@@ -37,7 +37,10 @@ assert(g.TERMS.filter(t=>t.help).length===1,'Assistance should not clutter the r
 assert(g.search('017').some(t=>t.id===incident.id),'Phone number should be searchable');
 assert(app.includes('<details class="glossary-help-resource">'),'Assistance must be collapsible');
 assert(app.includes('renderGlossaryHelp(t)'),'Help render missing');
-assert(g.TERMS.length>=144,'Expected 2026 networking concepts');
+assert(g.TERMS.length>=154,'Expected expanded audit-ready terminology');
+assert(g.TERMS.every(t=>t.example),'Each glossary entry needs a concrete example');
+for(const title of ['Passkeys / FIDO2','Cuentas de emergencia (break-glass)','Gestión de configuración (baseline)','Secretos y gestión de credenciales','Calidad y suficiencia de evidencias'])assert(g.TERMS.some(t=>t.title===title),'Missing field guide '+title);
+assert(app.includes('glossary-evidence')&&app.includes('glossary-caution'),'Evidence and warnings must be present in UI');
 for(const id of ['term-136','term-137','term-138','term-139','term-140','term-141','term-142','term-143','term-144']){
  const item=g.byId(id);
  assert(item&&item.category==='Redes'&&item.references?.length,'New network term incomplete: '+id);
@@ -54,8 +57,8 @@ assert(g.search('Common Vulnerabilities and Exposures').some(t=>t.title==='CVE')
 assert(g.TERMS.some(t=>t.references?.some(r=>r.url.includes('iana.org'))),'Missing official IANA references');
 assert(g.GUIDES['term-25'].commands.some(c=>c.platform==='macOS'),'Missing macOS diagnostics');
 const requiredIcons=['windows','linux','macos'].map(x=>'icons/os-'+x+'.svg');
-const shell=fs.readFileSync(path.join(root,'audit-workbench.sh'),'utf8');
-const powershell=fs.readFileSync(path.join(root,'audit-workbench.ps1'),'utf8');
+const shell=fs.readFileSync(path.join(root,'rabbitmole.sh'),'utf8');
+const powershell=fs.readFileSync(path.join(root,'rabbitmole.ps1'),'utf8');
 for(const icon of requiredIcons){assert(fs.existsSync(path.join(root,icon)),icon);assert(sw.includes('./'+icon),icon+' PWA');assert(shell.includes(icon),icon+' Bash');assert(powershell.includes(icon),icon+' PowerShell');}
 assert(app.includes('glossaryPlatformIcon')&&app.includes('glossary-references'),'Missing icon or link rendering');
 assert(Object.keys(g.GUIDES).length>=50,'Expected practical diagnostic guides');

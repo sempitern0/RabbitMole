@@ -14,8 +14,8 @@ assert(env.AuditGlossary.search('segmentada').some(x=>x.title.includes('Segmenta
 assert(env.AuditGlossary.TERMS.length>=20);
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
-const bash=fs.readFileSync(path.join(root,'audit-workbench.sh'),'utf8');
-const ps=fs.readFileSync(path.join(root,'audit-workbench.ps1'),'utf8');
+const bash=fs.readFileSync(path.join(root,'rabbitmole.sh'),'utf8');
+const ps=fs.readFileSync(path.join(root,'rabbitmole.ps1'),'utf8');
 for(const asset of ['js/os-catalog.js','js/glossary.js','css/glossary.css']){
  assert(html.includes(asset));assert(sw.includes('./'+asset));
  assert(bash.includes(asset));assert(ps.includes(asset));

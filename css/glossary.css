@@ -95,3 +95,10 @@
 .intake-record input{margin-top:.35rem;flex:none}
 .intake-record span{min-width:0;display:flex;flex-direction:column;gap:.3rem}
 .intake-record small{font-size:.83rem;color:var(--muted);line-height:1.5}
+
+/* Short, scan-friendly auditor guidance; warning is informational, not a blocking alert. */
+.glossary-evidence,.glossary-caution { margin-block:.7rem; }
+.glossary-evidence { border-inline-start:3px solid var(--brand); padding-inline-start:1rem; }
+.glossary-caution { border-inline-start:3px solid var(--line); padding-inline-start:1rem; }
+.glossary-evidence h3,.glossary-caution h3 { margin-bottom:.35rem; }
+.glossary-evidence p,.glossary-caution p { margin:0; line-height:1.65; }

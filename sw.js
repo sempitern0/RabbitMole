@@ -49,7 +49,7 @@ const CORE = [
   "./icons/os-windows.svg",
   "./icons/os-linux.svg",
   "./icons/os-macos.svg",
-  "./icons/dragon.svg",
+  "./icons/app.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];

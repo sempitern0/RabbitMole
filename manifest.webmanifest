@@ -23,7 +23,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "./icons/dragon.svg",
+      "src": "./icons/app.png",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

@@ -1,9 +1,9 @@
-/* Audit Workbench offline persistence. Keeps the existing IndexedDB and fallback keys. */
+/* RabbitMole local persistence, current schema only; no legacy migrations. */
 'use strict';
 (() => {
-  const DATABASE_NAME = 'audit-workbench-offline';
+  const DATABASE_NAME = 'rabbitmole-offline';
   const OBJECT_STORE = 'audits';
-  const DEFAULT_FALLBACK_KEY = 'sysadmin-tools:audit-workbench:records:v3';
+  const DEFAULT_FALLBACK_KEY = 'rabbitmole:records:v3';
 
   function createRepository({
     fallbackKey = DEFAULT_FALLBACK_KEY,
@@ -52,7 +52,7 @@
         try { database = await openDatabase(); }
         catch (error) {
           logger.warn('IndexedDB no disponible; almacenamiento local alternativo:', error);
-          // Force access check while preparing the UI, as in earlier versions.
+          // Force access check while preparing the UI, before displaying the UI.
           storage.getItem(fallbackKey);
         }
       },

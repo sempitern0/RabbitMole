@@ -1,7 +1,7 @@
 /* Offline inventory intake: parses untrusted CSV/JSON, never touches audit state. */
 'use strict';
 (() => {
-  const KIND='audit-workbench-discovery-v1';
+  const KIND='rabbitmole-discovery-v1';
   const BLOCKS=['assets','networks','software'];
   const LIMIT_BYTES=2*1024*1024, LIMIT_ROWS=500, LIMIT_COLUMNS=48;
   const FIELDS=Object.freeze({

@@ -20,7 +20,7 @@
       '<div class="action-row transfer-actions"><button type="button" class="button quiet" data-transfer="download"'+noAudit+'>Descargar copia cifrada</button>',
       '<button type="button" class="button accent" data-transfer="backup"'+noRemote+'>Subir copia cifrada</button></div>',
       '<div class="transfer-field"><label for="transfer-recover">Recuperar una copia cifrada</label>',
-      '<input id="transfer-recover" type="file" accept=".awenc,.json">',
+      '<input id="transfer-recover" type="file" accept=".rmenc,.json">',
       '<small>Descifra y descarga un JSON para importarlo manualmente. Nunca sobrescribe el expediente actual.</small></div>',
       '<p id="transfer-backup-status" class="transfer-feedback" role="status" aria-live="polite"></p>',
       '</div>',

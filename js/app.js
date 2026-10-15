@@ -3,9 +3,9 @@
 (() => {
   // Unrecognized or absent deployment config must never enable sensitive features.
   const PUBLIC_DEMO = globalThis.RabbitMoleDeployment?.profile !== "private-full";
-  const VERSION = 3; // Only supported audit JSON schema: no migrations from pre-release formats.
-  const LIBRARY_KIND = "audit-workbench-library";
-  const PROFILE_KIND = "audit-workbench-consultancy";
+  const VERSION = 3; // The only supported RabbitMole audit JSON schema.
+  const LIBRARY_KIND = "rabbitmole-library";
+  const PROFILE_KIND = "rabbitmole-consultancy";
   const storage = globalThis.AuditStorage;
   const importPlan = globalThis.AuditImportPlan;
   const relations = globalThis.AuditRelations;
@@ -27,14 +27,14 @@
   if (!retest) throw Error("No se ha cargado el módulo de reevaluación.");
   if (!comparison)
     throw Error("No se ha cargado el resumen comparativo offline.");
-  const SETTINGS_KEY = "sysadmin-tools:audit-workbench:settings:v1";
+  const SETTINGS_KEY = "rabbitmole:settings:v1";
   const CONNECTION_KEY =
-    "sysadmin-tools:audit-workbench:encrypted-nextcloud:v1";
-  const ACTIVE_KEY = "sysadmin-tools:audit-workbench:active:v3";
-  const FALLBACK_KEY = "sysadmin-tools:audit-workbench:records:v3";
-  const PALETTE_KEY = "sysadmin-tools:audit-workbench:palette:v1";
-  const BACKUP_KEY = "sysadmin-tools:audit-workbench:backup-settings:v1";
-  const BACKUP_DB = "audit-workbench-backup-directory";
+    "rabbitmole:encrypted-nextcloud:v1";
+  const ACTIVE_KEY = "rabbitmole:active:v3";
+  const FALLBACK_KEY = "rabbitmole:records:v3";
+  const PALETTE_KEY = "rabbitmole:palette:v1";
+  const BACKUP_KEY = "rabbitmole:backup-settings:v1";
+  const BACKUP_DB = "rabbitmole-backup-directory";
   const palettes = [
     "ocean",
     "forest",
@@ -1430,7 +1430,7 @@
   }
   function backupFilename() {
     return (
-      "audit-workbench-copia-" +
+      "rabbitmole-copia-" +
       new Date().toISOString().replace(/[:.]/g, "-") +
       ".json"
     );
@@ -5053,7 +5053,7 @@
     try {
       await flush();
       download(
-        "audit-workbench-backup-" +
+        "rabbitmole-backup-" +
           new Date().toISOString().slice(0, 10) +
           ".json",
         JSON.stringify(backupPayload(), null, 2),

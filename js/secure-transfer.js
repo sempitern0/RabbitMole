@@ -1,7 +1,7 @@
 /* Offline-first secure transfer primitives: opt-in, no automatic network calls. */
 'use strict';
 (() => {
-  const KIND='audit-workbench-encrypted-backup-v1';
+  const KIND='rabbitmole-encrypted-backup-v1';
   const MAX_FILE=45*1024*1024;
   function remoteAccess(){
     if(globalThis.RabbitMoleDeployment?.profile!=='private-full')
@@ -77,7 +77,7 @@
   function safeFilename(type){
     const token=Array.from(crypt().getRandomValues(new Uint8Array(6)),b=>b.toString(16).padStart(2,'0')).join('');
     const date=new Date().toISOString().replace(/[-:]/g,'').replace(/\..+$/,'').replace('T','-');
-    return 'audit-'+date+'-'+token+'.'+(type==='pdf'?'pdf':'awenc');
+    return 'audit-'+date+'-'+token+'.'+(type==='pdf'?'pdf':'rmenc');
   }
   async function upload(profile,filename,body,type){
     remoteAccess();

@@ -1,4 +1,4 @@
-/* Audit Workbench — local, deterministic relationships and document checks.
+/* RabbitMole — local, deterministic relationships and document checks.
  * No network access, storage, or DOM access. The current JSON schema remains v3.
  */
 'use strict';
@@ -62,7 +62,7 @@
   }
   function evidenceManifest(audit) {
     return {
-      kind: 'audit-workbench-evidence-manifest-v1',
+      kind: 'rabbitmole-evidence-manifest-v1',
       reportId: str(audit.meta?.reportId),
       evidence: (audit.evidence || []).map(row => ({
         id:str(row.id), title:str(row.title), fileName:str(row.fileName),

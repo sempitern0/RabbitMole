@@ -1,4 +1,4 @@
-/* Audit Workbench — offline, dependency-free tabular exports. */
+/* RabbitMole — offline, dependency-free tabular exports. */
 'use strict';
 (() => {
   const enc = new TextEncoder();
@@ -100,7 +100,7 @@
   const inlineCell = (column, row, value, style = 0) => `<c r="${cellRef(column,row)}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xmlEscape(display(value))}</t></is></c>`;
   const makeSheet = table => {
     const columns = table.headers.length;
-    const title = `<row r="1" ht="34" customHeight="1">${inlineCell(1,1,'AUDIT WORKBENCH · '+table.name,2)}</row>`;
+    const title = `<row r="1" ht="34" customHeight="1">${inlineCell(1,1,'RABBITMOLE · '+table.name,2)}</row>`;
     const sub = `<row r="2" ht="23" customHeight="1">${inlineCell(1,2,'Exportación tabular · No sustituye al expediente JSON ni al informe PDF.',3)}</row>`;
     const headers = `<row r="4" ht="29" customHeight="1">${table.headers.map((h,i) => inlineCell(i+1,4,h,1)).join('')}</row>`;
     const rows = table.rows.map((data,i) => `<row r="${i+5}" ht="21" customHeight="1">${data.map((v,j) => inlineCell(j+1,i+5,v,i%2===0?4:0)).join('')}</row>`).join('');

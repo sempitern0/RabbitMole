@@ -1,0 +1,31 @@
+name: RabbitMole quality checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-and-docs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify README branding and internal links
+        run: python3 -m unittest discover -s tests -p 'test_readme.py' -v
+      - name: Check static PWA resource and JSON contracts
+        run: python3 tests/test_static.py
+      - name: Check offline application asset consistency
+        run: node tests/test_shell_resources.cjs
+      - name: Check shell launcher syntax
+        run: bash -n audit-workbench.sh collect-local.sh discovery/run.sh discovery/setup.sh

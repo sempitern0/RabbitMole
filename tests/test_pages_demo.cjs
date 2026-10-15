@@ -3,6 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),asse
 const root=path.resolve(__dirname,'../dist-pages'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const html=read('index.html'),sw=read('sw.js'),app=read('js/app.js'),profile=read('js/deployment-profile.js');
 const release=JSON.parse(read('release.json'));
+assert.equal(JSON.parse(read('manifest.webmanifest')).start_url,'./');
 assert.equal(release.web,'limited');assert.equal(release.installed,'full');
 assert(html.includes('id="pwa-install-card"'));
 assert(sw.includes('rabbitmole-shell-public-'));

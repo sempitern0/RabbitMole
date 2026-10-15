@@ -109,8 +109,9 @@ python3 deploy/smoke_https.py https://rabbitmole.danieldigitalspace.workers.dev
    completa. La pestaña original puede seguir limitada.
 3. Pulsa **Comprobar** en **Protección del trabajo offline**. Espera a ver que
    está preparada y solicita persistencia si el navegador lo admite.
-4. Crea una auditoría de prueba, desactiva la red, cierra y vuelve a abrir desde
-   el icono. Comprueba edición, recuperación de datos, exportación y PDF.
+4. Crea una auditoría de prueba, desactiva la red, **cierra todas las ventanas**
+   y vuelve a abrir desde el icono. Comprueba edición, recuperación de datos,
+   exportación y PDF. Una simple recarga no verifica el arranque en frío.
 5. Exporta y restaura un JSON en otro dispositivo. No hay sincronización automática.
 
 No todos los navegadores o sistemas ofrecen instalación PWA. En los que no la
@@ -131,6 +132,12 @@ la misma URL y realiza backups externos: borrar datos del sitio o desinstalar
 puede perder expedientes. Un rollback de código no es un rollback de datos.
 Conserva el SHA de cada release y comprueba compatibilidad antes de volver atrás.
 
+Si el icono no arranca sin conexión, examina Application → Service Workers y
+Cache Storage desde el mismo perfil Brave. Comprueba los ajustes de borrado de
+los datos al cerrar el navegador. Antes de restablecer datos del sitio o
+reinstalar, exporta los expedientes: IndexedDB y CacheStorage pertenecen al
+perfil del navegador.
+
 Si la URL devuelve **403**, revisa en Cloudflare el despliegue activo y las reglas
 de acceso/WAF correspondientes. No desactives controles a ciegas: el fallo puede
 ser una restricción del cliente que realiza la prueba. La instalación exige que
@@ -142,8 +149,8 @@ recursos de caché, sin una página de bloqueo en su lugar.
 - [x] Paquete limitado por rutas/tipos, cabeceras y bloqueo de métodos de escritura.
 - [x] Web limitada y apertura instalada completa, sin depender de la conectividad.
 - [x] Pruebas de protocolo, integridad del paquete y actualización sin perder guardados.
-- [x] Prueba Chromium local de caché, recarga sin red y persistencia de un registro;
-  el modo instalado se simula en esa prueba.
+- [x] Prueba Chromium local de caché, apertura sin red en una ventana nueva
+  desde / y /index.html y persistencia; el modo instalado se simula en la prueba.
 - [ ] Confirmar secretos, entorno y mecanismo único de publicación en tu cuenta.
 - [ ] Confirmar `release.json` y la comprobación HTTPS en la URL de producción.
 - [ ] Probar instalación real desde el menú/icono en PC y tablet/teléfono.

@@ -106,7 +106,7 @@ def main():
         "web":"limited", "installed":"full", "version":version, "commit":commit
     }, sort_keys=True) + "\n", encoding="utf-8")
     manifest = json.loads((DIST / "manifest.webmanifest").read_text(encoding="utf-8"))
-    if manifest.get("start_url") != "./index.html" or manifest.get("display") != "standalone":
+    if manifest.get("start_url") != "./" or manifest.get("display") != "standalone":
         raise SystemExit("Unexpected PWA identity/display")
     hashes = {path.relative_to(DIST).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
               for path in sorted(DIST.rglob("*")) if path.is_file() and path.name != ".assetsignore"}

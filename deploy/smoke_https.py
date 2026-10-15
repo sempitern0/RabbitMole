@@ -2,6 +2,7 @@
 """Post-deployment HTTPS smoke check: static assets, headers and accidental exposure."""
 import argparse
 import json
+import re
 from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin, urlsplit
 from urllib.request import Request, urlopen
@@ -29,6 +30,8 @@ def verify(base, expected_commit=None):
     assert index_headers.get('X-Frame-Options', '').upper() == 'DENY', 'Falta X-Frame-Options.'
     assert 'max-age=' in index_headers.get('Strict-Transport-Security', ''), 'Falta HSTS.'
     assert 'no-store' in index_headers.get('Cache-Control', ''), 'La entrada no debe usar caché HTTP persistente.'
+    root_code, _, root_html = read(root, '')
+    assert root_code == 200 and b'RabbitMole' in root_html, 'La raíz / no carga.'
     sw_code, sw_headers, sw = read(root, 'sw.js')
     assert sw_code == 200 and b'RABBITMOLE_HEALTH' in sw, 'Service Worker ausente.'
     assert 'javascript' in sw_headers.get_content_type(), 'MIME incorrecto de Service Worker.'
@@ -36,8 +39,12 @@ def verify(base, expected_commit=None):
     code, _, raw_manifest = read(root, 'manifest.webmanifest')
     assert code == 200, 'No se ha servido el manifiesto.'
     manifest = json.loads(raw_manifest)
-    assert manifest.get('display') == 'standalone', 'Manifiesto no instalable.'
-    for resource in ('css/styles.css', 'js/app.js', 'icons/icon-192.png', 'icons/icon-512.png'):
+    assert manifest.get('display') == 'standalone' and manifest.get('start_url') == './', 'URL inicial PWA inesperada.'
+    match = re.search(rb'const CORE\s*=\s*\[(.*?)\];', sw, re.S)
+    assert match, 'No se encontró el inventario precache.'
+    resources = sorted(set(re.findall(rb'"\./([^\"]+)"', match.group(1))))
+    assert b'index.html' in resources and b'manifest.webmanifest' in resources, 'Precache incompleta.'
+    for resource in [item.decode('ascii') for item in resources]:
         code, _, content = read(root, resource)
         assert code == 200 and content, 'Recurso ausente: ' + resource
     for forbidden in ('discovery/discover.py', 'collect-local.ps1', 'tests/test_static.py',

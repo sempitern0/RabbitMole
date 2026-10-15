@@ -1,105 +1,112 @@
 #!/usr/bin/env python3
-"""Create a static public-demo distribution for Cloudflare Pages (stdlib only)."""
+"""Create the RabbitMole public-web / installed-full static bundle (stdlib only)."""
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import shutil
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist-pages"
-FILES = {"css": {".css"}, "js": {".js"}, "fonts": {".woff2"}, "icons": {".svg", ".png"}}
-EXCLUDED = ("js/secure-transfer.js", "js/secure-transfer-ui.js")
+ALLOWED = {"css": {".css"}, "js": {".js"}, "fonts": {".woff2"},
+           "icons": {".png", ".svg"}}
 CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; "
-       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; "
+       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https:; "
        "object-src 'none'; frame-src blob:; form-action 'none'; "
        "base-uri 'none'; manifest-src 'self'; worker-src 'self'; "
        "frame-ancestors 'none'")
 HEADERS = ("/*\n"
-    "  X-Content-Type-Options: nosniff\n"
-    "  X-Frame-Options: DENY\n"
-    "  Referrer-Policy: no-referrer\n"
-    "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n"
-    "  Strict-Transport-Security: max-age=31536000\n"
-    "  X-Robots-Tag: noindex\n"
-    "  Content-Security-Policy: " + CSP + "\n\n"
-    "/\n  Cache-Control: no-store\n\n"
-    "/index.html\n  Cache-Control: no-store\n\n"
-    "/sw.js\n  Cache-Control: no-store\n\n"
-    "/manifest.webmanifest\n  Cache-Control: no-store\n")
+           "  X-Content-Type-Options: nosniff\n"
+           "  X-Frame-Options: DENY\n"
+           "  Referrer-Policy: no-referrer\n"
+           "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n"
+           "  Strict-Transport-Security: max-age=31536000\n"
+           "  X-Robots-Tag: noindex\n"
+           "  Content-Security-Policy: " + CSP + "\n\n"
+           "/\n  Cache-Control: no-store\n\n"
+           "/index.html\n  Cache-Control: no-store\n\n"
+           "/sw.js\n  Cache-Control: no-store\n\n"
+           "/manifest.webmanifest\n  Cache-Control: no-store\n\n"
+           "/js/deployment-profile.js\n  Cache-Control: no-store\n\n"
+           "/release.json\n  Cache-Control: no-store\n")
 
 
 def main():
-    if os.getenv("CF_PAGES") == "1" and os.getenv("CF_PAGES_BRANCH") != "pages-production":
-        raise SystemExit("Build refused outside approved pages-production branch")
+    branch = os.getenv("CF_PAGES_BRANCH") or os.getenv("RABBITMOLE_DEPLOY_BRANCH")
+    if branch and branch != "pages-production":
+        raise SystemExit("Production builds require approved pages-production branch")
     if DIST.is_symlink():
-        raise SystemExit("Distribution path may not be a symlink")
+        raise SystemExit("Refusing symlink at dist-pages")
     if DIST.exists():
         shutil.rmtree(DIST)
     DIST.mkdir()
 
-    for folder, extensions in FILES.items():
+    for folder, suffixes in ALLOWED.items():
         for src in sorted((ROOT / folder).rglob("*")):
             if src.is_symlink():
-                raise SystemExit("Refusing symlink " + str(src))
+                raise SystemExit("Refusing linked resource " + str(src))
             if not src.is_file():
                 continue
             rel = src.relative_to(ROOT)
-            if src.suffix not in extensions or src.name.startswith("."):
-                raise SystemExit("Unexpected public file " + str(rel))
-            if rel.as_posix() in EXCLUDED:
-                continue
-            target = DIST / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src, target)
+            if src.suffix not in suffixes or src.name.startswith("."):
+                raise SystemExit("Unexpected asset " + str(rel))
+            dst = DIST / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, dst)
 
     html = (ROOT / "index.html").read_text(encoding="utf-8")
-    if "js/deployment-profile.js" not in html or "connect-src 'self' https:" not in html:
-        raise SystemExit("Missing deployment profile or original CSP")
-    for remote in EXCLUDED:
-        pattern = r'(?m)^\s*<script src="' + re.escape(remote) + r'" defer></script>\s*$'
-        html, count = re.subn(pattern, "\n", html)
-        if count != 1:
-            raise SystemExit("Expected one script tag for " + remote)
-    html = html.replace("connect-src 'self' https:", "connect-src 'self'")
+    if 'js/deployment-profile.js' not in html or "connect-src 'self' https:" not in html:
+        raise SystemExit("Missing profile or required installed-app CSP")
+    for src in re.findall(r'<script\s+src="([^"]+)"', html):
+        if not (DIST / src).is_file():
+            raise SystemExit("Script missing from bundle: " + src)
+    for src in re.findall(r'<link[^>]+href="([^"]+\.css)"', html):
+        if not (DIST / src).is_file():
+            raise SystemExit("Stylesheet missing from bundle: " + src)
     (DIST / "index.html").write_text(html, encoding="utf-8")
     (DIST / "manifest.webmanifest").write_bytes((ROOT / "manifest.webmanifest").read_bytes())
-    (DIST / "js/deployment-profile.js").write_text(
-        "'use strict';\nglobalThis.AuditDeployment = Object.freeze({profile:'public-demo'});\n",
-        encoding="utf-8",
-    )
+    (DIST / "js/deployment-profile.js").write_bytes(
+        (ROOT / "deploy/public-profile.js").read_bytes())
 
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    for remote in EXCLUDED:
-        needle = ", './" + remote + "'"
-        if needle not in sw:
-            raise SystemExit("Missing worker resource " + remote)
-        sw = sw.replace(needle, "")
-    if "'./js/deployment-profile.js'" not in sw:
-        raise SystemExit("Offline cache must contain profile")
+    if '"./js/deployment-profile.js"' not in sw:
+        raise SystemExit("Service Worker does not cache the deployment profile")
+    for path in re.findall(r'"\./([^"]+)"', sw.split("const CORE = [", 1)[1].split("];", 1)[0]):
+        if not (DIST / path).is_file():
+            raise SystemExit("Missing precached file: " + path)
 
-    checksum = hashlib.sha256()
-    for p in sorted(DIST.rglob("*")):
-        if p.is_file():
-            checksum.update(p.relative_to(DIST).as_posix().encode())
-            checksum.update(p.read_bytes())
-    fingerprint = checksum.hexdigest()[:16]
-    sw, n = re.subn(r"const CACHE_NAME='[^']+';",
-                    "const CACHE_NAME='audit-workbench-shell-public-" + fingerprint + "';",
-                    sw, count=1)
-    if n != 1:
-        raise SystemExit("Service worker cache constant missing")
+    digest = hashlib.sha256()
+    for asset in sorted(DIST.rglob("*")):
+        if asset.is_file():
+            digest.update(asset.relative_to(DIST).as_posix().encode())
+            digest.update(asset.read_bytes())
+    version = digest.hexdigest()[:16]
+    sw, updated = re.subn(r'const CACHE_NAME\s*=\s*"[^"]+";',
+                          'const CACHE_NAME = "rabbitmole-shell-public-' + version + '";',
+                          sw, count=1)
+    if updated != 1 or 'const CACHE_PREFIX = "rabbitmole-shell-"' not in sw:
+        raise SystemExit("Unrecognized service worker cache contract")
     (DIST / "sw.js").write_text(sw, encoding="utf-8")
     (DIST / "_headers").write_text(HEADERS, encoding="utf-8")
+    (DIST / ".assetsignore").write_text("_headers\n.assetsignore\n", encoding="utf-8")
     (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
-
+    commit = os.getenv("GITHUB_SHA") or os.getenv("CF_PAGES_COMMIT_SHA") or ""
+    if not commit:
+        try:
+            commit = subprocess.check_output(["git","rev-parse","HEAD"],
+                cwd=ROOT, stderr=subprocess.DEVNULL, text=True, timeout=3).strip()
+        except Exception:
+            commit = "unknown"
+    (DIST / "release.json").write_text(json.dumps({
+        "product":"RabbitMole", "channel":"cloudflare",
+        "web":"limited", "installed":"full", "version":version, "commit":commit
+    }, sort_keys=True) + "\n", encoding="utf-8")
     manifest = json.loads((DIST / "manifest.webmanifest").read_text(encoding="utf-8"))
-    if manifest.get("scope") != "./" or manifest.get("start_url") != "./index.html":
-        raise SystemExit("Installed PWA identity/scope has changed")
-    if any((DIST / forbidden).exists() for forbidden in EXCLUDED):
-        raise SystemExit("Remote transfer module was leaked")
-    print("InfraAudit public-demo: cache=" + fingerprint)
+    if manifest.get("start_url") != "./index.html" or manifest.get("display") != "standalone":
+        raise SystemExit("Unexpected PWA identity/display")
+    print("RabbitMole Cloudflare release " + version + " (" + commit[:12] + ")")
 
 
 if __name__ == "__main__":

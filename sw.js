@@ -1,7 +1,7 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "audit-workbench-shell-v57-infraaudit";
-const CACHE_PREFIX = "audit-workbench-shell-";
+const CACHE_NAME = "rabbitmole-shell-v58-local";
+const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
 );
@@ -50,7 +50,7 @@ const CORE = [
   "./icons/os-linux.svg",
   "./icons/os-macos.svg",
   "./icons/app.png",
-  "./icons/icon-192.png",
+  "./icons/icon_192.png",
   "./icons/icon-512.png",
 ];
 const urlFor = (path) => new URL(path, self.registration.scope).href;
@@ -92,7 +92,7 @@ async function repairMissing() {
 }
 self.addEventListener("message", (event) => {
   const type = event.data?.type;
-  if (type === "AUDIT_WORKBENCH_APPLY_UPDATE") {
+  if (type === "RABBITMOLE_APPLY_UPDATE") {
     event.waitUntil(
       (async () => {
         try {
@@ -106,7 +106,7 @@ self.addEventListener("message", (event) => {
         }
       })(),
     );
-  } else if (type === "AUDIT_WORKBENCH_HEALTH") {
+  } else if (type === "RABBITMOLE_HEALTH") {
     event.waitUntil(
       shellHealth()
         .then((result) => reply(event, result))
@@ -117,7 +117,7 @@ self.addEventListener("message", (event) => {
           }),
         ),
     );
-  } else if (type === "AUDIT_WORKBENCH_REPAIR_SHELL") {
+  } else if (type === "RABBITMOLE_REPAIR_SHELL") {
     event.waitUntil(
       repairMissing()
         .then((result) => reply(event, result))

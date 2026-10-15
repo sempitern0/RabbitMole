@@ -1,6 +1,6 @@
 {
   "name": "RabbitMole · Auditorías de infraestructura y seguridad",
-  "short_name": "InfraAudit",
+  "short_name": "RabbitMole",
   "description": "RabbitMole: inventario, controles y evidencias offline.",
   "id": "./",
   "start_url": "./index.html",

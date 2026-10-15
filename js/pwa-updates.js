@@ -1,7 +1,7 @@
 /* Opt-in PWA updates. No external services, audit data, or automatic reloads. */
 "use strict";
 (() => {
-  const PUBLIC_DEMO = globalThis.AuditDeployment?.profile !== "private-full";
+  const PUBLIC_DEMO = globalThis.RabbitMoleDeployment?.profile !== "private-full";
   const APPLY_MESSAGE = "AUDIT_WORKBENCH_APPLY_UPDATE";
   const CHECK_INTERVAL_MS = 60 * 60 * 1000;
   function supported() {

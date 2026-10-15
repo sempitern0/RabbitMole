@@ -3,6 +3,10 @@
 (() => {
   const KIND='audit-workbench-encrypted-backup-v1';
   const MAX_FILE=45*1024*1024;
+  function remoteAccess(){
+    if(globalThis.RabbitMoleDeployment?.profile!=='private-full')
+      throw Error('Transferencias externas disponibles solo en la PWA instalada.');
+  }
   const encoder=new TextEncoder(),decoder=new TextDecoder();
   const crypt=()=>globalThis.crypto?.subtle?globalThis.crypto:null;
   const b64=bytes=>{
@@ -76,6 +80,7 @@
     return 'audit-'+date+'-'+token+'.'+(type==='pdf'?'pdf':'awenc');
   }
   async function upload(profile,filename,body,type){
+    remoteAccess();
     const url=target(profile,filename);
     const result=await fetch(url,{method:'PUT',mode:'cors',credentials:'omit',redirect:'error',referrerPolicy:'no-referrer',
       headers:{Authorization:auth(profile),'Content-Type':type,'If-None-Match':'*'},body});
@@ -91,6 +96,7 @@
     return utcDate.toISOString().slice(0,10);
   }
   async function ocs(profile,method,path,data){
+    remoteAccess();
     const info=shareApiInfo(profile,'file.pdf');
     const parsed=new URL(info.api);
     parsed.pathname=parsed.pathname.replace(/\/shares$/,'/shares'+(path?'/'+encodeURIComponent(String(path)):''));
@@ -105,6 +111,7 @@
     return payload.ocs.data;
   }
   async function createExpiringShare(profile,filename,days,password){
+    remoteAccess();
     if(typeof password!=='string'||password.length<16)throw Error('El enlace requiere una contraseña de al menos 16 caracteres.');
     const expiration=expiryDate(days),path=shareApiInfo(profile,filename).path;
     const data=await ocs(profile,'POST','',{path,shareType:'3',permissions:'1',password,expireDate:expiration,publicUpload:'false'});
@@ -123,7 +130,7 @@
     }
     return {id,url:url.href,expiration,filename};
   }
-  async function revokeShare(profile,share){return ocs(profile,'DELETE',share.id)}
+  async function revokeShare(profile,share){remoteAccess();return ocs(profile,'DELETE',share.id)}
   async function isPdf(file){
     if(!file||file.size<5||file.size>40*1024*1024)return false;
     const bytes=new Uint8Array(await file.slice(0,5).arrayBuffer());

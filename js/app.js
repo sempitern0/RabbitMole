@@ -2,7 +2,7 @@
 "use strict";
 (() => {
   // Unrecognized or absent deployment config must never enable sensitive features.
-  const PUBLIC_DEMO = globalThis.AuditDeployment?.profile !== "private-full";
+  const PUBLIC_DEMO = globalThis.RabbitMoleDeployment?.profile !== "private-full";
   const VERSION = 3; // Only supported audit JSON schema: no migrations from pre-release formats.
   const LIBRARY_KIND = "audit-workbench-library";
   const PROFILE_KIND = "audit-workbench-consultancy";
@@ -2702,7 +2702,7 @@
   }
   function connectionSettingsMarkup() {
     if (PUBLIC_DEMO)
-      return '<section class="card"><h1>Conexiones desactivadas</h1><p>La edición pública no permite credenciales ni transferencias. Tus expedientes son locales.</p></section>';
+      return '<section class="card"><h1>Conexiones desactivadas</h1><p>La versión web no permite credenciales ni transferencias. Tus expedientes son locales.</p></section>';
     const exists = Boolean(localStorage.getItem(CONNECTION_KEY));
     return `<span class="eyebrow">CONECTORES / OPCIONAL</span><h1 class="page-title">Conexiones y entrega</h1>
       <p class="lead">La auditoría funciona offline. Las transferencias son opcionales y requieren confirmación explícita. Distingue exportación JSON sin cifrar, backup cifrado y entrega de PDF.</p>
@@ -2724,7 +2724,7 @@
   }
   async function uploadDav() {
     if (PUBLIC_DEMO)
-      throw Error("WebDAV no está disponible en la edición pública.");
+      throw Error("WebDAV no está disponible en la versión web.");
     if (!currentId || !unlockedConnection)
       throw Error("Abre un expediente y desbloquea la conexión primero.");
     const filename =
@@ -4889,7 +4889,7 @@
   }
   async function lookupCve(index, button) {
     if (PUBLIC_DEMO)
-      throw Error("Consultas CVE remotas desactivadas en la edición pública.");
+      throw Error("Consultas CVE remotas desactivadas en la versión web.");
     const row = state.cves[index];
     if (!row) return;
     const id = str(row.id).trim().toUpperCase();
@@ -4976,7 +4976,7 @@
   async function shareAudit() {
     if (PUBLIC_DEMO)
       throw Error(
-        "Compartir remotamente no está disponible en la edición pública.",
+        "Compartir remotamente no está disponible en la versión web.",
       );
     if (!currentId) {
       alert("Primero crea o selecciona una auditoría.");
@@ -5025,7 +5025,7 @@
   }
   function draftEmail() {
     if (PUBLIC_DEMO)
-      throw Error("Correo externo no disponible en la edición pública.");
+      throw Error("Correo externo no disponible en la versión web.");
     if (!currentId) {
       alert("Primero crea o selecciona una auditoría.");
       return;

@@ -601,3 +601,6 @@ dist
 # End of https://www.toptal.com/developers/gitignore/api/linux,powershell,visualstudiocode,visualstudio,dotenv
 # Cloudflare Pages generated build; only publish the output directory
 /audit-workbench/dist-pages/
+
+# Generated, allowlisted Cloudflare release bundle
+/dist-pages/

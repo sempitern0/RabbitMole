@@ -1,4 +1,7 @@
-/* Trusted private installations only. Pages build overrides this with public-demo.
-   Never place credentials, access tokens or API secrets here. */
-'use strict';
-globalThis.AuditDeployment = Object.freeze({profile:'private-full'});
+/* Default distribution: complete standalone/local RabbitMole edition. */
+"use strict";
+globalThis.RabbitMoleDeployment = Object.freeze({
+  channel: "local",
+  get profile() { return "private-full"; },
+  get installed() { return true; }
+});

@@ -25,7 +25,7 @@ assert "auditWorkbenchBackup" not in app and "settings.sequences" not in app
 assert "js/audit-identifiers.js" in scripts and "js/document-control.js" in scripts
 assert "js/audit-storage.js" in scripts and "js/exporters.js" in scripts
 assert manifest["display"] == "standalone" and manifest["start_url"].startswith("./")
-assert all((root / ("icons/icon-%d.png" % size)).is_file() for size in (192, 512))
+assert all((root / icon["src"].lstrip("./")).is_file() for icon in manifest["icons"])
 if shutil.which("node"):
     for script in scripts + ["sw.js"]:
         subprocess.run(["node", "--check", str(root / script)], check=True)

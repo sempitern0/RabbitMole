@@ -26,7 +26,7 @@ Para actualizar los archivos instalados:
 .\rabbitmole.ps1 -Update
 ```
 
-También puedes servir los archivos con Python desde la carpeta ``:
+También puedes servir los archivos con Python desde la raíz del repositorio:
 
 ```powershell
 py -m http.server 8765 --bind 127.0.0.1
@@ -72,11 +72,15 @@ python3 smoke_https.py https://auditoria.example.com
 
 **Importante:** cada dispositivo mantiene sus datos locales. Para migrar desde `localhost` u otro dominio, exporta el backup JSON e impórtalo en el nuevo origen HTTPS. Discovery sigue ejecutándose aparte desde el equipo del auditor.
 
+## Pestaña web pública frente a PWA instalada
+
+En la URL pública de Cloudflare, la pestaña normal permite auditorías locales, inventarios y exportaciones, pero **bloquea las integraciones externas**. Al instalar y abrir desde el icono se utiliza la **PWA completa**: ventana propia, funcionamiento offline tras precargar y verificar recursos, e integraciones HTTPS opcionales con autorización y red. Esta distinción depende del modo de visualización del navegador y no supone autenticación. Véase [la guía de Cloudflare](deploy/CLOUDFLARE_PAGES_ES.md).
+
 ## Tablet y móvil: instalación PWA
 
 La instalación desde navegador requiere, en general, **una primera carga HTTPS** desde un servidor fiable y accesible al dispositivo. Un ZIP por sí mismo **no es un APK o IPA instalable**.
 
-1. Publica **solo los archivos estáticos** de `` en una intranet o alojamiento HTTPS con certificado válido. Nunca publiques JSON, PDFs o evidencias confidenciales.
+1. Publica **solo los archivos estáticos** del repositorio en una intranet o alojamiento HTTPS con certificado válido. Nunca publiques JSON, PDFs o evidencias confidenciales.
 2. Accede desde Chrome/Edge (Android) o Safari (iPhone/iPad) y espera a que cargue la aplicación.
 3. En Android usa la opción **Instalar aplicación** o **Añadir a pantalla de inicio**, si se ofrece. En iOS/iPadOS utiliza **Compartir → Añadir a pantalla de inicio**.
 4. Abre la aplicación desde su icono y comprueba que funciona sin conexión antes de llevarla a una red aislada.
@@ -99,7 +103,7 @@ Las copias automáticas a carpeta solo funcionan en navegadores compatibles, con
 
 ## Actualizaciones de la PWA
 
-La caché de la aplicación se actualiza por versiones y **no almacena los expedientes**. Después de actualizar el código, cierra y vuelve a abrir la aplicación y recarga la página. Si continúas viendo recursos anteriores, revisa **Herramientas de desarrollo → Application → Service Workers**.
+El Service Worker utiliza una caché versionada que **no almacena los expedientes**. La PWA instalada busca actualizaciones al abrirse con conexión y al recuperar visibilidad o red; una nueva versión preparada **solo se aplica al confirmar «Guardar y actualizar»**, previa comprobación de guardado. «Buscar actualización» fuerza la comprobación. Sin red continúa funcionando la versión almacenada. No borres los datos del sitio para forzar una actualización.
 
 **No utilices «Clear site data» sin disponer de un backup comprobado:** podrías borrar los expedientes locales.
 

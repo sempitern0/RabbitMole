@@ -26,7 +26,7 @@ To update the installed files:
 .\rabbitmole.ps1 -Update
 ```
 
-You can also serve the files with Python from the `` directory:
+You can also serve the files with Python from the repository root:
 
 ```powershell
 py -m http.server 8765 --bind 127.0.0.1
@@ -72,11 +72,15 @@ python3 smoke_https.py https://your-audit-domain.example
 
 Each device retains its own local records. Export/import JSON when switching from localhost or another origin. Discovery remains an independent local tool.
 
+## Public browser tab versus installed PWA
+
+The Cloudflare URL provides local inventory/audit functions and exports in a regular browser tab, but **disables remote integrations**. Installing and opening RabbitMole from its icon provides the **complete PWA**, including optional authorized HTTPS integrations, dedicated window and verified offline startup after caching. The distinction is a client-side browser display-mode policy, not authentication. See [the Cloudflare guide](deploy/CLOUDFLARE_PAGES.md).
+
 ## Tablet and mobile: PWA installation
 
 Browser installation generally requires an **initial HTTPS load** from a trusted server accessible to the device. A ZIP file by itself **is not an installable APK or IPA**.
 
-1. Publish **only the static files** in `` on an intranet or HTTPS host with a valid certificate. Never publish confidential JSON files, PDFs, or evidence.
+1. Publish **only the static files** from the repository on an intranet or HTTPS host with a valid certificate. Never publish confidential JSON files, PDFs, or evidence.
 2. Open the site using Chrome/Edge (Android) or Safari (iPhone/iPad) and wait for the application to load.
 3. On Android, use **Install app** or **Add to Home Screen**, if offered. On iOS/iPadOS, use **Share → Add to Home Screen**.
 4. Launch the application from its icon and confirm that it runs offline before taking it into an isolated network.
@@ -99,7 +103,7 @@ Automatic folder backups work only in compatible browsers, while permission rema
 
 ## PWA updates
 
-The application's cache is versioned and **does not store audit records**. After updating the code, close and reopen the application and reload the page. If older resources continue to appear, check **Developer Tools → Application → Service Workers**.
+The service worker's application cache is versioned and **does not contain audit records**. The installed PWA checks for updates when opened online and on visibility/network changes; prepared versions are applied **only after you confirm Save and update**. You can press **Check for updates** to force a check. When offline, RabbitMole continues running the last installed cached release. Do not clear site data to force an update.
 
 **Do not use "Clear site data" without a verified backup:** you could delete locally stored audit records.
 

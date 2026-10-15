@@ -1,5 +1,7 @@
 # RabbitMole · Publicación controlada e instalación offline
 
+[English](CLOUDFLARE_PAGES.md) · **Español**
+
 Esta guía sustituye a la antigua checklist de Audit Workbench en Sysadmin.
 El repositorio es **sempitern0/RabbitMole**, la aplicación está en la raíz y el
 servicio existente es **Cloudflare Workers con Static Assets**, no un proyecto

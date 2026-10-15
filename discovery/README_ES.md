@@ -1,5 +1,7 @@
 # Discovery · motor de reconocimiento desde un equipo auditor
 
+[English](README.md) · **Español**
+
 El motor funciona **desde un dispositivo externo conectado a la red del cliente**, sin instalar agentes en cada activo. No se integra como un escáner dentro del navegador: la PWA importa su JSON local.
 
 ## Inicio rápido, sin servicios ni cambios de permisos

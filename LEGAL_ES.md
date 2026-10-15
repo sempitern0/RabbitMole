@@ -2,7 +2,7 @@
 
 [English](LEGAL.md) · **Español**
 
-**Documento informativo, no asesoramiento jurídico**. Las cláusulas de Audit Workbench son modelos iniciales para la redacción técnica del informe, no un contrato de auditoría, autorización de pentesting, NDA, acuerdo de encargo de tratamiento, póliza ni renuncia general válida de responsabilidad. El auditor debe revisar cada texto con el cliente y, cuando corresponda, con asesoría jurídica.
+**Documento informativo, no asesoramiento jurídico**. Las cláusulas de RabbitMole son modelos iniciales para la redacción técnica del informe, no un contrato de auditoría, autorización de pentesting, NDA, acuerdo de encargo de tratamiento, póliza ni renuncia general válida de responsabilidad. El auditor debe revisar cada texto con el cliente y, cuando corresponda, con asesoría jurídica.
 
 ## Referencias normativas generales (contrastadas octubre de 2026)
 

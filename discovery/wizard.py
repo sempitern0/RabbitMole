@@ -91,7 +91,7 @@ def default_output(base=None, clock=None):
 def run_wizard(doctor, scope_network, execute, read=input, write=print,
                suggest=interface_candidates, output_base=None):
     """Asistente textual: no ejecuta scan si la confirmación no es literal."""
-    write('\n=== Audit Workbench · Descubrimiento guiado ===')
+    write('\n=== RabbitMole · Descubrimiento guiado ===')
     write('Se ejecuta en TU equipo. No instala agentes ni modifica los dispositivos.')
     write('No busca vulnerabilidades ni averigua el software instalado.')
     info = doctor()
@@ -154,7 +154,7 @@ def run_wizard(doctor, scope_network, execute, read=input, write=print,
         result = execute(['scan', '--cidr', str(network), '--authorized',
                           '--backend', backend, '--output', str(destination)])
         if result == 0:
-            write('\nCaptura preparada. En Audit Workbench:')
+            write('\nCaptura preparada. En RabbitMole:')
             write('  1. Hardware → Captura asistida → importa el JSON → revisa las filas.')
             write('  2. Redes → Captura asistida → importa el mismo JSON → revisa el segmento.')
             write('  3. Conserva el original en almacenamiento protegido.')

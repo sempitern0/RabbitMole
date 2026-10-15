@@ -36,7 +36,7 @@ En Windows puedes usar `./discovery/run.ps1 doctor` y `./discovery/run.ps1 scan 
 - La red incorporada al JSON indica **el alcance observado**, no una VLAN, gateway o DNS confirmado.
 - No sobrescribe resultados existentes. Los archivos contienen datos potencialmente sensibles de infraestructura: conservarlos cifrados y borrarlos según la política acordada.
 
-## Llevar resultados a Audit Workbench
+## Llevar resultados a RabbitMole
 
 En el expediente abre **Hardware → Captura asistida**, importa el JSON y confirma las filas nuevas; después cambia a **Redes → Captura asistida** e importa el *mismo archivo* para incorporar el CIDR observado. El importador existente detecta duplicados/conflictos y no sobreescribe filas. Los datos permanecen pendientes de revisión.
 

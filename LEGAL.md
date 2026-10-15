@@ -2,7 +2,7 @@
 
 **English** · [Español](LEGAL_ES.md)
 
-**Informational document, not legal advice.** Audit Workbench clauses are starting templates for technical report writing, not an audit agreement, penetration-testing authorization, NDA, data processing agreement, insurance policy, or generally valid waiver of liability. The auditor must review each clause with the client and, when appropriate, legal counsel.
+**Informational document, not legal advice.** RabbitMole clauses are starting templates for technical report writing, not an audit agreement, penetration-testing authorization, NDA, data processing agreement, insurance policy, or generally valid waiver of liability. The auditor must review each clause with the client and, when appropriate, legal counsel.
 
 ## General regulatory references (checked October 2026)
 

@@ -1,4 +1,4 @@
-# Audit Workbench security model
+# RabbitMole security model
 
 **English** · [Español](SECURITY_ES.md)
 

@@ -40,7 +40,7 @@
     "aliases": [
       "Virtual Local Area Network"
     ],
-    "example": "",
+    "example": "Ejemplo: las VLAN 10 (usuarios) y 20 (servidores) están separadas en L2, pero su comunicación depende del enrutamiento y las ACL.",
     "fullName": "Virtual Local Area Network",
     "references": [
       {
@@ -51,7 +51,9 @@
         "label": "CISA · Hardening de infraestructura de comunicaciones",
         "url": "https://www.cisa.gov/resources-tools/resources/enhanced-visibility-and-hardening-guidance-communications-infrastructure"
       }
-    ]
+    ],
+    "evidence": "Solicita configuración de puertos access/trunk, diagrama y reglas de routing; las VLAN aisladas no demuestran ACL adecuadas.",
+    "caution": "Una VLAN no cifra tráfico ni impide por sí sola tráfico entre subredes."
   },
   {
     "id": "term-3",
@@ -63,7 +65,7 @@
     "aliases": [
       "Classless Inter-Domain Routing"
     ],
-    "example": "",
+    "example": "Ejemplo: 192.168.10.0/24 describe 256 direcciones, no 256 equipos utilizables; confirma el alcance aprobado.",
     "fullName": "Classless Inter-Domain Routing",
     "references": [
       {
@@ -80,7 +82,7 @@
     "check": "Comprueba que un servidor de DMZ no puede alcanzar libremente sistemas de gestión.",
     "why": "Separa servicios expuestos de activos internos sensibles.",
     "aliases": [],
-    "example": ""
+    "example": "Ejemplo: el proxy público de la DMZ recibe HTTPS y solo se comunica con la aplicación interna mediante puertos explícitos."
   },
   {
     "id": "term-5",
@@ -95,14 +97,16 @@
       "autenticación multifactor",
       "Multi-Factor Authentication"
     ],
-    "example": "",
+    "example": "Ejemplo: una cuenta de administrador inicia sesión con contraseña y llave FIDO2; verifica también cuentas de emergencia y excepciones.",
     "fullName": "Multi-Factor Authentication",
     "references": [
       {
         "label": "Guías NIST de identidad digital",
         "url": "https://pages.nist.gov/800-63-4/"
       }
-    ]
+    ],
+    "evidence": "Solicita políticas y una muestra de inicios de sesión para usuarios y administradores; distingue SMS/TOTP de métodos resistentes a phishing.",
+    "caution": "Dos pasos del mismo factor no son necesariamente autenticación multifactor."
   },
   {
     "id": "term-6",
@@ -112,7 +116,7 @@
     "check": "Revisa membresías privilegiadas, accesos de servicio y revisiones periódicas.",
     "why": "Disminuye las consecuencias de una cuenta comprometida.",
     "aliases": [],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «Principio de mínimo privilegio» y anota permisos efectivos, excepciones y responsable."
   },
   {
     "id": "term-7",
@@ -124,7 +128,7 @@
     "aliases": [
       "Common Vulnerabilities and Exposures"
     ],
-    "example": "",
+    "example": "Ejemplo: anotar CVE-AAAA-NNNN sin verificar el producto y versión instalada NO confirma un hallazgo.",
     "fullName": "Common Vulnerabilities and Exposures",
     "references": [
       {
@@ -139,7 +143,9 @@
         "label": "CISA KEV",
         "url": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
       }
-    ]
+    ],
+    "evidence": "Solicita inventario de versión, boletín del proveedor, mitigaciones y evidencia de afectación; evita copiar literalmente un escáner como prueba definitiva.",
+    "caution": "Una CVE publicada no prueba afectación de ese activo sin contexto de producto y configuración."
   },
   {
     "id": "term-8",
@@ -151,7 +157,7 @@
     "aliases": [
       "Common Vulnerability Scoring System"
     ],
-    "example": "",
+    "example": "Ejemplo: CVSS 9,8 señala gravedad técnica alta; la prioridad también depende de explotación real, exposición y activo.",
     "fullName": "Common Vulnerability Scoring System",
     "references": [
       {
@@ -162,7 +168,8 @@
         "label": "NVD",
         "url": "https://nvd.nist.gov/"
       }
-    ]
+    ],
+    "caution": "Un CVSS alto no demuestra explotación ni implica automáticamente una prioridad de negocio equivalente."
   },
   {
     "id": "term-9",
@@ -172,7 +179,7 @@
     "check": "Consulta la política oficial de soporte del producto y registra su fecha.",
     "why": "Los productos sin soporte pueden dejar de recibir correcciones.",
     "aliases": [],
-    "example": ""
+    "example": "Ejemplo: un servidor mantiene actualizaciones del SO, pero su hipervisor ya no dispone de soporte del fabricante."
   },
   {
     "id": "term-10",
@@ -184,14 +191,16 @@
     "aliases": [
       "Endpoint Detection and Response"
     ],
-    "example": "",
+    "example": "Ejemplo: 85 de 100 portátiles tienen agente instalado, pero 12 no envían telemetría y requieren revisión.",
     "fullName": "Endpoint Detection and Response",
     "references": [
       {
         "label": "MITRE ATT&CK para detección y contexto",
         "url": "https://attack.mitre.org/"
       }
-    ]
+    ],
+    "evidence": "Solicita cobertura de agentes, último contacto, versión de política, alertas de prueba y procedimiento de investigación.",
+    "caution": "Agente instalado no significa agente saludable ni cobertura de detección garantizada."
   },
   {
     "id": "term-11",
@@ -201,7 +210,7 @@
     "check": "Contrasta la configuración efectiva con una referencia apropiada y documenta excepciones.",
     "why": "Reduce servicios, permisos y configuraciones innecesarias.",
     "aliases": [],
-    "example": "",
+    "example": "Ejemplo: se deshabilita un servicio sin uso, se justifica una excepción y se verifica que el cambio persiste tras reiniciar.",
     "references": [
       {
         "label": "CIS Benchmarks",
@@ -230,7 +239,9 @@
         "label": "NIST: continuidad y recuperación",
         "url": "https://csrc.nist.gov/pubs/sp/800/34/r1/upd1/final"
       }
-    ]
+    ],
+    "evidence": "Solicita marcas temporales de backups recuperables y evidencia de recuperación, no solo la periodicidad configurada.",
+    "caution": "Una copia existente no demuestra que el RPO se cumpla hasta ejecutar o verificar la recuperación."
   },
   {
     "id": "term-13",
@@ -249,7 +260,9 @@
         "label": "NIST: planes de contingencia",
         "url": "https://csrc.nist.gov/pubs/sp/800/34/r1/upd1/final"
       }
-    ]
+    ],
+    "evidence": "Solicita cronometraje de una recuperación extremo a extremo y criterio de servicio utilizable, no solo arranque del servidor.",
+    "caution": "La existencia de un plan no demuestra que el servicio se recupere dentro del objetivo."
   },
   {
     "id": "term-14",
@@ -259,7 +272,7 @@
     "check": "Revisa reglas amplias, caducidad, registro y justificación de negocio.",
     "why": "Los permisos amplios permiten comunicaciones que quizá no sean necesarias.",
     "aliases": [],
-    "example": ""
+    "example": "Ejemplo: la regla «cualquier origen → 3389/TCP» requiere justificar exposición y revisar alternativa de administración controlada."
   },
   {
     "id": "term-15",
@@ -272,7 +285,7 @@
       "hash",
       "sha256"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: conserva una muestra fechada relacionada con «Evidencia SHA-256», indicando origen, alcance y límites de lo observado."
   },
   {
     "id": "term-16",
@@ -282,7 +295,7 @@
     "check": "Registra aceptación responsable y fecha de revisión; no equivale a corrección.",
     "why": "Mantiene visibles las amenazas que siguen existiendo tras las medidas.",
     "aliases": [],
-    "example": ""
+    "example": "Ejemplo: tras limitar el acceso de una aplicación antigua, el responsable acepta temporalmente el riesgo restante con fecha de revisión."
   },
   {
     "id": "term-17",
@@ -292,7 +305,7 @@
     "check": "Considera confidencialidad, integridad, disponibilidad y dependencias.",
     "why": "Permite priorizar según procesos e información realmente importantes.",
     "aliases": [],
-    "example": ""
+    "example": "Ejemplo: un DNS interno puede ser crítico aunque almacene pocos datos porque condiciona la continuidad de otros servicios."
   },
   {
     "id": "term-18",
@@ -304,7 +317,7 @@
     "aliases": [
       "Network Address Translation"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «NAT», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "fullName": "Network Address Translation",
     "references": [
       {
@@ -323,7 +336,7 @@
     "aliases": [
       "Virtual Private Network"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «VPN», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "fullName": "Virtual Private Network",
     "references": [
       {
@@ -340,7 +353,8 @@
     "check": "Registra origen, fecha, responsable, hash y ubicación protegida.",
     "why": "Apoya la trazabilidad e integridad de los materiales recopilados.",
     "aliases": [],
-    "example": ""
+    "example": "Ejemplo: captura de configuración obtenida el 15/10, con operador, origen, SHA-256 y custodia de la copia original.",
+    "evidence": "Solicita registro de recogida, transferencias, custodios, fechas y hashes, preservando el original."
   },
   {
     "id": "term-21",
@@ -353,7 +367,7 @@
       "subnet",
       "máscara de red"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «Subred», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado."
   },
   {
     "id": "term-22",
@@ -366,7 +380,7 @@
       "lista de control de acceso",
       "Access Control List"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «ACL», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "fullName": "Access Control List",
     "references": [
       {
@@ -385,7 +399,7 @@
     "aliases": [
       "microsegmentacion"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «Microsegmentación», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado."
   },
   {
     "id": "term-24",
@@ -398,7 +412,7 @@
       "network access control",
       "control de acceso a red"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «802.1X / NAC», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "references": [
       {
         "label": "ASD · Medidas defensivas para redes y NAC",
@@ -421,7 +435,7 @@
       "domain name system",
       "Domain Name System"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «DNS», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "fullName": "Domain Name System",
     "references": [
       {
@@ -432,7 +446,9 @@
         "label": "RFC Editor",
         "url": "https://www.rfc-editor.org/"
       }
-    ]
+    ],
+    "evidence": "Solicita un inventario de zonas, resolutores y registros críticos; no confundas una respuesta DNS correcta con autenticidad o disponibilidad garantizada.",
+    "caution": "Una respuesta obtenida desde un cliente no demuestra la seguridad de toda la infraestructura DNS."
   },
   {
     "id": "term-26",
@@ -445,7 +461,7 @@
       "asignación automática IP",
       "Dynamic Host Configuration Protocol"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «DHCP», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "fullName": "Dynamic Host Configuration Protocol",
     "references": [
       {
@@ -464,7 +480,7 @@
     "aliases": [
       "ARP poisoning"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «ARP Spoofing», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado."
   },
   {
     "id": "term-28",
@@ -478,7 +494,7 @@
       "RDP",
       "gestión remota"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «Puertos de administración», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "references": [
       {
         "label": "IANA - puertos y servicios",
@@ -498,7 +514,7 @@
       "SSL",
       "Transport Layer Security"
     ],
-    "example": "",
+    "example": "Ejemplo: HTTPS negocia TLS actual con cadena válida, pero debe revisarse también autenticación y autorización de la aplicación.",
     "fullName": "Transport Layer Security",
     "references": [
       {
@@ -518,7 +534,7 @@
       "certificado TLS",
       "PKI"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «Certificado digital», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado."
   },
   {
     "id": "term-31",
@@ -535,7 +551,7 @@
       "WPA2 Enterprise",
       "wireless LAN security"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «WPA2 / WPA3», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "references": [
       {
         "label": "ASD ISM · Seguridad de redes, revisión septiembre 2026",
@@ -558,7 +574,7 @@
       "guest wifi",
       "Wi-Fi invitados"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «Red de invitados», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "references": [
       {
         "label": "CISA · Segmentación de redes de invitados",
@@ -581,7 +597,7 @@
       "confianza cero",
       "ztna"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «Zero Trust», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "references": [
       {
         "label": "NIST SP 800-207",
@@ -600,7 +616,7 @@
       "patch management",
       "gestión de parches"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «Parches de seguridad» y comprueba su estado sin modificarlo."
   },
   {
     "id": "term-35",
@@ -612,7 +628,7 @@
     "aliases": [
       "cis benchmarks"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «CIS Benchmark» y comprueba su estado sin modificarlo.",
     "references": [
       {
         "label": "CIS Benchmarks",
@@ -634,7 +650,7 @@
     "aliases": [
       "puerto abierto"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «Servicio expuesto» y comprueba su estado sin modificarlo.",
     "references": [
       {
         "label": "IANA - puertos y servicios",
@@ -653,7 +669,7 @@
       "BIOS",
       "UEFI"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «Firmware» y comprueba su estado sin modificarlo."
   },
   {
     "id": "term-38",
@@ -665,7 +681,7 @@
     "aliases": [
       "arranque seguro"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «Secure Boot» y comprueba su estado sin modificarlo."
   },
   {
     "id": "term-39",
@@ -678,7 +694,7 @@
       "trusted platform module",
       "Trusted Platform Module"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «TPM» y comprueba su estado sin modificarlo.",
     "fullName": "Trusted Platform Module",
     "references": [
       {
@@ -699,7 +715,7 @@
       "luks",
       "filevault"
     ],
-    "example": ""
+    "example": "Ejemplo: BitLocker o FileVault está activo, la clave de recuperación está custodiada y se ha verificado el procedimiento."
   },
   {
     "id": "term-41",
@@ -712,7 +728,7 @@
       "asset inventory",
       "CMDB"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «Inventario de activos» y comprueba su estado sin modificarlo."
   },
   {
     "id": "term-42",
@@ -725,7 +741,7 @@
       "antivirus",
       "endpoint protection"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «EPP / Antivirus» y comprueba su estado sin modificarlo."
   },
   {
     "id": "term-43",
@@ -738,7 +754,7 @@
       "hipervisor",
       "hypervisor"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «Virtualización» y comprueba su estado sin modificarlo."
   },
   {
     "id": "term-44",
@@ -751,7 +767,7 @@
       "software bill of materials",
       "Software Bill of Materials"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: selecciona un equipo representativo, registra versión y política de «SBOM» y comprueba su estado sin modificarlo.",
     "fullName": "Software Bill of Materials",
     "references": [
       {
@@ -771,7 +787,7 @@
       "AD",
       "directorio activo"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «Active Directory» y anota permisos efectivos, excepciones y responsable."
   },
   {
     "id": "term-46",
@@ -784,7 +800,7 @@
       "group policy",
       "política de grupo"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «GPO» y anota permisos efectivos, excepciones y responsable."
   },
   {
     "id": "term-47",
@@ -796,7 +812,7 @@
     "aliases": [
       "ticket kerberos"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «Kerberos» y anota permisos efectivos, excepciones y responsable."
   },
   {
     "id": "term-48",
@@ -809,7 +825,7 @@
       "directorio LDAP",
       "Lightweight Directory Access Protocol / LDAP over TLS"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «LDAP / LDAPS» y anota permisos efectivos, excepciones y responsable.",
     "fullName": "Lightweight Directory Access Protocol / LDAP over TLS",
     "references": [
       {
@@ -829,7 +845,7 @@
       "administrador",
       "privileged account"
     ],
-    "example": ""
+    "example": "Ejemplo: se detecta una cuenta compartida de dominio con privilegios permanentes sin revisión ni trazabilidad individual."
   },
   {
     "id": "term-50",
@@ -842,7 +858,7 @@
       "privileged access management",
       "Privileged Access Management"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «PAM» y anota permisos efectivos, excepciones y responsable.",
     "fullName": "Privileged Access Management",
     "references": [
       {
@@ -862,7 +878,7 @@
       "service account",
       "gMSA"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «Cuenta de servicio» y anota permisos efectivos, excepciones y responsable."
   },
   {
     "id": "term-52",
@@ -875,7 +891,7 @@
       "single sign-on",
       "Single Sign-On"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «SSO» y anota permisos efectivos, excepciones y responsable.",
     "fullName": "Single Sign-On",
     "references": [
       {
@@ -895,7 +911,7 @@
       "role based access control",
       "Role-Based Access Control"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «RBAC» y anota permisos efectivos, excepciones y responsable.",
     "fullName": "Role-Based Access Control",
     "references": [
       {
@@ -916,7 +932,7 @@
       "OpenID Connect",
       "OIDC"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «Identidad federada» y anota permisos efectivos, excepciones y responsable."
   },
   {
     "id": "term-55",
@@ -928,7 +944,7 @@
     "aliases": [
       "conditional access"
     ],
-    "example": ""
+    "example": "Ejemplo: un acceso remoto desde equipo no conforme exige MFA resistente a phishing o se bloquea según política."
   },
   {
     "id": "term-56",
@@ -941,7 +957,7 @@
       "common weakness enumeration",
       "Common Weakness Enumeration"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: relaciona «CWE» con producto, versión, exposición y fuente verificable antes de formular una conclusión.",
     "fullName": "Common Weakness Enumeration",
     "references": [
       {
@@ -961,7 +977,7 @@
       "common platform enumeration",
       "Common Platform Enumeration"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: relaciona «CPE» con producto, versión, exposición y fuente verificable antes de formular una conclusión.",
     "fullName": "Common Platform Enumeration",
     "references": [
       {
@@ -981,7 +997,7 @@
       "exploit prediction scoring system",
       "Exploit Prediction Scoring System"
     ],
-    "example": "",
+    "example": "Ejemplo: EPSS estima la probabilidad relativa de explotación observada en los próximos 30 días; no es una puntuación de impacto.",
     "fullName": "Exploit Prediction Scoring System",
     "references": [
       {
@@ -1002,7 +1018,7 @@
       "KEV",
       "Known Exploited Vulnerabilities Catalog"
     ],
-    "example": "",
+    "example": "Ejemplo: una CVE incluida en KEV eleva la urgencia del análisis, pero aún se verifica que el producto vulnerable está instalado.",
     "fullName": "Known Exploited Vulnerabilities Catalog",
     "references": [
       {
@@ -1021,7 +1037,7 @@
     "aliases": [
       "false positive"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: relaciona «Falso positivo» con producto, versión, exposición y fuente verificable antes de formular una conclusión."
   },
   {
     "id": "term-61",
@@ -1033,7 +1049,7 @@
     "aliases": [
       "proof of concept"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: relaciona «Prueba de concepto (PoC)» con producto, versión, exposición y fuente verificable antes de formular una conclusión."
   },
   {
     "id": "term-62",
@@ -1045,7 +1061,7 @@
     "aliases": [
       "attack surface"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: relaciona «Superficie de ataque» con producto, versión, exposición y fuente verificable antes de formular una conclusión."
   },
   {
     "id": "term-63",
@@ -1057,7 +1073,7 @@
     "aliases": [
       "exploitability"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: relaciona «Explotabilidad» con producto, versión, exposición y fuente verificable antes de formular una conclusión."
   },
   {
     "id": "term-64",
@@ -1069,7 +1085,7 @@
     "aliases": [
       "copia incremental"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «Backup incremental», la última prueba realizada y el resultado frente a los objetivos del negocio."
   },
   {
     "id": "term-65",
@@ -1082,7 +1098,8 @@
       "immutable backup",
       "WORM"
     ],
-    "example": ""
+    "example": "Ejemplo: una cuenta de administrador de producción no puede acortar la retención ni borrar la copia protegida.",
+    "evidence": "Solicita política de retención, separación de roles, evidencia de bloqueo de borrado y prueba de restauración."
   },
   {
     "id": "term-66",
@@ -1094,7 +1111,7 @@
     "aliases": [
       "3-2-1 backups"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «Regla 3-2-1», la última prueba realizada y el resultado frente a los objetivos del negocio."
   },
   {
     "id": "term-67",
@@ -1106,7 +1123,7 @@
     "aliases": [
       "restore test"
     ],
-    "example": ""
+    "example": "Ejemplo: restaurar un expediente en un entorno aislado, verificar su integridad y documentar tiempo y resultado."
   },
   {
     "id": "term-68",
@@ -1118,7 +1135,7 @@
     "aliases": [
       "business continuity plan"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «Plan de continuidad (BCP)», la última prueba realizada y el resultado frente a los objetivos del negocio."
   },
   {
     "id": "term-69",
@@ -1130,7 +1147,7 @@
     "aliases": [
       "disaster recovery plan"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «Plan de recuperación (DRP)», la última prueba realizada y el resultado frente a los objetivos del negocio."
   },
   {
     "id": "term-70",
@@ -1143,7 +1160,7 @@
       "HA",
       "failover"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «Alta disponibilidad», la última prueba realizada y el resultado frente a los objetivos del negocio."
   },
   {
     "id": "term-71",
@@ -1156,7 +1173,7 @@
       "SPOF",
       "single point of failure"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «Punto único de fallo», la última prueba realizada y el resultado frente a los objetivos del negocio."
   },
   {
     "id": "term-72",
@@ -1168,7 +1185,7 @@
     "aliases": [
       "hash de evidencia"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: conserva una muestra fechada relacionada con «Integridad de evidencia», indicando origen, alcance y límites de lo observado."
   },
   {
     "id": "term-73",
@@ -1180,7 +1197,7 @@
     "aliases": [
       "traceability"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: conserva una muestra fechada relacionada con «Trazabilidad», indicando origen, alcance y límites de lo observado."
   },
   {
     "id": "term-74",
@@ -1192,7 +1209,7 @@
     "aliases": [
       "custodia documental"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: conserva una muestra fechada relacionada con «Confidencialidad del expediente», indicando origen, alcance y límites de lo observado."
   },
   {
     "id": "term-75",
@@ -1204,7 +1221,7 @@
     "aliases": [
       "finding"
     ],
-    "example": ""
+    "example": "Ejemplo: «RDP accesible desde Internet» indica activo, evidencia reproducible, riesgo, recomendación y responsable."
   },
   {
     "id": "term-76",
@@ -1216,7 +1233,7 @@
     "aliases": [
       "pendiente de verificar"
     ],
-    "example": ""
+    "example": "Ejemplo: no se accedió a la consola del firewall: marcar «no verificado», documentar limitación y solicitar evidencia posterior."
   },
   {
     "id": "term-77",
@@ -1228,7 +1245,7 @@
     "aliases": [
       "threat"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta el escenario de «Amenaza», el activo afectado, la justificación y la persona que valida la decisión."
   },
   {
     "id": "term-78",
@@ -1240,7 +1257,7 @@
     "aliases": [
       "debilidad"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta el escenario de «Vulnerabilidad», el activo afectado, la justificación y la persona que valida la decisión."
   },
   {
     "id": "term-79",
@@ -1252,7 +1269,7 @@
     "aliases": [
       "compensating control"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta el escenario de «Control compensatorio», el activo afectado, la justificación y la persona que valida la decisión."
   },
   {
     "id": "term-80",
@@ -1264,7 +1281,7 @@
     "aliases": [
       "risk treatment"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta el escenario de «Tratamiento del riesgo», el activo afectado, la justificación y la persona que valida la decisión."
   },
   {
     "id": "term-81",
@@ -1276,7 +1293,7 @@
     "aliases": [
       "likelihood"
     ],
-    "example": ""
+    "example": "Ejemplo: probabilidad mayor para un servicio expuesto con vulnerabilidad explotada activamente, justificando supuestos."
   },
   {
     "id": "term-82",
@@ -1288,7 +1305,7 @@
     "aliases": [
       "business impact"
     ],
-    "example": ""
+    "example": "Ejemplo: pérdida de un servicio de identidad que detiene el acceso de usuarios y procesos críticos."
   },
   {
     "id": "term-83",
@@ -1300,7 +1317,7 @@
     "aliases": [
       "roadmap de seguridad"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta el escenario de «Plan de remediación», el activo afectado, la justificación y la persona que valida la decisión."
   },
   {
     "id": "term-84",
@@ -1312,7 +1329,7 @@
     "aliases": [
       "risk acceptance"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: documenta el escenario de «Aceptación de riesgo», el activo afectado, la justificación y la persona que valida la decisión."
   },
   {
     "id": "term-85",
@@ -1324,7 +1341,7 @@
     "aliases": [
       "shared responsibility"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa la configuración efectiva de «Modelo de responsabilidad compartida» y delimita qué administra el proveedor y qué controla el cliente."
   },
   {
     "id": "term-86",
@@ -1336,7 +1353,7 @@
     "aliases": [
       "cloud service models"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa la configuración efectiva de «IaaS / PaaS / SaaS» y delimita qué administra el proveedor y qué controla el cliente."
   },
   {
     "id": "term-87",
@@ -1348,7 +1365,7 @@
     "aliases": [
       "identity and access management"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa la configuración efectiva de «IAM cloud» y delimita qué administra el proveedor y qué controla el cliente."
   },
   {
     "id": "term-88",
@@ -1361,7 +1378,7 @@
       "object storage",
       "S3"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa la configuración efectiva de «Bucket público» y delimita qué administra el proveedor y qué controla el cliente."
   },
   {
     "id": "term-89",
@@ -1373,7 +1390,7 @@
     "aliases": [
       "instantánea"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa la configuración efectiva de «Snapshot» y delimita qué administra el proveedor y qué controla el cliente."
   },
   {
     "id": "term-90",
@@ -1386,7 +1403,7 @@
       "docker",
       "container"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa la configuración efectiva de «Contenedor» y delimita qué administra el proveedor y qué controla el cliente."
   },
   {
     "id": "term-91",
@@ -1398,7 +1415,7 @@
     "aliases": [
       "k8s"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: revisa la configuración efectiva de «Kubernetes» y delimita qué administra el proveedor y qué controla el cliente."
   },
   {
     "id": "term-92",
@@ -1411,7 +1428,7 @@
       "RGPD",
       "GDPR"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: identifica un flujo de información asociado a «Dato personal», su finalidad, controles y periodo aprobado."
   },
   {
     "id": "term-93",
@@ -1423,7 +1440,7 @@
     "aliases": [
       "data minimization"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: identifica un flujo de información asociado a «Minimización de datos», su finalidad, controles y periodo aprobado."
   },
   {
     "id": "term-94",
@@ -1435,7 +1452,7 @@
     "aliases": [
       "encryption at rest"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: identifica un flujo de información asociado a «Cifrado en reposo», su finalidad, controles y periodo aprobado."
   },
   {
     "id": "term-95",
@@ -1447,7 +1464,7 @@
     "aliases": [
       "conservación"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: identifica un flujo de información asociado a «Retención de datos», su finalidad, controles y periodo aprobado."
   },
   {
     "id": "term-96",
@@ -1459,7 +1476,7 @@
     "aliases": [
       "autorización"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: identifica un flujo de información asociado a «Control de acceso», su finalidad, controles y periodo aprobado."
   },
   {
     "id": "term-97",
@@ -1472,7 +1489,7 @@
       "security information event management",
       "Security Information and Event Management"
     ],
-    "example": "",
+    "example": "Ejemplo: los eventos de tres controladores de dominio llegan al SIEM con tiempos sincronizados y retención definida.",
     "fullName": "Security Information and Event Management",
     "references": [
       {
@@ -1492,7 +1509,7 @@
       "security operations center",
       "Security Operations Center"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: toma una muestra de registros o alertas sobre «SOC», verifica cobertura y anota cómo se investigaría.",
     "fullName": "Security Operations Center",
     "references": [
       {
@@ -1512,7 +1529,7 @@
       "logs",
       "audit log"
     ],
-    "example": ""
+    "example": "Ejemplo: un cambio privilegiado deja evento con cuenta, timestamp, sistema y resultado, sin exponer contraseñas."
   },
   {
     "id": "term-100",
@@ -1525,7 +1542,7 @@
       "network time protocol",
       "Network Time Protocol"
     ],
-    "example": "",
+    "example": "Ejemplo: un desfase de 12 minutos entre sistemas impide correlacionar adecuadamente el inicio de un incidente.",
     "fullName": "Network Time Protocol",
     "references": [
       {
@@ -1544,7 +1561,7 @@
     "aliases": [
       "indicator of compromise"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: toma una muestra de registros o alertas sobre «Indicador de compromiso (IoC)», verifica cobertura y anota cómo se investigaría.",
     "references": [
       {
         "label": "MITRE ATT&CK",
@@ -1573,7 +1590,7 @@
       "reporting": "Para comunicar un incidente de una empresa, consulta la vía correspondiente de INCIBE-CERT. El 017 es una línea de orientación, no sustituye la notificación formal ni las obligaciones aplicables.",
       "privacy": "Evita compartir contraseñas, claves o evidencias sensibles sin autorización."
     },
-    "example": "",
+    "example": "Ejemplo de auditoría: toma una muestra de registros o alertas sobre «Respuesta a incidentes», verifica cobertura y anota cómo se investigaría.",
     "references": [
       {
         "label": "NIST SP 800-61",
@@ -1592,7 +1609,7 @@
       "mean time to detect",
       "mean time to respond"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: toma una muestra de registros o alertas sobre «MTTD / MTTR», verifica cobertura y anota cómo se investigaría."
   },
   {
     "id": "term-104",
@@ -1604,7 +1621,7 @@
     "aliases": [
       "secuestro de datos"
     ],
-    "example": ""
+    "example": "Ejemplo de auditoría: toma una muestra de registros o alertas sobre «Ransomware», verifica cobertura y anota cómo se investigaría."
   },
   {
     "id": "term-105",
@@ -1616,7 +1633,7 @@
     "aliases": [
       "Information security management systems"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «ISO/IEC 27001» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "Information security management systems",
     "references": [
       {
@@ -1635,7 +1652,7 @@
     "aliases": [
       "Information security controls"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «ISO/IEC 27002» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "Information security controls",
     "references": [
       {
@@ -1654,7 +1671,7 @@
     "aliases": [
       "Guidance on managing information security risks"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «ISO/IEC 27005» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "Guidance on managing information security risks",
     "references": [
       {
@@ -1673,7 +1690,7 @@
     "aliases": [
       "Privacy information management system"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «ISO/IEC 27701» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "Privacy information management system",
     "references": [
       {
@@ -1692,7 +1709,7 @@
     "aliases": [
       "Business continuity management systems"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «ISO 22301» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "Business continuity management systems",
     "references": [
       {
@@ -1711,7 +1728,7 @@
     "aliases": [
       "National Institute of Standards and Technology Cybersecurity Framework"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «NIST CSF» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "National Institute of Standards and Technology Cybersecurity Framework",
     "references": [
       {
@@ -1730,7 +1747,7 @@
     "aliases": [
       "NIST Special Publication 800-53"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «NIST SP 800-53» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "NIST Special Publication 800-53",
     "references": [
       {
@@ -1749,7 +1766,7 @@
     "aliases": [
       "NIST Special Publication 800-61"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «NIST SP 800-61» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "NIST Special Publication 800-61",
     "references": [
       {
@@ -1768,7 +1785,7 @@
     "aliases": [
       "Center for Internet Security Controls"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «CIS Controls» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "Center for Internet Security Controls",
     "references": [
       {
@@ -1787,7 +1804,7 @@
     "aliases": [
       "Open Worldwide Application Security Project Top 10"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: vincula un requisito de «OWASP Top 10» a un control aplicable y evidencia revisada, sin equiparar esa muestra a certificación.",
     "fullName": "Open Worldwide Application Security Project Top 10",
     "references": [
       {
@@ -1806,7 +1823,7 @@
     "aliases": [
       "Request for Comments"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: consulta la entrada oficial de «RFC» y guarda la versión, fecha y referencia de la decisión.",
     "fullName": "Request for Comments",
     "references": [
       {
@@ -1825,7 +1842,7 @@
     "aliases": [
       "Internet Engineering Task Force"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: consulta la entrada oficial de «IETF» y guarda la versión, fecha y referencia de la decisión.",
     "fullName": "Internet Engineering Task Force",
     "references": [
       {
@@ -1844,7 +1861,7 @@
     "aliases": [
       "Internet Assigned Numbers Authority"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: consulta la entrada oficial de «IANA» y guarda la versión, fecha y referencia de la decisión.",
     "fullName": "Internet Assigned Numbers Authority",
     "references": [
       {
@@ -1863,7 +1880,7 @@
     "aliases": [
       "Internet Corporation for Assigned Names and Numbers"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: consulta la entrada oficial de «ICANN» y guarda la versión, fecha y referencia de la decisión.",
     "fullName": "Internet Corporation for Assigned Names and Numbers",
     "references": [
       {
@@ -1882,7 +1899,7 @@
     "aliases": [
       "National Vulnerability Database"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: relaciona «NVD» con producto, versión, exposición y fuente verificable antes de formular una conclusión.",
     "fullName": "National Vulnerability Database",
     "references": [
       {
@@ -1901,7 +1918,7 @@
     "aliases": [
       "CVE Numbering Authority"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: relaciona «CNA» con producto, versión, exposición y fuente verificable antes de formular una conclusión.",
     "fullName": "CVE Numbering Authority",
     "references": [
       {
@@ -1920,7 +1937,7 @@
     "aliases": [
       "Public Key Infrastructure"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «PKI» y anota permisos efectivos, excepciones y responsable.",
     "fullName": "Public Key Infrastructure",
     "references": [
       {
@@ -1939,7 +1956,7 @@
     "aliases": [
       "Remote Authentication Dial-In User Service"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: revisa una muestra autorizada de cuentas o roles para «RADIUS» y anota permisos efectivos, excepciones y responsable.",
     "fullName": "Remote Authentication Dial-In User Service",
     "references": [
       {
@@ -1962,7 +1979,7 @@
     "aliases": [
       "IEEE 802.1X Port-Based Network Access Control"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: documenta en un diagrama dónde se aplica «802.1X», contrasta configuración real con la política y recoge evidencia del dispositivo autorizado.",
     "fullName": "IEEE 802.1X Port-Based Network Access Control",
     "references": [
       {
@@ -1985,7 +2002,7 @@
     "aliases": [
       "Business Impact Analysis"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «BIA», la última prueba realizada y el resultado frente a los objetivos del negocio.",
     "fullName": "Business Impact Analysis",
     "references": [
       {
@@ -2004,7 +2021,7 @@
     "aliases": [
       "Service Level Agreement"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: solicita el procedimiento de «SLA», la última prueba realizada y el resultado frente a los objetivos del negocio.",
     "fullName": "Service Level Agreement",
     "references": [
       {
@@ -2023,7 +2040,7 @@
     "aliases": [
       "CVE versus CWE"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: relaciona «CVE ID vs CWE» con producto, versión, exposición y fuente verificable antes de formular una conclusión.",
     "fullName": "CVE versus CWE",
     "references": [
       {
@@ -2042,7 +2059,7 @@
     "aliases": [
       "Sender Policy Framework"
     ],
-    "example": "",
+    "example": "Ejemplo: la política SPF autoriza emisores concretos; el auditor contrasta también DKIM y alineación DMARC.",
     "fullName": "Sender Policy Framework",
     "references": [
       {
@@ -2061,7 +2078,7 @@
     "aliases": [
       "DomainKeys Identified Mail"
     ],
-    "example": "",
+    "example": "Ejemplo: una firma DKIM válida prueba integridad del mensaje firmado según el dominio, no que su contenido sea fiable.",
     "fullName": "DomainKeys Identified Mail",
     "references": [
       {
@@ -2080,7 +2097,7 @@
     "aliases": [
       "Domain-based Message Authentication, Reporting and Conformance"
     ],
-    "example": "",
+    "example": "Ejemplo: una política p=none supervisa, pero no ordena al receptor poner en cuarentena ni rechazar mensajes.",
     "fullName": "Domain-based Message Authentication, Reporting and Conformance",
     "references": [
       {
@@ -2099,7 +2116,7 @@
     "aliases": [
       "Domain Name System Security Extensions"
     ],
-    "example": "",
+    "example": "Ejemplo: validar la cadena de firmas DNSSEC evita respuestas manipuladas, pero no cifra consultas DNS.",
     "fullName": "Domain Name System Security Extensions",
     "references": [
       {
@@ -2118,7 +2135,7 @@
     "aliases": [
       "HTTP response security headers"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: verifica en una aplicación autorizada cómo se implementa «HTTP Security Headers» y qué riesgos siguen fuera de su alcance.",
     "fullName": "HTTP response security headers",
     "references": [
       {
@@ -2137,7 +2154,7 @@
     "aliases": [
       "Content Security Policy"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: verifica en una aplicación autorizada cómo se implementa «CSP» y qué riesgos siguen fuera de su alcance.",
     "fullName": "Content Security Policy",
     "references": [
       {
@@ -2156,7 +2173,7 @@
     "aliases": [
       "HTTP Strict Transport Security"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: verifica en una aplicación autorizada cómo se implementa «HSTS» y qué riesgos siguen fuera de su alcance.",
     "fullName": "HTTP Strict Transport Security",
     "references": [
       {
@@ -2175,7 +2192,7 @@
     "aliases": [
       "Application Security Verification Standard"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: verifica en una aplicación autorizada cómo se implementa «OWASP ASVS» y qué riesgos siguen fuera de su alcance.",
     "fullName": "Application Security Verification Standard",
     "references": [
       {
@@ -2194,7 +2211,7 @@
     "aliases": [
       "Static Application Security Testing / Dynamic Application Security Testing"
     ],
-    "example": "",
+    "example": "Ejemplo de auditoría: verifica en una aplicación autorizada cómo se implementa «SAST / DAST» y qué riesgos siguen fuera de su alcance.",
     "fullName": "Static Application Security Testing / Dynamic Application Security Testing",
     "references": [
       {
@@ -2446,6 +2463,186 @@
       {
         "label": "NIST SP 800-215 · Redes empresariales seguras",
         "url": "https://csrc.nist.gov/pubs/sp/800/215/final"
+      }
+    ]
+  },
+  {
+    "id": "term-145",
+    "category": "Identidad",
+    "title": "Passkeys / FIDO2",
+    "description": "Autenticación mediante claves criptográficas vinculadas al sitio, normalmente protegidas por el dispositivo o una llave física.",
+    "check": "Comprueba dónde se exige autenticación resistente a phishing, métodos de recuperación, inscripción y revocación de credenciales.",
+    "why": "Reduce el riesgo de robo y reutilización de contraseñas, aunque no elimina los fallos de autorización.",
+    "example": "Ejemplo: administradores usan llaves FIDO2 en vez de códigos SMS.",
+    "evidence": "Política de MFA, capturas de configuración y muestra de acceso sin registrar claves privadas.",
+    "caution": "No todos los métodos llamados MFA ofrecen resistencia a phishing.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://pages.nist.gov/800-63-4/"
+      }
+    ]
+  },
+  {
+    "id": "term-146",
+    "category": "Identidad",
+    "title": "Cuentas de emergencia (break-glass)",
+    "description": "Identidades privilegiadas reservadas para recuperar el acceso cuando falla el proveedor de identidad o la política habitual.",
+    "check": "Identifica titular, custodia, condiciones de uso, alertas y ejercicios de recuperación con autorización.",
+    "why": "Una cuenta de emergencia sin controles puede convertirse en una puerta trasera persistente.",
+    "example": "Ejemplo: dos cuentas separadas, custodiadas y monitorizadas, probadas en un ejercicio planificado.",
+    "evidence": "Inventario de cuentas, alarmas activas y acta de simulacro.",
+    "caution": "Una excepción permanente sin trazabilidad no es un plan de contingencia.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://pages.nist.gov/800-63-4/"
+      }
+    ]
+  },
+  {
+    "id": "term-147",
+    "category": "Continuidad",
+    "title": "Backup air-gapped / copia desconectada",
+    "description": "Copia mantenida separada lógica o físicamente de la infraestructura operativa y de sus credenciales.",
+    "check": "Solicita evidencia de aislamiento, periodicidad, custodia y una restauración comprobada.",
+    "why": "Disminuye la probabilidad de que un incidente comprometa todas las copias simultáneamente.",
+    "example": "Ejemplo: una copia desconectada fuera de línea se restaura periódicamente en entorno aislado.",
+    "evidence": "Registro de rotación, custodia, pruebas y tiempos de restauración.",
+    "caution": "La ubicación fuera de línea no sustituye pruebas de integridad ni cifrado.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://csrc.nist.gov/pubs/sp/800/34/r1/upd1/final"
+      }
+    ]
+  },
+  {
+    "id": "term-148",
+    "category": "Sistemas",
+    "title": "Gestión de configuración (baseline)",
+    "description": "Conjunto aprobado de ajustes técnicos usados como referencia para equipos de una misma función.",
+    "check": "Contrasta versión de la baseline, excepciones autorizadas y configuración efectiva en una muestra representativa.",
+    "why": "Permite distinguir cambios aprobados de desviaciones y detectar deriva de configuración.",
+    "example": "Ejemplo: servidores Linux siguen una baseline revisada y documentan excepciones de servicios.",
+    "evidence": "Versión de la política, resultados de comprobación y registro de excepciones.",
+    "caution": "Una baseline publicada no demuestra que se aplique en los activos.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://www.cisecurity.org/cis-benchmarks"
+      }
+    ]
+  },
+  {
+    "id": "term-149",
+    "category": "Riesgos",
+    "title": "Riesgo de terceros / cadena de suministro",
+    "description": "Exposición derivada de proveedores, dependencias, librerías, servicios y accesos externalizados.",
+    "check": "Revisa inventario de terceros críticos, acuerdos, accesos, responsabilidades, continuidad y revisión de incidentes.",
+    "why": "Un proveedor puede afectar la disponibilidad y la seguridad incluso si los servidores son propios.",
+    "example": "Ejemplo: un proveedor de soporte conserva acceso remoto después de finalizar el contrato.",
+    "evidence": "Contrato, matriz de accesos, revisión de permisos y evaluación de continuidad.",
+    "caution": "Una certificación de proveedor no sustituye verificar el alcance aplicable al servicio.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://www.nist.gov/cyberframework"
+      }
+    ]
+  },
+  {
+    "id": "term-150",
+    "category": "Aplicaciones y servicios",
+    "title": "Secretos y gestión de credenciales",
+    "description": "Contraseñas técnicas, tokens, claves API y otros valores que permiten actuar sobre sistemas o datos.",
+    "check": "Comprueba que no estén en repositorios o logs; revisa almacenamiento seguro, rotación, caducidad, permisos mínimos y revocación.",
+    "why": "Una credencial expuesta puede permitir operaciones ajenas aunque el resto de la aplicación esté endurecida.",
+    "example": "Ejemplo: un token de integración se guarda en una bóveda y se rota al cambiar de responsable.",
+    "evidence": "Política de secretos, metadatos de rotación y evidencias sin mostrar valores secretos.",
+    "caution": "Nunca copies claves, tokens o contraseñas reales al expediente.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+      }
+    ]
+  },
+  {
+    "id": "term-151",
+    "category": "Aplicaciones y servicios",
+    "title": "CORS",
+    "description": "Política aplicada por el navegador para permitir o impedir que un origen web lea respuestas de otro origen.",
+    "check": "Revisa cabeceras Access-Control-Allow-Origin, credenciales, métodos admitidos y orígenes autorizados.",
+    "why": "Una configuración permisiva puede facilitar lecturas no previstas desde navegadores de usuarios autenticados.",
+    "example": "Ejemplo: una API interna autoriza únicamente el origen del cliente corporativo necesario.",
+    "evidence": "Configuración y respuestas HTTP obtenidas de forma autorizada.",
+    "caution": "CORS no es autenticación ni un control de acceso de servidor para clientes no navegador.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS"
+      }
+    ]
+  },
+  {
+    "id": "term-152",
+    "category": "Sistemas",
+    "title": "Gestión de exposición externa",
+    "description": "Inventario y revisión de servicios y activos visibles desde Internet con autorización explícita.",
+    "check": "Contrasta dominios, direcciones, propietarios, puertos expuestos, autenticación y cambios autorizados.",
+    "why": "Permite detectar servicios publicados accidentalmente antes de que se conviertan en incidentes.",
+    "example": "Ejemplo: un panel de administración aparece en una IP pública sin restricción aprobada.",
+    "evidence": "Inventario de publicaciones y prueba de alcance previamente autorizada.",
+    "caution": "No realices escaneos externos fuera del alcance escrito.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://www.cisa.gov/cross-sector-cybersecurity-performance-goals"
+      }
+    ]
+  },
+  {
+    "id": "term-153",
+    "category": "Evidencias",
+    "title": "Calidad y suficiencia de evidencias",
+    "description": "Grado en que las pruebas documentadas sostienen una conclusión específica de la auditoría.",
+    "check": "Valida fecha, origen, cobertura de muestra, reproducibilidad, integridad y limitaciones de cada hallazgo.",
+    "why": "Evita que una suposición, una captura parcial o la ausencia de logs se presente como un hecho probado.",
+    "example": "Ejemplo: una única captura de pantalla no acredita que MFA esté activo para todos los administradores.",
+    "evidence": "Acta de muestra, evidencias originales y limitaciones reconocidas.",
+    "caution": "Ausencia de evidencia no equivale a evidencia de ausencia.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://www.nist.gov/cyberframework"
+      }
+    ]
+  },
+  {
+    "id": "term-154",
+    "category": "Operaciones y detección",
+    "title": "Retención y centralización de logs",
+    "description": "Conservación de registros de sistemas y su consulta centralizada durante un plazo documentado.",
+    "check": "Revisa fuentes incluidas, sincronización horaria, integridad, acceso, plazos y consultas de ejemplo.",
+    "why": "Sin registros suficientes, investigar incidentes y reconstruir actividades puede resultar imposible.",
+    "example": "Ejemplo: los eventos de identidad se conservan con sellos de tiempo coherentes y acceso restringido.",
+    "evidence": "Matriz de fuentes, configuración de retención y una búsqueda de prueba.",
+    "caution": "Recibir logs no garantiza que las alertas o su revisión funcionen.",
+    "aliases": [],
+    "references": [
+      {
+        "label": "Guía oficial de referencia",
+        "url": "https://csrc.nist.gov/pubs/sp/800/92/final"
       }
     ]
   }

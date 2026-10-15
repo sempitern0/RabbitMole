@@ -3,21 +3,21 @@
 set -Eeuo pipefail
 umask 077
 
-REPO="${AUDIT_WORKBENCH_REPO:-sempitern0/RabbitMole}"
-REF="${AUDIT_WORKBENCH_REF:-main}"
-DEST="${XDG_DATA_HOME:-$HOME/.local/share}/audit-workbench"
+REPO="${RABBITMOLE_REPO:-sempitern0/RabbitMole}"
+REF="${RABBITMOLE_REF:-main}"
+DEST="${XDG_DATA_HOME:-$HOME/.local/share}/rabbitmole"
 UPDATE=0
 NO_OPEN=0
 
 usage() {
   cat <<'HELP'
 RabbitMole — auditorías offline
-Uso: bash audit-workbench.sh [--dir RUTA] [--ref RAMA_O_SHA] [--update] [--no-open]
+Uso: bash rabbitmole.sh [--dir RUTA] [--ref RAMA_O_SHA] [--update] [--no-open]
   --dir       Carpeta de instalación local
   --ref       Rama, etiqueta o SHA en GitHub (por defecto main)
   --update    Actualizar recursos de la aplicación sin tocar los expedientes del navegador
   --no-open   No abrir automáticamente el navegador
-También puedes usar AUDIT_WORKBENCH_REPO=owner/repo.
+También puedes usar RABBITMOLE_REPO=owner/repo.
 La primera descarga remota requiere Internet. La edición y el PDF funcionan offline.
 HELP
 }

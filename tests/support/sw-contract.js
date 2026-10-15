@@ -9,7 +9,7 @@ function loadWorker(extra={}){
 }
 function assertCached(...assets){
  const worker=loadWorker();
- assert.match(worker.name,/^audit-workbench-shell-v\d+-[a-z0-9-]+$/,'Expected a versioned app-shell cache');
+ assert.match(worker.name,/^rabbitmole-shell-v\d+-[a-z0-9-]+$/,'Expected a versioned app-shell cache');
  for(const asset of assets){
   assert(worker.core.includes('./'+asset),'Offline asset missing: '+asset);
   assert(fs.statSync(path.join(root,asset)).size>0,'Empty offline asset: '+asset);

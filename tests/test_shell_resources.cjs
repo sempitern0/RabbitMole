@@ -4,7 +4,7 @@ const path=require('node:path');
 const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
-const html=read('index.html'),sw=read('sw.js'),bash=read('audit-workbench.sh'),ps=read('audit-workbench.ps1');
+const html=read('index.html'),sw=read('sw.js'),bash=read('rabbitmole.sh'),ps=read('rabbitmole.ps1');
 const scripts=[...html.matchAll(/<script\s+src="([^"]+)"\s+defer><\/script>/g)].map(x=>x[1]);
 const styles=[...html.matchAll(/<link\s+[^>]*href="([^"]+\.css)"/g)].map(x=>x[1]);
 assert(scripts.length>=9 && styles.length>=10,'Expected all offline modules');

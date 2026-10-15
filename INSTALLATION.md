@@ -17,13 +17,13 @@ From a copy of the repository:
 
 ```powershell
 
-.\audit-workbench.ps1
+.\rabbitmole.ps1
 ```
 
 To update the installed files:
 
 ```powershell
-.\audit-workbench.ps1 -Update
+.\rabbitmole.ps1 -Update
 ```
 
 You can also serve the files with Python from the `` directory:
@@ -40,13 +40,13 @@ From the repository:
 
 ```bash
 
-bash ./audit-workbench.sh
+bash ./rabbitmole.sh
 ```
 
 To update:
 
 ```bash
-bash ./audit-workbench.sh --update
+bash ./rabbitmole.sh --update
 ```
 
 Optional local server:
@@ -120,15 +120,15 @@ The application's cache is versioned and **does not store audit records**. After
 To inspect them before execution:
 
 ```bash
-curl -fL -o audit-workbench.sh 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/audit-workbench.sh'
-less audit-workbench.sh
-bash ./audit-workbench.sh
+curl -fL -o rabbitmole.sh 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/rabbitmole.sh'
+less rabbitmole.sh
+bash ./rabbitmole.sh
 ```
 
 ```powershell
-Invoke-WebRequest 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/audit-workbench.ps1' -OutFile audit-workbench.ps1
-Get-Content .\audit-workbench.ps1
-.\audit-workbench.ps1
+Invoke-WebRequest 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/rabbitmole.ps1' -OutFile rabbitmole.ps1
+Get-Content .\rabbitmole.ps1
+.\rabbitmole.ps1
 ```
 
 Avoid piping scripts directly from the Internet into an interpreter without inspecting them. The installers perform the initial download; ordinary work in the application remains offline.

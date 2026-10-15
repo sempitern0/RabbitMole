@@ -51,11 +51,11 @@ Visit **http://127.0.0.1:8765**. Windows users can run \`py -m http.server 8765 
 
 | Environment | Entry point | Notes |
 | --- | --- | --- |
-| Linux / macOS | \`bash ./audit-workbench.sh\` | \`--update\`, \`--dir\`, \`--no-open\` supported |
-| Windows / PowerShell | \`.\audit-workbench.ps1\` | \`-Update\`, \`-NoOpen\` supported |
+| Linux / macOS | \`bash ./rabbitmole.sh\` | \`--update\`, \`--dir\`, \`--no-open\` supported |
+| Windows / PowerShell | \`.\rabbitmole.ps1\` | \`-Update\`, \`-NoOpen\` supported |
 | Android / iOS / iPadOS | Trusted **HTTPS** deployment | Install from a compatible browser and test offline access |
 
-The installer filenames preserve the earlier \`audit-workbench\` identity for compatibility; **their source repository is RabbitMole**. The initial installation may need network access. See [Installation & updates](INSTALLATION.md) before changing devices or URLs.
+The installers are named for RabbitMole and retrieve this repository's files. Install the complete PWA from https://rabbitmole.danieldigitalspace.workers.dev/. See [Installation](INSTALLATION.md).
 
 > [!TIP]
 > Use **one stable URL and browser profile** for ongoing work. \`localhost\` and \`127.0.0.1\`, different ports, or different browsers may have separate local audit stores. A \`file://\` page is not equivalent to an installable PWA.
@@ -99,7 +99,7 @@ Start with **fictional test data**, export a full JSON backup and verify restore
 | CVE or Nextcloud/WebDAV | Authorized remote service, **on request** | Internet, HTTPS and compatible CORS may be needed |
 
 > [!WARNING]
-> **Browser storage is not a backup.** Before changing browser profiles, devices, origins or releases, use **Backups and exports → Download full backup (.json)** and verify the file. Keep it in protected storage. The current audit contract is **JSON schema v3**. Historical \`audit-workbench-*\` identifiers are retained for data compatibility.
+> **Browser storage is not a backup.** Before changing browser profiles, devices, origins or releases, use **Backups and exports → Download full backup (.json)** and verify the file. Keep it in protected storage. The current audit contract is **JSON schema v3**. Historical \`rabbitmole-*\` identifiers are retained for data compatibility.
 >
 > **Local record hashes and graphic signatures are not cryptographically validated electronic signatures or immutable audit logs.** Preserve approved exports and original evidence in an independent, access-controlled repository.
 
@@ -111,7 +111,7 @@ See [Security](SECURITY.md) and [Legal notes](LEGAL.md).
 | --- | --- | --- |
 | Local HTTP on \`127.0.0.1\` | Development, evaluation and individual work | [Installation](INSTALLATION.md) |
 | Docker Compose + Caddy HTTPS | Shared installation URL, browser-local records | [HTTPS deployment](deploy/README.md) |
-| Restricted Cloudflare Pages public demo | **Fictional data only**; reduced application bundle | [Public-demo guide (ES)](deploy/CLOUDFLARE_PAGES_ES.md) |
+| Cloudflare web / installed PWA | **Fictional data only**; limited web view; full installed PWA | [Public-demo guide (ES)](deploy/CLOUDFLARE_PAGES_ES.md) |
 
 A shared HTTPS address **does not synchronize browsers, create accounts or store audits on the server**.
 
@@ -129,8 +129,8 @@ RabbitMole/
 ├── discovery/                  # Separate authorized inventory collection
 ├── deploy/                     # HTTPS and public-demo packaging
 ├── tests/                      # Offline and browser regression checks
-├── audit-workbench.sh          # Linux/macOS installer (legacy filename)
-└── audit-workbench.ps1         # PowerShell installer (legacy filename)
+├── rabbitmole.sh          # Linux/macOS installer (RabbitMole installer)
+└── rabbitmole.ps1         # PowerShell installer (RabbitMole installer)
 \`\`\`
 
 ## Validation
@@ -141,7 +141,7 @@ RabbitMole/
 python3 -m unittest discover -s tests -p 'test_readme.py'
 python3 tests/test_static.py
 node tests/test_shell_resources.cjs
-bash -n audit-workbench.sh collect-local.sh discovery/run.sh discovery/setup.sh
+bash -n rabbitmole.sh collect-local.sh discovery/run.sh discovery/setup.sh
 \`\`\`
 
 Python and Node.js are **development tools**, not requirements for using the hosted PWA. Static tests do not replace browser-level verification of accessibility, storage, offline installation and PDF layout.

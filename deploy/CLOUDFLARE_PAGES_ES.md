@@ -1,65 +1,41 @@
-# RabbitMole — Cloudflare Pages
+# RabbitMole · Publicación e instalación desde Cloudflare Workers
 
-Guía de despliegue de la edición pública, que permite probar la aplicación e instalarla sin conexión. NO usar datos reales de clientes.
+**URL:** https://rabbitmole.danieldigitalspace.workers.dev/
 
-## Estado y requisitos
+## Experiencia según el modo de apertura
 
-- [x] Renombrada la interfaz, título y manifest de la PWA.
-- [x] Conservados los identificadores internos de almacenamiento para compatibilidad.
-- [x] Creado perfil private-full para despliegues locales y perfil public-demo para Cloudflare.
-- [x] Creado generador estático por lista positiva: sin Discovery, ejecutables ni módulos de transferencia.
-- [x] Añadidos controles en app.js y política CSP exclusivamente same-origin en el artefacto público.
-- [x] Caché offline de recursos completos y tests de distribución en CI.
-- [ ] Verificar CI verde y comprobar funcionamiento en un navegador y tablet reales.
-- [ ] Crear y proteger la rama pages-production con un commit aprobado.
-- [ ] Vincular GitHub a Cloudflare Pages y desplegar por HTTPS.
+- **Web en pestaña:** modo `public-web`, con formularios, inventarios, controles, evidencias y exportaciones locales; conexiones externas limitadas.
+- **PWA instalada:** modo `private-full`, detectado mediante `display-mode: standalone` o `navigator.standalone` en iOS, con todas las funcionalidades. Las conexiones externas siguen necesitando Internet y consentimiento.
+- La política no depende de `navigator.onLine` y no es una barrera de seguridad: se publica JavaScript inspeccionable. No incluir secretos, claves ni datos reales en archivos de distribución.
 
-## Compilación local previa
+## Validación y compilación
 
-Desde la raíz del repositorio:
+```bash
+python3 deploy/build-pages-demo.py
+node tests/test_pages_demo.cjs
+```
 
-    python3 deploy/build-pages-demo.py
-    node tests/test_pages_demo.cjs
+Solo publica `dist-pages/`, nunca la raíz del repositorio. El builder genera un `release.json`, un Service Worker versionado y el perfil dinámico `js/deployment-profile.js`; la versión local es completa sin restricciones web.
 
-Solo se publica dist-pages; esa carpeta se ignora en Git. Nunca publiques el repositorio entero.
+## Workers y CI/CD
 
-## Configuración en Cloudflare
+`wrangler.toml` configura el Worker y sus recursos estáticos. El workflow `.github/workflows/ci.yml` valida y adjunta un artefacto versionado. El workflow `.github/workflows/deploy-cloudflare.yml` permite desplegar manualmente una revisión aprobada de `main`.
 
-En Workers & Pages, crea un proyecto Pages conectado al repositorio sempitern0/RabbitMole.
+En GitHub Actions configura `CLOUDFLARE_API_TOKEN` y `CLOUDFLARE_ACCOUNT_ID` como secretos, y protege el entorno `production`. Ejecutar desde un terminal autorizado:
 
-| Configuración          | Valor                                           |
-| ---------------------- | ----------------------------------------------- |
-| Nombre sugerido        | rabbitmole (sujeto a disponibilidad) |
-| Framework              | None                                            |
-| Production branch      | pages-production                                |
-| Root directory | (vacío; raíz del repositorio) |
-| Build command          | python3 deploy/build-pages-demo.py              |
-| Build output directory | dist-pages                                      |
-| Variables/secretos     | Ninguna                                         |
-| Preview branches       | None (deshabilitadas)                           |
+```bash
+python3 deploy/build-pages-demo.py
+npx --yes wrangler@4 deploy
+```
 
-El script impide builds desde otras ramas cuando Cloudflare establece CF_PAGES=1. No conectes main directamente a producción.
+Antes de desplegar confirma que `rabbitmole.danieldigitalspace.workers.dev` pertenece a ese Worker. Si actualmente lo gestiona otro proyecto de Pages/Workers, revisa su integración GitHub y elimina rutas de publicación antiguas para no sobrescribir releases.
 
-Para crear la rama aprobada después de comprobar CI:
+## Aceptación
 
-    git fetch origin
-    git switch main
-    git pull --ff-only
-    git switch -c pages-production
-    git push -u origin pages-production
+1. Pestaña pública: sin conexiones externas y sin credenciales.
+2. PWA instalada desde icono: funcionalidades completas, incluso con Wi-Fi desactivado salvo servicios externos.
+3. Descarga/carga JSON local y generación de PDF conservadas en ambos modos.
+4. `release.json` coincide con el commit desplegado; `/deploy/`, `/discovery/`, `/tests/` y scripts .sh/.ps1 no son públicos.
+5. Service Worker nuevo, caché completa, actualizaciones controladas y backup antes de actualizar.
 
-Protege pages-production en GitHub con reglas de revisión y comprobaciones. Promueve nuevas versiones solo tras pruebas y aprobación.
-
-## Pruebas finales
-
-- [ ] HTTPS válido y cabeceras CSP de \_headers presentes.
-- [ ] PWA instalable y sin conexiones Nextcloud, WebDAV, correo, share ni consultas CVE online.
-- [ ] Las rutas deploy/, tests/, discovery/ y los scripts de administración devuelven 404.
-- [ ] Crear un expediente ficticio, exportar/importar JSON y generar PDF.
-- [ ] Instalar la PWA; poner el dispositivo en modo avión; reabrir y verificar que funciona.
-- [ ] El botón Buscar actualización funciona manualmente. El navegador puede comprobar internamente actualizaciones del Service Worker.
-- [ ] Revisar backups: IndexedDB no se sincroniza entre dispositivos y puede ser eliminado por el navegador.
-
-Una app instalada no desbloquea ninguna función restringida. Public-demo es un perfil de compilación, no un estado de conectividad.
-
-Consulta documentación oficial: https://developers.cloudflare.com/pages/configuration/build-configuration/ y https://developers.cloudflare.com/pages/configuration/headers/ .
+**Advertencia:** el navegador y el sistema determinan si `display-mode` refleja una instalación; prueba Chrome/Edge, Android y Safari/iPadOS específicamente. 

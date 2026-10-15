@@ -51,11 +51,11 @@ Abre **http://127.0.0.1:8765**. En Windows también puedes usar \`py -m http.ser
 
 | Entorno | Comando o acceso | Detalles |
 | --- | --- | --- |
-| Linux / macOS | \`bash ./audit-workbench.sh\` | Admite \`--update\`, \`--dir\` y \`--no-open\` |
-| Windows / PowerShell | \`.\audit-workbench.ps1\` | Admite \`-Update\` y \`-NoOpen\` |
+| Linux / macOS | \`bash ./rabbitmole.sh\` | Admite \`--update\`, \`--dir\` y \`--no-open\` |
+| Windows / PowerShell | \`.\rabbitmole.ps1\` | Admite \`-Update\` y \`-NoOpen\` |
 | Android / iOS / iPadOS | Despliegue **HTTPS** de confianza | Instala desde el navegador y verifica el uso sin conexión |
 
-Los instaladores conservan el nombre \`audit-workbench\` por compatibilidad histórica, pero **descargan desde RabbitMole**. La primera instalación puede requerir Internet. Consulta [Instalación y actualizaciones](INSTALLATION_ES.md) antes de cambiar de dispositivo o URL.
+Los instaladores son propios de RabbitMole. Instala la PWA completa desde https://rabbitmole.danieldigitalspace.workers.dev/. Consulta [Instalación](INSTALLATION_ES.md).
 
 > [!TIP]
 > Trabaja siempre con **la misma URL y perfil de navegador**. \`localhost\` y \`127.0.0.1\`, distintos puertos o navegadores pueden tener bases de datos separadas. Abrir \`file://\` no equivale a instalar una PWA desde un origen estable.
@@ -99,7 +99,7 @@ Empieza con **datos ficticios**, exporta un backup JSON completo, comprueba su r
 | CVE o Nextcloud/WebDAV | Servicio remoto autorizado, **bajo petición** | Pueden requerir Internet, HTTPS y CORS |
 
 > [!WARNING]
-> **El almacenamiento del navegador no sustituye a las copias de seguridad.** Antes de actualizar, cambiar de dispositivo, perfil u origen, utiliza **Copias y exportaciones → Descargar backup JSON completo** y comprueba el archivo. Guárdalo en almacenamiento protegido. El contrato actual es **JSON v3**. Los identificadores históricos \`audit-workbench-*\` permanecen por compatibilidad.
+> **El almacenamiento del navegador no sustituye a las copias de seguridad.** Antes de actualizar, cambiar de dispositivo, perfil u origen, utiliza **Copias y exportaciones → Descargar backup JSON completo** y comprueba el archivo. Guárdalo en almacenamiento protegido. El contrato actual es **JSON v3**. Los identificadores históricos \`rabbitmole-*\` permanecen por compatibilidad.
 >
 > **Los hashes y firmas gráficas locales no constituyen firmas electrónicas validadas ni un registro inmutable.** Conserva las evidencias originales y las entregas aprobadas fuera de la aplicación, con control de acceso.
 
@@ -111,7 +111,7 @@ Consulta [Seguridad](SECURITY_ES.md) y [Notas legales](LEGAL_ES.md).
 | --- | --- | --- |
 | HTTP local en \`127.0.0.1\` | Desarrollo, evaluación y trabajo individual | [Instalación](INSTALLATION_ES.md) |
 | HTTPS con Docker Compose + Caddy | URL estable, expedientes independientes por navegador | [Despliegue HTTPS](deploy/README_ES.md) |
-| Demostración limitada en Cloudflare Pages | **Solo datos ficticios**; recursos reducidos | [Guía public-demo](deploy/CLOUDFLARE_PAGES_ES.md) |
+| Web Cloudflare / PWA instalada | **Solo datos ficticios**; vista web limitada y PWA instalada completa | [Guía public-demo](deploy/CLOUDFLARE_PAGES_ES.md) |
 
 Una URL HTTPS compartida **no sincroniza navegadores, crea cuentas ni guarda auditorías en el servidor**.
 
@@ -129,8 +129,8 @@ RabbitMole/
 ├── discovery/                  # Inventario autorizado independiente
 ├── deploy/                     # HTTPS y paquete public-demo
 ├── tests/                      # Pruebas offline y de navegador
-├── audit-workbench.sh          # Instalador Linux/macOS (nombre histórico)
-└── audit-workbench.ps1         # Instalador PowerShell (nombre histórico)
+├── rabbitmole.sh          # Instalador Linux/macOS (RabbitMole installer)
+└── rabbitmole.ps1         # Instalador PowerShell (RabbitMole installer)
 \`\`\`
 
 ## Validación
@@ -141,7 +141,7 @@ El [workflow de calidad](.github/workflows/ci.yml) comprueba enlaces documentale
 python3 -m unittest discover -s tests -p 'test_readme.py'
 python3 tests/test_static.py
 node tests/test_shell_resources.cjs
-bash -n audit-workbench.sh collect-local.sh discovery/run.sh discovery/setup.sh
+bash -n rabbitmole.sh collect-local.sh discovery/run.sh discovery/setup.sh
 \`\`\`
 
 Python y Node.js se usan para **desarrollo y validación**, no son requisitos de la PWA alojada. Las pruebas estáticas no sustituyen las de navegador sobre accesibilidad, exportaciones, informes PDF y funcionamiento offline.

@@ -19,8 +19,8 @@ const sec=ctx.AuditSecureTransfer;
  assert.throws(()=>sec.expiryDate(8),/1 a 7/);
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
- const bash=fs.readFileSync(path.join(root,'audit-workbench.sh'),'utf8');
- const powershell=fs.readFileSync(path.join(root,'audit-workbench.ps1'),'utf8');
+ const bash=fs.readFileSync(path.join(root,'rabbitmole.sh'),'utf8');
+ const powershell=fs.readFileSync(path.join(root,'rabbitmole.ps1'),'utf8');
  for(const file of ['secure-transfer.js','secure-transfer-ui.js'])
    for(const src of [html,sw,bash,powershell])assert(src.includes(file),'Missing offline resource '+file);
  assert(html.includes('frame-src blob:;')&&!html.includes("frame-src 'none'"),'Local PDF preview CSP missing');

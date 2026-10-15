@@ -19,7 +19,7 @@ assert(source.includes("registration.update()")&&source.includes('registration.w
 assert(source.includes("controllerchange")&&source.includes("location.reload()"));
 assert(source.includes("credentials")===false,'No credentials should be used for update checks');
 assert(css.includes('.pwa-update-notice[hidden]'));
-for(const file of ['audit-workbench.sh','audit-workbench.ps1'])
+for(const file of ['rabbitmole.sh','rabbitmole.ps1'])
  assert(fs.readFileSync(path.join(root,file),'utf8').includes('js/pwa-updates.js'),'installer missing '+file);
 console.log('PASS consent, pre-reload save, offline shell, packaging');
 
@@ -28,7 +28,7 @@ console.log('PASS consent, pre-reload save, offline shell, packaging');
  const {handlers}=require('./support/sw-contract.js').loadWorker({self:{skipWaiting:async()=>{activations++;}}});
  handlers.message({data:{type:'UNKNOWN'},waitUntil:()=>{throw Error('Unknown message must be ignored');}});
  assert.equal(activations,0);
- handlers.message({data:{type:'AUDIT_WORKBENCH_APPLY_UPDATE'},waitUntil:promise=>{pending=promise;}});
+ handlers.message({data:{type:'RABBITMOLE_APPLY_UPDATE'},waitUntil:promise=>{pending=promise;}});
  await pending;
  assert.equal(activations,1,'Only explicit apply message activates the waiting worker');
 })().catch(error=>{console.error(error);process.exitCode=1;});

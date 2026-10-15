@@ -1,18 +1,15 @@
-name: RabbitMole quality checks
-
+name: RabbitMole quality and Cloudflare release
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
-  static-and-docs:
+  validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,11 +18,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify README branding and internal links
+      - name: README and documentation
         run: python3 -m unittest discover -s tests -p 'test_readme.py' -v
-      - name: Check static PWA resource and JSON contracts
+      - name: Static resources and JS
         run: python3 tests/test_static.py
-      - name: Check offline application asset consistency
+      - name: Installer consistency
         run: node tests/test_shell_resources.cjs
-      - name: Check shell launcher syntax
-        run: bash -n audit-workbench.sh collect-local.sh discovery/run.sh discovery/setup.sh
+      - name: Shell syntax
+        run: bash -n rabbitmole.sh collect-local.sh discovery/run.sh discovery/setup.sh
+      - name: Build Cloudflare bundle
+        run: python3 deploy/build-pages-demo.py
+      - name: Web and installed modes
+        run: node tests/test_pages_demo.cjs
+      - name: Secure transfer
+        run: node tests/test_secure_transfer.cjs
+      - name: PWA update
+        run: node tests/test_pwa_updates.cjs
+      - name: Upload validated bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: rabbitmole-cloudflare
+          path: dist-pages/
+          include-hidden-files: true

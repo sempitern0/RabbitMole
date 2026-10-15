@@ -83,7 +83,7 @@ El workflow de CI solo construye y adjunta un artefacto; **no despliega**.
 | Configuración | `wrangler.toml` |
 | Assets | `./dist-pages`, binding `ASSETS` |
 | Rama | Una rama de publicación que controles, o `main` solo si aceptas publicar cada push |
-| Previews no aprobadas | Desactivadas |
+| Previews de ramas | Opcionales: desactívalas en Cloudflare si quieres publicación exclusivamente aprobada |
 
 No uses la raíz antigua `audit-workbench`, ni un campo de salida de Pages como
 sustituto de la configuración de Workers. No uses `wrangler pages deploy` para

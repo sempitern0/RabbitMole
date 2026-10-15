@@ -2,6 +2,7 @@
 'use strict';
 (()=>{
  const $=id=>document.getElementById(id);
+ const setState=value=>{const panel=$('offline-health-panel');if(panel)panel.dataset.state=value;};
  const send=(worker,type)=>new Promise((resolve,reject)=>{
    if(!worker)return reject(Error('Service Worker no activo.'));
    const channel=new MessageChannel();
@@ -11,6 +12,7 @@
  });
  async function check(){
    const output=$('offline-health-status');if(!output)return;
+   setState('checking');
    try{
      const worker=navigator.serviceWorker?.controller;
      const health=await send(worker,'RABBITMOLE_HEALTH');
@@ -19,8 +21,9 @@
      const detail=health.ok?'Recursos offline completos. Comprueba el arranque desde el icono sin conexión.':'Caché incompleta: '+(health.missingCount??'?')+' recursos pendientes.';
      const space=estimate?.quota?' · Espacio utilizado '+Math.round((estimate.usage||0)/1048576)+' MiB / cuota estimada '+Math.round(estimate.quota/1048576)+' MiB.':'';
      output.textContent=detail+' · Almacenamiento '+(persistent?'persistente':'sin protección de persistencia confirmada')+space;
+     setState(health.ok?'ready':'incomplete');
      $('offline-health-repair').disabled=health.ok||!navigator.onLine;
-   }catch(error){output.textContent='No se ha podido comprobar el modo offline: '+error.message;}
+   }catch(error){setState('error');output.textContent='No se ha podido comprobar el modo offline: '+error.message;}
  }
  async function persist(){
    const output=$('offline-health-status');

@@ -26,11 +26,11 @@
   margin: .35rem .25rem .25rem .6rem;
   vertical-align: middle;
 }
-#workspace .page-title:focus,
-#workspace #delivery-options-title:focus {
-  outline: 3px solid var(--brand);
-  outline-offset: 5px;
-  border-radius: 3px;
+/* Focus is retained for screen readers on SPA navigation, without a visual ring on static headings.
+   Interactive buttons and fields retain the browser's visible keyboard focus. */
+#workspace :is(h1, h2)[tabindex="-1"]:focus,
+#workspace :is(h1, h2)[tabindex="-1"]:focus-visible {
+  outline: none;
 }
 
 #workspace .report-delivery { scroll-margin-block-start: 1.5rem; }
@@ -260,9 +260,53 @@
 .public-demo-banner{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem 1rem;padding:.65rem 1rem;border-bottom:1px solid #b7c6d0;background:#eaf1f4;color:#102a3b;font-size:.9rem}
 .public-demo-banner[hidden]{display:none}
 
-.pwa-install-card { padding:1rem 1.25rem; margin:1rem; border:1px solid var(--line); border-radius:.75rem; background:var(--paper); color:var(--ink); }
-.pwa-install-card h2 { margin:0 0 .5rem; font-size:1.1rem; }
-.pwa-install-card summary { cursor:pointer; padding:.7rem 0; font-weight:600; }
-.pwa-install-card li { margin-bottom:.5rem; }
+.pwa-install-card {
+  margin: .8rem clamp(18px,3vw,48px) 0;
+  padding: .85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: .7rem;
+  background: var(--paper);
+  color: var(--ink);
+}
+.pwa-install-card h2 { margin:0 0 .3rem; font-size:1rem; }
+.pwa-install-card > p { margin:.15rem 0 .5rem; color:var(--muted); font-size:.9rem; line-height:1.5; }
+.pwa-install-card .button { margin: .35rem .65rem .5rem 0; }
+.pwa-install-card details { margin-top:.35rem; }
+.pwa-install-card summary { cursor:pointer; padding:.4rem 0; font-weight:600; font-size:.88rem; }
+.pwa-install-card details > :is(ol,p) { margin-block:.65rem; line-height:1.6; font-size:.9rem; }
+.pwa-install-card li { margin-bottom:.55rem; padding-left:.2rem; }
+.pwa-install-card.is-installed {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:.2rem .85rem;
+  padding:.55rem .85rem;
+  background:color-mix(in srgb,var(--paper) 90%,var(--canvas));
+}
+.pwa-install-card.is-installed h2 { font-size:.89rem; font-weight:700; margin:0; }
+.pwa-install-card.is-installed > p { margin:0; flex:1 1 18rem; font-size:.82rem; }
+.pwa-install-card.is-installed details { flex:0 0 auto; margin:0; }
+.pwa-install-card.is-installed details[open] { flex:1 1 100%; }
+.pwa-install-card.is-installed summary { padding:.25rem 0; }
 .pwa-install-card[hidden] { display:none; }
+@media(max-width:650px) {
+ .pwa-install-card { margin:.65rem 1rem 0; }
+ .pwa-install-card.is-installed details { flex:1 1 100%; }
+}
+
 @media print { .pwa-install-card { display:none!important; } }
+
+/* Deliberate separation of standalone actions from adjacent explanatory text. */
+#workspace .card > p + :is(button, .button),
+#workspace .card > .subtle + :is(button, .button),
+#workspace .card > :is(h2,h3) + :is(button,.button) { margin-block-start:.8rem; }
+#workspace .card > :is(p,ul,ol) + .action-row { margin-block-start:1rem; }
+#workspace .card > .button + :is(p,ul,ol) { margin-block-start:.85rem; }
+#workspace .action-row { row-gap:.75rem; column-gap:.85rem; }
+.topbar .actions { row-gap:.65rem; }
+.topbar .actions > .save-status { margin-inline:.25rem; }
+.topbar .actions > .pwa-update-status:not(:empty) { padding-inline:.2rem; }
+.topbar .offline-health { padding:.7rem .9rem; }
+.topbar .offline-health .action-row { margin-top:.6rem; }
+.topbar .offline-health .action-row > button { margin:0; }
+@media print { #workspace .card > .button { margin:0; } }

@@ -17,6 +17,8 @@ assert(app.includes("prefers-reduced-motion: reduce"),'Scrolling must respect re
 assert(app.includes("workspace.querySelector('h1')"),'SPA page changes must focus the new heading');
 assert(app.includes('id="delivery-options" aria-labelledby="delivery-options-title"'));
 assert(app.includes('id="delivery-options-title" tabindex="-1"'));
+assert(styles.includes('h1, h2)[tabindex="-1"]:focus'),'Static headings should not have a visual focus ring');
+assert(styles.includes('outline: none;'),'Focus styling for programmatically focused headings missing');
 assert(app.includes('class="report-delivery-grid"'),'PDF report types must be visually grouped');
 assert(app.includes('class="report-delivery-danger"'),'Create-new-record action must be separated from export actions');
 for(const id of ['delivery-executive-draft','delivery-executive-final','delivery-technical-draft','delivery-technical-final','retest-pdf','delivery-json']){

@@ -8,9 +8,10 @@
     if(!card||!button||!status)return;
     const installed=globalThis.RabbitMoleDeployment?.installed===true;
     card.hidden=false;
+    card.classList.toggle('is-installed',installed);
     button.hidden=installed||!promptEvent;
     status.textContent=installed
-      ?'Aplicación completa. Comprueba la caché offline antes de desconectarte. Las conexiones externas requieren Internet y tu autorización.'
+      ?'Aplicación instalada · Funciones locales disponibles sin conexión.'
       :'Web limitada. Instala RabbitMole y ábrela desde su icono para usar la aplicación completa. Los expedientes se guardan en este dispositivo.';
   }
   window.addEventListener('beforeinstallprompt',event=>{

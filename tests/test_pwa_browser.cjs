@@ -22,6 +22,8 @@ const {chromium}=require('playwright');
    await page.goto(origin);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
    await page.waitForSelector('#pwa-install-card:not([hidden])');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
+   assert.equal(await page.locator('#pwa-install-card').evaluate(el=>el.classList.contains('is-installed')),installed);
+   if(installed)assert.equal(await page.locator('#pwa-install-status').textContent(),'Aplicación instalada · Funciones locales disponibles sin conexión.');
    if(!installed){
     assert.equal(await page.locator('#global-navigation [data-go="connections"]').isVisible(),false);
     const rejected=await page.evaluate(async()=>{try{await AuditSecureTransfer.upload({url:'https://example.com/',user:'test',secret:'test'},'test.json','{}','application/json');return false;}catch{return true;}});
@@ -32,6 +34,21 @@ const {chromium}=require('playwright');
     await page.waitForFunction(()=>document.getElementById('pwa-install-status').textContent.includes('desde su icono'));
    }
    await page.locator('#offline-health-check').click();await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Recursos offline completos'));
+   await page.locator('#global-navigation [data-go="records"]').click();
+   assert.equal(await page.locator('#workspace h1').evaluate(el=>getComputedStyle(el).outlineStyle),'none');
+   // Programmatic .focus() does not imply :focus-visible in Chromium.
+   // Use real keyboard navigation after the SPA focuses its static heading.
+   assert.equal(await page.locator('#workspace h1').evaluate(el=>document.activeElement===el),true);
+   await page.keyboard.press('Tab');
+   const keyboardFocus=await page.evaluate(()=>{
+    const element=document.activeElement;
+    return {interactive:element.matches('button,a,input,select,textarea,summary'),
+      visible:element.matches(':focus-visible'),
+      outline:getComputedStyle(element).outlineStyle};
+   });
+   assert.equal(keyboardFocus.interactive,true,'Tab must reach an interactive element');
+   assert.equal(keyboardFocus.visible,true,'Keyboard focus must remain visible');
+   assert.notEqual(keyboardFocus.outline,'none','Keyboard focus indicator must remain visible');
    await page.locator('[data-new]').first().click();
    await page.locator('#wizard-step-select').selectOption('assets');await page.locator('[data-add="assets"]').first().click();
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');

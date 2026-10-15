@@ -12,3 +12,10 @@ not_found_handling = "404-page"
 # A plain wrangler deploy cannot accidentally publish a missing/stale bundle.
 [build]
 command = "python3 deploy/build-pages-demo.py"
+
+# Workers Builds uses 'wrangler preview' for non-production branches when
+# Preview Builds is enabled in the Cloudflare dashboard. The empty block is
+# required by Wrangler 4.135+; previews do not promote code to production.
+# Disable Preview Builds in Cloudflare > Worker > Settings > Build > Branch
+# control if preview deployments are not wanted.
+[previews]

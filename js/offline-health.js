@@ -16,7 +16,7 @@
      const health=await send(worker,'RABBITMOLE_HEALTH');
      const persistent=await navigator.storage?.persisted?.();
      const estimate=await navigator.storage?.estimate?.();
-     const detail=health.ok?'Preparada para funcionar offline.':'Caché incompleta: '+(health.missingCount??'?')+' recursos pendientes.';
+     const detail=health.ok?'Recursos offline completos. Comprueba el arranque desde el icono sin conexión.':'Caché incompleta: '+(health.missingCount??'?')+' recursos pendientes.';
      const space=estimate?.quota?' · Espacio utilizado '+Math.round((estimate.usage||0)/1048576)+' MiB / cuota estimada '+Math.round(estimate.quota/1048576)+' MiB.':'';
      output.textContent=detail+' · Almacenamiento '+(persistent?'persistente':'sin protección de persistencia confirmada')+space;
      $('offline-health-repair').disabled=health.ok||!navigator.onLine;

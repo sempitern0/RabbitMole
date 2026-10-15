@@ -34,11 +34,11 @@ const {chromium}=require('playwright');
     await page.waitForFunction(()=>document.getElementById('pwa-install-status').textContent.includes('desde su icono'));
    }
    await page.locator('#offline-health-check').click();await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Recursos offline completos'));
-   await page.locator('[data-new]').first().click();
    await page.locator('#global-navigation [data-go="records"]').click();
    assert.equal(await page.locator('#workspace h1').evaluate(el=>getComputedStyle(el).outlineStyle),'none');
    await page.locator('#global-navigation [data-go="records"]').focus();
    assert.notEqual(await page.locator('#global-navigation [data-go="records"]').evaluate(el=>getComputedStyle(el).outlineStyle),'none');
+   await page.locator('[data-new]').first().click();
    await page.locator('#wizard-step-select').selectOption('assets');await page.locator('[data-add="assets"]').first().click();
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
    await page.waitForTimeout(600);

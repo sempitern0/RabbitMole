@@ -60,7 +60,7 @@ El algoritmo de checksum español de DNI/NIE y el de NIF ordinario de entidad so
 ## Exportaciones tabulares y carpeta de respaldo
 
 - **JSON:** formato restaurable de auditorías. La exportación normal no cifra el archivo y puede incluir imágenes, identificadores y datos personales; requiere custodia cifrada.
-- **Backup cifrado (`.awenc`):** contiene JSON cifrado con frase independiente y puede recuperarse desde el panel de conexiones. La pérdida de la frase puede impedir la recuperación.
+- **Backup cifrado (`.rmenc`):** contiene JSON cifrado con frase independiente y puede recuperarse desde el panel de conexiones. La pérdida de la frase puede impedir la recuperación.
 - **XLSX/CSV:** exportaciones de tablas sin imágenes. CSV protege campos que empiezan por caracteres interpretables como fórmulas; XLSX utiliza celdas de texto, sin macros ni fórmulas generadas. Revisa cada entregable antes de enviarlo.
 - **Carpeta local:** la aplicación solo escribe en una carpeta seleccionada explícitamente mediante File System Access API, si está disponible. El permiso puede revocarse al cerrar o actualizar el navegador. No se proporciona ejecución automática con la app cerrada. Los nombres de carpeta y los tiempos de respaldo se guardan como preferencias; los permisos se custodian localmente mediante IndexedDB.
 - No utilices como destino del backup la carpeta pública servida por Python o un servidor web: los expedientes podrían quedar accesibles a terceros.

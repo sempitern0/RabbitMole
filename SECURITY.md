@@ -60,7 +60,7 @@ The Spanish DNI/NIE checksum algorithms and ordinary entity NIF checks **validat
 ## Tabular exports and backup folder
 
 - **JSON:** restorable audit-record format. Ordinary exports do not encrypt files and may contain images, identifiers, and personal data; encrypted custody is required.
-- **Encrypted backup (`.awenc`):** contains JSON encrypted with a separate passphrase and can be recovered from the connections panel. Losing the passphrase may make recovery impossible.
+- **Encrypted backup (`.rmenc`):** contains JSON encrypted with a separate passphrase and can be recovered from the connections panel. Losing the passphrase may make recovery impossible.
 - **XLSX/CSV:** table exports without images. CSV protects fields beginning with characters that spreadsheet programs might interpret as formulas; XLSX uses text cells, without macros or generated formulas. Review each deliverable before sending.
 - **Local folder:** the application writes only to a folder explicitly selected with the File System Access API, when available. Permission may be revoked when the browser closes or updates. Automatic execution while the application is closed is not supported. Folder names and backup times are stored as preferences; permissions are kept locally in IndexedDB.
 - Do not use a publicly served Python or web-server directory as a backup destination: audit records could become accessible to third parties.

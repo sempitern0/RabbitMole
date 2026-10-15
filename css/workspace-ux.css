@@ -310,3 +310,12 @@
 .topbar .offline-health .action-row { margin-top:.6rem; }
 .topbar .offline-health .action-row > button { margin:0; }
 @media print { #workspace .card > .button { margin:0; } }
+
+/* Compact, non-intrusive status and consistent actions across viewport sizes. */
+.pwa-install-card.is-installed { box-shadow:none; }
+.pwa-install-card.is-installed > p { overflow-wrap:anywhere; }
+#workspace .card > :is(p,ul,ol) + :is(.actions,.action-row) { margin-block-start:1rem; }
+#workspace .card > :is(.actions,.action-row) + :is(p,ul,ol) { margin-block-start:.8rem; }
+#workspace .action-row > .button { margin:0; }
+.topbar .actions > :is(.button,.theme-select) { flex-shrink:0; }
+@media(max-width:550px){.topbar .actions > .pwa-update-status {flex-basis:100%}}

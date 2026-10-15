@@ -24,7 +24,7 @@ cp .env.example .env
 # Edita .env con tu dominio real y correo
 docker compose config --quiet
 docker compose up --detach --build
-docker compose logs -f audit-workbench
+docker compose logs -f rabbitmole
 ```
 
 Abre `https://auditoria.example.com/` (sustituyendo por tu dominio). Si el certificado no se emite, **corrige DNS/puertos/relojes/ACME**: no desactives la validación TLS en los clientes. El primer arranque requiere conexión para descargar la imagen Caddy y emitir el certificado.

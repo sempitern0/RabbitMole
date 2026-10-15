@@ -35,6 +35,21 @@ Funciona en el navegador **sin cuentas, base de datos remota ni backend obligato
 > [!IMPORTANT]
 > RabbitMole **no escanea vulnerabilidades automáticamente, no certifica conformidad y no administra equipos**. [Discovery](discovery/README_ES.md) es una utilidad independiente que se ejecuta desde el equipo del auditor y únicamente sobre redes autorizadas. Los comandos del diccionario técnico son ejemplos: la PWA no los ejecuta.
 
+## Web pública frente a PWA instalada
+
+[Instala RabbitMole](https://rabbitmole.danieldigitalspace.workers.dev/) desde un navegador compatible y **ábrela desde su icono**. Al visitar la misma URL en una pestaña normal se ofrecen deliberadamente menos funcionalidades. El modo instalado se detecta en el navegador: **no es autenticación ni una barrera de seguridad del servidor**.
+
+| Característica | URL pública en pestaña | PWA instalada (ventana propia) |
+| --- | --- | --- |
+| Auditorías, inventarios, evidencias, controles, diccionario | Disponible en local | Disponible en local |
+| Importación/exportación JSON, PDF, CSV/XLSX | Disponible en local | Disponible en local |
+| Integraciones HTTPS autorizadas (Nextcloud/WebDAV, transferencias) | Desactivadas | Disponibles bajo petición, con conexión y permisos |
+| Icono y ventana de aplicación | No | Sí |
+| Arranque sin red con recursos descargados | Depende del navegador; no es la modalidad prevista | Sí, previa verificación |
+| Comprobación de actualizaciones | Limitada | Se busca al abrir/recuperar foco con red; el usuario confirma su aplicación |
+
+**Ventajas de la PWA:** usar RabbitMole en redes aisladas, disponer de una ventana separada de las pestañas y conservar expedientes en el dispositivo sin una cuenta ni sincronización obligatoria. Antes de una auditoría sin Internet, pulsa **Protección del trabajo offline → Comprobar**, cierra la aplicación, desconecta la red y vuelve a abrirla desde su icono. Exporta copias JSON periódicamente: el navegador puede eliminar datos locales. La PWA no ejecuta comandos del sistema ni conecta con servicios remotos sin los permisos y la conectividad pertinentes.
+
 ## Inicio rápido
 
 ### Evaluación local

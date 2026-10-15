@@ -33,7 +33,22 @@ RabbitMole is a **self-contained technical auditing workspace**. Document **hard
 The application runs in the browser with **no account, remote database or required backend**. Audit records stay in the current browser profile unless you explicitly export or transfer them.
 
 > [!IMPORTANT]
-> RabbitMole **does not automatically scan for vulnerabilities, certify compliance or administer devices**. The optional [Discovery utility](discovery/README_ES.md) runs separately on an auditor-controlled device and must be restricted to authorized networks. Commands in the technical dictionary are examples, not commands executed by the PWA.
+> RabbitMole **does not automatically scan for vulnerabilities, certify compliance or administer devices**. The optional [Discovery utility](discovery/README.md) runs separately on an auditor-controlled device and must be restricted to authorized networks. Commands in the technical dictionary are examples, not commands executed by the PWA.
+
+## Public website vs installed PWA
+
+[Install RabbitMole](https://rabbitmole.danieldigitalspace.workers.dev/) from a compatible browser, then **launch it using the installed icon**. Opening the same address in a normal browser tab intentionally exposes a reduced set of functions. Installation is detected via browser display mode; it is **not an authentication or server security boundary**.
+
+| Capability | Public URL in a regular tab | Installed PWA (standalone) |
+| --- | --- | --- |
+| Audits, inventories, evidence, controls, technical dictionary | Available locally | Available locally |
+| JSON import/export, PDF reports, CSV/XLSX | Available locally | Available locally |
+| Authorized HTTPS integrations (Nextcloud/WebDAV, remote transfers) | Disabled | Available on explicit request, when online and supported |
+| Device icon, dedicated app window | No | Yes |
+| Offline cold start after complete cache installation | Browser-dependent; not the intended entry mode | Yes; verify before field work |
+| Automatic update discovery | Limited | Checks when opened/visible/online; user confirms activation |
+
+**Why install?** Work without Wi-Fi or connectivity to Cloudflare after the initial installation, keep the audit workspace separate from browser tabs, and retain audits locally on the device. No backend account or automatic synchronization is required. Check **Offline work protection → Check**, close the app, disable connectivity, and reopen it from its icon before visiting isolated networks. Export JSON backups regularly: local browser storage may be deleted by browser or device policies. No browser PWA can access host OS commands or remote services without the required permissions/connectivity.
 
 ## Quick start
 
@@ -111,7 +126,7 @@ See [Security](SECURITY.md) and [Legal notes](LEGAL.md).
 | --- | --- | --- |
 | Local HTTP on \`127.0.0.1\` | Development, evaluation and individual work | [Installation](INSTALLATION.md) |
 | Docker Compose + Caddy HTTPS | Shared installation URL, browser-local records | [HTTPS deployment](deploy/README.md) |
-| Cloudflare web / installed PWA | **Fictional data only**; limited web view; full installed PWA | [Public-demo guide (ES)](deploy/CLOUDFLARE_PAGES_ES.md) |
+| Cloudflare web / installed PWA | **Fictional data only**; limited web view; full installed PWA | [Public-demo guide (ES)](deploy/CLOUDFLARE_PAGES.md) |
 
 A shared HTTPS address **does not synchronize browsers, create accounts or store audits on the server**.
 
@@ -155,8 +170,8 @@ Python and Node.js are **development tools**, not requirements for using the hos
 | Data custody and optional connections | [Security](SECURITY.md) · [Seguridad (ES)](SECURITY_ES.md) |
 | Adaptable report clauses | [Legal](LEGAL.md) · [Legal (ES)](LEGAL_ES.md) |
 | Private HTTPS deployment | [Docker / Caddy](deploy/README.md) · [Despliegue (ES)](deploy/README_ES.md) |
-| Limited public demonstration | [Cloudflare Pages (ES)](deploy/CLOUDFLARE_PAGES_ES.md) |
-| Authorized local discovery | [Discovery (ES)](discovery/README_ES.md) |
+| Limited public demonstration | [Cloudflare Workers (EN)](deploy/CLOUDFLARE_PAGES.md) |
+| Authorized local discovery | [Discovery (EN)](discovery/README.md) |
 | Bugs and improvement requests | [GitHub Issues](https://github.com/sempitern0/RabbitMole/issues) |
 
 ---
@@ -168,4 +183,4 @@ Python and Node.js are **development tools**, not requirements for using the hos
 
 ## Controlled releases
 
-Run `npm ci` and `npm run deploy:check` from the repository root. The [Cloudflare guide](deploy/CLOUDFLARE_PAGES_ES.md) documents the existing Worker, build/deploy commands, protected production environment and device checks. CI does not deploy automatically. The public browser tab is limited; launching the installed PWA enables the full app. This is a client-side usage policy, not authentication.
+Run `npm ci` and `npm run deploy:check` from the repository root. The [Cloudflare guide](deploy/CLOUDFLARE_PAGES.md) documents the existing Worker, build/deploy commands, protected production environment and device checks. CI does not deploy automatically. The public browser tab is limited; launching the installed PWA enables the full app. This is a client-side usage policy, not authentication.

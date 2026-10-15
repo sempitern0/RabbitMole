@@ -14,7 +14,7 @@ cp .env.example .env
 # Configure AUDIT_DOMAIN and ACME_EMAIL in .env.
 docker compose config --quiet
 docker compose up -d --build
-docker compose logs -f audit-workbench
+docker compose logs -f rabbitmole
 python3 smoke_https.py https://your-audit-domain.example
 ```
 

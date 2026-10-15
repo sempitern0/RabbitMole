@@ -19,7 +19,7 @@ for resource in scripts + styles:
     assert (root / resource).is_file(), f"Missing HTML resource: {resource}"
     assert ('"./' + resource + '"' in sw or "'./" + resource + "'" in sw), f"Offline resource not cached: {resource}"
 assert re.search(r"rabbitmole-shell-v\d+-[a-z0-9-]+", sw)
-assert "const VERSION = 3;" in app and 'const LIBRARY_KIND = "audit-workbench-library"' in app and 'const PROFILE_KIND = "audit-workbench-consultancy"' in app
+assert "const VERSION = 3;" in app and 'const LIBRARY_KIND = "rabbitmole-library"' in app and 'const PROFILE_KIND = "rabbitmole-consultancy"' in app
 assert "LEGACY_STORE" not in app and "nextReportId(" not in app
 assert "auditWorkbenchBackup" not in app and "settings.sequences" not in app
 assert "js/audit-identifiers.js" in scripts and "js/document-control.js" in scripts

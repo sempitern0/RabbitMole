@@ -20,7 +20,7 @@ assert.throws(()=>m.parse('{"schemaVersion":3,"assets":[{"name":"A"}]}',{block:'
 assert.throws(()=>m.parse('hostname,ip\n"unterminated',{block:'assets',filename:'bad.csv'}),/comillas/);
 assert.throws(()=>m.parse('name\n'+Array.from({length:501},(_,i)=>'srv'+i).join('\n'),{block:'assets',filename:'many.csv'}),/500/);
 assert.throws(()=>m.parse('[{"os":"Linux"}]',{block:'assets'}),/sin hostname/);
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8'),bash=fs.readFileSync(path.join(root,'audit-workbench.sh'),'utf8'),ps=fs.readFileSync(path.join(root,'audit-workbench.ps1'),'utf8'),app=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8'),bash=fs.readFileSync(path.join(root,'rabbitmole.sh'),'utf8'),ps=fs.readFileSync(path.join(root,'rabbitmole.ps1'),'utf8'),app=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
 for(const file of ['js/inventory-import.js']){assert(html.includes(file));assert(sw.includes('./'+file));assert(bash.includes(file));assert(ps.includes(file));}
 for(const marker of ['renderIntakePreview','data-intake-apply','data-intake-row','intake.reconcile','Captura asistida'])assert(app.includes(marker));
 assert(html.indexOf('js/inventory-import.js')<html.indexOf('js/app.js'));

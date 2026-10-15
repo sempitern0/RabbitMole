@@ -6,7 +6,9 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ("README.md", "README_ES.md", "docs/FEATURE_REFERENCE.md",
-         "docs/FEATURE_REFERENCE_ES.md")
+         "docs/FEATURE_REFERENCE_ES.md", "deploy/CLOUDFLARE_PAGES.md",
+         "deploy/CLOUDFLARE_PAGES_ES.md", "discovery/README.md",
+         "discovery/README_ES.md")
 MD_LINK = re.compile(r"\]\(([^)]+)\)")
 HTML_LINK = re.compile(r'(?:href|src)="([^"]+)"')
 

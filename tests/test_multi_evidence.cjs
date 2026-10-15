@@ -14,7 +14,7 @@ assert.equal(row.fileName,'original.jpg');
 assert.equal(photos.list(row).length,2);
 const serialized=JSON.parse(JSON.stringify(row));
 assert.equal(photos.list(serialized).length,2,'New JSON carries additional images');
-assert.equal(photos.list({...serialized,attachments:undefined}).length,1,'Old JSON keeps the original photo');
+assert.equal(photos.list({...serialized,attachments:undefined}).length,1,'Primary image works without attachments');
 photos.remove(row,0);
 assert.equal(row.fileName,'extra.jpg','Removing the first photo promotes the next one');
 assert.equal(photos.list(row).length,1);
@@ -38,4 +38,4 @@ assert(dc.includes("key==='image'"),'Amendment diff should exclude image payload
 assert(!dc.includes("key==='attachments'"),'Attachments metadata must be retained in amendments');
 const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 assert(sw.includes("'./js/audit-evidence-images.js'"));
-console.log('PASS multi-image evidence, v3 legacy, authorizations, delivery warning, PDF and offline assets');
+console.log('PASS multi-image evidence, current v3, authorizations, delivery warning, PDF and offline assets');

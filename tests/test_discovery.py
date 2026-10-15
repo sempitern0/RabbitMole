@@ -31,7 +31,7 @@ class DiscoveryTests(unittest.TestCase):
             path=Path(d)/'capture.json'
             m.save_document(path,m.discovery_document(m.scope_network('10.0.0.0/30'),'native',[]))
             data=json.loads(path.read_text(encoding='utf8'))
-            self.assertEqual(data['kind'],'audit-workbench-discovery-v1')
+            self.assertEqual(data['kind'],'rabbitmole-discovery-v1')
             self.assertEqual(data['schemaVersion'],1)
             self.assertEqual(data['items']['software'],[])
             with self.assertRaises(FileExistsError):m.save_document(path,data)

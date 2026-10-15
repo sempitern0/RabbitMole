@@ -17,7 +17,7 @@ assert "Content-Security-Policy" in html
 assert scripts and scripts[-1] == "js/app.js", "Application should load after its modules"
 for resource in scripts + styles:
     assert (root / resource).is_file(), f"Missing HTML resource: {resource}"
-    assert "'./" + resource + "'" in sw, f"Offline resource not cached: {resource}"
+    assert ('"./' + resource + '"' in sw or "'./" + resource + "'" in sw), f"Offline resource not cached: {resource}"
 assert re.search(r"audit-workbench-shell-v\d+-[a-z0-9-]+", sw)
 assert "const VERSION = 3;" in app and "raw.schemaVersion!==VERSION" in app
 assert "LEGACY_STORE" not in app and "nextReportId(" not in app

@@ -11,7 +11,7 @@ assert(scripts.length>=9 && styles.length>=10,'Expected all offline modules');
 for(const asset of [...scripts,...styles]){
  assert(asset.startsWith('js/')||asset.startsWith('css/'),'Unorganized asset: '+asset);
  assert(fs.statSync(path.join(root,asset)).size>0,'Missing: '+asset);
- assert(sw.includes("'./"+asset+"'"),'PWA resource missing: '+asset);
+ assert(sw.includes("'./"+asset+"'") || sw.includes('"./'+asset+'"'),'PWA resource missing: '+asset);
  assert(bash.includes(asset),'Bash missing: '+asset);
  assert(ps.includes(asset),'PowerShell missing: '+asset);
 }

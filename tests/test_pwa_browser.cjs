@@ -31,7 +31,7 @@ const {chromium}=require('playwright');
     await page.locator('#pwa-install-button').click();
     await page.waitForFunction(()=>document.getElementById('pwa-install-status').textContent.includes('desde su icono'));
    }
-   await page.locator('#offline-health-check').click();await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Preparada para funcionar offline'));
+   await page.locator('#offline-health-check').click();await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Recursos offline completos'));
    await page.locator('[data-new]').first().click();
    await page.locator('#wizard-step-select').selectOption('assets');await page.locator('[data-add="assets"]').first().click();
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');

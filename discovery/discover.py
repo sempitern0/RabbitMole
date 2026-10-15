@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Agentless, bounded IPv4 discovery for the Audit Workbench offline importer.
+"""Agentless, bounded IPv4 discovery for the RabbitMole offline importer.
 
 Standard library only. Runs on the auditor's device; never logs into remote hosts.
 """
@@ -16,7 +16,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
-KIND = 'audit-workbench-discovery-v1'
+KIND = 'rabbitmole-discovery-v1'
 PRIVATE_RANGES = tuple(ipaddress.ip_network(x) for x in ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'))
 MAX_HOSTS = 1024
 MAX_XML = 2 * 1024 * 1024
@@ -150,7 +150,7 @@ def save_document(output, document):
         raise ValueError('La carpeta de destino debe existir.')
     data = json.dumps(document, indent=2, ensure_ascii=False).encode('utf-8')
     if len(data) > MAX_XML:
-        raise ValueError('El resultado supera el límite de importación de Audit Workbench (2 MiB).')
+        raise ValueError('El resultado supera el límite de importación de RabbitMole (2 MiB).')
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     if hasattr(os, 'O_BINARY'):
         flags |= os.O_BINARY
@@ -165,7 +165,7 @@ def save_document(output, document):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Audit Workbench: descubrimiento remoto acotado, sin agentes y de solo lectura.')
+    parser = argparse.ArgumentParser(description='RabbitMole: descubrimiento remoto acotado, sin agentes y de solo lectura.')
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('doctor', help='Comprueba dependencias y muestra instalación sugerida, sin red.')
     commands.add_parser('wizard', help='Asistente interactivo de descubrimiento sin servicios locales.')

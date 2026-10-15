@@ -52,7 +52,7 @@ function mockIndexedDB() {
   };
   return {
     open(name, versionNumber) {
-      assert.equal(name, 'audit-workbench-offline');
+      assert.equal(name, 'rabbitmole-offline');
       const req={result:database,error:null};
       queueMicrotask(()=>{
         if (!version) {version=versionNumber;req.onupgradeneeded?.();}
@@ -65,7 +65,7 @@ function mockIndexedDB() {
 }
 
 async function main() {
-  const key='sysadmin-tools:audit-workbench:records:v3';
+  const key='rabbitmole:records:v3';
   const local=localStorageFixture();
   const logger={warn:()=>{}};
   const fallback=createRepository({storage:local,indexed:null,logger});
@@ -121,6 +121,6 @@ async function main() {
   await repo.remove('a-1');
   assert.equal((await repo.list())[0].id,'a-2');
   assert.equal(separateLocal.writes,0,'IndexedDB does not write the localStorage fallback');
-  console.log('PASS storage: unchanged keys, IndexedDB lifecycle, fallback, safe corrupt-data behavior');
+  console.log('PASS storage: current storage keys, IndexedDB lifecycle, fallback, safe corrupt-data behavior');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

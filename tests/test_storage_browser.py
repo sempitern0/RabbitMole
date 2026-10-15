@@ -46,7 +46,7 @@ with server() as url, sync_playwright() as driver:
     page.wait_for_timeout(650)
     assert 'IndexedDB' in page.locator('#save-status').inner_text(), 'repository should use IndexedDB'
     rows=page.evaluate('''() => new Promise((resolve,reject)=>{
-        const request=indexedDB.open('audit-workbench-offline',1);
+        const request=indexedDB.open('rabbitmole-offline',1);
         request.onsuccess=()=>{
             const tx=request.result.transaction('audits','readonly');
             const q=tx.objectStore('audits').getAll();

@@ -1,4 +1,4 @@
-/* Bounded multi-image evidence, compatible with legacy v3 records with one image. */
+/* RabbitMole multi-image evidence, primary image plus attachments. */
 'use strict';
 (() => {
   const MAX_IMAGES=10,MAX_INLINE=1399999,MAX_AUDIT_IMAGES=28*1024*1024;

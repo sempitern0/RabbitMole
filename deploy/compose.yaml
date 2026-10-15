@@ -1,9 +1,9 @@
 services:
-  audit-workbench:
+  rabbitmole:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    image: audit-workbench-static:local
+    image: rabbitmole-static:local
     restart: unless-stopped
     environment:
       AUDIT_DOMAIN: "${AUDIT_DOMAIN:?Set_AUDIT_DOMAIN_in_.env}"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Audit Workbench local collector. Explicit local execution, read-only, no network connections.
+# RabbitMole local collector. Explicit local execution, read-only, no network connections.
 set -Eeuo pipefail
 umask 077
 OUT=""
@@ -60,7 +60,7 @@ for line in packages.splitlines()[:30]:
  if parts and parts[0] and len(parts[0])<170:
   software.append({'name':parts[0],'version':parts[1] if len(parts)>1 else '', 'asset':host,'notes':'Paquete local enumerado; relevancia y vulnerabilidad por verificar.'})
 software=software[:55]
-data={'kind':'audit-workbench-discovery-v1','schemaVersion':1,'capturedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':{'platform':platform.system(),'collector':'collect-local.sh','scope':'local','mode':'read-only'},'items':{'assets':[asset],'networks':networks,'software':software}}
+data={'kind':'rabbitmole-discovery-v1','schemaVersion':1,'capturedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':{'platform':platform.system(),'collector':'collect-local.sh','scope':'local','mode':'read-only'},'items':{'assets':[asset],'networks':networks,'software':software}}
 with open(out,'x',encoding='utf-8') as f:json.dump(data,f,indent=2,ensure_ascii=False)
 print('Saved',out)
 PY

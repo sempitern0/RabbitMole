@@ -1,4 +1,4 @@
-# Audit Workbench local collection. Read-only. No remote connections.
+# RabbitMole local collection. Read-only. No remote connections.
 [CmdletBinding()]
 param([Parameter(Mandatory=$true)][string]$Output)
 Set-StrictMode -Version Latest
@@ -23,7 +23,7 @@ $diskRows=@(Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' -ErrorAction
  [string]$_.DeviceID+' '+('{0:N1} GiB' -f ($_.Size/1GB))
 })
 $data=[ordered]@{
- kind='audit-workbench-discovery-v1';schemaVersion=1;capturedAt=(Get-Date).ToUniversalTime().ToString('o')
+ kind='rabbitmole-discovery-v1';schemaVersion=1;capturedAt=(Get-Date).ToUniversalTime().ToString('o')
  source=[ordered]@{platform='Windows';collector='collect-local.ps1';scope='local';mode='read-only'}
  items=[ordered]@{
   assets=@([ordered]@{

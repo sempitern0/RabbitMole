@@ -193,7 +193,7 @@ self.addEventListener("fetch", (event) => {
   )
     return;
   // Connectivity probes must not be answered from CacheStorage.
-  if (request.cache === "no-store") {
+  if (request.cache === "no-store" && request.mode !== "navigate") {
     event.respondWith(fetch(request));
     return;
   }

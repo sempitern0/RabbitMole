@@ -1,4 +1,4 @@
-# Despliegue HTTPS de Audit Workbench (PWA)
+# Despliegue HTTPS de RabbitMole (PWA)
 
 [Instalación por dispositivo](../INSTALLATION_ES.md) · [Seguridad](../SECURITY_ES.md)
 
@@ -16,10 +16,10 @@ No hace falta instalar Python, Nmap ni una base de datos **en el servidor web**.
 
 ## Ponerlo en marcha
 
-Desde la raíz del repositorio `sysadmin`:
+Desde la raíz del repositorio RabbitMole:
 
 ```bash
-cd audit-workbench/deploy
+cd deploy
 cp .env.example .env
 # Edita .env con tu dominio real y correo
 docker compose config --quiet
@@ -42,7 +42,7 @@ La comprobación solo solicita recursos de la aplicación; no importa expediente
 ```bash
 # Antes: exporta backups JSON de los dispositivos que tienen expedientes.
 git pull --ff-only
-cd audit-workbench/deploy
+cd deploy
 docker compose up --detach --build
 ```
 

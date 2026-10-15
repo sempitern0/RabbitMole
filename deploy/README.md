@@ -1,4 +1,4 @@
-# Audit Workbench HTTPS deployment
+# RabbitMole HTTPS deployment
 
 [Spanish deployment guide](README_ES.md) · [Installation](../INSTALLATION.md) · [Security](../SECURITY.md)
 
@@ -9,7 +9,7 @@ The PWA can be served securely from a stable HTTPS subdomain using Docker Compos
 A Linux server with Docker Engine/Compose v2, a DNS A/AAAA record pointing to it, and inbound TCP ports 80 and 443 for automatic TLS certificate issuance/renewal.
 
 ```bash
-cd audit-workbench/deploy
+cd deploy
 cp .env.example .env
 # Configure AUDIT_DOMAIN and ACME_EMAIL in .env.
 docker compose config --quiet

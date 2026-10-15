@@ -5,7 +5,7 @@ Guía de despliegue de la edición pública, que permite probar la aplicación e
 ## Estado y requisitos
 
 - [x] Renombrada la interfaz, título y manifest de la PWA.
-- [x] Conservado el directorio audit-workbench y los identificadores de almacenamiento para compatibilidad.
+- [x] Conservados los identificadores internos de almacenamiento para compatibilidad.
 - [x] Creado perfil private-full para despliegues locales y perfil public-demo para Cloudflare.
 - [x] Creado generador estático por lista positiva: sin Discovery, ejecutables ni módulos de transferencia.
 - [x] Añadidos controles en app.js y política CSP exclusivamente same-origin en el artefacto público.
@@ -18,21 +18,21 @@ Guía de despliegue de la edición pública, que permite probar la aplicación e
 
 Desde la raíz del repositorio:
 
-    python3 audit-workbench/deploy/build-pages-demo.py
-    node audit-workbench/tests/test_pages_demo.cjs
+    python3 deploy/build-pages-demo.py
+    node tests/test_pages_demo.cjs
 
-Solo se publica audit-workbench/dist-pages; esa carpeta se ignora en Git. Nunca publiques audit-workbench directamente.
+Solo se publica dist-pages; esa carpeta se ignora en Git. Nunca publiques el repositorio entero.
 
 ## Configuración en Cloudflare
 
-En Workers & Pages, crea un proyecto Pages conectado al repositorio sempitern0/sysadmin.
+En Workers & Pages, crea un proyecto Pages conectado al repositorio sempitern0/RabbitMole.
 
 | Configuración          | Valor                                           |
 | ---------------------- | ----------------------------------------------- |
-| Nombre sugerido        | dragonboon-infraaudit (sujeto a disponibilidad) |
+| Nombre sugerido        | rabbitmole (sujeto a disponibilidad) |
 | Framework              | None                                            |
 | Production branch      | pages-production                                |
-| Root directory         | audit-workbench                                 |
+| Root directory | (vacío; raíz del repositorio) |
 | Build command          | python3 deploy/build-pages-demo.py              |
 | Build output directory | dist-pages                                      |
 | Variables/secretos     | Ninguna                                         |

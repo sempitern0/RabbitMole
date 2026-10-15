@@ -1,4 +1,4 @@
-# Installing and updating Audit Workbench
+# Installing and updating RabbitMole
 
 **English** · [Español](INSTALLATION_ES.md)
 
@@ -16,7 +16,7 @@ This guide is for auditors and administrators who need to use the application on
 From a copy of the repository:
 
 ```powershell
-cd audit-workbench
+
 .\audit-workbench.ps1
 ```
 
@@ -26,7 +26,7 @@ To update the installed files:
 .\audit-workbench.ps1 -Update
 ```
 
-You can also serve the files with Python from the `audit-workbench/` directory:
+You can also serve the files with Python from the `` directory:
 
 ```powershell
 py -m http.server 8765 --bind 127.0.0.1
@@ -39,7 +39,7 @@ Open `http://127.0.0.1:8765` in your browser. If you previously used a different
 From the repository:
 
 ```bash
-cd audit-workbench
+
 bash ./audit-workbench.sh
 ```
 
@@ -62,7 +62,7 @@ Add `--no-open` to install without opening a browser. Use `--dir PATH` to choose
 Use **Docker Compose + Caddy** to serve the static PWA from a stable domain with automatic HTTPS. It does **not** store audit records on the server. See [HTTPS deployment](deploy/README.md) and the [detailed Spanish deployment guide](deploy/README_ES.md) for DNS, TLS, updates, security, and verification.
 
 ```bash
-cd audit-workbench/deploy
+cd deploy
 cp .env.example .env
 # Set AUDIT_DOMAIN and ACME_EMAIL.
 docker compose config --quiet
@@ -76,7 +76,7 @@ Each device retains its own local records. Export/import JSON when switching fro
 
 Browser installation generally requires an **initial HTTPS load** from a trusted server accessible to the device. A ZIP file by itself **is not an installable APK or IPA**.
 
-1. Publish **only the static files** in `audit-workbench/` on an intranet or HTTPS host with a valid certificate. Never publish confidential JSON files, PDFs, or evidence.
+1. Publish **only the static files** in `` on an intranet or HTTPS host with a valid certificate. Never publish confidential JSON files, PDFs, or evidence.
 2. Open the site using Chrome/Edge (Android) or Safari (iPhone/iPad) and wait for the application to load.
 3. On Android, use **Install app** or **Add to Home Screen**, if offered. On iOS/iPadOS, use **Share → Add to Home Screen**.
 4. Launch the application from its icon and confirm that it runs offline before taking it into an isolated network.
@@ -92,7 +92,7 @@ You can open `index.html` as a local file for basic use, but `file://` does not 
 
 1. On the previous device, go to **Backups and exports → Download full backup (.json)**.
 2. Copy the JSON using an approved, encrypted channel.
-3. Open Audit Workbench on the new device, select **Import**, and choose the file.
+3. Open RabbitMole on the new device, select **Import**, and choose the file.
 4. Check the client, inventories, findings, evidence, and generated report. Do not delete the original until recovery has been verified.
 
 Automatic folder backups work only in compatible browsers, while permission remains active and the application is open. They do not synchronize data across devices.
@@ -120,13 +120,13 @@ The application's cache is versioned and **does not store audit records**. After
 To inspect them before execution:
 
 ```bash
-curl -fL -o audit-workbench.sh 'https://raw.githubusercontent.com/sempitern0/sysadmin/main/audit-workbench/audit-workbench.sh'
+curl -fL -o audit-workbench.sh 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/audit-workbench.sh'
 less audit-workbench.sh
 bash ./audit-workbench.sh
 ```
 
 ```powershell
-Invoke-WebRequest 'https://raw.githubusercontent.com/sempitern0/sysadmin/main/audit-workbench/audit-workbench.ps1' -OutFile audit-workbench.ps1
+Invoke-WebRequest 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/audit-workbench.ps1' -OutFile audit-workbench.ps1
 Get-Content .\audit-workbench.ps1
 .\audit-workbench.ps1
 ```

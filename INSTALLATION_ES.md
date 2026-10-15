@@ -1,4 +1,4 @@
-# Instalación y actualización de Audit Workbench
+# Instalación y actualización de RabbitMole
 
 [English](INSTALLATION.md) · **Español**
 
@@ -16,7 +16,7 @@ Esta guía está dirigida a auditores y administradores que necesitan usar la ap
 Desde una copia del repositorio:
 
 ```powershell
-cd audit-workbench
+
 .\audit-workbench.ps1
 ```
 
@@ -26,7 +26,7 @@ Para actualizar los archivos instalados:
 .\audit-workbench.ps1 -Update
 ```
 
-También puedes servir los archivos con Python desde la carpeta `audit-workbench/`:
+También puedes servir los archivos con Python desde la carpeta ``:
 
 ```powershell
 py -m http.server 8765 --bind 127.0.0.1
@@ -39,7 +39,7 @@ Abre `http://127.0.0.1:8765` en tu navegador. Si trabajaste antes con otra direc
 Desde el repositorio:
 
 ```bash
-cd audit-workbench
+
 bash ./audit-workbench.sh
 ```
 
@@ -59,10 +59,10 @@ Para instalar sin abrir navegador, añade `--no-open`. Para elegir carpeta de de
 
 ## Despliegue en servidor HTTPS (recomendado para varios dispositivos)
 
-La opción reproducible para servir Audit Workbench desde un dominio es **Docker Compose + Caddy**. Se publica exclusivamente la interfaz estática, con certificados HTTPS automáticos; no se almacenan expedientes en el servidor. Consulta [Desplegar con HTTPS](deploy/README_ES.md) para DNS, puertos, instalación, protección de datos, actualizaciones y comprobaciones.
+La opción reproducible para servir RabbitMole desde un dominio es **Docker Compose + Caddy**. Se publica exclusivamente la interfaz estática, con certificados HTTPS automáticos; no se almacenan expedientes en el servidor. Consulta [Desplegar con HTTPS](deploy/README_ES.md) para DNS, puertos, instalación, protección de datos, actualizaciones y comprobaciones.
 
 ```bash
-cd audit-workbench/deploy
+cd deploy
 cp .env.example .env
 # Configura AUDIT_DOMAIN y ACME_EMAIL.
 docker compose config --quiet
@@ -76,7 +76,7 @@ python3 smoke_https.py https://auditoria.example.com
 
 La instalación desde navegador requiere, en general, **una primera carga HTTPS** desde un servidor fiable y accesible al dispositivo. Un ZIP por sí mismo **no es un APK o IPA instalable**.
 
-1. Publica **solo los archivos estáticos** de `audit-workbench/` en una intranet o alojamiento HTTPS con certificado válido. Nunca publiques JSON, PDFs o evidencias confidenciales.
+1. Publica **solo los archivos estáticos** de `` en una intranet o alojamiento HTTPS con certificado válido. Nunca publiques JSON, PDFs o evidencias confidenciales.
 2. Accede desde Chrome/Edge (Android) o Safari (iPhone/iPad) y espera a que cargue la aplicación.
 3. En Android usa la opción **Instalar aplicación** o **Añadir a pantalla de inicio**, si se ofrece. En iOS/iPadOS utiliza **Compartir → Añadir a pantalla de inicio**.
 4. Abre la aplicación desde su icono y comprueba que funciona sin conexión antes de llevarla a una red aislada.
@@ -92,7 +92,7 @@ Puedes abrir `index.html` como archivo local para un uso básico, pero `file://`
 
 1. En el equipo anterior entra en **Copias y exportaciones → Descargar backup completo (.json)**.
 2. Copia el JSON utilizando un canal aprobado y protegido por cifrado.
-3. Abre Audit Workbench en el nuevo dispositivo, pulsa **Importar** y elige el archivo.
+3. Abre RabbitMole en el nuevo dispositivo, pulsa **Importar** y elige el archivo.
 4. Comprueba cliente, inventarios, hallazgos, evidencias e informe generado. No elimines el original hasta verificar la restauración.
 
 Las copias automáticas a carpeta solo funcionan en navegadores compatibles, con permiso activo y la aplicación abierta. No constituyen sincronización entre dispositivos.
@@ -120,13 +120,13 @@ La caché de la aplicación se actualiza por versiones y **no almacena los exped
 Para comprobarlos antes de ejecutarlos:
 
 ```bash
-curl -fL -o audit-workbench.sh 'https://raw.githubusercontent.com/sempitern0/sysadmin/main/audit-workbench/audit-workbench.sh'
+curl -fL -o audit-workbench.sh 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/audit-workbench.sh'
 less audit-workbench.sh
 bash ./audit-workbench.sh
 ```
 
 ```powershell
-Invoke-WebRequest 'https://raw.githubusercontent.com/sempitern0/sysadmin/main/audit-workbench/audit-workbench.ps1' -OutFile audit-workbench.ps1
+Invoke-WebRequest 'https://raw.githubusercontent.com/sempitern0/RabbitMole/main/audit-workbench.ps1' -OutFile audit-workbench.ps1
 Get-Content .\audit-workbench.ps1
 .\audit-workbench.ps1
 ```

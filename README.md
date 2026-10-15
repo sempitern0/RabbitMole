@@ -1,8 +1,8 @@
-# RabbitMole · sysadmin
+# RabbitMole
 
 **English** · [Español](README_ES.md)
 
-[← Back to the sysadmin repository](../README.md) · [Installation](INSTALLATION.md) · [Security](SECURITY.md) · [Legal notes](LEGAL.md)
+[Installation](INSTALLATION.md) · [Security](SECURITY.md) · [Legal notes](LEGAL.md)
 
 **Offline-first technical auditing, inventory, and documentation tool** for recording assets, evaluating controls, documenting findings and evidence, planning remediation, and preparing client reports.
 
@@ -10,7 +10,7 @@ The PWA runs in the browser without requiring external services. Network scans a
 
 ## Getting started
 
-From the repository's `audit-workbench/` directory:
+From the repository root:
 
 ```bash
 bash ./audit-workbench.sh
@@ -23,7 +23,7 @@ bash ./audit-workbench.sh
 To work through a stable local origin:
 
 ```bash
-cd audit-workbench
+
 python -m http.server 8765 --bind 127.0.0.1
 ```
 
@@ -166,7 +166,7 @@ Full installation, updating, and troubleshooting instructions are in **[INSTALLA
 ## Organization
 
 ```text
-audit-workbench/
+RabbitMole/
 ├── index.html
 ├── manifest.webmanifest
 ├── sw.js                  # At root: maintains the PWA's offline scope
@@ -179,7 +179,7 @@ audit-workbench/
 └── tests/
 ```
 
-RabbitMole is part of **sysadmin**, a collection of system administration tools. It operates independently of the Active Directory assistants at the repository root: its purpose is to record and analyze audits, not to perform administration or hardening actions on remote systems.
+RabbitMole is an independent offline-first auditing tool that records and evaluates evidence without administering infrastructure.
 
 ## Document confirmation and exceptional amendments
 

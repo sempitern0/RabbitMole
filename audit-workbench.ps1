@@ -1,9 +1,9 @@
-# Audit Workbench — instalador offline Windows, PowerShell 5.1+ / 7+.
+# RabbitMole — instalador offline Windows, PowerShell 5.1+ / 7+.
 [CmdletBinding()]
 param(
-    [string]$OutputDirectory = (Join-Path $env:LOCALAPPDATA 'SysadminTools\AuditWorkbench'),
+    [string]$OutputDirectory = (Join-Path $env:LOCALAPPDATA 'RabbitMole'),
     [string]$Ref = 'main',
-    [string]$Repository = 'sempitern0/sysadmin',
+    [string]$Repository = 'sempitern0/RabbitMole',
     [switch]$Update,
     [switch]$NoOpen
 )
@@ -37,16 +37,16 @@ if ($required) {
             if ($source -and (Test-Path -LiteralPath $sourceFile -PathType Leaf)) {
                 Copy-Item -LiteralPath $sourceFile -Destination $stagedFile
             } else {
-                $url = "https://raw.githubusercontent.com/$Repository/$Ref/audit-workbench/$name"
+                $url = "https://raw.githubusercontent.com/$Repository/$Ref/$name"
                 Invoke-WebRequest -Uri $url -OutFile $stagedFile -UseBasicParsing -TimeoutSec 90 | Out-Null
             }
             if (-not (Test-Path -LiteralPath $stagedFile -PathType Leaf) -or (Get-Item -LiteralPath $stagedFile).Length -eq 0) {
                 throw "Archivo vacío: $name"
             }
         }
-        if (-not (Select-String -LiteralPath (Join-Path $stage 'index.html') -Pattern 'Audit Workbench' -SimpleMatch -Quiet) -or
+        if (-not (Select-String -LiteralPath (Join-Path $stage 'index.html') -Pattern 'RabbitMole' -SimpleMatch -Quiet) -or
             -not (Select-String -LiteralPath (Join-Path $stage 'js/audit-relations.js') -Pattern 'AuditRelations' -SimpleMatch -Quiet)) {
-            throw 'Los archivos no corresponden con Audit Workbench.'
+            throw 'Los archivos no corresponden con RabbitMole.'
         }
         foreach ($name in $files) {
             $parent = Split-Path -Parent (Join-Path $OutputDirectory $name)

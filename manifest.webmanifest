@@ -3,7 +3,7 @@
   "short_name": "RabbitMole",
   "description": "RabbitMole: inventario, controles y evidencias offline.",
   "id": "./",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f3f6fa",

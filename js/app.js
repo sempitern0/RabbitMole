@@ -1874,17 +1874,63 @@
     glossarySelected = "";
   let glossaryReturn = null,
     lastAuditPage = "engagement";
+  // The glossary is an in-app route, not an external page: browser Back/Forward
+  // must restore the exact audit step, field and (when possible) scroll position.
+  // History contains only local opaque record IDs; no client data or credentials.
+  const HISTORY_KEY = "rabbitmoleGlossaryRoute";
+  function restoreGlossaryOrigin(origin) {
+    if (!origin) return;
+    const field = origin.field ? byId(origin.field) : null;
+    if (field) {
+      field.scrollIntoView({ block: "center" });
+      field.focus({ preventScroll: true });
+    } else if (Number.isFinite(origin.scrollY)) {
+      window.scrollTo(0, origin.scrollY);
+    }
+  }
   function backToAudit() {
+    if (window.history.state?.[HISTORY_KEY]?.view === "glossary") {
+      window.history.back();
+      return;
+    }
     const origin = glossaryReturn;
     glossaryReturn = null;
-    const destination = origin?.page || lastAuditPage;
-    move(destination);
-    const target = origin?.field ? byId(origin.field) : null;
-    if (target) {
-      target.scrollIntoView({ block: "center" });
-      target.focus({ preventScroll: true });
-    } else if (origin?.scrollY !== undefined)
-      window.scrollTo(0, origin.scrollY);
+    move(origin?.page || lastAuditPage);
+    restoreGlossaryOrigin(origin);
+  }
+  window.addEventListener("popstate", (event) => {
+    const route = event.state?.[HISTORY_KEY];
+    if (!route) return;
+    if (route.auditId && route.auditId !== currentId) {
+      const record = records.find((entry) => entry.id === route.auditId);
+      if (!record) {
+        glossaryReturn = null;
+        move("records", { fromHistory: true });
+        return;
+      }
+      // Persist the audit being left before activating a different local record.
+      void flush().then(() => {
+        setActive(record);
+        restoreHistoryRoute(route);
+      }).catch((error) => alert(error.message));
+      return;
+    }
+    restoreHistoryRoute(route);
+  });
+  function restoreHistoryRoute(route) {
+    if (route.view === "glossary") {
+      glossaryReturn = route.origin || null;
+      glossaryCategory = "Todas";
+      glossaryQuery = "";
+      glossarySelected = glossary?.byId(route.term)?.id || "";
+      page = "glossary";
+      render();
+      window.scrollTo(0, 0);
+    } else if (route.view === "audit" && typeof route.section === "string") {
+      glossaryReturn = null;
+      move(route.section, { fromHistory: true });
+      restoreGlossaryOrigin(route);
+    }
   }
   function glossaryResults() {
     return glossary?.search(glossaryQuery, glossaryCategory) || [];
@@ -2028,11 +2074,20 @@
       <p class="glossary-disclaimer">Referencia orientativa. Documenta la prueba realizada y contrasta los criterios con el contexto del cliente.</p></article>`;
   }
   function openGlossary(term, origin) {
-    glossaryReturn = origin || { page: lastAuditPage, scrollY: window.scrollY };
+    if (page === "glossary") return;
+    glossaryReturn = origin || { page, scrollY: window.scrollY };
     const selected = glossary?.byId(term) || glossary?.search(term)?.[0];
     glossaryQuery = selected ? "" : term || "";
     glossaryCategory = "Todas";
     glossarySelected = selected?.id || "";
+    const route = { view: "audit", section: glossaryReturn.page,
+      field: glossaryReturn.field || "", scrollY: glossaryReturn.scrollY,
+      auditId: currentId };
+    window.history.replaceState({ ...window.history.state, [HISTORY_KEY]: route }, "");
+    window.history.pushState({ [HISTORY_KEY]: {
+      view: "glossary", term: glossarySelected, origin: glossaryReturn,
+      auditId: currentId
+    } }, "", "#glossary/" + encodeURIComponent(glossarySelected));
     page = "glossary";
     render();
     scrollTo(0, 0);
@@ -3292,14 +3347,21 @@
     originalRender();
     applyDocumentLock();
   };
-  function move(section) {
+  function move(section, { fromHistory = false } = {}) {
     if (PUBLIC_DEMO && ["connections", "online"].includes(section)) return;
+    if (section === "glossary") {
+      if (page !== "glossary") openGlossary("", { page, scrollY: window.scrollY });
+      return;
+    }
     if (nav.some((n) => n[0] === section)) lastAuditPage = section;
-    if (section === "glossary" && page !== "glossary")
-      glossaryReturn = {
-        page: page === "records" ? lastAuditPage : page,
-        scrollY: window.scrollY,
-      };
+    if (!fromHistory && page === "glossary" &&
+        window.history.state?.[HISTORY_KEY]?.view === "glossary") {
+      // Switching menus from the glossary should not leave a stale URL/route.
+      window.history.replaceState({ [HISTORY_KEY]: {
+        view: "audit", section, auditId: currentId
+      } }, "", window.location.pathname + window.location.search);
+      glossaryReturn = null;
+    }
     if (
       ![
         "records",
@@ -4169,6 +4231,9 @@
     if (b.dataset.glossarySelect) {
       glossarySelected = b.dataset.glossarySelect;
       filterGlossary(glossaryQuery);
+      const route = window.history.state?.[HISTORY_KEY];
+      if (route?.view === "glossary")
+        window.history.replaceState({ [HISTORY_KEY]: { ...route, term: glossarySelected } }, "");
       return;
     }
     if (b.dataset.glossaryCategory) {

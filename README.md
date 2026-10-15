@@ -1,4 +1,4 @@
-# Dragonboon InfraAudit · sysadmin
+# RabbitMole · sysadmin
 
 **English** · [Español](README_ES.md)
 
@@ -83,7 +83,7 @@ Delivery provides two modes: **Generate draft PDF**, always marked as unvalidate
 
 ### Import an existing audit JSON
 
-When a single audit or full-library JSON contains a report reference already in the local browser library, Dragonboon InfraAudit offers **Cancel** or **Overwrite**. Cancel leaves all records unchanged. Overwrite replaces the complete matching audit (including evidence, images, control/document approval status, and signatures) while keeping its internal library identity and creation date. **Export a verified copy of the current audit before overwriting** if you need to preserve the earlier state.
+When a single audit or full-library JSON contains a report reference already in the local browser library, RabbitMole offers **Cancel** or **Overwrite**. Cancel leaves all records unchanged. Overwrite replaces the complete matching audit (including evidence, images, control/document approval status, and signatures) while keeping its internal library identity and creation date. **Export a verified copy of the current audit before overwriting** if you need to preserve the earlier state.
 
 For multi-audit backups, the dialog shows matching references and how many new reports will also be added. Saves use one IndexedDB transaction or one fallback storage write. Duplicate references in the imported backup or conflicting duplicates already in the local library cause an error without changing anything. A single JSON with no report ID is still imported as a new audit.
 
@@ -96,7 +96,7 @@ The A4 print stylesheet reserves zero browser page margin to prevent title, URL,
 1. **Settings:** register your consultancy and audit team; assign professionals to the audit record.
 2. **Library:** create or open an audit, identify the client, and define scope, authorizations, and exclusions.
 3. **Inventory:** document hardware, operating systems, networks, and software. Use search and selectors; custom values are supported.
-4. **Controls:** select templates for systems, networks, identity, or continuity. All start as *Pending* and require actual verification.
+4. **Controls:** select templates for systems, networks, identity, or continuity. All start as _Pending_ and require actual verification.
 5. **Findings and evidence:** record observations, link assets and controls, describe consequences, recommended actions, and closure criteria. Retain original evidence and its SHA-256 hashes.
 6. **Quality and delivery:** review warnings, priorities, and the remediation plan before generating the PDF. If essential information is missing, the report is marked as a draft.
 7. **Follow-up:** record verified remediation and issue a separate reassessment report with historical changes and pending decisions.
@@ -119,13 +119,13 @@ Audit records are stored **in the browser**, preferably in **IndexedDB**, with `
 
 **Do not treat browser storage as a backup.** Before updating or switching devices, use **Backups and exports → Download full backup (.json)** and check the downloaded file.
 
-| Format | Purpose | Restorable |
-| --- | --- | --- |
-| Individual JSON | Continue an audit in another browser | Yes |
-| Full JSON backup | Back up and recover all audit records | Yes |
-| PDF | Formal delivery of an audit or reassessment | No |
-| XLSX | Editable tabular inventory and tracking | No |
-| CSV | Exchange a section with other tools | No |
+| Format           | Purpose                                     | Restorable |
+| ---------------- | ------------------------------------------- | ---------- |
+| Individual JSON  | Continue an audit in another browser        | Yes        |
+| Full JSON backup | Back up and recover all audit records       | Yes        |
+| PDF              | Formal delivery of an audit or reassessment | No         |
+| XLSX             | Editable tabular inventory and tracking     | No         |
+| CSV              | Exchange a section with other tools         | No         |
 
 To restore a record, choose **Import** and select the JSON file. Check the recovered information before deleting earlier copies. Some browsers support periodic backups to an authorized folder **only while the application remains open**; this does not replace an external backup system.
 
@@ -153,13 +153,13 @@ See **[Security and privacy](SECURITY.md)** and **[Model clauses (Spain)](LEGAL.
 
 ## Help and troubleshooting
 
-| Situation | What to check |
-| --- | --- |
-| My audits are missing | Verify the same URL/origin, browser, and profile; restore from JSON |
+| Situation                               | What to check                                                               |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| My audits are missing                   | Verify the same URL/origin, browser, and profile; restore from JSON         |
 | Interface fails to load after an update | Force a reload; inspect the cache/service worker without deleting IndexedDB |
-| Cannot install on a tablet | Check HTTPS, manifest, and browser support |
-| Fonts or colors are missing | Check `css/`, `fonts/`, paths, and CSP errors in the console |
-| PDF is incomplete | Review **Quality**, enable background printing, and verify A4 |
+| Cannot install on a tablet              | Check HTTPS, manifest, and browser support                                  |
+| Fonts or colors are missing             | Check `css/`, `fonts/`, paths, and CSP errors in the console                |
+| PDF is incomplete                       | Review **Quality**, enable background printing, and verify A4               |
 
 Full installation, updating, and troubleshooting instructions are in **[INSTALLATION.md](INSTALLATION.md)**.
 
@@ -179,11 +179,11 @@ audit-workbench/
 └── tests/
 ```
 
-Dragonboon InfraAudit is part of **sysadmin**, a collection of system administration tools. It operates independently of the Active Directory assistants at the repository root: its purpose is to record and analyze audits, not to perform administration or hardening actions on remote systems.
+RabbitMole is part of **sysadmin**, a collection of system administration tools. It operates independently of the Active Directory assistants at the repository root: its purpose is to record and analyze audits, not to perform administration or hardening actions on remote systems.
 
 ## Document confirmation and exceptional amendments
 
-Dragonboon InfraAudit distinguishes **draft**, **confirmed**, and **amendment in progress**. Drafts can be edited and reviewed without claiming final approval. The final-report preflight additionally checks the responsible auditor, authorization, executive summary, duplicate identifiers, referenced evidence, sign-off, and other existing consistency checks.
+RabbitMole distinguishes **draft**, **confirmed**, and **amendment in progress**. Drafts can be edited and reviewed without claiming final approval. The final-report preflight additionally checks the responsible auditor, authorization, executive summary, duplicate identifiers, referenced evidence, sign-off, and other existing consistency checks.
 
 Under **Final report**, identify the responsible person and confirm the audited record after reviewing the warnings. Confirmation stores a local SHA-256 digest and a revision entry and disables ordinary editing. To correct a confirmed audit, select **Open exceptional amendment**, identify the responsible person and explain the reason. After editing, run the definitive checks and choose **Validate changes and close amendment**; the local journal records the revision, reason, changed field paths, and before/after SHA-256 digests. A PDF for final delivery requires the confirmed content to match its digest. Older records remain drafts until explicitly confirmed.
 
@@ -191,9 +191,9 @@ Under **Final report**, identify the responsible person and confirm the audited 
 
 ## Controlled PWA updates
 
-When Dragonboon InfraAudit is served from a stable HTTPS or localhost origin, it checks for updates when opened, when connectivity returns, when the app becomes visible, and periodically while open. A prepared version is announced inside the interface; **it is not activated automatically while an audit is being edited**. Choose **Save and update** to save pending changes, verify local persistence, activate the waiting service worker, and reload. Choose **Later** to continue on the current version. **Check for updates** is also available manually. The application never uploads audit records during update checks.
+When RabbitMole is served from a stable HTTPS or localhost origin, it checks for updates when opened, when connectivity returns, when the app becomes visible, and periodically while open. A prepared version is announced inside the interface; **it is not activated automatically while an audit is being edited**. Choose **Save and update** to save pending changes, verify local persistence, activate the waiting service worker, and reload. Choose **Later** to continue on the current version. **Check for updates** is also available manually. The application never uploads audit records during update checks.
 
-**Initial migration:** PWA installations predating this update manager may need to close all Dragonboon InfraAudit tabs and reopen the app once to acquire the new interface. A source repository commit is not a deployment: the server hosting the PWA must also be updated. If a local file installer was used, refresh its installation directory first. Close other open tabs before activating an update because a service-worker activation affects all tabs sharing its scope; other tabs are not automatically reloaded by this workflow. Do not clear browser site data to force updates, as that can delete locally stored audit records. Export a backup before major releases.
+**Initial migration:** PWA installations predating this update manager may need to close all RabbitMole tabs and reopen the app once to acquire the new interface. A source repository commit is not a deployment: the server hosting the PWA must also be updated. If a local file installer was used, refresh its installation directory first. Close other open tabs before activating an update because a service-worker activation affects all tabs sharing its scope; other tabs are not automatically reloaded by this workflow. Do not clear browser site data to force updates, as that can delete locally stored audit records. Export a backup before major releases.
 
 ## Offline availability safeguards
 
@@ -223,7 +223,7 @@ The **Duplicate** action creates a new audit reference and returns the copy to d
 
 ## Current JSON contract (pre-release cleanup)
 
-Dragonboon InfraAudit accepts **only schemaVersion 3** for individual audit JSON. Full-library backups use `kind: "audit-workbench-library"` with `schemaVersion: 3`; consultancy profiles use `kind: "audit-workbench-consultancy"` with `schemaVersion: 3`. The application no longer accepts pre-release backup/profile formats or recovers records from old v2 storage keys. Encrypted backup containers have a separate cryptographic envelope and are not another audit schema. The live IndexedDB store and localStorage fallback remain supported for resilience. Before adopting this release, export any wanted test records from an earlier build and treat them as disposable unless already compatible with the current schema.
+RabbitMole accepts **only schemaVersion 3** for individual audit JSON. Full-library backups use `kind: "audit-workbench-library"` with `schemaVersion: 3`; consultancy profiles use `kind: "audit-workbench-consultancy"` with `schemaVersion: 3`. The application no longer accepts pre-release backup/profile formats or recovers records from old v2 storage keys. Encrypted backup containers have a separate cryptographic envelope and are not another audit schema. The live IndexedDB store and localStorage fallback remain supported for resilience. Before adopting this release, export any wanted test records from an earlier build and treat them as disposable unless already compatible with the current schema.
 
 ### Executive findings and visual evidence
 

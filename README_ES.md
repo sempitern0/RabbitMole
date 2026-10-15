@@ -1,4 +1,4 @@
-# Dragonboon InfraAudit · sysadmin
+# RabbitMole · sysadmin
 
 [English](README.md) · **Español**
 
@@ -83,7 +83,7 @@ La opción **Descargar expediente JSON** solicita una descarga local y muestra u
 
 ### Importar un JSON que ya existe
 
-Al importar una auditoría individual o una copia completa, **Dragonboon InfraAudit reconoce expedientes existentes por la referencia del informe** (no por el nombre del cliente). Si coincide, muestra un diálogo con dos botones: **Cancelar** (no cambia los registros) o **Sobrescribir** (sustituye íntegramente el expediente existente por el contenido del JSON). Se conservan la identidad interna y fecha de creación del registro; imágenes, firmas, hallazgos, controles y confirmaciones documentales pasan a ser las del archivo importado. Antes de confirmar, **descarga y verifica una copia de la versión local** si necesitas conservarla.
+Al importar una auditoría individual o una copia completa, **RabbitMole reconoce expedientes existentes por la referencia del informe** (no por el nombre del cliente). Si coincide, muestra un diálogo con dos botones: **Cancelar** (no cambia los registros) o **Sobrescribir** (sustituye íntegramente el expediente existente por el contenido del JSON). Se conservan la identidad interna y fecha de creación del registro; imágenes, firmas, hallazgos, controles y confirmaciones documentales pasan a ser las del archivo importado. Antes de confirmar, **descarga y verifica una copia de la versión local** si necesitas conservarla.
 
 Las copias completas pueden mezclar informes nuevos y ya existentes. El diálogo resume los que se sustituirán y cuántos se crearán; todas las operaciones se guardan en una sola transacción en IndexedDB o una sola escritura en almacenamiento alternativo. Si hay referencias repetidas dentro del JSON, o la biblioteca contiene más de un registro con la misma referencia, la importación se bloquea sin modificar nada. Un JSON individual sin referencia sigue ofreciéndose como **auditoría nueva**. Ningún registro se sobrescribe automáticamente.
 
@@ -95,7 +95,7 @@ Los controles **Pendiente** y **No verificado**, y las no conformidades sin hall
 
 ## Impresión PDF: encabezados limpios y lectura más cómoda
 
-La hoja de impresión A4 ahora reserva **cero margen para los encabezados y pies del navegador** y aplica sus márgenes de lectura dentro de cada página. Así evita el título «Dragonboon InfraAudit», la dirección local/HTTPS y la fecha incluso cuando el navegador activa sus cabeceras por defecto. Como consecuencia, el PDF no incorpora numeración automática; la portada identifica el documento. Si el navegador o la impresora siguen añadiendo datos propios, abre **Más ajustes → Encabezados y pies de página** y desmárcalo (la configuración nativa tiene la última palabra). Activa «Gráficos de fondo» para reproducir los colores de la portada.
+La hoja de impresión A4 ahora reserva **cero margen para los encabezados y pies del navegador** y aplica sus márgenes de lectura dentro de cada página. Así evita el título «RabbitMole», la dirección local/HTTPS y la fecha incluso cuando el navegador activa sus cabeceras por defecto. Como consecuencia, el PDF no incorpora numeración automática; la portada identifica el documento. Si el navegador o la impresora siguen añadiendo datos propios, abre **Más ajustes → Encabezados y pies de página** y desmárcalo (la configuración nativa tiene la última palabra). Activa «Gráficos de fondo» para reproducir los colores de la portada.
 
 La edición ejecutiva organiza prioridades y próximos pasos por párrafos/números sin repetirlos en la conclusión. La técnica evita repetir en las fichas los identificadores ya mostrados en los encabezados; las fotografías a tamaño completo se presentan en **Registro de evidencias**, mientras cada hallazgo enlaza sus identificadores. Los textos extensos de alcance, metodología y conclusiones se imprimen a ancho completo. Los capítulos sin redes o CVE registrados no se incluyen en el índice ni como páginas vacías. No se alteran el expediente JSON ni los controles documentales.
 
@@ -104,7 +104,7 @@ La edición ejecutiva organiza prioridades y próximos pasos por párrafos/núme
 1. **Configuración:** registra tu consultora y su equipo de auditores; asigna profesionales al expediente.
 2. **Biblioteca:** crea o abre una auditoría, identifica el cliente y delimita alcance, autorizaciones y exclusiones.
 3. **Inventario:** documenta hardware, sistemas operativos, redes y software. Usa búsquedas y selectores; se admiten valores personalizados.
-4. **Controles:** selecciona plantillas de sistemas, redes, identidad o continuidad. Todos comienzan como *Pendiente* y requieren verificación real.
+4. **Controles:** selecciona plantillas de sistemas, redes, identidad o continuidad. Todos comienzan como _Pendiente_ y requieren verificación real.
 5. **Hallazgos y evidencias:** registra lo observado, vincula activos y controles, documenta consecuencias, acciones recomendadas y criterios de cierre. Conserva los originales de evidencias y sus huellas SHA-256.
 6. **Calidad y entrega:** revisa avisos, prioridades y plan de remediación antes de generar el PDF. Si faltan datos esenciales, el informe se identifica como borrador.
 7. **Seguimiento:** registra las correcciones verificadas y emite un informe de reevaluación independiente, con evolución histórica y decisiones pendientes.
@@ -112,7 +112,6 @@ La edición ejecutiva organiza prioridades y próximos pasos por párrafos/núme
 ### Descubrimiento remoto desde el dispositivo del auditor
 
 **Asistente guiado sin servidor web adicional:** desde la instalación, abre `discovery/iniciar.cmd` en Windows o ejecuta `bash discovery/run.sh` en Linux/macOS. Elige una red autorizada de las sugeridas o introduce su CIDR, selecciona Nmap o ping y confirma escribiendo `AUTORIZO`. La captura se genera como un JSON nuevo para la importación manual en la PWA. Puedes consultar los pasos en [Discovery](discovery/README_ES.md).
-
 
 El nuevo [motor Discovery](discovery/README_ES.md) permite conectar un portátil a una red privada autorizada, comprobar las herramientas disponibles con `python3 discovery/discover.py doctor` y generar una captura importable con `python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output captura-lan.json`. Prefiere Nmap y, si no está instalado, utiliza ping nativo de manera limitada. No necesita instalación en los activos auditados. La herramienta no confirma sistemas operativos, vulnerabilidades ni VLAN de forma remota; se revisa todo antes de importar.
 
@@ -138,13 +137,13 @@ Los expedientes se guardan **en el navegador**, preferentemente en **IndexedDB**
 
 **No consideres este almacenamiento una copia de seguridad.** Antes de actualizar o cambiar de dispositivo, entra en **Copias y exportaciones → Descargar backup completo (.json)** y comprueba el archivo descargado.
 
-| Formato | Para qué sirve | Se puede restaurar |
-| --- | --- | --- |
-| JSON individual | Continuar una auditoría en otro navegador | Sí |
-| Backup JSON completo | Resguardar y recuperar todos los expedientes | Sí |
-| PDF | Entrega formal de la auditoría o reevaluación | No |
-| XLSX | Inventario y seguimiento tabular editable | No |
-| CSV | Intercambiar una sección con otras herramientas | No |
+| Formato              | Para qué sirve                                  | Se puede restaurar |
+| -------------------- | ----------------------------------------------- | ------------------ |
+| JSON individual      | Continuar una auditoría en otro navegador       | Sí                 |
+| Backup JSON completo | Resguardar y recuperar todos los expedientes    | Sí                 |
+| PDF                  | Entrega formal de la auditoría o reevaluación   | No                 |
+| XLSX                 | Inventario y seguimiento tabular editable       | No                 |
+| CSV                  | Intercambiar una sección con otras herramientas | No                 |
 
 Para recuperar un expediente, pulsa **Importar** y selecciona el JSON. Comprueba la información restaurada antes de eliminar copias anteriores. Algunos navegadores permiten guardar copias periódicas en una carpeta autorizada **solo mientras la aplicación está abierta**; no sustituye un sistema externo de backups.
 
@@ -172,13 +171,13 @@ Consulta **[Seguridad y privacidad](SECURITY_ES.md)** y **[Cláusulas modelo (Es
 
 ## Ayuda e incidencias
 
-| Situación | Qué comprobar |
-| --- | --- |
-| No aparecen mis auditorías | Verifica la misma URL/origen, navegador y perfil; restaura desde JSON |
-| No se carga la interfaz tras actualizar | Fuerza recarga; revisa caché/service worker sin borrar IndexedDB |
-| No puedo instalar en tablet | Comprueba HTTPS, manifiesto y compatibilidad del navegador |
-| Faltan fuentes o colores | Comprueba `css/`, `fonts/`, rutas y errores CSP en consola |
-| PDF incompleto | Revisa **Calidad**, activa impresión de fondos y verifica A4 |
+| Situación                               | Qué comprobar                                                         |
+| --------------------------------------- | --------------------------------------------------------------------- |
+| No aparecen mis auditorías              | Verifica la misma URL/origen, navegador y perfil; restaura desde JSON |
+| No se carga la interfaz tras actualizar | Fuerza recarga; revisa caché/service worker sin borrar IndexedDB      |
+| No puedo instalar en tablet             | Comprueba HTTPS, manifiesto y compatibilidad del navegador            |
+| Faltan fuentes o colores                | Comprueba `css/`, `fonts/`, rutas y errores CSP en consola            |
+| PDF incompleto                          | Revisa **Calidad**, activa impresión de fondos y verifica A4          |
 
 El proceso completo de instalación, actualización y diagnóstico está en **[INSTALLATION.md](INSTALLATION_ES.md)**.
 
@@ -198,11 +197,11 @@ audit-workbench/
 └── tests/
 ```
 
-Dragonboon InfraAudit forma parte de **sysadmin**, un conjunto de herramientas de administración de sistemas. Funciona de manera independiente de los asistentes de Active Directory de la raíz: su papel es registrar y analizar auditorías, no ejecutar tareas de administración o hardening sobre equipos remotos.
+RabbitMole forma parte de **sysadmin**, un conjunto de herramientas de administración de sistemas. Funciona de manera independiente de los asistentes de Active Directory de la raíz: su papel es registrar y analizar auditorías, no ejecutar tareas de administración o hardening sobre equipos remotos.
 
 ## Confirmación documental y rectificaciones excepcionales
 
-Dragonboon InfraAudit diferencia entre **borrador**, **confirmado** y **rectificación en curso**. El borrador puede editarse y revisarse sin presentarse como aprobado. El preflight definitivo comprueba además responsable auditor, autorización, resumen ejecutivo, identificadores duplicados, referencias de evidencia, validación responsable y otras reglas de coherencia existentes.
+RabbitMole diferencia entre **borrador**, **confirmado** y **rectificación en curso**. El borrador puede editarse y revisarse sin presentarse como aprobado. El preflight definitivo comprueba además responsable auditor, autorización, resumen ejecutivo, identificadores duplicados, referencias de evidencia, validación responsable y otras reglas de coherencia existentes.
 
 En **Informe final**, identifica a la persona responsable y confirma el expediente después de revisar los avisos. La confirmación registra una huella SHA-256 local y una revisión, y deshabilita la edición ordinaria. Para modificar una auditoría confirmada, utiliza **Abrir rectificación excepcional**, identifica al responsable y justifica el motivo. Tras editar, supera las validaciones definitivas y pulsa **Validar cambios y cerrar rectificación**; el historial local registra revisión, motivo, rutas de campos modificados y huellas SHA-256 anterior y posterior. El PDF definitivo exige que el contenido coincida con la huella confirmada. Los expedientes antiguos permanecen como borradores hasta confirmación expresa.
 
@@ -210,9 +209,9 @@ En **Informe final**, identifica a la persona responsable y confirma el expedien
 
 ## Actualizaciones controladas de la PWA
 
-Cuando Dragonboon InfraAudit se sirve desde un origen HTTPS o localhost estable, comprueba las actualizaciones al abrir, al recuperar la conexión, cuando vuelve a estar visible y periódicamente mientras está abierto. Una versión preparada se anuncia dentro de la interfaz; **no se activa automáticamente durante la edición de una auditoría**. Pulsa **Guardar y actualizar** para guardar los cambios pendientes, verificar la persistencia local, activar el service worker preparado y recargar la página. Pulsa **Más tarde** para continuar con la versión actual. También puedes usar **Buscar actualización** manualmente. La comprobación no sube datos de las auditorías.
+Cuando RabbitMole se sirve desde un origen HTTPS o localhost estable, comprueba las actualizaciones al abrir, al recuperar la conexión, cuando vuelve a estar visible y periódicamente mientras está abierto. Una versión preparada se anuncia dentro de la interfaz; **no se activa automáticamente durante la edición de una auditoría**. Pulsa **Guardar y actualizar** para guardar los cambios pendientes, verificar la persistencia local, activar el service worker preparado y recargar la página. Pulsa **Más tarde** para continuar con la versión actual. También puedes usar **Buscar actualización** manualmente. La comprobación no sube datos de las auditorías.
 
-**Primera transición:** las PWA instaladas antes de incorporar este gestor pueden necesitar cerrar todas las pestañas de Dragonboon InfraAudit y volver a abrir la aplicación una vez para adquirir la nueva interfaz. Actualizar el repositorio no actualiza automáticamente los archivos servidos: también hay que desplegar la versión en el servidor. Con los instaladores de archivos locales, primero actualiza la carpeta instalada. Cierra otras pestañas antes de activar una versión nueva: el service worker afecta a todas las pestañas bajo su ámbito, pero este flujo no las recarga automáticamente. No borres los datos del sitio para forzar actualizaciones, porque pueden contener expedientes. Exporta un backup antes de versiones importantes.
+**Primera transición:** las PWA instaladas antes de incorporar este gestor pueden necesitar cerrar todas las pestañas de RabbitMole y volver a abrir la aplicación una vez para adquirir la nueva interfaz. Actualizar el repositorio no actualiza automáticamente los archivos servidos: también hay que desplegar la versión en el servidor. Con los instaladores de archivos locales, primero actualiza la carpeta instalada. Cierra otras pestañas antes de activar una versión nueva: el service worker afecta a todas las pestañas bajo su ámbito, pero este flujo no las recarga automáticamente. No borres los datos del sitio para forzar actualizaciones, porque pueden contener expedientes. Exporta un backup antes de versiones importantes.
 
 ## Protección de disponibilidad offline
 
@@ -242,7 +241,7 @@ La opción **Duplicar** crea otra referencia de auditoría y devuelve la copia a
 
 ## Contrato JSON vigente (limpieza previa al lanzamiento)
 
-Dragonboon InfraAudit admite **únicamente schemaVersion 3** para el JSON de auditorías individuales. Las copias de biblioteca utilizan `kind: "audit-workbench-library"` con `schemaVersion: 3`; los perfiles de consultora utilizan `kind: "audit-workbench-consultancy"` con `schemaVersion: 3`. Ya no se aceptan respaldos/perfiles anteriores al lanzamiento ni se recuperan expedientes desde claves antiguas v2. El contenedor de copia cifrada conserva su formato criptográfico independiente: no es otro esquema de auditoría. Se mantienen IndexedDB y el almacenamiento alternativo local para mayor resiliencia. Antes de adoptar esta versión, exporta cualquier dato de prueba que quieras conservar y considéralo descartable si no se ajusta al esquema vigente.
+RabbitMole admite **únicamente schemaVersion 3** para el JSON de auditorías individuales. Las copias de biblioteca utilizan `kind: "audit-workbench-library"` con `schemaVersion: 3`; los perfiles de consultora utilizan `kind: "audit-workbench-consultancy"` con `schemaVersion: 3`. Ya no se aceptan respaldos/perfiles anteriores al lanzamiento ni se recuperan expedientes desde claves antiguas v2. El contenedor de copia cifrada conserva su formato criptográfico independiente: no es otro esquema de auditoría. Se mantienen IndexedDB y el almacenamiento alternativo local para mayor resiliencia. Antes de adoptar esta versión, exporta cualquier dato de prueba que quieras conservar y considéralo descartable si no se ajusta al esquema vigente.
 
 ### Informes ejecutivos con acciones y evidencia visual
 

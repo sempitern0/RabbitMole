@@ -1,4 +1,4 @@
-# Dragonboon InfraAudit — Cloudflare Pages
+# RabbitMole — Cloudflare Pages
 
 Guía de despliegue de la edición pública, que permite probar la aplicación e instalarla sin conexión. NO usar datos reales de clientes.
 
@@ -27,16 +27,16 @@ Solo se publica audit-workbench/dist-pages; esa carpeta se ignora en Git. Nunca 
 
 En Workers & Pages, crea un proyecto Pages conectado al repositorio sempitern0/sysadmin.
 
-| Configuración | Valor |
-| --- | --- |
-| Nombre sugerido | dragonboon-infraaudit (sujeto a disponibilidad) |
-| Framework | None |
-| Production branch | pages-production |
-| Root directory | audit-workbench |
-| Build command | python3 deploy/build-pages-demo.py |
-| Build output directory | dist-pages |
-| Variables/secretos | Ninguna |
-| Preview branches | None (deshabilitadas) |
+| Configuración          | Valor                                           |
+| ---------------------- | ----------------------------------------------- |
+| Nombre sugerido        | dragonboon-infraaudit (sujeto a disponibilidad) |
+| Framework              | None                                            |
+| Production branch      | pages-production                                |
+| Root directory         | audit-workbench                                 |
+| Build command          | python3 deploy/build-pages-demo.py              |
+| Build output directory | dist-pages                                      |
+| Variables/secretos     | Ninguna                                         |
+| Preview branches       | None (deshabilitadas)                           |
 
 El script impide builds desde otras ramas cuando Cloudflare establece CF_PAGES=1. No conectes main directamente a producción.
 
@@ -52,7 +52,7 @@ Protege pages-production en GitHub con reglas de revisión y comprobaciones. Pro
 
 ## Pruebas finales
 
-- [ ] HTTPS válido y cabeceras CSP de _headers presentes.
+- [ ] HTTPS válido y cabeceras CSP de \_headers presentes.
 - [ ] PWA instalable y sin conexiones Nextcloud, WebDAV, correo, share ni consultas CVE online.
 - [ ] Las rutas deploy/, tests/, discovery/ y los scripts de administración devuelven 404.
 - [ ] Crear un expediente ficticio, exportar/importar JSON y generar PDF.

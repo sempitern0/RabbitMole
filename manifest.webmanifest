@@ -1,7 +1,7 @@
 {
-  "name": "Dragonboon InfraAudit · Auditorías de infraestructura y seguridad",
+  "name": "RabbitMole · Auditorías de infraestructura y seguridad",
   "short_name": "InfraAudit",
-  "description": "Dragonboon InfraAudit: inventario, controles y evidencias offline.",
+  "description": "RabbitMole: inventario, controles y evidencias offline.",
   "id": "./",
   "start_url": "./index.html",
   "scope": "./",

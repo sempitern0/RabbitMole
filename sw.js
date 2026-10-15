@@ -50,7 +50,7 @@ const CORE = [
   "./icons/os-linux.svg",
   "./icons/os-macos.svg",
   "./icons/app.png",
-  "./icons/icon_192.png",
+  "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];
 const urlFor = (path) => new URL(path, self.registration.scope).href;

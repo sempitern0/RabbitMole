@@ -259,3 +259,10 @@
 /* Visibly distinguish the public offline demonstration. */
 .public-demo-banner{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem 1rem;padding:.65rem 1rem;border-bottom:1px solid #b7c6d0;background:#eaf1f4;color:#102a3b;font-size:.9rem}
 .public-demo-banner[hidden]{display:none}
+
+.pwa-install-card { padding:1rem 1.25rem; margin:1rem; border:1px solid var(--line); border-radius:.75rem; background:var(--paper); color:var(--ink); }
+.pwa-install-card h2 { margin:0 0 .5rem; font-size:1.1rem; }
+.pwa-install-card summary { cursor:pointer; padding:.7rem 0; font-weight:600; }
+.pwa-install-card li { margin-bottom:.5rem; }
+.pwa-install-card[hidden] { display:none; }
+@media print { .pwa-install-card { display:none!important; } }

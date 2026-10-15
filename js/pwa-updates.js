@@ -2,7 +2,7 @@
 "use strict";
 (() => {
   const PUBLIC_DEMO = globalThis.RabbitMoleDeployment?.profile !== "private-full";
-  const APPLY_MESSAGE = "AUDIT_WORKBENCH_APPLY_UPDATE";
+  const APPLY_MESSAGE = "RABBITMOLE_APPLY_UPDATE";
   const CHECK_INTERVAL_MS = 60 * 60 * 1000;
   function supported() {
     return (

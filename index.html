@@ -7,6 +7,7 @@
     <title>RabbitMole · Auditoría offline</title>
     <meta name="theme-color" content="#102a3b" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta
       http-equiv="Content-Security-Policy"
@@ -266,18 +267,18 @@
         </div>
       </aside>
       <div class="content-wrap">
-        <div
-          id="public-demo-banner"
-          class="public-demo-banner"
-          hidden
-          role="status"
-        >
-          <strong>RabbitMole · Demostración pública</strong
-          ><span
-            >Sin servicios externos. Datos únicamente en este dispositivo. Usa
-            información ficticia.</span
-          >
-        </div>
+        <section id="pwa-install-card" class="pwa-install-card" aria-label="Instalación de RabbitMole" hidden>
+          <h2>RabbitMole en tu dispositivo</h2>
+          <p id="pwa-install-status" role="status" aria-live="polite"></p>
+          <button type="button" class="button accent" id="pwa-install-button" hidden>Instalar RabbitMole</button>
+          <details><summary>Cómo instalar y comprobar el modo offline</summary>
+            <ol><li>Chrome o Edge: pulsa «Instalar RabbitMole» cuando aparezca o usa la opción de instalación del menú del navegador.</li>
+            <li>iPhone/iPad: abre esta URL en Safari, pulsa Compartir y «Añadir a pantalla de inicio»; activa «Abrir como app web» si se ofrece.</li>
+            <li>Abre la aplicación desde su icono y usa «Comprobar modo offline» en «Protección del trabajo offline». Espera a que indique que está preparada.</li>
+            <li>Activa modo avión, cierra y vuelve a abrir la aplicación. Conserva copias JSON o cifradas fuera del navegador.</li></ol>
+            <p>La instalación depende del navegador y del sistema. Si no admite PWA, puedes usar la web limitada o un navegador compatible. La instalación no otorga permisos del sistema ni sustituye la autorización de los servicios externos.</p>
+          </details>
+        </section>
         <section
           id="pwa-update-notice"
           class="pwa-update-notice"
@@ -450,6 +451,7 @@
     <script src="js/secure-transfer-ui.js" defer></script>
     <script src="js/document-control.js" defer></script>
     <script src="js/pwa-updates.js" defer></script>
+    <script src="js/pwa-install.js" defer></script>
     <script src="js/offline-health.js" defer></script>
     <script src="js/app.js" defer></script>
   </body>

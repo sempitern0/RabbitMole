@@ -604,3 +604,8 @@ dist
 
 # Generated, allowlisted Cloudflare release bundle
 /dist-pages/
+
+# Wrangler local state and browser test output
+/.wrangler/
+/test-results/
+/playwright-report/

@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v58-local";
+const CACHE_NAME = "rabbitmole-shell-v59-installation";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -41,6 +41,7 @@ const CORE = [
   "./js/secure-transfer-ui.js",
   "./js/document-control.js",
   "./js/pwa-updates.js",
+  "./js/pwa-install.js",
   "./js/offline-health.js",
   "./css/glossary.css",
   "./css/atkinson.css",
@@ -76,6 +77,13 @@ async function shellHealth() {
 async function repairMissing() {
   const cache = await caches.open(CACHE_NAME);
   const before = await shellHealth();
+  if (before.missingCount) {
+    // Do not mix a newer deployed release into an older offline cache.
+    const response = await fetch(new Request(urlFor("./sw.js"), {cache:"no-store"}));
+    const source = response.ok && !response.redirected ? await response.text() : "";
+    const remoteName = source.match(/const CACHE_NAME\s*=\s*["']([^"']+)["']/)?.[1];
+    if (remoteName !== CACHE_NAME) throw Error("El servidor ofrece otra versión. Busca y aplica la actualización antes de reparar.");
+  }
   for (const path of CORE) {
     const url = urlFor(path);
     if (await cache.match(url)) continue;

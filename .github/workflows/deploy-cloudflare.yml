@@ -3,12 +3,17 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: rabbitmole-production
+  cancel-in-progress: false
 jobs:
   deploy:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     environment: production
     timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,10 +22,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: python3 deploy/build-pages-demo.py
-      - run: node tests/test_pages_demo.cjs
-      - name: Deploy
-        run: npx --yes wrangler@4 deploy
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - name: Deploy validated revision
+        run: npm run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Check production HTTPS
+        run: python3 deploy/smoke_https.py https://rabbitmole.danieldigitalspace.workers.dev --expected-commit "$GITHUB_SHA"

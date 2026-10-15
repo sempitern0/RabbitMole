@@ -6124,7 +6124,6 @@
     printMode = "audit";
   });
   if (PUBLIC_DEMO) {
-    byId("public-demo-banner").hidden = false;
     byId("global-navigation")
       .querySelectorAll('[data-go="connections"]')
       .forEach((button) => (button.hidden = true));

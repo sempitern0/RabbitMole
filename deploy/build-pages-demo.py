@@ -34,9 +34,7 @@ HEADERS = ("/*\n"
 
 
 def main():
-    branch = os.getenv("CF_PAGES_BRANCH") or os.getenv("RABBITMOLE_DEPLOY_BRANCH")
-    if branch and branch != "pages-production":
-        raise SystemExit("Production builds require approved pages-production branch")
+    # Building is safe on any branch; promotion is controlled by the deployment workflow.
     if DIST.is_symlink():
         raise SystemExit("Refusing symlink at dist-pages")
     if DIST.exists():
@@ -78,6 +76,10 @@ def main():
             raise SystemExit("Missing precached file: " + path)
 
     digest = hashlib.sha256()
+    # Worker logic, headers and SW-only fixes must also produce a fresh release/cache.
+    digest.update(sw.encode())
+    digest.update(HEADERS.encode())
+    digest.update((ROOT / "deploy/worker.js").read_bytes())
     for asset in sorted(DIST.rglob("*")):
         if asset.is_file():
             digest.update(asset.relative_to(DIST).as_posix().encode())
@@ -92,7 +94,7 @@ def main():
     (DIST / "_headers").write_text(HEADERS, encoding="utf-8")
     (DIST / ".assetsignore").write_text("_headers\n.assetsignore\n", encoding="utf-8")
     (DIST / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
-    commit = os.getenv("GITHUB_SHA") or os.getenv("CF_PAGES_COMMIT_SHA") or ""
+    commit = os.getenv("GITHUB_SHA") or os.getenv("CF_PAGES_COMMIT_SHA") or os.getenv("CF_BUILD_COMMIT_SHA") or ""
     if not commit:
         try:
             commit = subprocess.check_output(["git","rev-parse","HEAD"],
@@ -106,6 +108,9 @@ def main():
     manifest = json.loads((DIST / "manifest.webmanifest").read_text(encoding="utf-8"))
     if manifest.get("start_url") != "./index.html" or manifest.get("display") != "standalone":
         raise SystemExit("Unexpected PWA identity/display")
+    hashes = {path.relative_to(DIST).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+              for path in sorted(DIST.rglob("*")) if path.is_file() and path.name != ".assetsignore"}
+    (DIST / "checksums.json").write_text(json.dumps(hashes, sort_keys=True, indent=2) + "\n", encoding="utf-8")
     print("RabbitMole Cloudflare release " + version + " (" + commit[:12] + ")")
 
 

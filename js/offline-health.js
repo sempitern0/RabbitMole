@@ -13,7 +13,7 @@
    const output=$('offline-health-status');if(!output)return;
    try{
      const worker=navigator.serviceWorker?.controller;
-     const health=await send(worker,'AUDIT_WORKBENCH_HEALTH');
+     const health=await send(worker,'RABBITMOLE_HEALTH');
      const persistent=await navigator.storage?.persisted?.();
      const estimate=await navigator.storage?.estimate?.();
      const detail=health.ok?'Preparada para funcionar offline.':'Caché incompleta: '+(health.missingCount??'?')+' recursos pendientes.';
@@ -37,7 +37,7 @@
    if(!confirm('Reparar únicamente los archivos offline ausentes desde el servidor de origen. ¿Continuar?'))return;
    output.textContent='Comprobando y recuperando archivos ausentes…';
    try{
-     const result=await send(navigator.serviceWorker?.controller,'AUDIT_WORKBENCH_REPAIR_SHELL');
+     const result=await send(navigator.serviceWorker?.controller,'RABBITMOLE_REPAIR_SHELL');
      output.textContent=result.ok?'Archivos offline recuperados. Comprueba el arranque sin servidor.':'No se completó la reparación: '+(result.error||'Recursos ausentes.');
      await check();
    }catch(error){output.textContent='Error de reparación: '+error.message;}

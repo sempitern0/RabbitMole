@@ -127,7 +127,7 @@ RabbitMole/
 ├── fonts/                      # Local Atkinson Hyperlegible
 ├── icons/app.png               # Project icon
 ├── discovery/                  # Separate authorized inventory collection
-├── deploy/                     # HTTPS and public-demo packaging
+├── deploy/                     # HTTPS and web/PWA packaging
 ├── tests/                      # Offline and browser regression checks
 ├── rabbitmole.sh          # Linux/macOS installer (RabbitMole installer)
 └── rabbitmole.ps1         # PowerShell installer (RabbitMole installer)
@@ -165,3 +165,7 @@ Python and Node.js are **development tools**, not requirements for using the hos
   <strong>RabbitMole — your evidence, your scope, your decisions.</strong><br>
   <a href="#quick-start">Get started</a> · <a href="README_ES.md">Leer en español</a>
 </p>
+
+## Controlled releases
+
+Run `npm ci` and `npm run deploy:check` from the repository root. The [Cloudflare guide](deploy/CLOUDFLARE_PAGES_ES.md) documents the existing Worker, build/deploy commands, protected production environment and device checks. CI does not deploy automatically. The public browser tab is limited; launching the installed PWA enables the full app. This is a client-side usage policy, not authentication.

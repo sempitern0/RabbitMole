@@ -111,7 +111,7 @@ Consulta [Seguridad](SECURITY_ES.md) y [Notas legales](LEGAL_ES.md).
 | --- | --- | --- |
 | HTTP local en \`127.0.0.1\` | Desarrollo, evaluación y trabajo individual | [Instalación](INSTALLATION_ES.md) |
 | HTTPS con Docker Compose + Caddy | URL estable, expedientes independientes por navegador | [Despliegue HTTPS](deploy/README_ES.md) |
-| Web Cloudflare / PWA instalada | **Solo datos ficticios**; vista web limitada y PWA instalada completa | [Guía public-demo](deploy/CLOUDFLARE_PAGES_ES.md) |
+| Web Cloudflare / PWA instalada | **Solo datos ficticios**; vista web limitada y PWA instalada completa | [Publicación e instalación](deploy/CLOUDFLARE_PAGES_ES.md) |
 
 Una URL HTTPS compartida **no sincroniza navegadores, crea cuentas ni guarda auditorías en el servidor**.
 
@@ -127,7 +127,7 @@ RabbitMole/
 ├── fonts/                      # Atkinson Hyperlegible local
 ├── icons/app.png               # Identidad visual
 ├── discovery/                  # Inventario autorizado independiente
-├── deploy/                     # HTTPS y paquete public-demo
+├── deploy/                     # HTTPS y paquete web/PWA
 ├── tests/                      # Pruebas offline y de navegador
 ├── rabbitmole.sh          # Instalador Linux/macOS (RabbitMole installer)
 └── rabbitmole.ps1         # Instalador PowerShell (RabbitMole installer)
@@ -165,3 +165,7 @@ Python y Node.js se usan para **desarrollo y validación**, no son requisitos de
   <strong>RabbitMole — tus evidencias, tu alcance, tus decisiones.</strong><br>
   <a href="#inicio-rápido">Empezar</a> · <a href="README.md">Read in English</a>
 </p>
+
+## Publicar una versión controlada
+
+Desde la raíz: `npm ci` y `npm run deploy:check`. La [guía de Cloudflare](deploy/CLOUDFLARE_PAGES_ES.md) describe el Worker existente, los comandos de build/deploy, el entorno `production` y las pruebas en dispositivos. CI no publica automáticamente.

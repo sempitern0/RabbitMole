@@ -10,6 +10,8 @@ jobs:
   validate:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -18,25 +20,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: README and documentation
-        run: python3 -m unittest discover -s tests -p 'test_readme.py' -v
-      - name: Static resources and JS
-        run: python3 tests/test_static.py
-      - name: Installer consistency
-        run: node tests/test_shell_resources.cjs
+          cache: npm
+      - run: npm ci
+      - name: Validate and dry-run the production bundle
+        run: npm run deploy:check
       - name: Shell syntax
         run: bash -n rabbitmole.sh collect-local.sh discovery/run.sh discovery/setup.sh
-      - name: Build Cloudflare bundle
-        run: python3 deploy/build-pages-demo.py
-      - name: Web and installed modes
-        run: node tests/test_pages_demo.cjs
-      - name: Secure transfer
-        run: node tests/test_secure_transfer.cjs
-      - name: PWA update
-        run: node tests/test_pwa_updates.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Browser, persistence and offline acceptance
+        run: npm run test:browser
       - name: Upload validated bundle
         uses: actions/upload-artifact@v4
         with:
-          name: rabbitmole-cloudflare
+          name: rabbitmole-cloudflare-${{ github.sha }}
           path: dist-pages/
           include-hidden-files: true

@@ -14,13 +14,15 @@ for(const id of ['pwa-update-notice','pwa-update-status','pwa-update-apply','pwa
  assert(html.includes('id="'+id+'"'),id+' missing');
 assert(html.indexOf('js/pwa-updates.js')<html.indexOf('js/app.js'));
 require('./support/sw-contract.js').assertCached('js/pwa-updates.js');
-assert(app.includes('saveBeforeReload:flush')&&app.includes('isSafeToReload'),'Must guard dirty audit');
+assert((/saveBeforeReload\s*:\s*flush/.test(app))&&app.includes('isSafeToReload'),'Must guard dirty audit');
 assert(source.includes("registration.update()")&&source.includes('registration.waiting'));
 assert(source.includes("controllerchange")&&source.includes("location.reload()"));
 assert(source.includes("credentials")===false,'No credentials should be used for update checks');
 assert(css.includes('.pwa-update-notice[hidden]'));
 for(const file of ['rabbitmole.sh','rabbitmole.ps1'])
  assert(fs.readFileSync(path.join(root,file),'utf8').includes('js/pwa-updates.js'),'installer missing '+file);
+const message=source.match(/const APPLY_MESSAGE\s*=\s*["']([^"']+)["']/)[1];
+assert(sw.includes('\"'+message+'\"'),'App and worker update protocol must agree');
 console.log('PASS consent, pre-reload save, offline shell, packaging');
 
 (async()=>{

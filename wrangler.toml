@@ -8,3 +8,7 @@ directory = "./dist-pages"
 binding = "ASSETS"
 run_worker_first = true
 not_found_handling = "404-page"
+
+# A plain wrangler deploy cannot accidentally publish a missing/stale bundle.
+[build]
+command = "python3 deploy/build-pages-demo.py"

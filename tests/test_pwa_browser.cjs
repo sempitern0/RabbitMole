@@ -56,8 +56,16 @@ const {chromium}=require('playwright');
     assert(contrast.ratio>=4.5,palette+' maintenance title has insufficient contrast: '+JSON.stringify(contrast));
    }
    await page.locator('#palette').selectOption('ocean');
+   // Storage permission has independent feedback; health checks must not overwrite it.
+   await page.evaluate(()=>{Object.defineProperty(navigator,'storage',{configurable:true,value:{
+     persist:async()=>false,persisted:async()=>false,estimate:async()=>({quota:1000000,usage:1000})
+   }});});
+   await page.locator('#offline-health-persist').click();
+   await page.waitForFunction(()=>document.getElementById('offline-storage-status')?.dataset.result==='denied');
+   assert((await page.locator('#offline-storage-status').textContent()).includes('no concedida'));
    await page.locator('#offline-health-check').click();
    await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Recursos offline completos'));
+   assert.equal(await page.locator('#offline-storage-status').getAttribute('data-result'),'denied','Offline check must preserve storage permission feedback');
    await page.locator('#global-navigation [data-go="records"]').click();
    assert.equal(await page.locator('#workspace h1').evaluate(el=>getComputedStyle(el).outlineStyle),'none');
    // Programmatic .focus() does not imply :focus-visible in Chromium.
@@ -115,6 +123,11 @@ const {chromium}=require('playwright');
      assert(form.radius>=8&&form.padding>=10&&form.height>=44,palette+' unstyled field: '+JSON.stringify(form));
    }
    await page.locator('#palette').selectOption('ocean');
+   await page.locator('#wizard-step-select').selectOption('controls');
+   await page.locator('[data-add="controls"]').first().click();
+   const sticky=await page.locator('.record-navigator').evaluate(el=>({position:getComputedStyle(el).position,border:parseFloat(getComputedStyle(el).borderLeftWidth),background:getComputedStyle(el).backgroundColor}));
+   assert.equal(sticky.position,'sticky');
+   assert(sticky.border>=4,'The audit filter bar needs a visible separator');
    await page.locator('#wizard-step-select').selectOption('networks');
    const acrylicHeaders=['SSID','#','Dirección MAC','RSSI','SNR','Canal','Banda','Ancho','802.11','WEP','WPA','WPA2','WPA3','WPS','Fabricante'];
    const acrylicRow={SSID:'Demo','#':'1','Dirección MAC':'02:00:00:00:00:01',RSSI:'-55',Canal:'6',Banda:'2.4GHz',Ancho:'20','802.11':'n',WPA2:'PSK-CCMP'};

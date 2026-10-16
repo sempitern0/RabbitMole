@@ -10,6 +10,11 @@ assert(app.includes("page==='glossary'?renderGlossary()"),'Glossary must render'
 assert(app.includes("button.classList.toggle('active',active)"),'Active main-menu navigation required');
 assert(app.includes('window.history.pushState')&&app.includes('window.addEventListener("popstate"'),'Browser history must restore glossary origin');
 assert(app.includes('restoreGlossaryOrigin')&&app.includes('origin.field'),'Field return context required');
+assert(html.includes('id="glossary-quick-dialog"'),'Missing contextual glossary dialog');
+assert(app.includes('openQuickGlossary')&&app.includes('closeQuickGlossary'),'Contextual help must preserve workspace');
+assert(app.includes('closeQuickGlossary(false);'),'Route changes should dismiss quick help');
+const glossaryCss=read('css/glossary.css');
+assert(glossaryCss.includes('.glossary-quick-dialog[open]')&&glossaryCss.includes('max-width:700px'),'Adaptive glossary drawer missing');
 for(const page of ['records','backups','settings','connections','glossary'])assert(html.includes('data-go="'+page+'"'),'Missing '+page);
 assert((html.match(/class="nav-icon"/g)||[]).length===5,'Expected five SVG icons');
 assert(!/<span class="nav-mark">/.test(html),'Global menu must not use font glyphs');

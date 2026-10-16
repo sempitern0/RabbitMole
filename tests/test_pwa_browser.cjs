@@ -74,17 +74,32 @@ const {chromium}=require('playwright');
    assert.equal(keyboardFocus.visible,true,'Keyboard focus must remain visible');
    assert.notEqual(keyboardFocus.outline,'none','Keyboard focus indicator must remain visible');
    await page.locator('[data-new]').first().click();
-   // A field's help icon must create a real browser history entry.
+   // Quick help preserves the live input node, its value, the current step and URL.
    const contextualHelp=page.locator('[data-glossary-term][data-glossary-field]').first();
    const returnField=await contextualHelp.getAttribute('data-glossary-field');
    const auditStep=await page.locator('#wizard-step-select').inputValue();
+   const auditUrl=page.url();
+   const originalValue=await page.locator('#'+returnField).evaluate(el=>{
+     el.dataset.keepNode='contextual-help-stable';return el.value;
+   });
    await contextualHelp.click();
+   assert.equal(await page.locator('#glossary-quick-dialog').evaluate(el=>el.open),true);
+   assert.equal(await page.locator('#glossary-quick-dialog .glossary-definition').count(),1);
+   assert.equal(page.url(),auditUrl);
+   assert.equal(await page.locator('#wizard-step-select').inputValue(),auditStep);
+   assert.deepEqual(await page.locator('#'+returnField).evaluate(el=>({
+     sameNode:el.dataset.keepNode==='contextual-help-stable',value:el.value
+   })),{sameNode:true,value:originalValue});
+   await page.keyboard.press('Escape');
+   await page.waitForFunction(id=>!document.getElementById('glossary-quick-dialog').open &&
+     document.activeElement?.dataset.glossaryField===id,returnField);
+   await contextualHelp.click();
+   await page.locator('#glossary-quick-full').click();
    await page.locator('.glossary-article').waitFor();
    assert.equal(new URL(page.url()).hash.startsWith('#glossary/'),true);
    await page.goBack({waitUntil:'domcontentloaded'});
    await page.waitForFunction(([id,step])=>document.activeElement?.id===id &&
      document.getElementById('wizard-step-select')?.value===step,[returnField,auditStep]);
-   // Forward and the in-app return action must be symmetrical.
    await page.goForward({waitUntil:'domcontentloaded'});
    await page.locator('[data-glossary-back]').first().click();
    await page.waitForFunction(id=>document.activeElement?.id===id,returnField);

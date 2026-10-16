@@ -1927,6 +1927,7 @@
     restoreGlossaryOrigin(origin);
   }
   window.addEventListener("popstate", (event) => {
+    closeQuickGlossary(false);
     const route = event.state?.[HISTORY_KEY];
     if (!route) return;
     if (route.auditId && route.auditId !== currentId) {
@@ -2088,10 +2089,10 @@
       </div>
     </details>`;
   }
-  function renderGlossaryDetail(t) {
+  function renderGlossaryDetail(t, contextual = false) {
     if (!t)
       return '<div class="glossary-empty">Selecciona un concepto del índice.</div>';
-    return `<article class="glossary-article">${glossaryReturn || currentId ? '<button type="button" class="glossary-inline-back" data-glossary-back="true">← Volver al asistente</button>' : ""}<span class="glossary-kicker">${html(t.category)}</span><h2>${html(t.title)}</h2>${glossaryTermPlatforms(t)}${t.fullName ? `<p class="glossary-fullname"><strong>Denominación completa:</strong> ${html(t.fullName)}</p>` : ""}<div class="glossary-definition">${glossaryEmphasis(t.description)}</div>
+    return `<article class="glossary-article">${!contextual && (glossaryReturn || currentId) ? '<button type="button" class="glossary-inline-back" data-glossary-back="true">← Volver al asistente</button>' : ""}<span class="glossary-kicker">${html(t.category)}</span><h2>${html(t.title)}</h2>${glossaryTermPlatforms(t)}${t.fullName ? `<p class="glossary-fullname"><strong>Denominación completa:</strong> ${html(t.fullName)}</p>` : ""}<div class="glossary-definition">${glossaryEmphasis(t.description)}</div>
       ${t.why ? `<section class="glossary-section glossary-why"><h3>Por qué importa</h3><p>${glossaryEmphasis(t.why)}</p></section>` : ""}
       <section class="glossary-section glossary-check"><h3>Qué comprobar en la auditoría</h3><p>${glossaryEmphasis(t.check)}</p></section>
       ${Array.isArray(t.steps) && t.steps.length ? `<section class="glossary-section glossary-audit-steps"><h3>Mini guía paso a paso</h3><ol>${t.steps.map(step => `<li>${html(step)}</li>`).join("")}</ol></section>` : ""}
@@ -2104,6 +2105,87 @@
       ${t.aliases?.length ? `<p class="glossary-aliases"><strong>También se busca como:</strong> ${html(t.aliases.join(", "))}</p>` : ""}
       <p class="glossary-disclaimer">Referencia orientativa. Documenta la prueba realizada y contrasta los criterios con el contexto del cliente.</p></article>`;
   }
+
+  // The quick view never navigates or rerenders an audit field.
+  let quickGlossaryOpener = null, quickGlossaryField = "", quickGlossaryTerm = "";
+  function closeQuickGlossary(restoreFocus = true) {
+    const dialog = byId("glossary-quick-dialog");
+    if (!dialog?.open) return;
+    dialog.close();
+    const opener = quickGlossaryOpener, field = quickGlossaryField;
+    quickGlossaryOpener = null;
+    quickGlossaryField = "";
+    quickGlossaryTerm = "";
+    if (restoreFocus) (opener?.isConnected ? opener : field ? byId(field) : null)?.focus({preventScroll:true});
+  }
+  function openQuickGlossary(termId, opener) {
+    const term = glossary?.byId(termId) || glossary?.search(termId)?.[0];
+    if (!term || !opener) return;
+    const dialog = byId("glossary-quick-dialog"), body = byId("glossary-quick-body");
+    if (!dialog || !body || typeof dialog.showModal !== "function") {
+      openGlossary(term.id, {page,field:opener.dataset.glossaryField || "",scrollY:window.scrollY});
+      return;
+    }
+    if (dialog.open) closeQuickGlossary(false);
+    quickGlossaryOpener = opener;
+    quickGlossaryField = opener.dataset.glossaryField || "";
+    quickGlossaryTerm = term.id;
+    byId("glossary-quick-title").textContent = term.title;
+    body.innerHTML = renderGlossaryDetail(term, true);
+    const article = body.querySelector(".glossary-article");
+    const advanced = [".glossary-audit-steps",".glossary-troubleshoot",".glossary-console",
+      ".glossary-help-resource",".glossary-references"].map(selector=>article?.querySelector(selector)).filter(Boolean);
+    if (article && advanced.length) {
+      const details = document.createElement("details"), summary = document.createElement("summary");
+      details.className = "glossary-quick-advanced";
+      summary.textContent = "Guías, comandos y referencias adicionales";
+      details.append(summary);
+      for (const item of advanced) details.append(item);
+      article.append(details);
+    }
+    body.scrollTop = 0;
+    dialog.showModal();
+    byId("glossary-quick-close").focus({preventScroll:true});
+  }
+  async function copyGlossaryCommand(button) {
+    const term = glossary?.byId(button.dataset.glossaryId);
+    const command = glossary?.GUIDES?.[term?.id]?.commands?.[Number(button.dataset.glossaryCopy)]?.command;
+    if (!command) return;
+    try {
+      if (!navigator.clipboard?.writeText) throw Error("Clipboard API no disponible");
+      await navigator.clipboard.writeText(command);
+      button.textContent = "Copiado";
+    } catch (_error) {
+      const textarea = document.createElement("textarea");
+      textarea.value = command;
+      textarea.setAttribute("readonly","");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = typeof document.execCommand === "function" && document.execCommand("copy");
+      textarea.remove();
+      button.textContent = copied ? "Copiado" : "Selecciona el comando para copiarlo";
+    }
+  }
+  const quickDialog = byId("glossary-quick-dialog");
+  quickDialog?.addEventListener("cancel", event => {event.preventDefault();closeQuickGlossary();});
+  quickDialog?.addEventListener("click", async event => {
+    if (event.target === quickDialog) {closeQuickGlossary();return;}
+    const button = event.target.closest("button");
+    if (!button) return;
+    if (button.dataset.glossaryCopy !== undefined) {await copyGlossaryCommand(button);return;}
+    if (button.id === "glossary-quick-close" || button.id === "glossary-quick-done") {
+      closeQuickGlossary();return;
+    }
+    if (button.id === "glossary-quick-full") {
+      const termId=quickGlossaryTerm;
+      const origin={page,field:quickGlossaryField,scrollY:window.scrollY};
+      closeQuickGlossary(false);
+      openGlossary(termId,origin);
+    }
+  });
+
   function openGlossary(term, origin) {
     if (page === "glossary") return;
     glossaryReturn = origin || { page, scrollY: window.scrollY };
@@ -3446,6 +3528,7 @@
   }
 
   function render() {
+    closeQuickGlossary(false);
     const inLibrary =
       [
         "records",
@@ -4436,35 +4519,7 @@
     if (b.id === "discovery-check") { await checkLocalDiscovery(); return; }
     if (b.id === "discovery-run") { await runLocalDiscovery(); return; }
     if (b.dataset.glossaryCopy !== undefined) {
-      const term = glossary?.byId(b.dataset.glossaryId);
-      const command =
-        glossary?.GUIDES?.[term?.id]?.commands?.[Number(b.dataset.glossaryCopy)]
-          ?.command;
-      if (!command) return;
-      try {
-        if (!navigator.clipboard?.writeText)
-          throw Error("Clipboard API no disponible");
-        await navigator.clipboard.writeText(command);
-        b.textContent = "Copiado";
-      } catch (_error) {
-        const previous = document.getElementById("glossary-copy-fallback");
-        previous?.remove();
-        const textarea = document.createElement("textarea");
-        textarea.id = "glossary-copy-fallback";
-        textarea.value = command;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.left = "-9999px";
-        document.body.appendChild(textarea);
-        textarea.select();
-        const copied =
-          typeof document.execCommand === "function" &&
-          document.execCommand("copy");
-        textarea.remove();
-        b.textContent = copied
-          ? "Copiado"
-          : "Selecciona el comando para copiarlo";
-      }
+      await copyGlossaryCommand(b);
       return;
     }
     if (b.dataset.glossaryBack !== undefined) {
@@ -4472,11 +4527,7 @@
       return;
     }
     if (b.dataset.glossaryTerm) {
-      openGlossary(b.dataset.glossaryTerm, {
-        page,
-        field: b.dataset.glossaryField || "",
-        scrollY: window.scrollY,
-      });
+      openQuickGlossary(b.dataset.glossaryTerm, b);
       return;
     }
     if (b.dataset.glossarySelect) {

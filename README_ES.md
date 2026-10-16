@@ -188,3 +188,7 @@ Desde la raíz: `npm ci` y `npm run deploy:check`. La [guía de Cloudflare](depl
 ### Auditoría WiFi desde un dispositivo
 
 El **Diccionario técnico → WiFi** incorpora 20 conceptos y cuatro mini guías para WiFi corporativa, invitados, cobertura y revisión desde móviles/tablets. Incluye referencias oficiales, evidencias recomendadas y limitaciones. Sus comandos son orientativos y de lectura; RabbitMole no ejecuta escaneos radio desde el navegador. Verifica alcance y autorización antes de probar conectividad o segmentación.
+
+### Ayuda técnica contextual durante la auditoría
+
+El icono de información de cada campo abre una ficha superpuesta del diccionario sin sustituir el formulario, cambiar de paso ni modificar el historial. Consulta definiciones, comprobaciones, evidencias y advertencias incluso sin conexión. Ciérrala con **Escape**, «Volver al campo» o el icono de cierre. «Abrir ficha completa» conserva el regreso al paso original mediante el historial del navegador.

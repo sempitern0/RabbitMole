@@ -232,3 +232,7 @@ The **Protect storage** control requests persistent browser storage and now repo
 ### File-level WiFi CSV management and install guidance
 
 New WiFi CSV imports retain separate per-file snapshots. Removing an import restores the previous dataset for its category without touching PDF annexes or other categories. Existing saved CSV data is preserved as one historical group because the previous schema did not attribute rows to individual filenames. The top install guidance is visually distinguished from audit forms while retaining accessible controls and theme-aware contrast.
+
+### Android-only touch ergonomics
+
+Android phones and tablets with a coarse pointer use a dedicated style layer for form alignment, field labels, touch targets, upload controls and step navigation. It leaves audit data, offline logic, desktop and iOS styling unchanged. The layer is cached for offline use and its device gating has automated tests; actual hardware acceptance remains necessary.

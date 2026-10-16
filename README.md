@@ -250,3 +250,9 @@ Form field markup (text, selects, touch-friendly pickers, datalists, evidence li
 Create a **Rack de servidores** or **Rack de comunicaciones** hardware asset to reveal an optional physical/environmental inspection sheet. It covers rack U occupancy, inlet temperature, humidity and airflow, sensors, leak exposure, electrical/PDU/UPS records, fire detection, access control, maintenance logs, cabling and logical network controls. All observations are manual, and the app does not impose universal environmental thresholds or infer compliance.
 
 The **Racks, CPD y seguridad física** control pack (10 controls, PHY-01–PHY-10) supports evidence collection, nonconformity reporting, mitigation and retesting. Firewall rules remain assessed in the existing perimeter control pack. Validate environmental criteria against manufacturers, relevant ASHRAE guidance and local regulations. Do not handle live electrical equipment or record access secrets. Current JSON v3, reporting and offline workflows remain unchanged.
+
+### Expanded router/ONT/firewall catalog and rack occupancy
+
+Network inventory supports device-specific **Router**, **ONT** and **Firewall** manufacturer/model suggestions, all offline and editable. Suggestions do not attest to hardware support, firmware, availability or interoperability; existing and custom values remain editable.
+
+The rack audit adds a documentary U-by-U occupancy view (U1 at the bottom), linked through an inventoried rack asset ID or internal key, with starting U, unit height and front/rear placement for equipment. Overlapping or out-of-bounds placements are flagged as observations, not automatically treated as compliance failures. Front/rear photos remain managed in Evidence and can be referenced by evidence IDs. JSON v3 and technical reporting continue to use the existing inventory fields. A structured environmental readings history is a possible later addition.

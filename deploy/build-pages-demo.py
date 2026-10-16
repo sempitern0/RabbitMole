@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist-pages"
 ALLOWED = {"css": {".css"}, "js": {".js"}, "fonts": {".woff2"},
            "icons": {".png", ".svg"}}
-CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; "
+CSP = ("default-src 'none'; script-src 'self'; script-src-elem 'self'; "
+       "script-src-attr 'none'; style-src 'self'; "
        "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https:; "
        "object-src 'none'; frame-src blob:; form-action 'none'; "
        "base-uri 'none'; manifest-src 'self'; worker-src 'self'; "
@@ -21,7 +22,7 @@ HEADERS = ("/*\n"
            "  X-Content-Type-Options: nosniff\n"
            "  X-Frame-Options: DENY\n"
            "  Referrer-Policy: no-referrer\n"
-           "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n"
+           "  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()\n"
            "  Strict-Transport-Security: max-age=31536000\n"
            "  X-Robots-Tag: noindex\n"
            "  Content-Security-Policy: " + CSP + "\n\n"

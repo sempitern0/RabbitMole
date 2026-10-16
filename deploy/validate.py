@@ -13,6 +13,7 @@ COMMANDS = [
     ['node', 'tests/test_external_network.cjs'],
     ['node', 'tests/test_router_catalog.cjs'],
     ['node', 'tests/test_form_system.cjs'],
+    ['node', 'tests/test_field_renderer.cjs'],
     ['node', 'tests/test_mitigation.cjs'],
     ['node', 'tests/test_workflow_views.cjs'],
     ['node', 'tests/test_audit_actions.cjs'],

@@ -103,6 +103,18 @@ const {chromium}=require('playwright');
    await page.goForward({waitUntil:'domcontentloaded'});
    await page.locator('[data-glossary-back]').first().click();
    await page.waitForFunction(id=>document.activeElement?.id===id,returnField);
+   // Canonical form controls must have computed styling and room around adjacent fields.
+   for(const palette of ['ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+     await page.locator('#palette').selectOption(palette);
+     const form=await page.locator('#workspace .field input:not([type="file"])').first().evaluate(el=>{
+       const s=getComputedStyle(el), wrapper=el.closest('.field');
+       return {radius:parseFloat(s.borderTopLeftRadius),padding:parseFloat(s.paddingLeft),
+         background:s.backgroundColor,gap:getComputedStyle(wrapper).rowGap,
+         height:el.getBoundingClientRect().height};
+     });
+     assert(form.radius>=8&&form.padding>=10&&form.height>=44,palette+' unstyled field: '+JSON.stringify(form));
+   }
+   await page.locator('#palette').selectOption('ocean');
    await page.locator('#wizard-step-select').selectOption('networks');
    await page.locator('[data-add="networks"]').first().click();
    const routerReview=page.locator('.router-security-review').first();
@@ -143,6 +155,17 @@ const {chromium}=require('playwright');
    await page.locator('#wizard-step-select').selectOption('findings');
    await page.locator('[data-add="findings"]').first().click();
    assert.equal(await page.locator('[data-finding-image-key]').count()>=2,true,'File and camera controls are both present');
+   await page.locator('#wizard-step-select').selectOption('evidence');
+   await page.locator('[data-add="evidence"]').first().click();
+   const upload=page.locator('.file-upload .upload-control').first();
+   assert.equal(await upload.locator('input[type="file"]').count(),2);
+   assert.equal(await upload.locator('.camera-action').count(),1);
+   const uploadLayout=await upload.evaluate(el=>{
+     const button=el.querySelector('.camera-action'),file=el.querySelector('input[type="file"]:not(.camera-input)');
+     return {gap:getComputedStyle(el).gap,button:file?button.getBoundingClientRect().width:0,
+       fileWidth:file?.getBoundingClientRect().width};
+   });
+   assert(uploadLayout.button>=100&&uploadLayout.fileWidth>=160,'File and camera actions need independent space: '+JSON.stringify(uploadLayout));
    await page.locator('#wizard-step-select').selectOption('assets');await page.locator('[data-add="assets"]').first().click();
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
    await page.waitForTimeout(600);

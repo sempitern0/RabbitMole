@@ -1,0 +1,16 @@
+'use strict';
+const fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path');
+const root=path.join(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const html=read('index.html'),sw=read('sw.js'),form=read('css/form-system.css'),app=read('js/app.js');
+assert(html.includes('href="css/form-system.css" media="screen"'));
+assert(sw.includes('"./css/form-system.css"'));
+for(const part of ['css/contrast.css','css/team.css','css/workspace-ux.css']) assert(html.includes(part),'Missing stylesheet '+part);
+for(const selector of ['.upload-control','input[type="file"]','.field','.fields','.action-row','.camera-input','.member-card','.wizard-jump']) assert(form.includes(selector),'Form token missing '+selector);
+assert(app.includes('function renderCaptureControls('));
+assert(app.includes('renderCaptureControls(`finding-image-'));
+assert(app.includes('renderCaptureControls(`evidence-upload-'));
+assert(!read('css/team.css').includes('/* Form rhythm:'),'Legacy duplicate rhythm remains');
+assert(!read('css/contrast.css').includes('#workspace .field :is(input'),'Legacy duplicate field borders remain');
+assert(form.includes(':not([type="checkbox"])')&&form.includes(':not([type="radio"])'),'Do not skin checkboxes and radios');
+console.log('PASS shared screen-only forms, image/camera controls and offline CSS resources');

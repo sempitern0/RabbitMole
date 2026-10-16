@@ -95,7 +95,7 @@ const {chromium}=require('playwright');
      document.activeElement?.dataset.glossaryField===id,returnField);
    await contextualHelp.click();
    await page.locator('#glossary-quick-full').click();
-   await page.locator('.glossary-article').waitFor();
+   await page.locator('#glossary-detail .glossary-article').waitFor();
    assert.equal(new URL(page.url()).hash.startsWith('#glossary/'),true);
    await page.goBack({waitUntil:'domcontentloaded'});
    await page.waitForFunction(([id,step])=>document.activeElement?.id===id &&

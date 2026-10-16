@@ -243,3 +243,7 @@ En móviles y tablets Android con pantalla táctil, RabbitMole aplica una capa d
 ### Mantenimiento incremental de la navegación
 
 La búsqueda, los filtros y el acceso rápido a registros se gestionan desde `js/audit-record-navigation.js`. `js/app.js` conserva el estado de la auditoría, el guardado y la navegación general. Se reutilizan los mismos identificadores de interfaz y se mantiene una prueba de búsqueda que cubre acentos, filtros y aislamiento entre expedientes. La capa de estilos Android elimina selectores repetidos sin afectar a escritorio o iOS.
+
+### Refactorización de campos de auditoría
+
+El HTML de los campos (entradas, desplegables, selectores táctiles, datalist, relaciones con evidencias y ayuda del diccionario) se genera desde `js/audit-field-renderer.js`. `app.js` conserva el estado, las validaciones y el autoguardado. Se han comprobado once variantes de campos comparando exactamente el HTML anterior con el nuevo. La integración se precarga para uso offline, cuenta con una prueba de contrato y mantiene el esquema JSON v3 y los flujos Android existentes.

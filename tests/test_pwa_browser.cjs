@@ -40,8 +40,12 @@ const {chromium}=require('playwright');
     const contrast=await page.locator('#offline-health-panel').evaluate(el=>{
       const style=getComputedStyle(el), child=getComputedStyle(el.querySelector('strong'));
       const lum=v=>{
-        const rgb=v.match(/[\\d.]+/g)?.slice(0,3).map(Number)||[0,0,0];
-        const [r,g,b]=rgb.map(n=>{const x=n/255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});
+        // Chromium may serialize color-mix() as color(srgb ...) rather than rgb(...).
+        const srgb=v.match(/^color\\(srgb\\s+([0-9.]+)\\s+([0-9.]+)\\s+([0-9.]+)/);
+        const rgb=v.match(/^rgba?\\(\\s*([0-9.]+)[,\\s]+([0-9.]+)[,\\s]+([0-9.]+)/);
+        const channel=srgb?[...srgb.slice(1,4)].map(Number):rgb?[...rgb.slice(1,4)].map(n=>Number(n)/255):null;
+        if(!channel)throw Error('Unsupported CSS color '+v);
+        const [r,g,b]=channel.map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);
         return .2126*r+.7152*g+.0722*b;
       };
       const bg=lum(style.backgroundColor), fg=lum(child.color);

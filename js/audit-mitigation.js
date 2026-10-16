@@ -58,11 +58,30 @@
   blocked:['blocked','proposed','approved'],
   reverted:['reverted','proposed']
  });
+ const CHECK_RESULTS=Object.freeze({verified:'Eficacia verificada',failed:'Medida ineficaz',inconclusive:'Verificación no concluyente'});
+ const MAX_CHECKS=30;
+ function normalizeChecks(value){
+  if(value==null)return [];
+  if(!Array.isArray(value)||value.length>MAX_CHECKS)throw Error('Historial de verificación de acciones fuera de límites.');
+  const seen=new Set();
+  return value.map(raw=>{
+   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Comprobación de acción inválida.');
+   const entry={id:clean(raw.id,100),date:clean(raw.date,10),result:clean(raw.result,25),
+    by:clean(raw.by,160),notes:clean(raw.notes,3000),evidenceKey:clean(raw.evidenceKey,120),
+    evidenceId:clean(raw.evidenceId,100),
+    evidenceSha256:/^[a-f0-9]{64}$/i.test(raw.evidenceSha256||'')?raw.evidenceSha256.toLowerCase():''};
+   if(!entry.id||seen.has(entry.id)||!entry.date||!dates(entry.date)||
+      !Object.hasOwn(CHECK_RESULTS,entry.result)||!entry.by||entry.notes.length<12)
+     throw Error('Historial de comprobación inválido o duplicado.');
+   seen.add(entry.id);return entry;
+  });
+ }
  const fields=Object.freeze(['key','templateId','title','steps','impact','rollback','acceptance','owner','deadline','status','approvedBy','approvalDate','changeRef','executedBy','executedAt','changeNotes','evidenceKey']);
  function normalizeRow(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Acción correctiva no válida.');
   const row={};
   for(const key of fields)row[key]=clean(raw[key],key==='steps'?MAX_STEPS:key==='key'?100:key==='title'?180:key==='templateId'?80:key==='status'?30:key==='changeNotes'?1500:500);
+  row.checks=normalizeChecks(raw.checks);
   row.status ||= 'proposed';
   if(!row.key||row.key.length>100||!Object.hasOwn(STATES,row.status))throw Error('Identidad o estado de acción no válido.');
   if(!dates(row.deadline)||!dates(row.approvalDate)||!dates(row.executedAt))throw Error('Fecha de acción correctiva inválida.');
@@ -86,7 +105,10 @@
  }
  function save(current,input,evidence=[]){
   const previous=normalizeRow(current);
+  if(Object.hasOwn(input||{},'checks'))throw Error('El historial de verificación no se puede editar.');
   const next=normalizeRow({...previous,...input,key:previous.key});
+  if(previous.checks.length&&['title','steps','acceptance','executedBy','executedAt'].some(k=>previous[k]!==next[k]))
+   throw Error('Una acción verificada conserva sus datos de ejecución y aceptación; registra otra acción si hubo cambios.');
   if(!allow[previous.status].includes(next.status))throw Error('Transición de estado no permitida: '+STATES[previous.status]+' → '+STATES[next.status]+'.');
   if(next.title.length<5||next.steps.length<15||next.acceptance.length<10)
     throw Error('Documenta título, procedimiento y criterio de aceptación antes de guardar.');
@@ -102,10 +124,31 @@
     throw Error('La evidencia seleccionada ya no está en el expediente.');
   return next;
  }
+ function recordVerification(action,input,evidence=[],makeId){
+  const row=normalizeRow(action);
+  if(row.status!=='applied')throw Error('La verificación individual solo se registra tras aplicar la acción.');
+  if(row.checks.length>=MAX_CHECKS)throw Error('Límite de comprobaciones alcanzado.');
+  const result=clean(input?.result,25),date=clean(input?.date,10),
+   by=clean(input?.by,160),notes=clean(input?.notes,3000),evidenceKey=clean(input?.evidenceKey,120);
+  if(!Object.hasOwn(CHECK_RESULTS,result))throw Error('Selecciona un resultado de la comprobación.');
+  if(!date||!dates(date)||!row.executedAt||date<row.executedAt)
+   throw Error('La fecha de comprobación no puede preceder a la intervención.');
+  if(!by||notes.length<12)throw Error('Identifica al auditor y describe la comprobación (12 caracteres mínimo).');
+  const item=evidenceKey?evidence.find(e=>e._key===evidenceKey):null;
+  if(evidenceKey&&!item)throw Error('La evidencia seleccionada no está disponible.');
+  const id=typeof makeId==='function'?clean(makeId(),100):'';
+  if(!id||row.checks.some(c=>c.id===id))throw Error('Identificador de comprobación duplicado.');
+  const hash=item?.fileSha256||item?.sha256||'';
+  const check={id,date,result,by,notes,evidenceKey,evidenceId:clean(item?.id,100),
+   evidenceSha256:/^[a-f0-9]{64}$/i.test(hash)?hash.toLowerCase():''};
+  return normalizeRow({...row,checks:[...row.checks,check]});
+ }
  // Read-only correlation. A finding-level retest is not proof of each individual work order.
  function verification(finding, action){
   const row=normalizeRow(action);
   if(row.status!=='applied')return 'not-applicable';
+  const check=row.checks.at(-1);
+  if(check)return 'action-'+check.result;
   const revisions=Array.isArray(finding?.retests)?finding.retests:[];
   const eligible=revisions.filter(r=>r&&typeof r==='object'&&!Array.isArray(r)&&
    /^\d{4}-\d{2}-\d{2}$/.test(r.date||'')&&(!row.executedAt||r.date>=row.executedAt)&&
@@ -123,5 +166,5 @@
   }
   return counts;
  }
- globalThis.AuditMitigation=Object.freeze({VERSION,MAX_ACTIONS,STATES,TEMPLATES,normalize,fromTemplate,save,metrics,verification});
+ globalThis.AuditMitigation=Object.freeze({VERSION,MAX_ACTIONS,MAX_CHECKS,CHECK_RESULTS,STATES,TEMPLATES,normalize,fromTemplate,save,metrics,verification,recordVerification});
 })();

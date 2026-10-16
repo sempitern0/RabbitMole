@@ -4314,6 +4314,15 @@
       return;
     }
     obj[t.dataset.field] = t.value;
+    if(t.dataset.block==="networks" && t.dataset.field==="networkDeviceType"){
+      obj.routerVendor="";
+      obj.routerModel="";
+      const index=Number(t.dataset.index);
+      for(const name of ["routerVendor","routerModel"]){
+        const sibling=workspace.querySelector(`#f-networks-${index}-${name}`)?.closest(".field");
+        if(sibling)sibling.outerHTML=renderField(obj,"networks",groups.networks.fields.find(([field])=>field===name),index);
+      }
+    }
     if (
       t.dataset.block === "meta" &&
       ["clientIdType", "contactIdType"].includes(t.dataset.field)

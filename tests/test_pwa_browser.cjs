@@ -140,6 +140,16 @@ const {chromium}=require('playwright');
    await page.locator('#external-network-files').setInputFiles({name:'acrylic_aps.csv',mimeType:'text/csv',buffer:Buffer.from(acrylicCsv)});
    await page.waitForFunction(()=>document.querySelector('.network-analysis-metrics')?.textContent.includes('1'));
    assert.equal(await page.locator('.network-analysis-metrics').count(),1);
+   const csvRow=page.locator('.network-analysis-imports li').first();
+   assert.equal(await csvRow.count(),1,'Each CSV import has a separate row');
+   assert.equal(await csvRow.locator('[data-network-csv-remove]').count(),1);
+   page.once('dialog',dialog=>dialog.accept());
+   await csvRow.locator('[data-network-csv-remove]').click();
+   assert.equal(await page.locator('.network-analysis-imports li').count(),0,'Removing one CSV does not touch PDF annexes');
+   // Reimport to preserve the existing CSV diagnostics checks below.
+   await page.locator('#external-network-files').setInputFiles({name:'acrylic_aps.csv',mimeType:'text/csv',buffer:Buffer.from(acrylicCsv)});
+   await page.waitForFunction(()=>document.querySelector('.network-analysis-metrics')?.textContent.includes('1'));
+
    assert.equal(await page.locator('.network-analysis-data').textContent().then(x=>x.includes('Herramienta de laboratorio')),true);
 
 
@@ -176,6 +186,11 @@ const {chromium}=require('playwright');
    await page.locator('[data-intake-mode="local"]').click();
    assert.equal(await page.locator('#discovery-check').count(),1);
    await page.locator('[data-go="networks"]').last().click();
+   await page.setViewportSize({width:390,height:844});
+   assert.equal(await page.locator('#pwa-install-card').evaluate(el=>getComputedStyle(el).borderLeftWidth!=='0px'),true);
+   await page.locator('#wizard-step-select').selectOption('networks');
+   assert.equal(await page.locator('.record-navigator').evaluate(el=>getComputedStyle(el).position),'static','Mobile filters must not cover editable records');
+   await page.setViewportSize({width:1280,height:900});
    await page.locator('#wizard-step-select').selectOption('delivery');
    assert.equal(await page.locator('#pdf-appendix-upload').count(),1);
    assert.equal(await page.locator('#pdf-appendices-title').textContent(),'Documentación complementaria (PDF)');

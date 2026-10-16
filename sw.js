@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v71-workflow-modules";
+const CACHE_NAME = "rabbitmole-shell-v72-audit-actions";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -28,6 +28,7 @@ const CORE = [
   "./js/audit-retest.js",
   "./js/audit-mitigation.js",
   "./js/audit-workflow-views.js",
+  "./js/audit-actions.js",
   "./css/comparison.css",
   "./js/audit-comparison.js",
   "./js/control-templates.js",

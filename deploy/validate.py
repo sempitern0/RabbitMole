@@ -15,6 +15,7 @@ COMMANDS = [
     ['node', 'tests/test_form_system.cjs'],
     ['node', 'tests/test_mitigation.cjs'],
     ['node', 'tests/test_workflow_views.cjs'],
+    ['node', 'tests/test_audit_actions.cjs'],
     ['node', 'tests/test_shell_resources.cjs'],
     [sys.executable, 'tests/test_build_bundle.py'],
     [sys.executable, 'deploy/build-pages-demo.py'],

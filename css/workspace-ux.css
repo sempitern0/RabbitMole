@@ -691,3 +691,17 @@
 #offline-storage-status[data-result="denied"],#offline-storage-status[data-result="unsupported"],#offline-storage-status[data-result="error"]{border-inline-start:4px solid #b87828}
 @media(max-width:600px){#workspace .record-navigator{position:static;padding:.75rem;box-shadow:0 3px 12px #0000001a}}
 @media(prefers-reduced-motion:reduce){#workspace .record-navigator{scroll-behavior:auto}}
+
+/* Installation guidance: distinct but calm informational panel, in every theme. */
+#pwa-install-card.pwa-install-card:not([hidden]){position:relative;border:1px solid var(--brand);border-inline-start:5px solid var(--brand);border-radius:1rem;background:var(--brand-tint);color:var(--ink);box-shadow:0 5px 17px #00000013;padding:clamp(.9rem,2vw,1.25rem);overflow-wrap:anywhere}
+#pwa-install-card .pwa-install-intro{display:flex;align-items:center;gap:.55rem;margin:0 0 .4rem;color:var(--brand);font-size:.74rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+#pwa-install-card .pwa-install-intro svg{flex:none}
+#pwa-install-card #pwa-install-heading{color:var(--ink);font-size:1.05rem;line-height:1.4}
+#pwa-install-card #pwa-install-status{color:var(--ink);line-height:1.6}
+#pwa-install-card details{border-top:1px solid var(--line);padding-top:.35rem}
+#pwa-install-card summary{min-height:44px;display:list-item;cursor:pointer;color:var(--ink)}
+#pwa-install-card :is(summary,button):focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:.4rem}
+#pwa-install-card .pwa-steps li{color:var(--ink)}
+#pwa-install-card.is-installed{border-inline-start-color:var(--brand);background:var(--canvas)}
+@media(max-width:600px){#pwa-install-card.pwa-install-card{margin:.65rem .75rem;padding:.9rem}}
+@media(forced-colors:active){#pwa-install-card.pwa-install-card{border:2px solid CanvasText;box-shadow:none}#pwa-install-card .pwa-install-intro{color:CanvasText}}

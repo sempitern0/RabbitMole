@@ -10,9 +10,12 @@
     card.hidden=false;
     card.classList.toggle('is-installed',installed);
     button.hidden=installed||!promptEvent;
+    const ios=/iPad|iPhone|iPod/.test(navigator.userAgent||'') || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
     status.textContent=installed
       ?'Aplicación instalada · Funciones locales disponibles sin conexión.'
-      :'Web limitada. Instala RabbitMole y ábrela desde su icono para usar la aplicación completa. Los expedientes se guardan en este dispositivo.';
+      :ios
+        ?'Para instalar en iPhone o iPad: abre esta página en Safari, pulsa Compartir y elige «Añadir a pantalla de inicio» (activa «Abrir como app web» si aparece). Ábrela desde su icono para utilizar todas las funciones.'
+        :'Web limitada. Instala RabbitMole y ábrela desde su icono para usar la aplicación completa. Los expedientes se guardan en este dispositivo.';
   }
   window.addEventListener('beforeinstallprompt',event=>{
     event.preventDefault();promptEvent=event;refresh();

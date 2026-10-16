@@ -56,7 +56,7 @@ assert.equal(m.normalize(state.mitigationActions)[0].status,'applied');
 const app=fs.readFileSync('js/app.js','utf8'),html=fs.readFileSync('index.html','utf8');
 assert(app.includes('renderMitigationActions')&&app.includes('mitigationOverview'));
 assert(app.includes('data-mitigation-verify')&&app.includes('data-mitigation-check-field'));
-assert(app.includes('data-pdf-appendix-edit')&&app.includes('data-remove-evidence-photo'));
+assert(app.includes('data-pdf-appendix-save')&&app.includes('data-remove-evidence-photo'));
 assert(app.includes('renderResidualAssessment')&&app.includes('renderMitigationDashboard')&&app.includes('data-save-residual'));
 assert(app.includes('record.residualAssessments = mitigation.normalizeResidual(item.residualAssessments)'));
 assert(html.includes('js/audit-mitigation.js'));

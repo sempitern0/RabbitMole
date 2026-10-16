@@ -235,3 +235,7 @@ Las importaciones CSV nuevas se almacenan por archivo y categoría, con un botó
 ### Validación táctil previa a auditorías móviles
 
 Se han incorporado comprobaciones de tamaño y desbordamiento del selector de pasos en pantallas de móvil y estilos para evitar el zoom de Safari al enfocar campos pequeños. En dispositivos táctiles se mantienen controles con objetivos de al menos 44 px donde corresponda. Antes de usar un expediente real: instalar y abrir desde el icono, comprobar caché completa, editar y guardar un registro, capturar una evidencia, exportar una copia JSON y verificar el arranque sin conexión. La emulación de Chromium no sustituye una prueba física Android/iOS.
+
+### Ergonomía exclusiva de Android
+
+En móviles y tablets Android con pantalla táctil, RabbitMole aplica una capa de presentación que mejora la alineación de campos, tamaño de etiquetas y controles, distribución de acciones, adjuntos y selector de pasos. No modifica los datos, el flujo offline ni el escritorio/iOS. Esta capa se incluye en la caché PWA y dispone de prueba automatizada de detección de dispositivo; la validación en hardware real sigue siendo necesaria.

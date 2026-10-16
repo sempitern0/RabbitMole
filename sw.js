@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v64-form-system";
+const CACHE_NAME = "rabbitmole-shell-v65-network-external";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -42,6 +42,7 @@ const CORE = [
   "./js/secure-transfer-ui.js",
   "./js/document-control.js",
   "./js/pdf-appendices.js",
+  "./js/external-network-analysis.js",
   "./js/pwa-updates.js",
   "./js/pwa-install.js",
   "./js/offline-health.js",

@@ -196,7 +196,7 @@
    const old=normalize(value);
    if(!parsed||!FIELDS[parsed.kind])throw Error('Tipo de CSV no admitido.');
    const filename=text(parsed.filename);
-   if(!/\\.csv$/i.test(filename))throw Error('CSV sin nombre válido.');
+   if(!/\.csv$/i.test(filename))throw Error('CSV sin nombre válido.');
    let imports=old?.imports||[];
    if(old&&!old.imports)imports=[{id:'historical-csv',kind:'historical',filename:'Importaciones anteriores (agrupadas)',
      files:old.files,source:old.source,observedAt:old.observedAt,importedAt:old.importedAt,
@@ -208,7 +208,7 @@
    else if(parsed.kind==='latency')snapshot.latency=parsed.latency;
    else snapshot.diagnostics[parsed.kind]=parsed.items;
    const stamp=new Date().toISOString();
-   imports.push({id:'csv-'+stamp.replace(/\\D/g,'')+'-'+Math.random().toString(36).slice(2,9),
+   imports.push({id:'csv-'+stamp.replace(/\D/g,'')+'-'+Math.random().toString(36).slice(2,9),
      kind:parsed.kind,filename,files:[filename],source:sourceName(metadata.source??old?.source??''),
      observedAt:text(metadata.observedAt??old?.observedAt??''),importedAt:stamp,snapshot:normalize(snapshot)});
    return rebuild(imports);

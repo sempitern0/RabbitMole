@@ -42,3 +42,14 @@
 .mitigation-order>h4{margin:0 0 1rem;line-height:1.45}
 .mitigation-order .fields{margin-bottom:1rem}
 .mitigation-order .field{min-width:0}
+
+/* Individual mitigation checks: compact, keyboard operable and responsive. */
+.mitigation-checks{border-top:1px solid var(--line);margin:1rem 0;padding:.25rem 0 .8rem}
+.mitigation-checks>summary{cursor:pointer;min-height:44px;padding:.75rem .25rem;font-weight:750}
+.mitigation-checks>summary:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:6px}
+.mitigation-checks .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:.6rem 0 1rem}
+.mitigation-checks .field{min-width:0;display:grid;gap:.4rem}
+.mitigation-checks .field.full{grid-column:1/-1}
+.mitigation-checks input,.mitigation-checks select,.mitigation-checks textarea{width:100%;min-height:44px;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:.6rem}
+.mitigation-checks .retest-history{margin-bottom:1rem}
+@media(max-width:720px){.mitigation-checks .fields{grid-template-columns:1fr}}

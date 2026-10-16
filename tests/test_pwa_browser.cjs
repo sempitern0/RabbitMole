@@ -120,9 +120,15 @@ const {chromium}=require('playwright');
    const acrylicRow={SSID:'Demo','#':'1','Dirección MAC':'02:00:00:00:00:01',RSSI:'-55',Canal:'6',Banda:'2.4GHz',Ancho:'20','802.11':'n',WPA2:'PSK-CCMP'};
    const acrylicCsv=['sep=;',acrylicHeaders.join(';'),acrylicHeaders.map(k=>acrylicRow[k]||'').join(';')].join('\n');
 
+   assert.equal(await page.locator('#external-wifi-pdf').count(),1,'PDF-first network attachment');
+   await page.locator('#network-analysis-source').fill('Herramienta de laboratorio');
+   await page.locator('#network-analysis-date').fill('2026-10-16');
+   await page.locator('.network-analysis-import summary').click();
    await page.locator('#external-network-files').setInputFiles({name:'acrylic_aps.csv',mimeType:'text/csv',buffer:Buffer.from(acrylicCsv)});
    await page.waitForFunction(()=>document.querySelector('.network-analysis-metrics')?.textContent.includes('1'));
    assert.equal(await page.locator('.network-analysis-metrics').count(),1);
+   assert.equal(await page.locator('.network-analysis-data').textContent().then(x=>x.includes('Herramienta de laboratorio')),true);
+
 
    await page.locator('[data-add="networks"]').first().click();
    const routerReview=page.locator('.router-security-review').first();

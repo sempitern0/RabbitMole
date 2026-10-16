@@ -197,6 +197,8 @@ Select a field's information icon to consult glossary definitions, checks and ev
 
 Under **Networks → Router/gateway security**, select a suggested manufacturer and model. The model list follows the selected vendor, and **Other / enter manually** supports equipment not included in the offline catalog. Suggestions are not a verification of model, firmware, support status or security. The same sharp vector help icon opens context-sensitive glossary guidance on every field.
 
-### External Wi-Fi measurements
+### External Wi-Fi reports
 
-Within **Networks**, import Acrylic Wi-Fi Analyzer CSV exports to see a local, palette-aware summary of APs, LAN client rows, observed devices and network troubleshooting measurements. The original HTML is never executed. Convert the original vendor report to PDF and attach it under **PDF delivery → Complementary documents** (up to 2 MiB per PDF); PDF annexes are indexed by SHA-256 and delivered separately, not merged. Imported measurements do not automatically create network assets or security findings.
+Under **Networks → External Wi-Fi analysis**, attach a **PDF produced by any approved tool**, with optional tool/source and observation date. It is stored as a SHA-256-identified complementary document, delivered separately (not merged into the main PDF); the existing limits are 2 MiB per PDF, four documents and 6 MiB overall.
+
+Optionally import **CSV** exports with common Spanish or English SSID/BSSID, device, or latency headers, separated by commas or semicolons. Existing Acrylic CSV exports remain supported, but no tool is required and unrecognized formats can still be documented as PDF. Third-party HTML is never executed; imported observations do not automatically create inventoried assets or findings.

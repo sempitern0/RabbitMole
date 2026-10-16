@@ -197,6 +197,8 @@ El icono de información de cada campo abre una ficha superpuesta del diccionari
 
 En **Redes → Seguridad del router/gateway**, selecciona fabricante y modelo mediante listas relacionadas. «Otro / escribir…» permite introducir equipos que no figuren en el catálogo offline. Las sugerencias no acreditan el modelo, firmware ni el estado de soporte: confirma siempre la identificación mediante evidencias. Los iconos de ayuda utilizan un SVG uniforme, legible con todas las paletas.
 
-### Análisis WiFi externo en Redes
+### Informes externos de análisis WiFi en Redes
 
-En **Redes** importa los CSV de Acrylic Wi-Fi Analyzer para ver un resumen offline de AP, clientes LAN, dispositivos y mediciones de red. El HTML de terceros **no se ejecuta** en RabbitMole. Convierte el informe original a PDF y adjúntalo en **Generar informe PDF → Documentación complementaria** (hasta 2 MiB por PDF). Los anexos quedan referenciados por SHA-256 y se entregan por separado: no se fusionan en el PDF principal. Las observaciones de herramientas externas no crean automáticamente activos ni hallazgos.
+En **Redes → Análisis WiFi externo** puedes adjuntar primero un informe **PDF de cualquier herramienta**, identificando de forma opcional el programa o procedencia y la fecha del análisis. El PDF queda protegido en el expediente con huella SHA-256 y también figura en **Documentación complementaria**. Los PDFs se entregan separados del informe principal, no se fusionan. El límite es de 2 MiB por PDF, cuatro anexos y 6 MiB en total.
+
+Opcionalmente puedes importar **CSV** con encabezados habituales de SSID/BSSID, equipos o latencia, en español o inglés, con comas o punto y coma. Los CSV de Acrylic ya registrados siguen siendo compatibles. Una herramienta sin CSV reconocible puede documentarse igualmente mediante PDF; no es obligatorio usar Acrylic ni introducir resultados tabulares. El HTML externo no se ejecuta y las observaciones no crean activos ni hallazgos automáticamente.

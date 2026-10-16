@@ -76,6 +76,87 @@
    seen.add(entry.id);return entry;
   });
  }
+ const RESIDUAL_LEVELS=Object.freeze(['Crítica','Alta','Media','Baja','Informativa']);
+ const RESIDUAL_DECISIONS=Object.freeze({
+  remediate:'Requiere medidas adicionales',monitor:'Seguimiento y revisión acordados',
+  accept_proposed:'Aceptación de riesgo propuesta (no aprobada)'
+ });
+ const MAX_RESIDUAL_REVIEWS=20;
+ function normalizeResidual(value){
+  if(value==null)return [];
+  if(!Array.isArray(value)||value.length>MAX_RESIDUAL_REVIEWS)
+   throw Error('Historial de riesgo residual fuera de límites.');
+  const seen=new Set();
+  return value.map(raw=>{
+   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Valoración residual inválida.');
+   const entry={
+    id:clean(raw.id,100),level:clean(raw.level,30),decision:clean(raw.decision,35),
+    rationale:clean(raw.rationale,3000),assessedBy:clean(raw.assessedBy,160),
+    assessedAt:clean(raw.assessedAt,10),nextReview:clean(raw.nextReview,10),
+    evidenceKey:clean(raw.evidenceKey,120),evidenceId:clean(raw.evidenceId,100),
+    evidenceSha256:/^[a-f0-9]{64}$/i.test(raw.evidenceSha256||'')?raw.evidenceSha256.toLowerCase():'',
+    initialSeverity:clean(raw.initialSeverity,30)
+   };
+   if(!entry.id||seen.has(entry.id)||!RESIDUAL_LEVELS.includes(entry.level)||
+      !Object.hasOwn(RESIDUAL_DECISIONS,entry.decision)||
+      entry.rationale.length<12||!entry.assessedBy||!entry.assessedAt||!dates(entry.assessedAt)||
+      !dates(entry.nextReview)||(entry.nextReview&&entry.nextReview<entry.assessedAt))
+    throw Error('Registro de valoración residual incompleto, inválido o duplicado.');
+   seen.add(entry.id);return entry;
+  });
+ }
+ function latestResidual(finding){return normalizeResidual(finding?.residualAssessments).at(-1)||null;}
+ function recordResidual(finding,input,evidence=[],makeId){
+  const history=normalizeResidual(finding?.residualAssessments);
+  if(history.length>=MAX_RESIDUAL_REVIEWS)throw Error('Límite de revisiones del riesgo residual alcanzado.');
+  const evidenceKey=clean(input?.evidenceKey,120);
+  const item=evidenceKey?evidence.find(e=>e._key===evidenceKey):null;
+  if(evidenceKey&&!item)throw Error('La evidencia de valoración ya no está disponible.');
+  const id=typeof makeId==='function'?clean(makeId(),100):'';
+  if(!id||history.some(r=>r.id===id))throw Error('Identificador de valoración residual duplicado.');
+  const hash=item?.fileSha256||item?.sha256||'';
+  const entry={
+   id,level:clean(input?.level,30),decision:clean(input?.decision,35),
+   rationale:clean(input?.rationale,3000),assessedBy:clean(input?.assessedBy,160),
+   assessedAt:clean(input?.assessedAt,10),nextReview:clean(input?.nextReview,10),
+   evidenceKey,evidenceId:clean(item?.id,100),
+   evidenceSha256:/^[a-f0-9]{64}$/i.test(hash)?hash.toLowerCase():'',
+   initialSeverity:clean(finding?.severity,30)
+  };
+  return normalizeResidual([...history,entry]);
+ }
+ // Only an auditor's individual action checks count as proven remediation effectiveness.
+ // Deadlines are for execution, not proof of verification; a missing deadline is not "overdue".
+ function portfolio(findings,asOf){
+  const day=clean(asOf,10);
+  if(!day||!dates(day))throw Error('Fecha de referencia de indicadores inválida.');
+  const out={findings:0,residualAssessed:0,residualPending:0,residualHigh:0,
+   total:0,proposed:0,approved:0,scheduled:0,applied:0,blocked:0,reverted:0,
+   overdue:0,noDeadline:0,verified:0,failed:0,inconclusive:0,unchecked:0};
+  const overdue=[];
+  for(const finding of findings||[]){
+   out.findings++;
+   const residual=latestResidual(finding);
+   if(residual){out.residualAssessed++;if(['Crítica','Alta'].includes(residual.level))out.residualHigh++;}
+   else out.residualPending++;
+   for(const action of normalize(finding.mitigationActions)){
+    out.total++;out[action.status]++;
+    if(['applied','reverted'].includes(action.status)){
+     if(action.status==='applied'){
+      const result=action.checks.at(-1)?.result;
+      out[result||'unchecked']++;
+     }
+    }else if(!action.deadline){out.noDeadline++;}
+    else if(action.deadline<day){
+     out.overdue++;
+     overdue.push({findingKey:clean(finding._key,100),findingId:clean(finding.id,100),
+      actionKey:action.key,title:action.title,owner:action.owner,deadline:action.deadline,status:action.status});
+    }
+   }
+  }
+  overdue.sort((a,b)=>a.deadline.localeCompare(b.deadline)||a.title.localeCompare(b.title,'es'));
+  return {counts:out,overdue};
+ }
  const fields=Object.freeze(['key','templateId','title','steps','impact','rollback','acceptance','owner','deadline','status','approvedBy','approvalDate','changeRef','executedBy','executedAt','changeNotes','evidenceKey']);
  function normalizeRow(raw){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Acción correctiva no válida.');
@@ -166,5 +247,5 @@
   }
   return counts;
  }
- globalThis.AuditMitigation=Object.freeze({VERSION,MAX_ACTIONS,MAX_CHECKS,CHECK_RESULTS,STATES,TEMPLATES,normalize,fromTemplate,save,metrics,verification,recordVerification});
+ globalThis.AuditMitigation=Object.freeze({VERSION,MAX_ACTIONS,MAX_CHECKS,MAX_RESIDUAL_REVIEWS,CHECK_RESULTS,RESIDUAL_LEVELS,RESIDUAL_DECISIONS,STATES,TEMPLATES,normalize,fromTemplate,save,metrics,verification,recordVerification,normalizeResidual,latestResidual,recordResidual,portfolio});
 })();

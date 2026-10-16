@@ -2294,6 +2294,63 @@
     intakeBlock = "assets",
     intakeReturn = "assets";
   const intake = globalThis.AuditInventoryImport;
+  let localDiscovery = null, discoveryCsrf = "", discoveryBusy = false;
+  async function checkLocalDiscovery() {
+    if (location.protocol !== "http:" || !["127.0.0.1", "localhost", "::1"].includes(location.hostname)) {
+      localDiscovery = {available:false, reason:"Solo disponible con serve.py local."};
+      render(); return;
+    }
+    try {
+      const response = await fetch("./_local/discovery/status", {cache:"no-store",credentials:"same-origin"});
+      if (!response.ok) throw Error("Inicia python3 serve.py --enable-discovery para habilitar el asistente.");
+      const data = await response.json();
+      discoveryCsrf = data.csrf || "";
+      localDiscovery = data;
+    } catch (error) {
+      discoveryCsrf = "";
+      localDiscovery = {available:false, reason:error.message};
+    }
+    render();
+  }
+  function renderLocalDiscovery() {
+    const active = localDiscovery?.available === true;
+    const candidates = active ? (localDiscovery.interfaces || []) : [];
+    const toolNames = active ? [localDiscovery.tools?.nmap && "Nmap",localDiscovery.tools?.ping && "ping"].filter(Boolean).join(" / ") : "";
+    return `<section class="card local-discovery">
+      <h2>Discovery de la red autorizada</h2>
+      <p>Detecta equipos que responden en una subred privada: no explora puertos, no instala agentes y <strong>no sustituye la revisión del auditor</strong>. La PWA pública no puede iniciar procesos locales.</p>
+      <div class="action-row"><button type="button" class="button quiet" id="discovery-check">Comprobar herramientas locales</button></div>
+      <p class="subtle" role="status">${active ? "Herramientas: "+html(toolNames || "Ninguna") : html(localDiscovery?.reason || "Inicia serve.py --enable-discovery y comprueba las herramientas disponibles.")}</p>
+      ${active ? `<div class="fields"><div class="field"><label for="discovery-cidr">CIDR privado autorizado (máximo 256 IP)</label><input id="discovery-cidr" autocomplete="off" placeholder="192.168.10.0/24" list="discovery-cidr-list"><datalist id="discovery-cidr-list">${candidates.map(x=>`<option value="${html(x.cidr)}">${html(x.interface)} · ${html(x.address)}</option>`).join("")}</datalist></div>
+      <div class="field"><label for="discovery-consent">Confirmación explícita</label><input id="discovery-consent" autocomplete="off" placeholder="Escribe AUTORIZO"></div></div>
+      <button type="button" class="button accent" id="discovery-run" ${discoveryBusy || !toolNames?"disabled":""}>Iniciar descubrimiento autorizado</button>
+      <p class="subtle">Los CIDR sugeridos provienen de interfaces locales, no demuestran autorización. Se ejecuta exclusivamente en el dispositivo que inició serve.py.</p>` : `<p class="subtle">Alternativa sin servicio local: ejecuta <code>python3 discovery/discover.py wizard</code> desde tu terminal y después importa el JSON generado.</p>`}
+    </section>`;
+  }
+  async function runLocalDiscovery() {
+    if (discoveryBusy || !localDiscovery?.available || !discoveryCsrf) return;
+    const cidr = byId("discovery-cidr")?.value.trim();
+    const confirmation = byId("discovery-consent")?.value.trim();
+    if (confirmation !== "AUTORIZO") { alert("Escribe AUTORIZO para confirmar el alcance."); return; }
+    if (!confirm("¿Confirmas que tienes autorización expresa para descubrir hosts en " + cidr + "? Se enviarán paquetes desde este equipo.")) return;
+    discoveryBusy = true;
+    const button = byId("discovery-run");
+    if(button) {button.disabled=true;button.textContent="Explorando alcance autorizado…";}
+    try {
+      const response = await fetch("./_local/discovery/scan", {
+        method:"POST",credentials:"same-origin",cache:"no-store",
+        headers:{"Content-Type":"application/json","X-RabbitMole-Token":discoveryCsrf},
+        body:JSON.stringify({cidr,confirmation})
+      });
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error || "Discovery no disponible.");
+      const block = intakeBlock === "networks" ? "networks" : "assets";
+      intakePreview = intake.parse(JSON.stringify(data.capture), {block,filename:"Discovery local autorizado",size:JSON.stringify(data.capture).length});
+      intakeSelected = new Set(intake.reconcile(intakePreview,state[block]).filter(x=>x.status==="nuevo").map(x=>x.index));
+      intakeError = "Captura local finalizada: "+data.hosts+" equipos responden. Revisa los candidatos antes de incorporar.";
+    } catch(error) { intakeError = "Discovery: "+error.message; }
+    finally { discoveryBusy=false;render(); }
+  }
   function renderIntake() {
     const block = intakePreview?.block || intakeBlock;
     return `<span class="eyebrow">INVENTARIO / CAPTURA OPCIONAL</span><h1 class="page-title">Captura asistida de activos</h1>
@@ -2305,7 +2362,7 @@
         <label for="intake-file">Archivo de captura</label><input id="intake-file" type="file" accept=".json,.csv,application/json,text/csv">
         <p class="subtle"><strong>Nuevo asistente guiado (sin conectar la PWA a procesos locales):</strong> desde Windows inicia <code>discovery/iniciar.cmd</code> o <code>discovery/run.ps1</code>; desde Linux/macOS ejecuta <code>bash discovery/run.sh</code>. Detecta las interfaces locales, solicita la red autorizada y exige confirmación antes de capturar. Después importa el JSON generado aquí, primero en Hardware y luego en Redes.</p><p class="subtle">Descubrimiento avanzado desde un portátil conectado a la LAN autorizada: <code>python3 discovery/discover.py doctor</code> para preparar herramientas y <code>python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output captura-lan.json</code> para crear el JSON. Importa el mismo archivo en Hardware y en Redes; no se instalan agentes en equipos remotos. Consulta <code>discovery/README_ES.md</code> para Windows, Linux y macOS.</p><p class="subtle">Recopilación local opcional: <code>collect-local.sh --output captura.json</code> o <code>collect-local.ps1 -Output captura.json</code>. Ejecuta únicamente en equipos propios o autorizados.</p>
         <p id="intake-status" role="status" aria-live="polite">${html(intakeError)}</p></section>
-        ${intakePreview ? renderIntakePreview() : ""}`;
+        ${renderLocalDiscovery()}\n        ${intakePreview ? renderIntakePreview() : ""}`;
   }
   function renderIntakePreview() {
     if (!intakePreview) return "";
@@ -2502,7 +2559,7 @@
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -4215,6 +4272,8 @@
       focusAddedRecord(added[0]._key);
       return;
     }
+    if (b.id === "discovery-check") { await checkLocalDiscovery(); return; }
+    if (b.id === "discovery-run") { await runLocalDiscovery(); return; }
     if (b.dataset.glossaryCopy !== undefined) {
       const term = glossary?.byId(b.dataset.glossaryId);
       const command =

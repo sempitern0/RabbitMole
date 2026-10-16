@@ -222,3 +222,5 @@ The **Quality** and **Follow-up** pages include a local-only mitigation scorecar
 The residual-risk form, mitigation dashboard and PDF appendix controls are now rendered by `js/audit-workflow-views.js`, a side-effect-free browser module loaded before `js/app.js` and included in the offline service worker cache. The existing application retains state management, audit persistence, document locks, report generation and routing. The shared `npm run check` gate includes a dedicated view-contract regression test. The current JSON schema and local storage keys are unchanged.
 
 Mitigation, residual-risk and attachment event handlers now live in `js/audit-actions.js`, with explicit dependencies and tests for confirmed-audit protections. Browser-local storage keys and the existing JSON v3 contract remain unchanged.
+
+Evidence removal now reports dependent finding, remediation, retest and residual-risk references before confirmation. Quality review warns about missing historic evidence. References are not silently rewritten or removed.

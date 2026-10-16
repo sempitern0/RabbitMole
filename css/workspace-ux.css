@@ -705,3 +705,11 @@
 #pwa-install-card.is-installed{border-inline-start-color:var(--brand);background:var(--canvas)}
 @media(max-width:600px){#pwa-install-card.pwa-install-card{margin:.65rem .75rem;padding:.9rem}}
 @media(forced-colors:active){#pwa-install-card.pwa-install-card{border:2px solid CanvasText;box-shadow:none}#pwa-install-card .pwa-install-intro{color:CanvasText}}
+
+.network-analysis-imports{margin:.85rem 0;padding:.85rem;border:1px solid var(--line);border-radius:.7rem;background:var(--canvas)}
+.network-analysis-imports h3{margin:0 0 .65rem;font-size:1rem}
+.network-analysis-imports ul{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.network-analysis-imports li{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;padding:.65rem;border:1px solid var(--line);border-radius:.55rem;background:var(--paper);overflow-wrap:anywhere}
+.network-analysis-imports li span{min-width:0;flex:1 1 14rem}
+.network-analysis-imports li small{display:block;color:var(--muted);margin-top:.25rem}
+.network-analysis-imports li .button{min-height:44px}

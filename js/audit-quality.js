@@ -104,6 +104,10 @@
       if(last?.result==='verified' && f.status!=='Cerrado' && f.status!=='Riesgo aceptado')add('warning','ESTADO_DE_REEVALUACION','followup',`${name}: el seguimiento indica verificado, pero el estado administrativo es ${clean(f.status)||'vacío'}.`,key);
       if(last?.evidenceKey && !evidence.some(e=>e._key===last.evidenceKey))add('warning','EVIDENCIA_REEVALUACION_NO_DISPONIBLE','followup',`${name}: la evidencia de la última revisión ya no está disponible en el expediente.`,key);
       if(last?.result==='verified' && !last.evidenceKey)add('warning','VERIFICACION_SIN_EVIDENCIA','followup',`${name}: hay corrección verificada sin evidencia adicional vinculada.`,key);
+      const tracked=[...(f.mitigationActions||[]).flatMap(a=>[a,...(a.checks||[])]),...(f.retests||[]),...(f.residualAssessments||[])];
+      const unavailable=[...new Set(tracked.map(row=>clean(row?.evidenceKey)).filter(id=>id&&!evidenceKeys.has(id)))];
+      if(unavailable.length)add('warning','TRAZABILIDAD_EVIDENCIA_NO_DISPONIBLE','evidence',
+        `${name}: ${unavailable.length} referencia(s) de mitigación o seguimiento apuntan a evidencias retiradas.`,key);
       if(f.status==='Riesgo aceptado'&&!notEmpty(f.residual))add('warning','ACEPTACION_SIN_JUSTIFICAR','findings',`${name}: documenta justificación, responsable y condiciones de aceptación del riesgo.`,key);
     }
     if(!notEmpty(audit?.final?.executive))add(finalMode?'blocker':'warning','SIN_RESUMEN','delivery','Completa el resumen ejecutivo para dirección.');

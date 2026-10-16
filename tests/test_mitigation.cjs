@@ -25,11 +25,24 @@ assert.equal(m.verification({status:'Abierto',retests:[{date:'2026-10-17',result
 assert.equal(m.verification({status:'Abierto',retests:[{date:'2026-10-17',result:'unverified'}]},applied),'inconclusive');
 assert.equal(m.verification({status:'Cerrado',retests:[{date:'2026-10-17',result:'verified'}]},approved),'not-applicable');
 
+const checked=m.recordVerification(applied,{date:'2026-10-17',result:'verified',by:'Auditora',notes:'Se ha repetido la prueba de acceso y confirmado el resultado.'},[],()=> 'check-1');
+assert.equal(checked.checks.length,1);
+assert.equal(m.verification({status:'Abierto',retests:[]},checked),'action-verified');
+assert.throws(()=>m.recordVerification(approved,{date:'2026-10-17',result:'verified',by:'Auditora',notes:'Intento de verificar un cambio no aplicado'},[],()=> 'check-2'),/tras aplicar/);
+assert.throws(()=>m.recordVerification(applied,{date:'2026-10-15',result:'verified',by:'Auditora',notes:'Prueba anterior al cambio'},[],()=> 'check-2'),/no puede preceder/);
+assert.throws(()=>m.save(checked,{checks:[]}),/no se puede editar/);
+assert.throws(()=>m.save(checked,{steps:'Nuevo procedimiento no validado'}),/conserva/);
+assert.equal(m.normalize(JSON.parse(JSON.stringify([checked])))[0].checks[0].id,'check-1');
+assert.throws(()=>m.recordVerification(checked,{date:'2026-10-18',result:'failed',by:'Auditora',notes:'Medida ineficaz tras repetir las comprobaciones'},[],()=> 'check-1'),/duplicado/);
+const failed=m.recordVerification(checked,{date:'2026-10-18',result:'failed',by:'Auditora',notes:'La medida no cumple el criterio esperado de seguridad.'},[],()=> 'check-2');
+assert.equal(m.verification({},failed),'action-failed');
 assert.throws(()=>m.normalize([initial,initial]),/duplicadas/);
 assert.throws(()=>m.save(proposal,{status:'proposed',evidenceKey:'missing'},[]),/evidencia/);
 const state=JSON.parse(JSON.stringify({mitigationActions:[applied]}));
 assert.equal(m.normalize(state.mitigationActions)[0].status,'applied');
 const app=fs.readFileSync('js/app.js','utf8'),html=fs.readFileSync('index.html','utf8');
 assert(app.includes('renderMitigationActions')&&app.includes('mitigationOverview'));
+assert(app.includes('data-mitigation-verify')&&app.includes('data-mitigation-check-field'));
+assert(app.includes('data-pdf-appendix-edit')&&app.includes('data-remove-evidence-photo'));
 assert(html.includes('js/audit-mitigation.js'));
 console.log('PASS mitigation plans, approvals, controlled transitions, JSON roundtrip and display');

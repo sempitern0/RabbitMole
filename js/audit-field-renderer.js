@@ -22,7 +22,13 @@
       control = `<input id="${id}" type="text" value="${html(value)}" readonly aria-readonly="true" class="identifier-readonly" title="Código generado por la aplicación; no editable" autocomplete="off"><small class="identifier-hint">Identificador asignado automáticamente · solo lectura</small>`;
     } else if (type === "textarea")
       control = `<textarea id="${id}" ${attrs} maxlength="20000">${html(value)}</textarea>`;
-    else if (type === "select")
+    else if(block==="assets"&&name==="os"&&/^(servidor\\b|hypervisor\\b|hipervisor\\b)/i.test(String(obj.type||"").trim())){
+      const groups=osCatalog?.SERVER_GROUPS||{};
+      const options=Object.values(groups).flat();
+      const custom=Boolean(value)&&!options.includes(value);
+      control=`<select id="${id}" ${attrs} data-preset="true" aria-label="${html(label)}"><option value="">Seleccionar sistema operativo…</option>${Object.entries(groups).map(([group,systems])=>`<optgroup label="${html(group)}">${systems.map(system=>`<option value="${html(system)}"${system===value?" selected":""}>${html(system)}</option>`).join("")}</optgroup>`).join("")}<option value="__custom__"${custom?" selected":""}>Otro / escribir…</option></select><input ${attrs} data-custom="true" aria-label="Sistema operativo personalizado" placeholder="Escribe sistema y versión" value="${custom?html(value):""}" maxlength="20000" ${custom?"":"hidden"}>`;
+    }
+        else if (type === "select")
       control = `<select id="${id}" ${attrs}>${choices.map((x) => `<option value="${html(x)}"${x === value ? " selected" : ""}>${html(x)}</option>`).join("")}</select>`;
     else if (
       block === "networks" &&

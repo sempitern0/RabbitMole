@@ -12,7 +12,7 @@ const d={html,str:v=>String(v??''),identifiers:{isLockedField:(_b,k)=>k==='id'},
  glossaryHelpIcon:'<svg></svg>'};
 const c=(obj,b,def)=>render(obj,b,def,0,d);
 assert(c({id:'AST-001'},'assets',['id','Código']).includes('readonly aria-readonly="true"'));
-assert(c({notes:'dato <sensible>'},'assets',['notes','Notas','textarea']).includes('&lt;sensible>'));
+assert(c({notes:'dato <sensible>'},'assets',['notes','Notas','textarea']).includes('&lt;sensible&gt;'));
 assert(c({status:'Pendiente'},'controls',['status','Estado','select',['','Pendiente']]).includes('selected'));
 assert(c({gateway:'1.1.1.1'},'networks',['gateway','Gateway']).includes('<datalist'));
 assert(c({routerVendor:'MikroTik',routerModel:'RB5009'},'networks',['routerModel','Modelo','picker',[]]).includes('RB5009'));

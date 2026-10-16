@@ -53,3 +53,20 @@
 .mitigation-checks input,.mitigation-checks select,.mitigation-checks textarea{width:100%;min-height:44px;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:.6rem}
 .mitigation-checks .retest-history{margin-bottom:1rem}
 @media(max-width:720px){.mitigation-checks .fields{grid-template-columns:1fr}}
+
+/* Residual risk assessment and portfolio dashboard, accessible at tablet widths. */
+.residual-assessment{margin:1rem 0;border:1px solid var(--line);border-radius:.85rem;padding:0 1rem;background:var(--canvas)}
+.residual-assessment>summary{cursor:pointer;padding:.9rem .25rem;min-height:48px;font-weight:760}
+.residual-assessment .fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0}
+.residual-assessment .field{display:grid;gap:.4rem;min-width:0}
+.residual-assessment .field.full{grid-column:1/-1}
+.residual-assessment input,.residual-assessment select,.residual-assessment textarea{width:100%;min-height:44px;padding:.6rem;font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:9px}
+.residual-assessment summary:focus-visible,.mitigation-dashboard summary:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:5px}
+.mitigation-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:.75rem;margin:1rem 0}
+.mitigation-stat-grid>div{display:grid;gap:.25rem;padding:.8rem;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas)}
+.mitigation-stat-grid strong{font-size:1.6rem;font-variant-numeric:tabular-nums}
+.mitigation-stat-grid span{font-size:.9rem;color:var(--muted)}
+.mitigation-overdue{display:grid;gap:.7rem;padding-left:1.4rem}
+.mitigation-overdue li{overflow-wrap:anywhere}
+@media(max-width:720px){.residual-assessment .fields{grid-template-columns:1fr}.mitigation-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{.mitigation-dashboard,.mitigation-stat-grid>div{break-inside:avoid}}

@@ -244,3 +244,9 @@ Record search, filtering, quick jump and focus handling now live in `js/audit-re
 ### Incremental audit field renderer
 
 Form field markup (text, selects, touch-friendly pickers, datalists, evidence links and contextual glossary help) is rendered by `js/audit-field-renderer.js`. App state, validation and local persistence remain in `app.js`. Eleven representative field variants were compared byte-for-byte with their previous HTML output. The renderer is precached for offline use and covered by a contract test; JSON v3 and Android interactions remain unchanged.
+
+### Rack and physical infrastructure audits
+
+Create a **Rack de servidores** or **Rack de comunicaciones** hardware asset to reveal an optional physical/environmental inspection sheet. It covers rack U occupancy, inlet temperature, humidity and airflow, sensors, leak exposure, electrical/PDU/UPS records, fire detection, access control, maintenance logs, cabling and logical network controls. All observations are manual, and the app does not impose universal environmental thresholds or infer compliance.
+
+The **Racks, CPD y seguridad física** control pack (10 controls, PHY-01–PHY-10) supports evidence collection, nonconformity reporting, mitigation and retesting. Firewall rules remain assessed in the existing perimeter control pack. Validate environmental criteria against manufacturers, relevant ASHRAE guidance and local regulations. Do not handle live electrical equipment or record access secrets. Current JSON v3, reporting and offline workflows remain unchanged.

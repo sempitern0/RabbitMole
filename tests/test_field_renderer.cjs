@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const source=fs.readFileSync('js/audit-field-renderer.js','utf8');
 const scope={};scope.globalThis=scope;vm.runInNewContext(source,scope);
 const render=scope.RabbitMoleFieldRenderer.render;
-const html=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&gt;').replace(/"/g,'&quot;');
+const html=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const d={html,str:v=>String(v??''),identifiers:{isLockedField:(_b,k)=>k==='id'},
  assist:{suggestions:(_s,_b,_n,choices=[])=>choices||[],assetChoices:()=>[{value:'Router'}],candidates:()=>[{id:'EVD-001',title:'Foto'}]},
  state:{},osCatalog:{ALL:['Debian 13']},vendorModels:{Cisco:['C9200']},

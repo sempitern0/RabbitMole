@@ -386,7 +386,104 @@
         "reference": "Plantilla orientativa propia; contrastar con políticas y alcance acordados."
       }
     ]
-  }
+  },
+  {
+  "id": "physical-racks",
+  "name": "Racks, CPD y seguridad física",
+  "description": "Comprobaciones físicas y ambientales para racks y salas técnicas; evaluación manual con evidencia, sin certificación automática.",
+  "controls": [
+    {
+      "id": "PHY-01",
+      "name": "Inventario y ocupación de rack",
+      "category": "Seguridad física",
+      "method": "Identificar armario, ubicación, ocupación U, equipos, responsable y plano actualizado.",
+      "expectedEvidence": "Fotografía saneada de frontal/posterior y plano de distribución U.",
+      "recommendation": "Documentar equipos, capacidad y responsables; corregir ocupaciones o fijaciones inseguras.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-02",
+      "name": "Temperatura y circulación de aire",
+      "category": "Seguridad física",
+      "method": "Medir temperatura en entrada de equipos, comprobar obstrucciones, recirculación y separación de flujos según fabricante y diseño.",
+      "expectedEvidence": "Medición fechada y ubicación del sensor, fotografía saneada del flujo y ficha del fabricante.",
+      "recommendation": "Restaurar circulación de aire y revisar climatización y consignas con mantenimiento según especificación del equipo.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-03",
+      "name": "Humedad y monitorización ambiental",
+      "category": "Seguridad física",
+      "method": "Revisar humedad, alarmas, sensores, mantenimiento y umbrales aprobados; no aplicar cifras universales.",
+      "expectedEvidence": "Lecturas fechadas, configuración saneada de sensores y pruebas de avisos.",
+      "recommendation": "Ajustar monitorización y revisar condiciones de operación dentro de límites documentados.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-04",
+      "name": "Protección frente a agua y humedad",
+      "category": "Seguridad física",
+      "method": "Comprobar exposición a goteras, tuberías, condensación, sensores de fugas y respuesta documentada.",
+      "expectedEvidence": "Inspección visual autorizada, plano y registro de mantenimiento.",
+      "recommendation": "Reducir exposición y verificar detección y respuesta ante fugas.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-05",
+      "name": "PDU, cableado eléctrico y tierra",
+      "category": "Seguridad física",
+      "method": "Inspeccionar distribución y etiquetado de circuitos, capacidad, fijaciones y evidencias de tierra según personal competente; no realizar maniobras eléctricas.",
+      "expectedEvidence": "Plano de circuitos, inspección autorizada y mantenimiento.",
+      "recommendation": "Corregir sobrecargas, etiquetado y defectos mediante personal habilitado.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-06",
+      "name": "SAI y continuidad eléctrica",
+      "category": "Seguridad física",
+      "method": "Contrastar autonomía y redundancia previstas con pruebas autorizadas, estado de baterías y mantenimiento.",
+      "expectedEvidence": "Registro de pruebas, fecha de baterías y mapa de dependencias.",
+      "recommendation": "Actualizar mantenimiento y ensayos de continuidad según criticidad del servicio.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-07",
+      "name": "Incendio y protección de equipos",
+      "category": "Seguridad física",
+      "method": "Verificar detección de incendios, mantenimiento, acceso a equipos y respuesta de emergencias según normativa local.",
+      "expectedEvidence": "Actas de inspección y mantenimiento, procedimientos y fotos saneadas.",
+      "recommendation": "Adecuar detección, protección y procedimientos con profesionales competentes.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-08",
+      "name": "Acceso físico y registro de intervenciones",
+      "category": "Seguridad física",
+      "method": "Comprobar cerraduras, autorizaciones, registros de acceso, custodia de llaves y acompañamiento de terceros; no registrar códigos.",
+      "expectedEvidence": "Relación saneada de autorizados, bitácora de mantenimiento e imagen del cierre.",
+      "recommendation": "Limitar accesos, mantener registro y corregir cierres defectuosos.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-09",
+      "name": "Cableado, orden y etiquetado",
+      "category": "Seguridad física",
+      "method": "Revisar rutas de cables, radios mínimos de curvatura, separación donde aplique, etiquetado y ausencia de obstrucciones.",
+      "expectedEvidence": "Imágenes saneadas y correspondencia con patch panel o diagrama.",
+      "recommendation": "Reorganizar y etiquetar cableado sin interrumpir servicios, mediante cambio aprobado.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    },
+    {
+      "id": "PHY-10",
+      "name": "Firewall y segmentación vinculados al rack",
+      "category": "Seguridad física",
+      "method": "Relacionar switches, firewall y redes de gestión con controles de red; revisar reglas y acceso remoto usando NET-02/03/08/11, sin duplicar dictamen.",
+      "expectedEvidence": "Diagrama de puertos y VLAN y referencia a controles de firewall con evidencia saneada.",
+      "recommendation": "Aplicar mínimo privilegio y segmentación según flujos aprobados; enlazar las acciones correctivas al control de red.",
+      "reference": "Criterios orientativos: NIST SP 800-53 familia PE y recomendaciones ambientales ASHRAE; validar con fabricante, instalaciones y normativa local. No certifica conformidad."
+    }
+  ]
+}
 ];
   const index = new Map(PACKS.map(pack => [pack.id, pack]));
   const safeKey = value => typeof value === 'string' && /^[a-z0-9-]{2,64}$/.test(value);

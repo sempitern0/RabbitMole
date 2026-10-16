@@ -2763,12 +2763,19 @@
         : "smooth",
     });
   }
+  function renderCaptureControls(fileId, cameraId, attributes, cameraAttributes) {
+    return `<div class="upload-control">
+      <input type="file" id="${html(fileId)}" accept="image/png,image/jpeg,image/webp" multiple ${attributes}>
+      <button type="button" class="button quiet small camera-action" data-camera-for="${html(cameraId)}">📷 Hacer foto</button>
+      <input class="camera-input" type="file" id="${html(cameraId)}" accept="image/*" capture="environment" ${cameraAttributes}>
+    </div>`;
+  }
   function renderFindingAttachments(finding, index) {
     const linked = relations.linkedEvidence(state, "findings", finding._key);
     return `<div class="finding-attachments"><strong>Fotos y capturas del hallazgo</strong>
       <p class="subtle">Selecciona una imagen para crear una evidencia vinculada automáticamente.</p>
       <label for="finding-image-${index}">Añadir foto o captura (PNG, JPG o WebP, hasta 5 MiB)</label>
-      <input type="file" id="finding-image-${index}" accept="image/png,image/jpeg,image/webp" multiple data-finding-image-key="${html(finding._key)}"><button type="button" class="button quiet small camera-action" data-camera-for="finding-camera-${index}">📷 Hacer foto</button><input class="camera-input" type="file" id="finding-camera-${index}" accept="image/*" capture="environment" data-finding-image-key="${html(finding._key)}">
+      ${renderCaptureControls(`finding-image-${index}`,`finding-camera-${index}`,`data-finding-image-key="${html(finding._key)}"`,`data-finding-image-key="${html(finding._key)}"`)}
       <div class="finding-image-gallery">${linked
         .flatMap((e) =>
           evidenceImages.list(e).map((photo, i) => ({ photo, e, i })),
@@ -2791,7 +2798,7 @@
               (r, i) =>
                 `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${block === "cves" && !PUBLIC_DEMO ? `<div class="cve-tools"><button class="button quiet small" type="button" data-cve-check="${i}">Consultar CVE online (opcional)</button><button class="button small" type="button" data-cve-link="${i}">Ver en CVE.org ↗</button><span class="subtle">Solo se envía el identificador CVE, nunca los datos del cliente.</span></div>` : ""}${
                   block === "evidence"
-                    ? `<div class="file-upload"><label for="evidence-upload-${i}"><strong>Añadir foto o captura</strong> (PNG, JPG o WebP, hasta 5 MiB)</label><p class="subtle">Se guarda una copia optimizada. El SHA-256 identifica el archivo original, que debes conservar por separado.</p>${r.fileSha256 ? `<p class="evidence-digest">Archivo: ${html(r.fileName || "Sin nombre")} · ${(r.fileBytes || 0).toLocaleString("es-ES")} bytes <span>SHA-256 ${html(r.fileSha256)}</span></p>` : ""}<input type="file" accept="image/png,image/jpeg,image/webp" multiple data-image-index="${i}" id="evidence-upload-${i}"><button type="button" class="button quiet small camera-action" data-camera-for="evidence-camera-${i}">📷 Hacer foto</button><input class="camera-input" type="file" accept="image/*" capture="environment" data-image-index="${i}" id="evidence-camera-${i}"><div class="evidence-image-grid">${evidenceImages
+                    ? `<div class="file-upload"><label for="evidence-upload-${i}"><strong>Añadir foto o captura</strong> (PNG, JPG o WebP, hasta 5 MiB)</label><p class="subtle">Se guarda una copia optimizada. El SHA-256 identifica el archivo original, que debes conservar por separado.</p>${r.fileSha256 ? `<p class="evidence-digest">Archivo: ${html(r.fileName || "Sin nombre")} · ${(r.fileBytes || 0).toLocaleString("es-ES")} bytes <span>SHA-256 ${html(r.fileSha256)}</span></p>` : ""}${renderCaptureControls(`evidence-upload-${i}`,`evidence-camera-${i}`,`data-image-index="${i}"`,`data-image-index="${i}"`)}<div class="evidence-image-grid">${evidenceImages
                         .list(r)
                         .map(
                           (photo, j) =>

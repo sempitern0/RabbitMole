@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v63-router-catalog";
+const CACHE_NAME = "rabbitmole-shell-v64-form-system";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -49,6 +49,7 @@ const CORE = [
   "./css/glossary.css",
   "./css/atkinson.css",
   "./css/workspace-ux.css",
+  "./css/form-system.css",
   "./manifest.webmanifest",
   "./icons/os-windows.svg",
   "./icons/os-linux.svg",

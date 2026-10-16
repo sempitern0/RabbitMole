@@ -1,0 +1,149 @@
+/* Single screen-only form system. Palette-aware; the printable report is untouched.
+   Owns shared field rhythm and controls, including inputs outside legacy .field wrappers. */
+#workspace {
+  --form-gap: 1.2rem;
+  --form-inline-gap: 1.35rem;
+  --form-control-radius: .7rem;
+  min-width: 0;
+}
+#workspace > .card { margin-block: 1.5rem; }
+#workspace > .button + .card { margin-block-start: 1.5rem; }
+#workspace .card, #workspace .entry, #workspace .field { min-width: 0; }
+#workspace .card-head { align-items: flex-start; gap: 1rem 1.35rem; flex-wrap: wrap; }
+#workspace .card-head > div { min-width: 0; flex: 1 1 17rem; }
+#workspace .card-head h2 { line-height: 1.35; margin-bottom: .5rem; }
+#workspace .card-head .subtle { line-height: 1.6; margin: 0; max-width: 75ch; }
+
+#workspace .fields { column-gap: var(--form-inline-gap); row-gap: var(--form-gap); }
+#workspace .field { display: flex; flex-direction: column; gap: .55rem; }
+#workspace .field > .field-heading { margin: 0; }
+#workspace .field :is(label, .field-heading label) {
+  color: var(--ink); display: block; line-height: 1.5; font-weight: 730;
+  font-size: .92rem; margin: 0; overflow-wrap: anywhere;
+}
+#workspace :is(.field, .retest-fields, .intake-file-control, .transfer-field, .member-card)
+  :is(input, select, textarea) { min-width: 0; max-width: 100%; }
+#workspace .field :is(input,select,textarea) { width: 100%; }
+#workspace .field textarea { min-height: 7.5rem; line-height: 1.55; resize: vertical; }
+
+/* Canonical appearance for text-like inputs across every workbench screen. */
+#workspace :is(
+  input:not([type="hidden"]):not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  select, textarea
+) {
+  box-sizing: border-box; min-height: 48px; max-width: 100%;
+  padding: .7rem .85rem; border: 1.5px solid var(--aw-field-border);
+  border-radius: var(--form-control-radius); background: var(--aw-field-bg);
+  color: var(--ink); color-scheme: inherit; font: inherit;
+  box-shadow: 0 1px 2px #00000010;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+#workspace :is(input,select,textarea):where(:not([type="checkbox"]):not([type="radio"]):not([type="file"])):hover:not(:disabled) {
+  border-color: var(--aw-field-hover);
+}
+#workspace :is(input,select,textarea):where(:not([type="checkbox"]):not([type="radio"]):not([type="file"])):focus-visible {
+  border-color: var(--aw-field-focus);
+  background: var(--aw-field-bg);
+  outline: 3px solid color-mix(in srgb, var(--aw-field-focus) 32%, transparent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--aw-field-focus);
+}
+#workspace :is(input,select,textarea)::placeholder { color: var(--aw-field-placeholder); opacity: 1; }
+#workspace :is(input,select,textarea):disabled { opacity: .68; cursor: not-allowed; }
+#workspace input[type="search"] { appearance: textfield; -webkit-appearance: textfield; }
+#workspace :is(input[type="checkbox"],input[type="radio"]) {
+  accent-color: var(--brand); width: 1.2rem; height: 1.2rem; flex: none;
+}
+#workspace input[data-custom][hidden], #workspace input[hidden] { display: none!important; }
+#workspace .field input[data-custom]:not([hidden]) { margin-block-start: .25rem; }
+#workspace :is(.field-hint,.identifier-hint,.field-assist small) {
+  font-size: .84rem; line-height: 1.55; color: var(--muted);
+}
+#workspace .field-error { margin-block-start: .2rem; line-height: 1.5; }
+#workspace .field-error:empty { display: none; }
+#workspace .required-mark { color: #d64c65; font-weight: 800; }
+
+/* File inputs retain their native affordance, but have the same surface and spacing. */
+#workspace input[type="file"]:not([hidden]):not(.camera-input) {
+  display: block; width: 100%; max-width: 100%; min-width: 0;
+  min-height: 48px; padding: .55rem .7rem;
+  border: 1.5px dashed var(--aw-field-border);
+  border-radius: var(--form-control-radius);
+  background: var(--aw-field-bg); color: var(--ink); font: inherit;
+  font-size: .9rem; overflow-wrap: anywhere;
+}
+#workspace input[type="file"]:not([hidden]):not(.camera-input)::file-selector-button {
+  padding: .48rem .75rem; margin-inline-end: .8rem;
+  border: 1px solid var(--brand); border-radius: .5rem;
+  background: var(--brand-tint); color: var(--ink); cursor: pointer;
+  font: inherit; font-weight: 720;
+}
+#workspace input[type="file"]:not([hidden]):not(.camera-input):focus-visible {
+  outline: 3px solid var(--brand); outline-offset: 2px;
+}
+#workspace :is(.file-upload,.finding-attachments) { display: grid; gap: .75rem; min-width: 0; }
+#workspace .file-upload {
+  margin-block: 1rem; padding: 1rem; border: 1px solid var(--line);
+  border-radius: .8rem; background: var(--paper);
+}
+#workspace :is(.file-upload,.finding-attachments) > :is(label,p,strong) { margin: 0; line-height: 1.55; }
+#workspace :is(.file-upload,.finding-attachments) > label { color: var(--ink); font-weight: 700; }
+#workspace .upload-control {
+  display: flex; align-items: center; flex-wrap: wrap; gap: .7rem .85rem; min-width: 0;
+}
+#workspace .upload-control > input[type="file"]:not(.camera-input) { flex: 1 1 17rem; width: auto; }
+#workspace .upload-control > .camera-action { flex: 0 1 auto; margin: 0; }
+/* Keep the camera input visually hidden: the custom trigger opens the real camera flow. */
+#workspace .upload-control > .camera-input { position: absolute; width: 1px; height: 1px; opacity: 0; clip-path: inset(50%); }
+
+/* Sections and actions: no more labels, buttons or cards touching neighboring copy. */
+#workspace .card > :is(h2,h3,p,.subtle) + :is(.fields,.action-row,.entry,.file-upload,.card,.field,.notice) {
+  margin-block-start: 1rem;
+}
+#workspace .card > :is(p,.subtle) + :is(button,.button) { margin-block-start: .8rem; }
+#workspace .card > :is(button,.button) + :is(p,.subtle) { margin-block-start: .85rem; }
+#workspace .card > :is(.fields,.entry,.notice,.remediation-list) + .button { margin-block-start: 1rem; }
+#workspace .card > .button { margin-block: .7rem .5rem; margin-inline-end: .65rem; }
+#workspace .action-row { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1rem; }
+#workspace .action-row > .button { margin: 0; min-height: 44px; }
+#workspace .card > .action-row { margin-block: 1rem .35rem; }
+#workspace .card > .action-row + :is(p,.subtle) { margin-block-start: .85rem; }
+#workspace .card > label:not(.backup-opt) { display:block; font-weight:700; color:var(--ink); margin-block: .8rem .5rem; }
+#workspace .card > input[type="file"]:not([hidden]) { margin-block: .5rem 1rem; }
+#workspace .notice .button { margin: .35rem .25rem .25rem .6rem; vertical-align: middle; }
+#workspace .entry > :is(.inventory-fields,.finding-attachments,.file-upload,.evidence-relations) + :is(.file-upload,.finding-attachments,.evidence-relations,.control-extras) { margin-block-start: 1rem; }
+#workspace .entry .inventory-baseline { margin-block-start: 1rem; }
+
+/* Multi-column layouts, wizard and member forms share predictable gaps. */
+#workspace .member-directory { gap: 1.25rem; margin-block: 1.25rem .5rem; }
+#workspace .member-card { padding: clamp(1.1rem,2.5vw,1.75rem); }
+#workspace .member-card-head { align-items:center; gap:.75rem 1.2rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+#workspace .member-card-head strong { line-height:1.5; overflow-wrap:anywhere; }
+#workspace .member-card .fields { gap:var(--form-gap); }
+#workspace .auditor-choice-list { gap:1rem; margin-block:1.4rem; }
+#workspace .auditor-choice { gap:1rem; padding:1.1rem; align-items:flex-start; }
+#workspace .auditor-choice strong { line-height:1.45; }
+#workspace .auditor-choice small { line-height:1.55; overflow-wrap:anywhere; }
+#workspace .wizard-top { margin-top:0; margin-bottom:1.5rem; gap:.9rem 1.25rem; flex-wrap:wrap; }
+#workspace .wizard-controls { margin-top:1.8rem; gap:1.2rem 1.5rem; }
+#workspace .wizard-buttons { gap:.75rem; }
+#workspace .wizard-jump { gap:.65rem; flex-wrap:wrap; }
+#workspace .wizard-jump select { min-width:0; }
+#workspace :is(.notice,.lead) { line-height:1.65; }
+#workspace .notice { margin-block:1.1rem; }
+#workspace :where(.button,button) { min-height:44px; }
+
+@media(max-width:1100px){ #workspace .wizard-controls { grid-template-columns:1fr; } #workspace .wizard-buttons { justify-content:flex-start; } }
+@media(max-width:850px){ #workspace .member-card .fields { grid-template-columns:1fr; } #workspace .card-head > .button { flex:0 1 auto; } }
+@media(max-width:540px){
+  #workspace .fields { grid-template-columns:minmax(0,1fr); row-gap:1.25rem; }
+  #workspace .field.full { grid-column:auto; }
+  #workspace .member-card-head .button { width:100%; }
+  #workspace .wizard-buttons .button { flex:1 1 100%; }
+  #workspace .wizard-jump { width:100%; }
+  #workspace .wizard-jump select { width:100%; max-width:none; flex:1 1 100%; }
+  #workspace .upload-control > :is(input[type="file"],.camera-action) { flex:1 1 100%; }
+}
+@media(prefers-reduced-motion:reduce){
+  #workspace :is(input,select,textarea) { transition:none; }
+}

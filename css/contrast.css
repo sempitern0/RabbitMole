@@ -27,68 +27,6 @@
   --aw-card-bg: var(--paper);
   --aw-card-bg: color-mix(in srgb, var(--paper) 82%, var(--brand-tint));
 }
-#workspace .member-card,
-#workspace .entry,
-#workspace .auditor-choice,
-#workspace .connection-methods label {
-  background-color: var(--aw-card-bg);
-  border-color: var(--line);
-}
-#workspace .auditor-choice:has(input:checked) {
-  background-color: var(--brand-tint);
-  border-color: var(--aw-field-focus);
-}
-/* Consistent surfaces even when a control is outside a .field wrapper.
-   Exclude file, checkbox, radio and hidden controls to retain native affordances. */
-#workspace .field :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea),
-#workspace .entry :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea),
-#workspace .library-toolbar input,
-#workspace .backup-exports select,
-#workspace .wizard-jump select,
-#workspace .card :is(input[type="search"], input[type="text"], input[type="email"], input[type="url"], input[type="password"], input[type="tel"], select, textarea),
-#workspace #glossary-search {
-  background: var(--aw-field-bg);
-  color: var(--ink);
-  color-scheme: inherit;
-  border: 1.5px solid var(--aw-field-border);
-  box-shadow: 0 1px 2px #00000012;
-  min-height: 48px;
-  transition: border-color .16s ease, box-shadow .16s ease;
-}
-#workspace .field :is(input, select, textarea):hover,
-#workspace .library-toolbar input:hover,
-#workspace .backup-exports select:hover,
-#workspace .wizard-jump select:hover,
-#workspace #glossary-search:hover {
-  border-color: var(--aw-field-hover);
-}
-#workspace .field :is(input, select, textarea):focus-visible,
-#workspace .library-toolbar input:focus-visible,
-#workspace .backup-exports select:focus-visible,
-#workspace .wizard-jump select:focus-visible,
-#workspace #glossary-search:focus-visible {
-  background: var(--aw-field-bg);
-  border-color: var(--aw-field-focus);
-  outline: 3px solid var(--aw-field-focus-ring);
-  outline-color: color-mix(in srgb, var(--aw-field-focus) 32%, transparent);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 1px var(--aw-field-focus);
-}
-#workspace .field :is(input, select, textarea):disabled {
-  opacity: .7;
-  cursor: not-allowed;
-}
-#workspace :is(input, textarea)::placeholder {
-  color: var(--aw-field-placeholder);
-  opacity: 1;
-}
-/* Native search appearance is normalized without removing the clear button. */
-#workspace input[type="search"] {
-  -webkit-appearance: textfield;
-  appearance: textfield;
-}
-/* Explicit custom-value field remains hidden unless the operator chooses Other. */
-#workspace input[hidden] { display: none !important; }
 /* Printed inventory and finding tables need distinct cells without colored text blocks. */
 @media print {
   #report .report-table td {
@@ -103,7 +41,4 @@
     background: #f4f8fb !important;
   }
   #report .report-table :is(th, td) { border-color: #aabecb !important; }
-}
-@media (prefers-reduced-motion: reduce) {
-  #workspace .field :is(input, select, textarea) { transition: none; }
 }

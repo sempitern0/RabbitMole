@@ -12,20 +12,6 @@
 .topbar .offline-health .action-row { gap: .65rem .8rem; }
 .topbar .pwa-update-status:empty { display: none; }
 
-#workspace .action-row { gap: .8rem 1rem; align-items: center; }
-#workspace .action-row > .button { min-height: 44px; }
-#workspace .card > .action-row { margin-block: 1rem .35rem; }
-#workspace .card > .button {
-  margin-block: .7rem .5rem;
-  margin-inline-end: .65rem;
-}
-#workspace .card > :is(.fields, .entry, .notice, .remediation-list) + .button {
-  margin-block-start: 1rem;
-}
-#workspace .notice .button {
-  margin: .35rem .25rem .25rem .6rem;
-  vertical-align: middle;
-}
 /* Focus is retained for screen readers on SPA navigation, without a visual ring on static headings.
    Interactive buttons and fields retain the browser's visible keyboard focus. */
 #workspace :is(h1, h2)[tabindex="-1"]:focus,
@@ -295,30 +281,6 @@
 }
 
 @media print { .pwa-install-card { display:none!important; } }
-
-/* Deliberate separation of standalone actions from adjacent explanatory text. */
-#workspace .card > p + :is(button, .button),
-#workspace .card > .subtle + :is(button, .button),
-#workspace .card > :is(h2,h3) + :is(button,.button) { margin-block-start:.8rem; }
-#workspace .card > :is(p,ul,ol) + .action-row { margin-block-start:1rem; }
-#workspace .card > .button + :is(p,ul,ol) { margin-block-start:.85rem; }
-#workspace .action-row { row-gap:.75rem; column-gap:.85rem; }
-.topbar .actions { row-gap:.65rem; }
-.topbar .actions > .save-status { margin-inline:.25rem; }
-.topbar .actions > .pwa-update-status:not(:empty) { padding-inline:.2rem; }
-.topbar .offline-health { padding:.7rem .9rem; }
-.topbar .offline-health .action-row { margin-top:.6rem; }
-.topbar .offline-health .action-row > button { margin:0; }
-@media print { #workspace .card > .button { margin:0; } }
-
-/* Compact, non-intrusive status and consistent actions across viewport sizes. */
-.pwa-install-card.is-installed { box-shadow:none; }
-.pwa-install-card.is-installed > p { overflow-wrap:anywhere; }
-#workspace .card > :is(p,ul,ol) + :is(.actions,.action-row) { margin-block-start:1rem; }
-#workspace .card > :is(.actions,.action-row) + :is(p,ul,ol) { margin-block-start:.8rem; }
-#workspace .action-row > .button { margin:0; }
-.topbar .actions > :is(.button,.theme-select) { flex-shrink:0; }
-@media(max-width:550px){.topbar .actions > .pwa-update-status {flex-basis:100%}}
 
 /* Application toolbar: visually distinct from the audit canvas, without extra controls.
    Works with all built-in themes, touch screens and keyboard navigation. */

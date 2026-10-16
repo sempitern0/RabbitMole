@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v79-field-renderer";
+const CACHE_NAME = "rabbitmole-shell-v80-rack-audit";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -31,6 +31,7 @@ const CORE = [
   "./js/audit-actions.js",
   "./js/audit-record-navigation.js",
   "./js/audit-field-renderer.js",
+  "./js/audit-rack.js",
   "./js/android-touch.js",
   "./css/android-touch.css",
   "./css/comparison.css",

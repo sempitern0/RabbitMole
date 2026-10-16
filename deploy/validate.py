@@ -24,6 +24,7 @@ COMMANDS = [
     ['node', 'tests/test_secure_transfer.cjs'],
     ['node', 'tests/test_pwa_updates.cjs'],
     ['node', 'tests/test_pwa_protocol.cjs'],
+    ['node', 'tests/test_mobile_pwa.cjs'],
 ]
 if __name__ == '__main__':
     for command in COMMANDS:

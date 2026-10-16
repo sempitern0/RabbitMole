@@ -108,7 +108,7 @@
   if(row.status!=='applied')return 'not-applicable';
   const revisions=Array.isArray(finding?.retests)?finding.retests:[];
   const eligible=revisions.filter(r=>r&&typeof r==='object'&&!Array.isArray(r)&&
-   /^\\d{4}-\\d{2}-\\d{2}$/.test(r.date||'')&&(!row.executedAt||r.date>=row.executedAt)&&
+   /^\d{4}-\d{2}-\d{2}$/.test(r.date||'')&&(!row.executedAt||r.date>=row.executedAt)&&
    ['verified','pending','unverified','reopened'].includes(r.result));
   const latest=eligible.at(-1);
   if(!latest)return 'awaiting-retest';

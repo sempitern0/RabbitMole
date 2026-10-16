@@ -32,6 +32,36 @@
   function linkedEvidence(audit, kind, key) {
     return (audit.evidence || []).filter(e => normalizeLinks(e.links)[kind]?.includes(key));
   }
+  // Read-only dependency inventory, used before removing an evidence record.
+  // Preserve historical identifiers and never rewrite audit findings implicitly.
+  function evidenceUsage(audit, evidence) {
+    if (!evidence || typeof evidence !== 'object') return [];
+    const key=str(evidence._key), id=str(evidence.id).trim().toUpperCase();
+    if (!key && !id) return [];
+    const matchesText=value=>str(value).split(/[\\s,;]+/).some(token=>token.toUpperCase()===id&&Boolean(id)||token===key&&Boolean(key));
+    const matchesKey=row=>key&&str(row?.evidenceKey)===key;
+    const out=[];
+    const push=(kind,label)=>out.push({kind,label});
+    for (const kind of CATEGORIES) {
+      const links=normalizeLinks(evidence.links)[kind];
+      if(links.length) push('link', kind+': '+links.length+' vínculos');
+    }
+    for (const kind of ['controls','findings']) {
+      for (const row of audit?.[kind]||[]) {
+        if (matchesText(row.evidenceIds)) push('reference',kind+': '+itemLabel(row,kind));
+      }
+    }
+    for (const finding of audit?.findings||[]) {
+      const label=itemLabel(finding,'findings');
+      for (const action of finding.mitigationActions||[]) {
+        if (matchesKey(action)) push('mitigation','Mitigación: '+label);
+        for (const check of action?.checks||[]) if (matchesKey(check)) push('verification','Comprobación de acción: '+label);
+      }
+      for (const check of finding.retests||[]) if (matchesKey(check)) push('retest','Reevaluación: '+label);
+      for (const assessment of finding.residualAssessments||[]) if (matchesKey(assessment)) push('residual','Riesgo residual: '+label);
+    }
+    return out;
+  }
   function referenceProblems(audit) {
     const messages = [];
     const lookup = Object.fromEntries(CATEGORIES.map(category => [category, new Set((audit[category] || []).map(item => item._key))]));
@@ -75,5 +105,5 @@
       notes:'Las huellas SHA-256 se calculan sobre el archivo original seleccionado. Las imágenes incrustadas se optimizan y no tienen necesariamente la misma huella. Conserve el archivo original por separado.'
     };
   }
-  globalThis.AuditRelations = Object.freeze({CATEGORIES, normalizeLinks, nextCode, itemLabel, linkedEvidence, referenceProblems, evidenceManifest});
+  globalThis.AuditRelations = Object.freeze({CATEGORIES, normalizeLinks, nextCode, itemLabel, linkedEvidence, evidenceUsage, referenceProblems, evidenceManifest});
 })();

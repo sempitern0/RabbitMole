@@ -19,6 +19,16 @@ assert.equal(templates.countMissing([],pack.id),10);
 const generated=templates.prepare([],pack.id,['PHY-02'],()=> 'row-1',()=> 'CTRL-001');
 assert.equal(generated[0].status,'Pendiente');
 assert.equal(generated[0].templateKey,'physical-racks/PHY-02');
+const plan=rack.layout({_key:'rack1',id:'RACK-01',rackHeightU:'6'},[
+  {_key:'sw',id:'SW-01',rackParent:'RACK-01',rackStartU:'1',rackSizeU:'2',rackFace:'Frontal'},
+  {_key:'fw',id:'FW-01',rackParent:'RACK-01',rackStartU:'2',rackSizeU:'1',rackFace:'Posterior'}
+]);
+assert.equal(plan.placements.length,2);
+assert.equal(plan.slots[1].length,2);
+assert(plan.issues.some(issue=>issue.includes('Solapamiento')));
+assert(rack.renderLayout({_key:'rack1',id:'RACK-01',rackHeightU:'6'},[],html).includes('U6'));
+assert.equal(rack.PHOTO_FIELDS.length,2);
+assert.equal(rack.PLACEMENT_FIELDS.length,4);
 const app=fs.readFileSync('js/app.js','utf8'),page=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
 assert(app.includes('...rackAudit.FIELDS')&&app.includes('...rackAudit.FIELD_NAMES'));
 assert(app.includes('rackAudit.render(record,index,renderField,html)'));

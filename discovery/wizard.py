@@ -67,7 +67,10 @@ def interface_candidates(system=None, runner=None):
         try:
             ip = ipaddress.IPv4Address(address)
             network = ipaddress.IPv4Network(f'{ip}/{prefix}', strict=False)
-            from discover import scope_network
+            try:
+                from .discover import scope_network
+            except ImportError:
+                from discover import scope_network
             scope_network(str(network))
         except (TypeError, ValueError, ipaddress.AddressValueError):
             continue

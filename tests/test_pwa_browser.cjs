@@ -222,7 +222,8 @@ const {chromium}=require('playwright');
    await page.locator('#wizard-step-select').selectOption('evidence');
    await page.locator('[data-add="evidence"]').first().click();
    // A linked evidence must warn before deletion; cancelling preserves its record.
-   const evidenceId=await page.locator('[data-block="evidence"][data-field="id"]').first().inputValue();
+   const evidenceId=(await page.locator('.entry[data-entry-key] .entry-head strong').first().textContent()).trim();
+   assert.match(evidenceId,/^EVD-\d+$/,'New evidence must display a stable ID');
    await page.locator('#wizard-step-select').selectOption('findings');
    const findingRef=page.locator('[data-block="findings"][data-field="evidenceIds"]').first();
    await findingRef.fill(evidenceId);

@@ -147,6 +147,8 @@ const {chromium}=require('playwright');
    await csvRow.locator('[data-network-csv-remove]').click();
    assert.equal(await page.locator('.network-analysis-imports li').count(),0,'Removing one CSV does not touch PDF annexes');
    // Reimport to preserve the existing CSV diagnostics checks below.
+   await page.locator('#network-analysis-source').fill('Herramienta de laboratorio');
+   await page.locator('#network-analysis-date').fill('2026-10-16');
    await page.locator('#external-network-files').setInputFiles({name:'acrylic_aps.csv',mimeType:'text/csv',buffer:Buffer.from(acrylicCsv)});
    await page.waitForFunction(()=>document.querySelector('.network-analysis-metrics')?.textContent.includes('1'));
 

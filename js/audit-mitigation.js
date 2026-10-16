@@ -102,6 +102,20 @@
     throw Error('La evidencia seleccionada ya no está en el expediente.');
   return next;
  }
+ // Read-only correlation. A finding-level retest is not proof of each individual work order.
+ function verification(finding, action){
+  const row=normalizeRow(action);
+  if(row.status!=='applied')return 'not-applicable';
+  const revisions=Array.isArray(finding?.retests)?finding.retests:[];
+  const eligible=revisions.filter(r=>r&&typeof r==='object'&&!Array.isArray(r)&&
+   /^\\d{4}-\\d{2}-\\d{2}$/.test(r.date||'')&&(!row.executedAt||r.date>=row.executedAt)&&
+   ['verified','pending','unverified','reopened'].includes(r.result));
+  const latest=eligible.at(-1);
+  if(!latest)return 'awaiting-retest';
+  if(latest.result==='verified'&&finding?.status==='Cerrado')return 'finding-verified';
+  if(latest.result==='pending'||latest.result==='reopened')return 'finding-persists';
+  return 'inconclusive';
+ }
  function metrics(findings){
   const counts={total:0,proposed:0,approved:0,scheduled:0,applied:0,blocked:0,reverted:0};
   for(const f of findings||[])for(const action of normalize(f.mitigationActions)){
@@ -109,5 +123,5 @@
   }
   return counts;
  }
- globalThis.AuditMitigation=Object.freeze({VERSION,MAX_ACTIONS,STATES,TEMPLATES,normalize,fromTemplate,save,metrics});
+ globalThis.AuditMitigation=Object.freeze({VERSION,MAX_ACTIONS,STATES,TEMPLATES,normalize,fromTemplate,save,metrics,verification});
 })();

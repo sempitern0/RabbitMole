@@ -4534,6 +4534,7 @@
         !b.dataset.glossaryTerm &&
         !b.dataset.glossaryBack &&
         !b.dataset.deliveryOpen &&
+        b.dataset.pdfAppendixDownload === undefined &&
         !safe.includes(b.id)
       ) {
         alert(

@@ -260,3 +260,7 @@ The rack audit adds a documentary U-by-U occupancy view (U1 at the bottom), link
 ### Lightweight server installation inventory
 
 Physical and virtual server assets now display grouped, touch-friendly operating-system choices (Windows Server, Ubuntu/Debian, enterprise Linux and virtualization) using the existing OS field. The custom entry option and previously stored OS values are preserved. An optional installation panel records server function, verified installation date, deployment type, boot storage, remote administration and notes. Location, IP, hardware and rack U positions remain in their existing inventory fields. No new storage schema is required.
+
+### Inventory code consolidation
+
+Inventory suggestions now live in `js/audit-inventory-presets.js`, with `js/os-catalog.js` as the sole OS source. Existing custom values, JSON v3 records, navigation and local storage are unchanged. Rack test expectations match the current signature.

@@ -265,3 +265,7 @@ La revisión de racks incorpora un **mapa de ocupación por U**, desde U1 en la 
 ### Instalación sencilla de servidores
 
 Al registrar un activo de tipo **Servidor físico** o **Servidor virtual**, el campo existente **Sistema operativo / firmware** se presenta como selector táctil agrupado: Windows Server, Ubuntu/Debian, Linux empresarial y plataformas de virtualización. Se conserva «Otro / escribir…» y cualquier valor guardado previamente. El selector vuelve al formato flexible habitual para activos que no sean servidores. La ficha opcional **Instalación y función del servidor** recoge únicamente función, fecha comprobada, modalidad, almacenamiento de arranque, administración remota y observaciones. IP, sede, hardware y ubicación U permanecen en sus campos de inventario para no duplicar información. Ningún dato supone conformidad automática y el esquema JSON v3 permanece intacto.
+
+### Consolidación del inventario
+
+Las listas reutilizables del inventario residen en `js/audit-inventory-presets.js`. El catálogo de sistemas operativos tiene una sola fuente: `js/os-catalog.js`. Sin cambios en expedientes JSON v3, almacenamiento, navegación ni personalizaciones. La prueba de racks se ha ajustado a la firma actual.

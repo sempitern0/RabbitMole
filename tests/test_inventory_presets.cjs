@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const ctx={};ctx.globalThis=ctx;
+vm.runInNewContext(fs.readFileSync('js/os-catalog.js','utf8'),ctx);
+vm.runInNewContext(fs.readFileSync('js/audit-inventory-presets.js','utf8'),ctx);
+const catalog=ctx.AuditOSCatalog,presets=ctx.RabbitMoleInventoryPresets.create(catalog);
+for(const k of ['hardware','operating','function','support','license','exposure','risk','owner','cpu','ram','storage','site'])assert(Array.isArray(presets[k])&&Object.isFrozen(presets[k]),k);
+assert.deepEqual(Array.from(presets.operating),Array.from(catalog.ALL));
+assert(presets.hardware.includes('Servidor físico'));
+assert(presets.site.includes('Rack de servidores'));
+assert.throws(()=>ctx.RabbitMoleInventoryPresets.create(null),/catálogo/);
+const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8'),app=fs.readFileSync('js/app.js','utf8');
+assert(html.indexOf('js/os-catalog.js')<html.indexOf('js/audit-inventory-presets.js'));
+assert(html.indexOf('js/audit-inventory-presets.js')<html.indexOf('js/app.js'));
+assert(sw.includes('./js/audit-inventory-presets.js'));
+assert(app.includes('inventoryPresets.create(osCatalog)'));
+console.log('PASS single OS catalogue, immutable presets and offline order');

@@ -733,3 +733,13 @@
   #workspace .wizard-jump {min-width:0}
   #workspace .wizard-jump select {min-width:0;max-width:100%}
 }
+
+/* Optional rack baseline: existing form controls and palette provide the shared styling. */
+#workspace .rack-physical-review .rack-review-group{padding-block:.8rem;border-top:1px solid var(--line);min-width:0}
+#workspace .rack-physical-review .rack-review-group:first-of-type{border-top:0}
+#workspace .rack-review-group h3{font-size:1rem;font-weight:760;line-height:1.45;color:var(--ink);margin:0 0 .35rem}
+#workspace .rack-review-group .subtle{margin:0 0 .85rem;max-width:68ch}
+#workspace .rack-review-group .fields{align-items:start}
+#workspace .rack-physical-review .action-row{margin:1rem 0}
+@media(max-width:700px){#workspace .rack-review-group .fields{grid-template-columns:minmax(0,1fr)}}
+@media print{#workspace .rack-physical-review .rack-review-group{break-inside:avoid}}

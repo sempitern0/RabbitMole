@@ -1,6 +1,6 @@
 /* RabbitMole Workers static-asset gateway: no API, storage, or proxy.
  * Never embed secrets or handle client audit data here. */
-const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; " +
+const CSP = "default-src 'none'; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; style-src 'self'; " +
   "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https:; " +
   "object-src 'none'; frame-src blob:; form-action 'none'; base-uri 'none'; " +
   "manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'";
@@ -24,7 +24,7 @@ export default {
     headers.set("X-Content-Type-Options","nosniff");
     headers.set("X-Frame-Options","DENY");
     headers.set("Referrer-Policy","no-referrer");
-    headers.set("Permissions-Policy","camera=(), microphone=(), geolocation=(), payment=()");
+    headers.set("Permissions-Policy","camera=(self), microphone=(), geolocation=(), payment=()");
     headers.set("Strict-Transport-Security","max-age=31536000");
     headers.set("X-Robots-Tag","noindex");
     headers.set("Content-Security-Policy",CSP);

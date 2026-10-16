@@ -29,7 +29,7 @@ To update the installed files:
 You can also serve the files with Python from the repository root:
 
 ```powershell
-py -m http.server 8765 --bind 127.0.0.1
+py serve.py 8765 --bind 127.0.0.1
 ```
 
 Open `http://127.0.0.1:8765` in your browser. If you previously used a different address, import the JSON backup from the earlier browser profile.
@@ -52,12 +52,12 @@ bash ./rabbitmole.sh --update
 Optional local server:
 
 ```bash
-python3 -m http.server 8765 --bind 127.0.0.1
+python3 serve.py 8765 --bind 127.0.0.1
 ```
 
 Add `--no-open` to install without opening a browser. Use `--dir PATH` to choose a destination directory. Both installers include the `js/`, `css/`, `fonts/`, and `icons/` modules.
 
-## HTTPS server deployment (recommended for multiple devices)
+The local server serves only RabbitMole's PWA files from the repository root, refuses non-loopback binding and returns restrictive CSP/security headers. It does not serve customer reports, secrets, arbitrary filesystem paths or directory listings. This is **not** an Internet-facing HTTPS server.\n\n## HTTPS server deployment (recommended for multiple devices)
 
 Use **Docker Compose + Caddy** to serve the static PWA from a stable domain with automatic HTTPS. It does **not** store audit records on the server. See [HTTPS deployment](deploy/README.md) and the [detailed Spanish deployment guide](deploy/README_ES.md) for DNS, TLS, updates, security, and verification.
 
@@ -101,7 +101,7 @@ You can open `index.html` as a local file for basic use, but `file://` does not 
 
 Automatic folder backups work only in compatible browsers, while permission remains active and the application is open. They do not synchronize data across devices.
 
-## PWA updates
+## Photos and external PDF appendices\n\nUse **Take photo** on supported mobile devices to request the rear camera for findings and evidence; the browser may offer a file picker instead. Photos are resized locally and the original should be retained separately. In **Generate PDF → Documentation complementaria**, attach up to four small PDF files. Their SHA-256 digests and names are listed in the report; download and deliver the separate originals along with the report, as the browser cannot merge them directly. JSON backups include the attachments and may grow significantly.\n\n## PWA updates
 
 The service worker's application cache is versioned and **does not contain audit records**. The installed PWA checks for updates when opened online and on visibility/network changes; prepared versions are applied **only after you confirm Save and update**. You can press **Check for updates** to force a check. When offline, RabbitMole continues running the last installed cached release. Do not clear site data to force an update.
 

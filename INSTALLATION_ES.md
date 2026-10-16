@@ -29,7 +29,7 @@ Para actualizar los archivos instalados:
 También puedes servir los archivos con Python desde la raíz del repositorio:
 
 ```powershell
-py -m http.server 8765 --bind 127.0.0.1
+py serve.py 8765 --bind 127.0.0.1
 ```
 
 Abre `http://127.0.0.1:8765` en tu navegador. Si trabajaste antes con otra dirección, importa el backup JSON desde ese perfil.
@@ -52,12 +52,12 @@ bash ./rabbitmole.sh --update
 Servidor local opcional:
 
 ```bash
-python3 -m http.server 8765 --bind 127.0.0.1
+python3 serve.py 8765 --bind 127.0.0.1
 ```
 
 Para instalar sin abrir navegador, añade `--no-open`. Para elegir carpeta de destino usa `--dir RUTA`. Ambas instalaciones incluyen los módulos `js/`, `css/`, `fonts/` y `icons/`.
 
-## Despliegue en servidor HTTPS (recomendado para varios dispositivos)
+El servidor local solo entrega los recursos de RabbitMole desde la raíz del repositorio, rechaza conexiones fuera de loopback y aplica cabeceras restrictivas CSP. No publica archivos ajenos, expedientes, secretos ni índices de carpetas; **no es un servidor HTTPS para Internet**.\n\n## Despliegue en servidor HTTPS (recomendado para varios dispositivos)
 
 La opción reproducible para servir RabbitMole desde un dominio es **Docker Compose + Caddy**. Se publica exclusivamente la interfaz estática, con certificados HTTPS automáticos; no se almacenan expedientes en el servidor. Consulta [Desplegar con HTTPS](deploy/README_ES.md) para DNS, puertos, instalación, protección de datos, actualizaciones y comprobaciones.
 
@@ -101,7 +101,7 @@ Puedes abrir `index.html` como archivo local para un uso básico, pero `file://`
 
 Las copias automáticas a carpeta solo funcionan en navegadores compatibles, con permiso activo y la aplicación abierta. No constituyen sincronización entre dispositivos.
 
-## Actualizaciones de la PWA
+## Cámara y documentación PDF complementaria\n\n«Hacer foto» permite solicitar la cámara trasera desde campos de hallazgos o evidencias en dispositivos compatibles. El navegador puede ofrecer un selector de archivos. Las fotografías se reducen localmente y conviene conservar su original. En **Generar informe PDF → Documentación complementaria**, se pueden anexar hasta cuatro PDF pequeños, con SHA-256 y referencia en el informe. Descarga y entrega los PDF originales por separado: el navegador no los fusiona con el informe principal. El backup JSON incorpora estos anexos y puede aumentar considerablemente de tamaño.\n\n## Actualizaciones de la PWA
 
 El Service Worker utiliza una caché versionada que **no almacena los expedientes**. La PWA instalada busca actualizaciones al abrirse con conexión y al recuperar visibilidad o red; una nueva versión preparada **solo se aplica al confirmar «Guardar y actualizar»**, previa comprobación de guardado. «Buscar actualización» fuerza la comprobación. Sin red continúa funcionando la versión almacenada. No borres los datos del sitio para forzar una actualización.
 

@@ -1,0 +1,23 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const crypto=require('node:crypto').webcrypto;
+const ctx={TextDecoder,Uint8Array,btoa,atob,crypto,Blob};ctx.globalThis=ctx;
+vm.runInNewContext(fs.readFileSync('js/pdf-appendices.js','utf8'),ctx);
+const p=ctx.RabbitMolePdfAppendices;
+(async()=>{
+ const content=new TextEncoder().encode('%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n');
+ const file={name:'anexo.pdf',type:'application/pdf',size:content.length,arrayBuffer:async()=>content.buffer};
+ const item=await p.fromFile(file);
+ assert.equal(item.size,content.length);
+ assert.equal(item.sha256.length,64);
+ assert.equal(p.normalize([item]).length,1);
+ assert.equal((await p.asBlob(item).arrayBuffer()).byteLength,content.length);
+ assert.throws(()=>p.normalize([item,item]),/duplicado/);
+ assert.throws(()=>p.normalize([{...item,data:btoa('not a pdf'),size:9}]),/cabecera PDF/);
+ await assert.rejects(p.fromFile({...file,name:'malware.exe'}),/PDF válido/);
+ const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8'),app=fs.readFileSync('js/app.js','utf8');
+ assert(html.includes('js/pdf-appendices.js'));
+ assert(sw.includes('./js/pdf-appendices.js'));
+ for(const token of ['renderPdfAppendices()','pdfAppendices.normalize(raw.pdfAppendices)','data-pdf-appendix-download','data-pdf-appendix-remove','pdf-appendix-upload'])assert(app.includes(token),token);
+ console.log('PASS bounded offline PDF appendices, recovery, SHA-256 and UI integration');
+})().catch(e=>{console.error(e);process.exitCode=1});

@@ -2,7 +2,7 @@
 'use strict';
 (()=>{
  const MAX_BYTES=2*1024*1024, MAX_ROWS=2000;
- const MAX_APS=300, MAX_DEVICES=300, MAX_DIAGNOSTIC_ROWS=20;
+ const MAX_APS=300, MAX_DEVICES=300, MAX_DIAGNOSTIC_ROWS=20, MAX_IMPORTS=8;
  const DATASETS=Object.freeze({
    aps:['SSID','#','Dirección MAC','RSSI','SNR','Canal','Banda','Ancho','802.11','WEP','WPA','WPA2','WPA3','WPS','Fabricante','Seguridad'],
    devices:['Dirección MAC','#','RSSI','SNR','Estado','Fabricante'],
@@ -156,19 +156,62 @@
        packetLoss:v.packetLoss==null?null:Math.min(100,nullable(v.packetLoss)),
        samples:v.samples.map(x=>({ms:x.ms==null?null:nullable(x.ms),date:text(x.date)}))};
    }
+   if(value.imports!==undefined){
+     if(!Array.isArray(value.imports)||value.imports.length>MAX_IMPORTS)throw Error('Demasiados CSV.');
+     const seen=new Set();
+     out.imports=value.imports.map(item=>{
+       if(!item||typeof item!=='object'||Array.isArray(item)||!item.id||seen.has(item.id)||
+         !['historical',...Object.keys(FIELDS)].includes(item.kind)||!item.filename||item.snapshot?.imports!==undefined)
+         throw Error('Registro de CSV inválido.');
+       seen.add(item.id);
+       const snapshot=normalize(item.snapshot);
+       if(!snapshot)throw Error('Captura CSV inválida.');
+       return {id:text(item.id),kind:item.kind,filename:text(item.filename),
+         files:(item.kind==='historical'?item.files||[]:[item.filename]).map(text).slice(0,8),
+         source:sourceName(item.source),observedAt:text(item.observedAt),importedAt:text(item.importedAt),snapshot};
+     });
+   }
    return out;
  }
+ function rebuild(imports){
+   if(!imports.length)return null;
+   const out={source:'',observedAt:'',importedAt:'',files:[],aps:[],devices:[],diagnostics:{},latency:null,imports};
+   for(const entry of imports){
+     const s=entry.snapshot;
+     if(entry.kind==='historical'){out.aps=s.aps;out.devices=s.devices;out.diagnostics={...s.diagnostics};out.latency=s.latency;}
+     else if(entry.kind==='aps'||entry.kind==='devices')out[entry.kind]=s[entry.kind];
+     else if(entry.kind==='latency')out.latency=s.latency;
+     else out.diagnostics[entry.kind]=s.diagnostics[entry.kind];
+     out.files=[...new Set([...out.files,...entry.files])].slice(-8);
+     out.source=entry.source;out.observedAt=entry.observedAt;out.importedAt=entry.importedAt;
+   }
+   return normalize(out);
+ }
+ function removeImport(value,id){
+   const current=normalize(value);
+   if(!current?.imports?.some(e=>e.id===id))throw Error('CSV no encontrado. Los CSV antiguos solo pueden retirarse como grupo.');
+   return rebuild(current.imports.filter(e=>e.id!==id));
+ }
  function merge(value,parsed,metadata={}){
-   const old=normalize(value)||{source:'',observedAt:'',importedAt:'',files:[],
-     aps:[],devices:[],diagnostics:{},latency:null};
+   const old=normalize(value);
    if(!parsed||!FIELDS[parsed.kind])throw Error('Tipo de CSV no admitido.');
-   const next={...old,source:sourceName(metadata.source??old.source),observedAt:text(metadata.observedAt??old.observedAt),importedAt:new Date().toISOString(),
-     files:[...old.files.filter(x=>x!==parsed.filename),parsed.filename].slice(-8),
-     diagnostics:{...old.diagnostics}};
-   if(parsed.kind==='latency')next.latency=parsed.latency;
-   else if(parsed.kind==='aps'||parsed.kind==='devices')next[parsed.kind]=parsed.items;
-   else next.diagnostics[parsed.kind]=parsed.items;
-   return normalize(next);
+   const filename=text(parsed.filename);
+   if(!/\\.csv$/i.test(filename))throw Error('CSV sin nombre válido.');
+   let imports=old?.imports||[];
+   if(old&&!old.imports)imports=[{id:'historical-csv',kind:'historical',filename:'Importaciones anteriores (agrupadas)',
+     files:old.files,source:old.source,observedAt:old.observedAt,importedAt:old.importedAt,
+     snapshot:normalize({...old,files:[]})}];
+   imports=imports.filter(e=>e.kind!==parsed.kind||e.filename!==filename);
+   if(imports.length>=MAX_IMPORTS)throw Error('Límite de ocho archivos CSV.');
+   const snapshot={source:'',observedAt:'',importedAt:'',files:[],aps:[],devices:[],diagnostics:{},latency:null};
+   if(parsed.kind==='aps'||parsed.kind==='devices')snapshot[parsed.kind]=parsed.items;
+   else if(parsed.kind==='latency')snapshot.latency=parsed.latency;
+   else snapshot.diagnostics[parsed.kind]=parsed.items;
+   const stamp=new Date().toISOString();
+   imports.push({id:'csv-'+stamp.replace(/\\D/g,'')+'-'+Math.random().toString(36).slice(2,9),
+     kind:parsed.kind,filename,files:[filename],source:sourceName(metadata.source??old?.source??''),
+     observedAt:text(metadata.observedAt??old?.observedAt??''),importedAt:stamp,snapshot:normalize(snapshot)});
+   return rebuild(imports);
  }
  function metrics(value){
    const v=normalize(value);
@@ -180,5 +223,5 @@
      band6:wifi.filter(x=>/^6\s*GHz$/i.test(x.Banda)).length,
      observedDevices:v.devices.length,latency:v.latency};
  }
- globalThis.RabbitMoleExternalNetwork=Object.freeze({MAX_BYTES,MAX_APS,MAX_DEVICES,csvRows,parseText,parseFile,normalize,merge,metrics});
+ globalThis.RabbitMoleExternalNetwork=Object.freeze({MAX_BYTES,MAX_APS,MAX_DEVICES,csvRows,parseText,parseFile,normalize,merge,removeImport,metrics});
 })();

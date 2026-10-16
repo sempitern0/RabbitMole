@@ -4,6 +4,8 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),assert=require('node:assert/strict');
 const {chromium}=require('playwright');
+const phase={name:'boot'};
+const watchdog=setTimeout(()=>{process.stderr.write('[PDF-E2E] Timeout en fase: '+phase.name+'\n');process.exit(1);},60000);
 (async()=>{
  const root=path.resolve('dist-pages');
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync('deploy/worker.js')).toString('base64'));
@@ -20,25 +22,25 @@ const {chromium}=require('playwright');
   const page=await context.newPage(),errors=[];
   page.setDefaultTimeout(12000);
   page.on('pageerror',error=>errors.push(error.message));
-  console.log('[PDF-E2E] Abriendo Worker');
+  phase.name='open Worker';console.error('[PDF-E2E] Abriendo Worker');
   await page.goto('http://127.0.0.1:'+server.address().port+'/',{timeout:15000});
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller,null,{timeout:15000});
-  console.log('[PDF-E2E] SW controla la página');
+  phase.name='audit create';console.error('[PDF-E2E] SW controla la página');
   await page.locator('[data-new]').first().click();
-  console.log('[PDF-E2E] Expediente abierto');
+  phase.name='audit data';console.error('[PDF-E2E] Expediente abierto');
   await page.locator('#wizard-step-select').selectOption('assets');
   await page.locator('[data-add="assets"]').first().click();
   const asset=page.locator('.entry[data-entry-key]').first();
   await asset.locator('[data-block="assets"][data-field="name"]').fill('Servidor de pruebas PDF');
   await asset.locator('[data-block="assets"][data-field="type"][data-preset]').selectOption('Servidor físico');
   await page.locator('#wizard-step-select').selectOption('delivery');
-  console.log('[PDF-E2E] Datos de servidor preparados');
+  phase.name='print executive';console.error('[PDF-E2E] Datos de servidor preparados');
   await page.evaluate(()=>{window.__printCount=0;window.print=()=>{window.__printCount++;};});
   for(const profile of ['executive','technical']){
-    console.log('[PDF-E2E] Generando '+profile);
+    phase.name='print '+profile;console.error('[PDF-E2E] Generando '+profile);
     await page.locator('#delivery-'+profile+'-draft').click();
     await page.waitForFunction(()=>window.__printCount>0,null,{timeout:15000});
-    console.log('[PDF-E2E] Impresión invocada '+profile);
+    phase.name='render A4 '+profile;console.error('[PDF-E2E] Impresión invocada '+profile);
     const content=await page.locator('#report').innerHTML();
     assert(content.includes(profile==='technical'?'INFORME TÉCNICO':'INFORME EJECUTIVO'));
     assert(content.includes('Servidor de pruebas PDF')=== (profile==='technical'),'Profile data leakage: '+profile);
@@ -48,7 +50,7 @@ const {chromium}=require('playwright');
       assert(content.includes('Servidor de pruebas PDF'),'Server missing from detailed profile');
     }else assert(content.includes('Cobertura de infraestructura física y servidores'),'Executive scope missing');
     const pdf=await page.pdf({format:'A4',printBackground:true,preferCSSPageSize:true,displayHeaderFooter:false,timeout:30000});
-    console.log('[PDF-E2E] PDF A4 '+profile+' '+pdf.length+' bytes');
+    console.error('[PDF-E2E] PDF A4 '+profile+' '+pdf.length+' bytes');
     assert.equal(pdf.subarray(0,5).toString(),'%PDF-');
     assert(pdf.length>12000,'Empty or truncated '+profile+' PDF');
     const pages=(pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)||[]).length;
@@ -60,6 +62,7 @@ const {chromium}=require('playwright');
     await page.evaluate(()=>{window.__printCount=0;});
   }
   assert.deepEqual(errors,[]);
+  clearTimeout(watchdog);
   console.log('PASS Chromium Worker PDF: executive/technical separation, signatures, A4 pages and non-empty PDF output');
   await context.close();
  }finally{await browser?.close();server.closeAllConnections?.();await new Promise(done=>server.close(done));}

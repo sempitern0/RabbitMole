@@ -1,4 +1,4 @@
-/* Audit Workbench · print-only layout. Screen themes and forms are unchanged. */
+/* RabbitMole · print-only layout. Screen themes and forms are unchanged. */
 /* Browser-independent clean PDF: no printable page margin means no room for
    browser-added document title, localhost URL, date or automatic page number.
    All visual A4 gutters are reapplied per fragment on #report instead. */
@@ -345,4 +345,20 @@
   }
   #report figure img { break-after:avoid-page; }
   #report figcaption { break-before:avoid-page; }
+}
+
+/* Infrastructure reading order: keep headings, photos, and table headers with context.
+   Do not keep entire rack blocks together; a populated 42U rack can span pages. */
+@media print {
+  #report .report-infrastructure-summary { margin:4mm 0 6mm; }
+  #report .report-infrastructure-rack { margin:5mm 0 7mm; break-inside:auto; page-break-inside:auto; }
+  #report .report-infrastructure-rack > h3 { break-after:avoid-page!important; }
+  #report .report-infrastructure-rack > h3 + .report-note { break-after:avoid-page; }
+  #report .report-infrastructure-table thead { display:table-header-group; }
+  #report .report-infrastructure-table tr { break-inside:avoid-page; }
+  #report .report-action { break-inside:auto; page-break-inside:auto; }
+  #report .report-action > h3 { break-after:avoid-page; }
+  #report .report-action > h3 + p { break-after:avoid-page; }
+  #report .report-evidence-figure, #report .report-executive-image,
+  #report .report-signature-card { break-inside:avoid-page; page-break-inside:avoid; }
 }

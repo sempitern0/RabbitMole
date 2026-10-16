@@ -268,3 +268,7 @@ Inventory suggestions now live in `js/audit-inventory-presets.js`, with `js/os-c
 ### Infrastructure consistency checks and report data separation
 
 Quality review now adds **non-blocking** warnings for documented but inconsistent rack/server information: U height and occupancy, rack references, out-of-bounds placements, same-face overlap, installation dates and missing linked photographs. Unfilled optional fields are not treated as defects. The `js/audit-report-data.js` module prepares counts, final-release checks, remediation metrics and follow-up comparisons separately from the existing executive, technical and retest HTML layouts. JSON v3, local audit storage, offline assets and Android navigation remain unchanged.
+
+### Executive and technical reporting acceptance
+
+The **executive report** summarizes rack/server coverage without exposing IPs, detailed OS versions or physical inventory identifiers. The **technical report** contains documentary rack U placements, server OS/role and front/rear evidence references alongside the existing full inventory, findings, mitigation, signatures and evidence list. External PDF attachments are listed by name/hash, never merged silently. Print pagination keeps headings with content and image captions with images. Chromium E2E generates both A4 PDFs; use `PDF_ACCEPTANCE_DIR` to save them for human visual review. Mobile native printing still requires device testing.

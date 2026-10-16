@@ -16,6 +16,7 @@
   const templates = globalThis.AuditControlTemplates;
   const quality = globalThis.AuditQuality;
   const reportData = globalThis.RabbitMoleReportData;
+  const reportInfrastructure = globalThis.RabbitMoleReportInfrastructure;
   const assist = globalThis.AuditFieldAssist;
   const docControl = globalThis.AuditDocumentControl;
   const retest = globalThis.AuditRetest;
@@ -35,6 +36,7 @@
     throw Error("No se ha cargado el catálogo de controles offline.");
   if (!quality) throw Error("No se ha cargado la revisión de calidad offline.");
   if (!reportData) throw Error("No se ha cargado la preparación de datos del informe.");
+  if (!reportInfrastructure) throw Error("No se ha cargado la presentación de infraestructura.");
   if (!retest) throw Error("No se ha cargado el módulo de reevaluación.");
   if (!mitigation) throw Error("No se ha cargado el módulo de mitigación.");
   if (!workflowViews) throw Error("No se ha cargado el módulo de vistas de auditoría.");
@@ -5740,7 +5742,7 @@
   function buildReport() {
     byId("report").dataset.palette = selectedPalette;
     const prepared=reportData.prepareAudit(state,{
-      severity,quality,relations,docControl,mitigation,
+      severity,quality,relations,docControl,mitigation,rackAudit,serverInstall,
       asOf:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)
     });
     const today = new Date().toLocaleDateString("es-ES");
@@ -5794,6 +5796,7 @@
         `<h3>Equipo responsable de la auditoría</h3>${teamTable}`,
     );
     const summaryCounts=prepared.summaryCounts;
+    const infrastructure=prepared.infrastructure;
     const executive = section(
       3,
       "Resumen ejecutivo",
@@ -6003,6 +6006,10 @@
       "Confidencialidad y límites de la evaluación",
       `<p>${para(state.legal.confidentiality)}</p><h3>Limitaciones</h3><p>${para(state.legal.scopeNotice)}</p>`,
     );
+    const infrastructureExecutive=infrastructure.rackCount||infrastructure.serverCount
+      ? section(15,"Cobertura de infraestructura física y servidores",reportInfrastructure.executive(infrastructure,html)):"";
+    const infrastructureTechnical=infrastructure.rackCount||infrastructure.serverCount
+      ? section(15,"Instalación de servidores y racks",reportInfrastructure.technical(infrastructure,html)):"";
     const technicalSummary = section(
       3,
       "Resumen técnico",
@@ -6014,6 +6021,7 @@
       reportProfile === "technical"
         ? [
             [3, "Resumen técnico", technicalSummary],
+            [15,"Instalación de servidores y racks",infrastructureTechnical],
             [2, "Identificación, alcance y metodología", identity],
             [9, "Hallazgos y ficha técnica", findings],
             [11, "Plan de remediación y comprobación", actionPlan],
@@ -6057,6 +6065,7 @@
           ]
         : [
             [3, "Resumen ejecutivo", executive],
+            [15,"Cobertura de infraestructura física y servidores",infrastructureExecutive],
             [2, "Alcance y cobertura", executiveScope],
             [9, "Riesgos para la organización", executiveFindings],
             [11, "Prioridades y decisiones", executiveActions],

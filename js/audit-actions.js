@@ -114,7 +114,16 @@
       return true;
     }
 
-    if(b.dataset.networkAnalysisClear!==undefined){
+    if(b.dataset.networkCsvRemove!==undefined){
+    if(state.documentControl?.status==='confirmed')return true;
+    if(!confirm('¿Quitar solo esta importación CSV? El PDF original y los demás CSV permanecerán intactos.'))return true;
+    try{
+      state.externalNetworkAnalysis=ctx.externalNetwork.removeImport(state.externalNetworkAnalysis,b.dataset.networkCsvRemove);
+      persist();render();
+    }catch(error){alert('No se pudo quitar el CSV: '+error.message);}
+    return true;
+  }
+  if(b.dataset.networkAnalysisClear!==undefined){
       if(state.documentControl?.status==="confirmed")return true;
       if(!confirm("¿Retirar del expediente el resumen CSV importado? Los anexos PDF permanecerán intactos."))return true;
       state.externalNetworkAnalysis=null;persist();render();return true;

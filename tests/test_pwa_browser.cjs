@@ -189,6 +189,15 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#discovery-check').count(),1);
    await page.locator('[data-go="networks"]').last().click();
    await page.setViewportSize({width:390,height:844});
+   // Emulate touch input and a phone viewport for layout/keyboard-related regressions.
+   const touchMetrics=await page.locator('#wizard-step-select').evaluate(el=>{
+     const r=el.getBoundingClientRect(),s=getComputedStyle(el);
+     return {width:r.width,height:r.height,font:parseFloat(s.fontSize),
+       overflow:document.documentElement.scrollWidth>window.innerWidth+2};
+   });
+   assert(touchMetrics.width>100&&touchMetrics.height>=40,'Step picker must remain reachable on phones');
+   assert.equal(touchMetrics.overflow,false,'The audit workspace must not overflow horizontally');
+
    assert.equal(await page.locator('#pwa-install-card').evaluate(el=>getComputedStyle(el).borderLeftWidth!=='0px'),true);
    await page.locator('#wizard-step-select').selectOption('networks');
    assert.equal(await page.locator('.record-navigator').evaluate(el=>getComputedStyle(el).position),'static','Mobile filters must not cover editable records');

@@ -236,3 +236,7 @@ New WiFi CSV imports retain separate per-file snapshots. Removing an import rest
 ### Android-only touch ergonomics
 
 Android phones and tablets with a coarse pointer use a dedicated style layer for form alignment, field labels, touch targets, upload controls and step navigation. It leaves audit data, offline logic, desktop and iOS styling unchanged. The layer is cached for offline use and its device gating has automated tests; actual hardware acceptance remains necessary.
+
+### Incremental record-navigation maintenance
+
+Record search, filtering, quick jump and focus handling now live in `js/audit-record-navigation.js`. `js/app.js` continues to own audit state, persistence and routing. Existing UI identifiers stay unchanged and the adapted regression test protects accent-insensitive searching and query isolation between audits. The Android touch stylesheet also drops redundant selectors without changing desktop or iOS styles.

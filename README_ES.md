@@ -255,3 +255,9 @@ En **Inventario de hardware** crea un activo de tipo **Rack de servidores** o **
 Desde la ficha puedes abrir las plantillas **Racks, CPD y seguridad física** (10 controles PHY-01 a PHY-10), relacionar evidencias/fotografías, documentar desviaciones y utilizar el flujo existente de mitigación y reevaluación. Las reglas de firewall continúan evaluándose con los controles de **Redes y perímetro**. Contrasta los límites ambientales con el fabricante, las recomendaciones ASHRAE aplicables y la normativa local. No manipules equipos energizados ni registres secretos de acceso.
 
 Se mantiene el esquema JSON v3, el informe técnico y el funcionamiento offline. Los activos que no son racks no muestran el cuestionario.
+
+### Catálogo ampliado de routers, ONT y firewalls · ocupación de racks
+
+En Infraestructura de red selecciona primero el tipo **Router**, **ONT** o **Firewall** para filtrar fabricantes y modelos. Las sugerencias son orientativas y offline: no prueban existencia, firmware, soporte o compatibilidad del hardware. Puedes introducir modelos personalizados, y se mantienen los campos y modelos previos del expediente.
+
+La revisión de racks incorpora un **mapa de ocupación por U**, desde U1 en la parte inferior, a partir de los equipos inventariados con ID de rack asociado, posición inicial U, altura U y vista frontal/posterior. Se detectan posiciones fuera de límites y solapamientos de forma informativa: no se realizan cambios físicos. El rack permite referenciar evidencias de fotografías frontales y posteriores mediante sus ID; las imágenes siguen bajo custodia del apartado Evidencias. Los datos forman parte de los activos y de los informes técnicos sin migrar JSON v3. La evolución futura puede incorporar series temporales ambientales estructuradas, con sensores y fecha de medición.

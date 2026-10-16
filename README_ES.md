@@ -206,3 +206,12 @@ Opcionalmente puedes importar **CSV** con encabezados habituales de SSID/BSSID, 
 ### Mitigaciones gestionadas y verificables
 
 En **Hallazgos → Plan de mitigación** puedes crear acciones correctivas desde procedimientos locales orientativos o personalizarlas. Cada acción registra objetivo, pasos, impacto, reversión, responsable, fecha, aprobación, referencia de cambio, intervención y evidencia. Los estados (propuesta, autorizada, programada, aplicada, bloqueada o revertida) describen el trabajo ejecutado; **no se realizan comandos ni cambios de infraestructura desde la PWA**. La aplicación exige autorización antes de marcar una acción como aplicada y conserva el expediente en JSON. Una acción aplicada **no cierra el hallazgo**: el auditor debe registrar una verificación independiente en **Seguimiento**. El plan se refleja en el resumen y el PDF técnico.
+
+
+### Verificación individual, riesgo residual y mantenimiento
+
+Cada acción aplicada puede registrar comprobaciones individuales con fecha, auditor, resultado y evidencia. Estas verificaciones no cierran automáticamente el hallazgo. En **Hallazgos → Riesgo residual** el auditor puede documentar valoraciones justificadas, responsables, fechas y revisiones previstas, preservando el historial. **Calidad** y **Seguimiento** muestran acciones vencidas, eficacia demostrada, comprobaciones fallidas y valoraciones residuales pendientes, sin calcular una reducción automática de riesgo.
+
+Los PDF adjuntos se pueden descargar, quitar o editar mediante un formulario desplegable accesible en las secciones de WiFi y Documentación complementaria. Editar nombre, procedencia o fecha no cambia los bytes del PDF ni su SHA-256. Las modificaciones en expedientes confirmados requieren una rectificación. Los paneles abiertos se mantienen durante la actualización de datos en el mismo apartado.
+
+La aplicación utiliza únicamente el esquema JSON v3 actual. Se han retirado rutas de interfaz que ya no se usan, manteniendo las claves de almacenamiento del navegador y el aislamiento de las versiones de caché para proteger los expedientes locales existentes.

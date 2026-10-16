@@ -220,3 +220,5 @@ The **Quality** and **Follow-up** pages include a local-only mitigation scorecar
 ### Gradual application modularization
 
 The residual-risk form, mitigation dashboard and PDF appendix controls are now rendered by `js/audit-workflow-views.js`, a side-effect-free browser module loaded before `js/app.js` and included in the offline service worker cache. The existing application retains state management, audit persistence, document locks, report generation and routing. The shared `npm run check` gate includes a dedicated view-contract regression test. The current JSON schema and local storage keys are unchanged.
+
+Audit action and attachment event handling de acciones correctivas y adjuntos se delega ahora en `js/audit-actions.js`, con dependencias explícitas y pruebas sobre bloqueos documentales. Se preservan las claves locales y el JSON v3.

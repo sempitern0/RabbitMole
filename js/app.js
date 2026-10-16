@@ -2317,8 +2317,8 @@
     const active = localDiscovery?.available === true;
     const candidates = active ? (localDiscovery.interfaces || []) : [];
     const toolNames = active ? [localDiscovery.tools?.nmap && "Nmap",localDiscovery.tools?.ping && "ping"].filter(Boolean).join(" / ") : "";
-    return `<section class="card local-discovery">
-      <h2>Discovery de la red autorizada</h2>
+    return `<section class="card intake-card local-discovery">
+      <span class="intake-kicker">03 · Herramientas locales</span><h2>Discovery de la red autorizada</h2>
       <p>Detecta equipos que responden en una subred privada: no explora puertos, no instala agentes y <strong>no sustituye la revisión del auditor</strong>. La PWA pública no puede iniciar procesos locales.</p>
       <div class="action-row"><button type="button" class="button quiet" id="discovery-check">Comprobar herramientas locales</button></div>
       <p class="subtle" role="status">${active ? "Herramientas: "+html(toolNames || "Ninguna") : html(localDiscovery?.reason || "Inicia serve.py --enable-discovery y comprueba las herramientas disponibles.")}</p>
@@ -2352,18 +2352,106 @@
     } catch(error) { intakeError = "Discovery: "+error.message; }
     finally { discoveryBusy=false;render(); }
   }
+
+  const intakeCommands = Object.freeze({
+    cmd: "discovery\\iniciar.cmd",
+    ps: "powershell -File discovery/run.ps1",
+    sh: "bash discovery/run.sh",
+    doctor: "python3 discovery/discover.py doctor",
+    scan: "python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output captura-lan.json",
+    localsh: "bash collect-local.sh --output captura.json",
+    localps: "powershell -File collect-local.ps1 -Output captura.json"
+  });
+  let intakeMode = "file";
+  function renderIntakeCommand(key, label, explanation) {
+    const command = intakeCommands[key];
+    return `<div class="intake-command">
+      <div class="intake-command-head"><strong>${html(label)}</strong><button type="button" class="glossary-copy" data-intake-copy="${key}" aria-label="Copiar comando de ${html(label)}">Copiar</button></div>
+      <pre><code>${html(command)}</code></pre><p>${html(explanation)}</p>
+    </div>`;
+  }
+  function renderIntakeGuided() {
+    return `<section class="card intake-card" aria-labelledby="intake-guided-title">
+      <span class="intake-kicker">02 · Generar una captura</span>
+      <h2 id="intake-guided-title">Herramientas del equipo auditor</h2>
+      <p>Estos comandos se ejecutan en <strong>tu terminal, nunca dentro de la PWA</strong>. Trabaja únicamente con equipos y CIDR autorizados. Después importa el JSON resultante en la opción «Subir archivo».</p>
+      <div class="intake-method">
+        <h3>Asistente guiado</h3>
+        <p class="subtle">Detecta las interfaces, solicita el alcance aprobado y pide confirmación antes de realizar descubrimiento.</p>
+        <div class="intake-command-grid">
+          ${renderIntakeCommand("cmd","Windows · CMD","Abre el asistente desde el repositorio, sin configurar comandos manualmente.")}
+          ${renderIntakeCommand("ps","Windows · PowerShell","Alternativa PowerShell al iniciador de Windows.")}
+          ${renderIntakeCommand("sh","Linux / macOS · Terminal","Inicia el asistente desde una copia local del repositorio.")}
+        </div>
+      </div>
+      <details class="intake-method">
+        <summary>Discovery avanzado · CIDR autorizado</summary>
+        <p class="subtle">Comprueba dependencias y captura únicamente la red RFC1918 incluida en tu autorización. Sustituye el CIDR de ejemplo por el permitido.</p>
+        <div class="intake-command-grid">
+          ${renderIntakeCommand("doctor","Diagnóstico de dependencias","Comprueba Nmap y ping sin iniciar un reconocimiento.")}
+          ${renderIntakeCommand("scan","Captura de red","Detecta hosts, sin explorar puertos ni instalar agentes. Requiere autorización expresa.")}
+        </div>
+      </details>
+      <details class="intake-method">
+        <summary>Recopilación local · inventario del equipo</summary>
+        <p class="subtle">Recoge datos del propio equipo donde ejecutas el script, con permiso de su responsable.</p>
+        <div class="intake-command-grid">
+          ${renderIntakeCommand("localsh","Linux / macOS","Recopilación local para importar hardware y software compatibles.")}
+          ${renderIntakeCommand("localps","Windows · PowerShell","Recopilación local en Windows sin agentes remotos.")}
+        </div>
+      </details>
+      <p class="intake-help"><strong>Siguiente paso:</strong> conserva el JSON resultante y vuelve a «Subir archivo». Las capturas Discovery se pueden revisar en <strong>Hardware</strong> y después en <strong>Redes</strong>, sin aplicarlas automáticamente.</p>
+    </section>`;
+  }
   function renderIntake() {
     const block = intakePreview?.block || intakeBlock;
-    return `<span class="eyebrow">INVENTARIO / CAPTURA OPCIONAL</span><h1 class="page-title">Captura asistida de activos</h1>
-      <p class="lead">Importa información obtenida mediante herramientas autorizadas. La vista previa no escribe en el expediente.</p>
-      <div class="action-row"><button class="button quiet small" type="button" data-go="${html(intakeReturn)}">← Volver al inventario</button></div><section class="card"><h2>Seleccionar archivo</h2>
-        <p class="subtle">Se admiten JSON de captura e inventarios CSV (UTF-8; comas o punto y coma). Máximo 2 MiB y 500 filas. Los datos se procesan localmente, sin conexiones a red.</p>
-        <label for="intake-block">Destino en el inventario</label>
-        <select id="intake-block"><option value="assets" ${block === "assets" ? "selected" : ""}>Hardware</option><option value="networks" ${block === "networks" ? "selected" : ""}>Redes</option><option value="software" ${block === "software" ? "selected" : ""}>Software</option></select>
-        <label for="intake-file">Archivo de captura</label><input id="intake-file" type="file" accept=".json,.csv,application/json,text/csv">
-        <p class="subtle"><strong>Nuevo asistente guiado (sin conectar la PWA a procesos locales):</strong> desde Windows inicia <code>discovery/iniciar.cmd</code> o <code>discovery/run.ps1</code>; desde Linux/macOS ejecuta <code>bash discovery/run.sh</code>. Detecta las interfaces locales, solicita la red autorizada y exige confirmación antes de capturar. Después importa el JSON generado aquí, primero en Hardware y luego en Redes.</p><p class="subtle">Descubrimiento avanzado desde un portátil conectado a la LAN autorizada: <code>python3 discovery/discover.py doctor</code> para preparar herramientas y <code>python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output captura-lan.json</code> para crear el JSON. Importa el mismo archivo en Hardware y en Redes; no se instalan agentes en equipos remotos. Consulta <code>discovery/README_ES.md</code> para Windows, Linux y macOS.</p><p class="subtle">Recopilación local opcional: <code>collect-local.sh --output captura.json</code> o <code>collect-local.ps1 -Output captura.json</code>. Ejecuta únicamente en equipos propios o autorizados.</p>
-        <p id="intake-status" role="status" aria-live="polite">${html(intakeError)}</p></section>
-        ${renderLocalDiscovery()}\n        ${intakePreview ? renderIntakePreview() : ""}`;
+    const csvSamples = {
+      assets: "hostname,ip,os\\nequipo-demo,192.0.2.10,Linux",
+      networks: "name,cidr,gateway\\nred-laboratorio,192.0.2.0/24,192.0.2.1",
+      software: "name,version,asset\\naplicacion-demo,1.0,equipo-demo"
+    };
+    const currentSample = csvSamples[block];
+    const importPanel = `<section class="card intake-card" aria-labelledby="intake-upload-title">
+      <span class="intake-kicker">01 · Archivo existente</span>
+      <h2 id="intake-upload-title">Importar una captura o inventario</h2>
+      <p>Selecciona un <strong>JSON de Discovery/recopilación</strong> o un <strong>CSV de inventario</strong>. El sistema identificará los registros compatibles y mostrará una vista previa antes de modificar el expediente.</p>
+      <div class="intake-formats" id="intake-formats">
+        <div class="intake-format"><span class="intake-format-type">JSON</span><div><strong>Captura técnica</strong><p>Archivo <code>.json</code> generado por Discovery o <code>collect-local</code>, con secciones <code>assets</code>, <code>networks</code> y <code>software</code>. También se admiten listas JSON de registros compatibles.</p></div></div>
+        <div class="intake-format"><span class="intake-format-type">CSV</span><div><strong>Inventario tabular</strong><p>Archivo <code>.csv</code> UTF-8 con encabezados y una fila por registro; comas o punto y coma. Adapta las columnas al inventario elegido.</p></div></div>
+      </div>
+      <div class="intake-limit-badges" aria-label="Límites y seguridad">
+        <span>Hasta 2 MiB</span><span>Máximo 500 registros</span><span>Procesamiento local</span><span>Sin escritura automática</span>
+      </div>
+      <div class="intake-file-grid">
+        <div class="intake-file-control"><label for="intake-block">Destino en el inventario</label>
+          <select id="intake-block"><option value="assets" ${block === "assets" ? "selected" : ""}>Hardware / activos</option><option value="networks" ${block === "networks" ? "selected" : ""}>Redes / segmentos</option><option value="software" ${block === "software" ? "selected" : ""}>Software / aplicaciones</option></select>
+          <small>Selecciona la sección cuyos registros quieres revisar.</small>
+        </div>
+        <div class="intake-file-control"><label for="intake-file">Seleccionar archivo JSON o CSV</label>
+          <input id="intake-file" type="file" accept=".json,.csv,application/json,text/csv" aria-describedby="intake-formats intake-file-hint">
+          <small id="intake-file-hint">Ejemplo de nombre: <code>captura-lan.json</code> o <code>inventario-redes.csv</code>.</small>
+        </div>
+      </div>
+      <details class="intake-sample">
+        <summary>Ver ejemplo de columnas CSV para ${html(block === "assets" ? "Hardware" : block === "networks" ? "Redes" : "Software")}</summary>
+        <pre><code>${html(currentSample)}</code></pre>
+        <p class="subtle">Ejemplo ilustrativo, con direcciones de documentación. Ajusta columnas y valores a tu inventario real. <strong>No subas el JSON completo de una auditoría</strong> por este formulario; usa «Importar expediente».</p>
+      </details>
+      <p id="intake-status" class="intake-status" role="status" aria-live="polite">${html(intakeError)}</p>
+    </section>`;
+    return `<div class="intake-shell">
+      <div class="intake-heading"><span class="eyebrow">INVENTARIO / CAPTURA AUTORIZADA</span><h1 class="page-title">Captura asistida de activos</h1>
+        <p class="lead">Importa información técnica sin incorporarla hasta revisar y confirmar los registros propuestos.</p>
+        <button class="button quiet small" type="button" data-go="${html(intakeReturn)}">← Volver al inventario</button>
+      </div>
+      <div class="intake-flow" role="group" aria-label="Método de captura">
+        <button type="button" data-intake-mode="file" aria-pressed="${intakeMode === "file"}" class="${intakeMode === "file" ? "is-selected" : ""}">Subir archivo</button>
+        <button type="button" data-intake-mode="guided" aria-pressed="${intakeMode === "guided"}" class="${intakeMode === "guided" ? "is-selected" : ""}">Generar una captura</button>
+        <button type="button" data-intake-mode="local" aria-pressed="${intakeMode === "local"}" class="${intakeMode === "local" ? "is-selected" : ""}">Discovery local</button>
+      </div>
+      ${intakeMode === "file" ? importPanel : intakeMode === "guided" ? renderIntakeGuided() : renderLocalDiscovery()}
+      ${intakePreview ? renderIntakePreview() : ""}
+    </div>`;
   }
   function renderIntakePreview() {
     if (!intakePreview) return "";
@@ -2373,7 +2461,7 @@
     );
     const counts = { nuevo: 0, duplicado: 0, conflicto: 0 };
     for (const c of candidates) counts[c.status]++;
-    return `<section class="card"><h2>Vista previa · ${candidates.length} registros</h2>
+    return `<section class="card intake-card intake-preview" aria-labelledby="intake-preview-title"><span class="intake-kicker">04 · Revisión antes de incorporar</span><h2 id="intake-preview-title">Vista previa · ${candidates.length} registros</h2>
       <p class="subtle">Origen: ${html(intakePreview.source)}${intakePreview.platform ? " · " + html(intakePreview.platform) : ""}. Nuevos: ${counts.nuevo} · Duplicados: ${counts.duplicado} · Conflictos: ${counts.conflicto}. Nunca se sobrescriben registros.</p>
       <div class="intake-toolbar"><button class="button quiet small" type="button" data-intake-select="new">Seleccionar solo nuevos</button><button class="button quiet small" type="button" data-intake-select="none">Deseleccionar</button></div>
       <div class="intake-records">${candidates
@@ -4273,6 +4361,34 @@
       focusAddedRecord(added[0]._key);
       return;
     }
+
+    if (b.dataset.intakeMode) {
+      if (!["file","guided","local"].includes(b.dataset.intakeMode)) return;
+      intakeMode = b.dataset.intakeMode;
+      render();
+      return;
+    }
+    if (b.dataset.intakeCopy) {
+      const command = intakeCommands[b.dataset.intakeCopy];
+      if (!command) return;
+      try {
+        if (!navigator.clipboard?.writeText) throw Error("Sin API de portapapeles");
+        await navigator.clipboard.writeText(command);
+        b.textContent = "Copiado";
+      } catch (_) {
+        const area = document.createElement("textarea");
+        area.value = command;
+        area.setAttribute("readonly","");
+        area.style.position = "fixed";
+        area.style.left = "-9999px";
+        document.body.appendChild(area);
+        area.select();
+        const success = typeof document.execCommand === "function" && document.execCommand("copy");
+        area.remove();
+        b.textContent = success ? "Copiado" : "Selecciona el comando para copiarlo";
+      }
+      return;
+    }
     if (b.id === "discovery-check") { await checkLocalDiscovery(); return; }
     if (b.id === "discovery-run") { await runLocalDiscovery(); return; }
     if (b.dataset.glossaryCopy !== undefined) {
@@ -4434,6 +4550,7 @@
       ) {
         intakeReturn = page;
         intakeBlock = page;
+        intakeMode = page === "networks" ? "local" : "file";
         intakePreview = null;
         intakeSelected.clear();
         intakeError = "";

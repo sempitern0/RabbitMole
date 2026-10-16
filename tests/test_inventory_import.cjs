@@ -50,3 +50,12 @@ assert(app.includes("cache:'no-store'")&&app.includes("credentials:'omit'"),'Con
  assert(response instanceof Promise);
 }
 console.log('PASS inventory intake parsing, duplicate detection, safety, and offline wiring');
+
+const uiCss=fs.readFileSync(path.join(root,'css/workspace-ux.css'),'utf8');
+for (const text of ['Captura técnica','Inventario tabular','Discovery local','Generar una captura','Máximo 500 registros','data-intake-mode','data-intake-copy','intake-file-hint']) {
+ assert(app.includes(text),'Missing user-facing assisted-capture feature: '+text);
+}
+assert(app.includes('intake.parse') && app.includes('intake.reconcile') && app.includes('data-intake-apply'),
+ 'Redesigned page must retain preview-before-import and validation workflow');
+assert(uiCss.includes('.intake-shell') && uiCss.includes('.intake-command') && uiCss.includes('var(--paper)'),
+ 'Paletted, readable technical design missing');

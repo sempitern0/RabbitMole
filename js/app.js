@@ -2422,6 +2422,7 @@
           ${state.evidence.map(e=>`<option value="${html(e._key)}" ${e._key===action.evidenceKey?"selected":""}>${html(e.id||"Evidencia")} · ${html(e.title||"")}</option>`).join("")}</select></label>
           ${htmlField("changeNotes","Resultado e incidencias",action.changeNotes,"textarea")}
         </div>
+        ${action.status==="applied"?`<details class="mitigation-checks"><summary tabindex="0">Verificación individual · ${action.checks.length} registros</summary><p class="subtle">Registro independiente del cierre global del hallazgo.</p><ol class="retest-history">${action.checks.map(check=>`<li><strong>${html(check.date)} · ${html(mitigation.CHECK_RESULTS[check.result])}</strong><p>${html(check.by)} · ${html(check.notes)}</p>${check.evidenceId?`<small>Evidencia: ${html(check.evidenceId)} · SHA-256: ${html(check.evidenceSha256||"No registrado")}</small>`:""}</li>`).join("")}</ol><div class="fields"><label class="field">Resultado<select data-mitigation-check-field="result"><option value="">Selecciona…</option>${Object.entries(mitigation.CHECK_RESULTS).map(([key,value])=>`<option value="${key}">${html(value)}</option>`).join("")}</select></label><label class="field">Fecha<input type="date" data-mitigation-check-field="date" value="${new Date().toISOString().slice(0,10)}"></label><label class="field">Auditor<input data-mitigation-check-field="by" maxlength="160"></label><label class="field">Evidencia<select data-mitigation-check-field="evidenceKey"><option value="">Sin nueva evidencia</option>${state.evidence.map(e=>`<option value="${html(e._key)}">${html(e.id||e.title||"Evidencia")}</option>`).join("")}</select></label><label class="field full">Prueba y resultado<textarea data-mitigation-check-field="notes" rows="3" maxlength="3000"></textarea></label></div><button type="button" class="button accent" data-mitigation-verify="${html(action.key)}" ${action.checks.length>=mitigation.MAX_CHECKS?"disabled":""}>Registrar comprobación</button></details>`:""}
         <div class="action-row"><button class="button accent" type="button" data-mitigation-save="${html(action.key)}">Guardar acción</button>
         <button class="button quiet" type="button" data-go="followup">Ir a reevaluación</button></div>
       </section>`).join("")}
@@ -2825,7 +2826,7 @@
         .slice(0, 12)
         .map(
           ({ photo, e, i }) =>
-            `<figure><img src="${photo.image}" alt="Evidencia ${html(e.id)} · imagen ${i + 1}" loading="lazy"><figcaption>${html(e.id)} · ${i + 1}</figcaption></figure>`,
+            `<figure><img src="${photo.image}" alt="Evidencia ${html(e.id)} · imagen ${i + 1}" loading="lazy"><figcaption>${html(e.id)} · ${i + 1}</figcaption><button type="button" class="button danger small" data-remove-evidence-photo="${html(e._key)}" data-photo-index="${i}" ${state.documentControl?.status==="confirmed"?"disabled":""} aria-label="Quitar imagen ${i+1} de ${html(e.id)}">Quitar imagen</button></figure>`,
         )
         .join("")}</div>
       <p class="subtle">${linked.length} evidencias vinculadas. Puedes revisarlas en «Evidencias».</p></div>`;
@@ -2870,7 +2871,7 @@
         <label for="external-wifi-pdf">Informe externo en PDF</label>
         <input id="external-wifi-pdf" type="file" accept=".pdf,application/pdf" ${readonly||pdfAppendices.normalize(state.pdfAppendices).length>=pdfAppendices.MAX_COUNT?"disabled":""}>
         <p class="subtle">Se incorpora como documento complementario del expediente y se entrega por separado, con SHA-256. Máximo 2 MiB por PDF, cuatro anexos en total. Si tu herramienta produce HTML, conviértelo a PDF antes de adjuntarlo.</p>
-        ${pdfAppendices.normalize(state.pdfAppendices).filter(item=>item.category==="wifi-analysis").map(item=>`<div class="network-analysis-pdf"><span><strong>${html(item.name)}</strong><small>${html(item.source||"Origen no indicado")} · ${html(item.observedAt||"Fecha no indicada")} · SHA-256 ${html(item.sha256)}</small></span><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?"disabled":""}>Quitar</button></div>`).join("")}
+        ${pdfAppendices.normalize(state.pdfAppendices).filter(item=>item.category==="wifi-analysis").map(item=>`<div class="network-analysis-pdf"><span><strong>${html(item.name)}</strong><small>${html(item.source||"Origen no indicado")} · ${html(item.observedAt||"Fecha no indicada")} · SHA-256 ${html(item.sha256)}</small></span><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button quiet small" data-pdf-appendix-edit="${html(item.id)}" ${readonly?"disabled":""}>Editar datos</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?"disabled":""}>Quitar</button></div>`).join("")}
       </div>
       <details class="network-analysis-import"><summary>2 · Importar mediciones CSV (opcional)</summary>
         <label for="external-network-files">CSV de análisis WiFi</label>
@@ -2895,7 +2896,7 @@
                         .list(r)
                         .map(
                           (photo, j) =>
-                            `<figure><img class="evidence-preview" alt="Imagen ${j + 1} de ${html(r.id || "evidencia")}" src="${photo.image}"><figcaption>${html(photo.fileName || "Imagen " + (j + 1))}</figcaption><button type="button" class="button quiet small" data-remove-evidence-photo="${html(r._key)}" data-photo-index="${j}">Quitar esta imagen</button></figure>`,
+                            `<figure><img class="evidence-preview" alt="Imagen ${j + 1} de ${html(r.id || "evidencia")}" src="${photo.image}"><figcaption>${html(photo.fileName || "Imagen " + (j + 1))}</figcaption><button type="button" class="button quiet small" data-remove-evidence-photo="${html(r._key)}" data-photo-index="${j}" ${state.documentControl?.status==="confirmed"?"disabled":""}>Quitar esta imagen</button></figure>`,
                         )
                         .join("")}</div></div>`
                     : ""
@@ -3302,7 +3303,7 @@
     return '<div class="remediation-work-orders"><strong>Acciones correctivas ('+actions.length+')</strong><ul>'+
       actions.map(a=>'<li><strong>'+html(a.title)+'</strong> · '+html(mitigation.STATES[a.status])+
         ' · '+html(a.owner||'Sin responsable')+' · '+html(a.deadline||'Sin fecha')+
-        (a.status==='applied'?({ 'finding-verified':'. Hallazgo verificado en una reevaluación posterior (no acredita por separado esta acción).', 'finding-persists':'. Reevaluación posterior: la debilidad persiste o se reabrió.', 'inconclusive':'. Reevaluación posterior no concluyente.', 'awaiting-retest':'. Pendiente de reevaluación posterior.' }[mitigation.verification(finding,a)]||''):'')+'</li>').join('')+'</ul></div>';
+        (a.status==='applied'?({ 'finding-verified':'. Hallazgo verificado en una reevaluación posterior (no acredita por separado esta acción).', 'finding-persists':'. Reevaluación posterior: la debilidad persiste o se reabrió.', 'inconclusive':'. Reevaluación posterior no concluyente.', 'awaiting-retest':'. Pendiente de reevaluación posterior.', 'action-verified':'. Eficacia verificada individualmente.', 'action-failed':'. Medida individual no eficaz.', 'action-inconclusive':'. Comprobación individual no concluyente.' }[mitigation.verification(finding,a)]||''):'')+'</li>').join('')+'</ul></div>';
   }
   function renderPlanSummary(rows, limit = 6) {
     if (!rows.length)
@@ -3461,7 +3462,7 @@
       Se guardan dentro del JSON local; el informe los referencia por nombre y SHA-256, pero <strong>no fusiona sus páginas</strong>. Descarga los originales y entrégalos junto al informe por un medio autorizado.</p>
       <label for="pdf-appendix-upload">Añadir PDF al expediente</label>
       <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly || list.length>=pdfAppendices.MAX_COUNT?'disabled':''}>
-      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span><span class="action-row"><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?'disabled':''}>Quitar</button></span></li>`).join('')}</ul>
+      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span><span class="action-row"><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button quiet small" data-pdf-appendix-edit="${html(item.id)}" ${readonly?"disabled":""}>Editar datos</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?'disabled':''}>Quitar</button></span></li>`).join('')}</ul>
       <p class="subtle">Los anexos pueden incluir datos confidenciales. No se cargan a servidores ni se visualizan dentro de la app.</p>
     </section>`;
   }
@@ -4744,6 +4745,20 @@
       }catch(error){alert("No se pudo añadir la acción: "+error.message);}
       return;
     }
+    if(b.dataset.mitigationVerify!==undefined){
+      if(state.documentControl?.status==="confirmed"){alert("Abre una rectificación antes de registrar comprobaciones.");return;}
+      const finding=state.findings.find(f=>(f.mitigationActions||[]).some(a=>a.key===b.dataset.mitigationVerify));
+      const card=b.closest("[data-mitigation-key]");
+      if(!finding||!card)return;
+      const data={};for(const el of card.querySelectorAll("[data-mitigation-check-field]"))data[el.dataset.mitigationCheckField]=el.value;
+      try{
+        finding.mitigationActions=mitigation.normalize(finding.mitigationActions.map(a=>a.key===b.dataset.mitigationVerify?mitigation.recordVerification(a,data,state.evidence,uid):a));
+        const key=b.dataset.mitigationVerify;persist();render();
+        const target=[...workspace.querySelectorAll("[data-mitigation-key]")].find(e=>e.dataset.mitigationKey===key);
+        if(target){target.closest(".mitigation-actions").open=true;target.querySelector(".mitigation-checks").open=true;target.querySelector(".mitigation-checks>summary")?.focus();}
+      }catch(error){alert("No se pudo registrar la comprobación: "+error.message);}
+      return;
+    }
     if(b.dataset.mitigationSave!==undefined){
       const finding=state.findings.find(f=>(f.mitigationActions||[]).some(a=>a.key===b.dataset.mitigationSave));
       if(!finding||state.documentControl?.status==="confirmed")return;
@@ -5359,6 +5374,16 @@
     if (b.dataset.pdfAppendixDownload) {
       const item = state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixDownload);
       if(item) downloadBlob(item.name,pdfAppendices.asBlob(item));
+      return;
+    }
+    if(b.dataset.pdfAppendixEdit){
+      if(state.documentControl?.status==="confirmed"){alert("Abre una rectificación para editar anexos.");return;}
+      const item=state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixEdit);if(!item)return;
+      const name=prompt("Nombre descriptivo del PDF (.pdf). El archivo y SHA-256 permanecen intactos.",item.name);if(name===null)return;
+      const source=prompt("Procedencia (opcional)",item.source||"");if(source===null)return;
+      const observedAt=prompt("Fecha de observación (AAAA-MM-DD; opcional)",item.observedAt||"");if(observedAt===null)return;
+      try{state.pdfAppendices=pdfAppendices.normalize(state.pdfAppendices.map(x=>x.id===item.id?{...x,name,source,observedAt}:x));persist();render();}
+      catch(error){alert("No se pudieron editar los datos: "+error.message);}
       return;
     }
     if (b.dataset.pdfAppendixRemove) {

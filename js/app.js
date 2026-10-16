@@ -590,6 +590,18 @@
         ],
         ["contractedRate", "Velocidad contratada (Mbps; si corresponde)"],
         ["measuredRate", "Velocidad medida (Mbps; método en observaciones)"],
+        ["routerDevice","Router / modelo / versión de firmware observados"],
+        ["routerCredentials","Credenciales administrativas de fábrica","select",["","No verificado","Cambio de fábrica acreditado","Credenciales predeterminadas vigentes","No aplica"]],
+        ["routerAccounts","Cuentas y privilegios","select",["","No verificado","Cuentas diferenciadas y privilegios mínimos","Cuenta compartida o privilegios excesivos","No aplica"]],
+        ["routerMfa","MFA administrativo (si está disponible)","select",["","No verificado","Habilitado","Disponible, deshabilitado","No disponible / excepción documentada","No aplica"]],
+        ["routerMgmt","Protocolos de administración","select",["","No verificado","HTTPS/SSH seguro","HTTP/Telnet/servicio inseguro","No aplica"]],
+        ["routerRemote","Administración desde Internet/WAN","select",["","No verificado","Deshabilitada","Restringida y autorizada","Expuesta sin restricción","No aplica"]],
+        ["routerFirmware","Parches, firmware y soporte","select",["","No verificado","Actualizado y soportado","Parche pendiente","Fuera de soporte","No aplica"]],
+        ["routerServices","UPnP, WPS y servicios auxiliares","select",["","No verificado","Deshabilitados o justificados","Sin justificar","No aplica"]],
+        ["routerPerimeter","Firewall, NAT e IPv6","select",["","No verificado","Reglas revisadas y justificadas","Reglas o exposición excesiva","No aplica"]],
+        ["routerDns","DNS/DHCP y redirecciones","select",["","No verificado","Configuración comprobada","Configuración no autorizada o dudosa","No aplica"]],
+        ["routerBackups","Copia de configuración y recuperación","select",["","No verificado","Copia protegida y recuperación probada","Sin copia o prueba","No aplica"]],
+        ["routerAuditEvidence","Evidencias, fecha y limitaciones (sin contraseñas)","textarea"],
       ],
     },
     software: {
@@ -882,6 +894,18 @@
       "wifiBand",
       "contractedRate",
       "measuredRate",
+      "routerDevice",
+      "routerCredentials",
+      "routerAccounts",
+      "routerMfa",
+      "routerMgmt",
+      "routerRemote",
+      "routerFirmware",
+      "routerServices",
+      "routerPerimeter",
+      "routerDns",
+      "routerBackups",
+      "routerAuditEvidence",
     ],
     software: [
       "licenseType",
@@ -1885,6 +1909,7 @@
     if (!origin) return;
     const field = origin.field ? byId(origin.field) : null;
     if (field) {
+      for (const panel of field.closest(".entry")?.querySelectorAll("details") || []) if(panel.contains(field)) panel.open=true;
       field.scrollIntoView({ block: "center" });
       field.focus({ preventScroll: true });
     } else if (Number.isFinite(origin.scrollY)) {
@@ -2480,6 +2505,24 @@
       <p class="subtle">Revisa los registros que no coincidan. Los datos sin comprobar no se convierten automáticamente en problemas detectados.</p></section>`;
   }
 
+  // Optional router checklist is documentary: never capture passwords or probe credentials.
+  const ROUTER_AUDIT_FIELDS = Object.freeze(["routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"]);
+  const ROUTER_AUDIT_SET = new Set(ROUTER_AUDIT_FIELDS);
+  function renderRouterAudit(record,index,definitions) {
+    const routerFields=definitions.filter(([name])=>ROUTER_AUDIT_SET.has(name));
+    const documented=routerFields.filter(([name])=>str(record[name]).trim()).length;
+    return `<details class="inventory-baseline router-security-review">
+      <summary><span><strong>Seguridad del router / gateway</strong>
+      <small>Credenciales de fábrica, administración, firmware, exposición y recuperación · solo revisión autorizada</small></span>
+      <span class="inventory-baseline-count">${documented} / ${routerFields.length} datos documentados</span></summary>
+      <div class="inventory-baseline-content">
+        <p><strong>Credenciales de fábrica:</strong> solicita al responsable el registro de instalación, la política de cambio y una evidencia saneada del estado de cuentas.
+        No pruebes usuarios o contraseñas predeterminados ni introduzcas secretos en el expediente. Si procede validar acceso, debe hacerlo un administrador autorizado.</p>
+        <p class="subtle">«No verificado» significa que no hay evidencia suficiente. Ningún estado supone conformidad automática: registra controles y hallazgos cuando corresponda.</p>
+        <div class="fields">${routerFields.map(def=>renderField(record,"networks",def,index)).join("")}</div>
+        <div class="action-row"><button type="button" class="button quiet" data-router-controls="true">Abrir plantillas de controles de routers →</button></div>
+      </div></details>`;
+  }
   function renderInventoryFieldGroups(record, section, index) {
     const definitions = groups[section].fields;
     if (section === "findings")
@@ -2506,7 +2549,7 @@
         "</div>"
       );
     const basic = definitions.filter(([name]) => !extra.has(name));
-    const extended = definitions.filter(([name]) => extra.has(name));
+    const extended = definitions.filter(([name]) => extra.has(name) && (section !== "networks" || !ROUTER_AUDIT_SET.has(name)));
     const completed = extended.filter(([name]) =>
       str(record[name]).trim(),
     ).length;
@@ -2516,6 +2559,7 @@
         .map((field) => renderField(record, section, field, index))
         .join("") +
       "</div>" +
+      (section === "networks" ? renderRouterAudit(record,index,definitions) : "") +
       '<details class="inventory-baseline"><summary><span><strong>Revisión ampliada · situación actual</strong>' +
       "<small>Datos opcionales de software, hardware y redes; documenta solo lo comprobado</small></span>" +
       '<span class="inventory-baseline-count">' +
@@ -4543,6 +4587,7 @@
       }
       return;
     }
+    if (b.dataset.routerControls !== undefined) { selectedTemplatePack = "networks"; move("controls"); return; }
     if (b.dataset.go) {
       if (
         b.dataset.go === "intake" &&

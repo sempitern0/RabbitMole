@@ -743,3 +743,15 @@
 #workspace .rack-physical-review .action-row{margin:1rem 0}
 @media(max-width:700px){#workspace .rack-review-group .fields{grid-template-columns:minmax(0,1fr)}}
 @media print{#workspace .rack-physical-review .rack-review-group{break-inside:avoid}}
+
+/* Accessible U-by-U rack map. Status never encoded only by color. */
+#workspace .rack-layout{margin:1.2rem 0;padding:.85rem;border:1px solid var(--line);border-radius:.7rem;max-width:100%;overflow-wrap:anywhere}
+#workspace .rack-units{padding:0;margin:.7rem 0;list-style:none;display:grid;gap:2px}
+#workspace .rack-units li{display:grid;grid-template-columns:minmax(3rem,4rem) minmax(0,1fr);gap:.6rem;padding:.45rem .65rem;border:1px solid var(--line);background:var(--paper);min-height:38px;align-items:center}
+#workspace .rack-units li>span:first-child{font-weight:800;font-variant-numeric:tabular-nums}
+#workspace .rack-units .rack-u-used{border-inline-start:4px solid var(--brand)}
+#workspace .rack-units .rack-u-conflict{border-inline-start:4px solid #b85c43}
+#workspace .rack-layout-warnings{padding-inline-start:1.4rem;line-height:1.55}
+#workspace .rack-placement{margin-block:1rem}
+@media(max-width:700px){#workspace .rack-units li{grid-template-columns:2.7rem minmax(0,1fr);font-size:.92rem}}
+@media(forced-colors:active){#workspace .rack-units li{border:1px solid CanvasText}}

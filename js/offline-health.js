@@ -26,13 +26,31 @@
    }catch(error){setState('error');output.textContent='No se ha podido comprobar el modo offline: '+error.message;}
  }
  async function persist(){
-   const output=$('offline-health-status');
-   if(!navigator.storage?.persist){output.textContent='El navegador no admite solicitar almacenamiento persistente.';return;}
+   const output=$('offline-storage-status'),button=$('offline-health-persist');
+   if(!output||!button)return;
+   const storage=navigator.storage;
+   if(!storage?.persist){
+     output.dataset.result='unsupported';
+     output.textContent='No disponible: este navegador no permite solicitar persistencia. Exporta periódicamente una copia JSON.';
+     return;
+   }
+   button.disabled=true;
+   output.dataset.result='checking';
+   output.textContent='Solicitando protección de persistencia al navegador…';
    try{
-     const allowed=await navigator.storage.persist();
-     output.textContent=allowed?'Persistencia concedida por el navegador.':'El navegador no concedió persistencia. Conserva backups JSON externos.';
-     await check();
-   }catch(error){output.textContent='No se pudo solicitar persistencia: '+error.message;}
+     // A repeated click should report the existing status, not imply a new permission.
+     const already=await storage.persisted?.()===true;
+     const granted=already || await storage.persist();
+     output.dataset.result=granted?'granted':'denied';
+     output.textContent=granted
+       ?'Persistencia '+(already?'ya activa':'concedida')+'. El navegador intentará conservar los datos locales. No están cifrados: mantén copias JSON externas.'
+       :'Persistencia no concedida. La PWA sigue funcionando offline, pero el navegador puede liberar su almacenamiento. Exporta copias JSON externas.';
+   }catch(error){
+     output.dataset.result='error';
+     output.textContent='No se pudo comprobar la persistencia: '+error.message+'. Conserva una copia JSON externa.';
+   }finally{
+     button.disabled=false;
+   }
  }
  async function repair(){
    const output=$('offline-health-status');

@@ -210,3 +210,9 @@ Under **Findings → Mitigation plan**, add a tailored action from an offline re
 ### Editing and removing supporting files
 
 Unconfirmed audits offer **Edit data**, **Download**, and **Remove** controls for PDF appendices, including external Wi-Fi reports. Editing a descriptive filename, source or observation date does not change the underlying PDF bytes or its SHA-256. Linked photos can be removed from the finding gallery or the Evidence section after confirmation; the underlying evidence record remains unless explicitly deleted. Wi-Fi CSV observations can be cleared as a dataset; the original CSV files are parsed locally rather than retained as downloadable attachments. Confirmed records require a documented amendment before changes. Export a backup before deleting evidence that might be needed for audit traceability.
+
+### Residual risk and mitigation follow-up
+
+In **Findings → Residual risk**, an auditor records a dated, justified assessment with level, treatment recommendation, responsible assessor, optional next review and linked evidence. Historical assessments are append-only; legacy free-text residual notes remain intact and previously saved JSON v3 audits load without a migration. **Proposing acceptance does not approve risk acceptance or close a finding**; that remains a separate organizational decision.
+
+The **Quality** and **Follow-up** pages include a local-only mitigation scorecard: registered actions, overdue work orders, individually verified/failed actions, applied actions without checks, and residual risks still awaiting assessment. The dashboard does not turn execution into proof of effectiveness or automatically calculate lower risk. The technical report includes the latest recorded residual assessment and supporting rationale. The installed PWA uses a new offline shell cache release; the user must approve any discovered app update before it activates.

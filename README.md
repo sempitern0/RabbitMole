@@ -228,3 +228,7 @@ Evidence removal now reports dependent finding, remediation, retest and residual
 ### Storage persistence and mobile PWA
 
 The **Protect storage** control requests persistent browser storage and now reports granted, denied or unsupported outcomes separately from offline-cache health. It does **not** encrypt records or replace exported JSON backups. The audit filter toolbar remains visually distinct while sticky on larger screens, and uses a static layout on narrow screens. On iOS/iPadOS install through Safari Share → Add to Home Screen, then launch from the icon. Browser and OS storage policies differ; verify offline cold start on the actual device before field use.
+
+### File-level WiFi CSV management and install guidance
+
+New WiFi CSV imports retain separate per-file snapshots. Removing an import restores the previous dataset for its category without touching PDF annexes or other categories. Existing saved CSV data is preserved as one historical group because the previous schema did not attribute rows to individual filenames. The top install guidance is visually distinguished from audit forms while retaining accessible controls and theme-aware contrast.

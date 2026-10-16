@@ -247,3 +247,11 @@ La búsqueda, los filtros y el acceso rápido a registros se gestionan desde `js
 ### Refactorización de campos de auditoría
 
 El HTML de los campos (entradas, desplegables, selectores táctiles, datalist, relaciones con evidencias y ayuda del diccionario) se genera desde `js/audit-field-renderer.js`. `app.js` conserva el estado, las validaciones y el autoguardado. Se han comprobado once variantes de campos comparando exactamente el HTML anterior con el nuevo. La integración se precarga para uso offline, cuenta con una prueba de contrato y mantiene el esquema JSON v3 y los flujos Android existentes.
+
+### Auditoría de racks y seguridad física
+
+En **Inventario de hardware** crea un activo de tipo **Rack de servidores** o **Rack de comunicaciones**. Aparecerá una ficha opcional desplegable de **Revisión física y ambiental**, organizada en ocupación, climatización, energía y seguridad física/perímetro. Registra la altura y ocupación U, temperatura medida en entrada, humedad, ventilación, sensores, exposición al agua, PDU, SAI, tierra, incendio, acceso, mantenimiento, cableado y segmentación. Las observaciones manuales no equivalen a conformidad automática.
+
+Desde la ficha puedes abrir las plantillas **Racks, CPD y seguridad física** (10 controles PHY-01 a PHY-10), relacionar evidencias/fotografías, documentar desviaciones y utilizar el flujo existente de mitigación y reevaluación. Las reglas de firewall continúan evaluándose con los controles de **Redes y perímetro**. Contrasta los límites ambientales con el fabricante, las recomendaciones ASHRAE aplicables y la normativa local. No manipules equipos energizados ni registres secretos de acceso.
+
+Se mantiene el esquema JSON v3, el informe técnico y el funcionamiento offline. Los activos que no son racks no muestran el cuestionario.

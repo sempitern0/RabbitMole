@@ -256,3 +256,7 @@ The **Racks, CPD y seguridad física** control pack (10 controls, PHY-01–PHY-1
 Network inventory supports device-specific **Router**, **ONT** and **Firewall** manufacturer/model suggestions, all offline and editable. Suggestions do not attest to hardware support, firmware, availability or interoperability; existing and custom values remain editable.
 
 The rack audit adds a documentary U-by-U occupancy view (U1 at the bottom), linked through an inventoried rack asset ID or internal key, with starting U, unit height and front/rear placement for equipment. Overlapping or out-of-bounds placements are flagged as observations, not automatically treated as compliance failures. Front/rear photos remain managed in Evidence and can be referenced by evidence IDs. JSON v3 and technical reporting continue to use the existing inventory fields. A structured environmental readings history is a possible later addition.
+
+### Lightweight server installation inventory
+
+Physical and virtual server assets now display grouped, touch-friendly operating-system choices (Windows Server, Ubuntu/Debian, enterprise Linux and virtualization) using the existing OS field. The custom entry option and previously stored OS values are preserved. An optional installation panel records server function, verified installation date, deployment type, boot storage, remote administration and notes. Location, IP, hardware and rack U positions remain in their existing inventory fields. No new storage schema is required.

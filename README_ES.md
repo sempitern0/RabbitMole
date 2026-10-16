@@ -215,3 +215,7 @@ Cada acción aplicada puede registrar comprobaciones individuales con fecha, aud
 Los PDF adjuntos se pueden descargar, quitar o editar mediante un formulario desplegable accesible en las secciones de WiFi y Documentación complementaria. Editar nombre, procedencia o fecha no cambia los bytes del PDF ni su SHA-256. Las modificaciones en expedientes confirmados requieren una rectificación. Los paneles abiertos se mantienen durante la actualización de datos en el mismo apartado.
 
 La aplicación utiliza únicamente el esquema JSON v3 actual. Se han retirado rutas de interfaz que ya no se usan, manteniendo las claves de almacenamiento del navegador y el aislamiento de las versiones de caché para proteger los expedientes locales existentes.
+
+### Modularización gradual
+
+Los formularios de riesgo residual, los indicadores de mitigación y los controles de anexos PDF se renderizan ahora desde `js/audit-workflow-views.js`, un módulo sin efectos secundarios que se precarga para trabajar offline. `js/app.js` conserva las responsabilidades de estado, almacenamiento, bloqueo documental, informes y navegación. La validación `npm run check` incluye pruebas específicas del contrato de estas vistas. Se mantienen el esquema JSON vigente y las claves de almacenamiento local.

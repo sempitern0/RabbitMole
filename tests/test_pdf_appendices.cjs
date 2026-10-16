@@ -19,5 +19,6 @@ const p=ctx.RabbitMolePdfAppendices;
  assert(html.includes('js/pdf-appendices.js'));
  assert(sw.includes('./js/pdf-appendices.js'));
  for(const token of ['renderPdfAppendices()','pdfAppendices.normalize(raw.pdfAppendices)','data-pdf-appendix-download','data-pdf-appendix-remove','pdf-appendix-upload'])assert(app.includes(token),token);
+ assert(app.includes('renderExternalNetworkAnalysis()')&&app.includes('external-network-files'));
  console.log('PASS bounded offline PDF appendices, recovery, SHA-256 and UI integration');
 })().catch(e=>{console.error(e);process.exitCode=1});

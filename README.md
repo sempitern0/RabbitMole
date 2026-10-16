@@ -196,3 +196,7 @@ Select a field's information icon to consult glossary definitions, checks and ev
 ### Router vendor and model entry
 
 Under **Networks → Router/gateway security**, select a suggested manufacturer and model. The model list follows the selected vendor, and **Other / enter manually** supports equipment not included in the offline catalog. Suggestions are not a verification of model, firmware, support status or security. The same sharp vector help icon opens context-sensitive glossary guidance on every field.
+
+### External Wi-Fi measurements
+
+Within **Networks**, import Acrylic Wi-Fi Analyzer CSV exports to see a local, palette-aware summary of APs, LAN client rows, observed devices and network troubleshooting measurements. The original HTML is never executed. Convert the original vendor report to PDF and attach it under **PDF delivery → Complementary documents** (up to 2 MiB per PDF); PDF annexes are indexed by SHA-256 and delivered separately, not merged. Imported measurements do not automatically create network assets or security findings.

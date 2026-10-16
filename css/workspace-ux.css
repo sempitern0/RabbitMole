@@ -641,3 +641,22 @@
 .router-security-review { border-inline-start:3px solid var(--brand); }
 .router-security-review .inventory-baseline-content > p { line-height:1.6; max-width:92ch; }
 .router-security-review .action-row { margin-block-start:.7rem; }
+
+/* External WiFi analysis adopts the same audit palette; full data is kept in the JSON. */
+#workspace .external-network-analysis{display:grid;gap:1rem;min-width:0}
+#workspace .network-analysis-import{display:grid;gap:.55rem;padding:1rem;border:1px solid var(--line);border-radius:.85rem;background:var(--canvas)}
+#workspace .network-analysis-import label{font-weight:750;color:var(--ink)}
+.network-analysis-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+.network-analysis-metrics>div{padding:.9rem;border:1px solid var(--line);border-radius:.75rem;background:var(--canvas);min-width:0}
+.network-analysis-metrics strong{display:block;font-size:1.5rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.network-analysis-metrics span{font-size:.82rem;color:var(--muted);line-height:1.4}
+.network-analysis-data{display:grid;gap:.85rem;min-width:0}
+.network-analysis-data>details{border:1px solid var(--line);border-radius:.75rem;padding:0;overflow:hidden}
+.network-analysis-data>details>summary{padding:.9rem 1rem;font-weight:750;cursor:pointer;background:var(--canvas)}
+.network-analysis-data>details>p,.network-analysis-data>details>h4{margin:.8rem 1rem}
+.network-analysis-table-wrap{overflow-x:auto;width:100%;max-width:100%;margin:.5rem 0}
+.network-analysis-table{width:100%;border-collapse:collapse;font-size:.83rem;line-height:1.45}
+.network-analysis-table th,.network-analysis-table td{padding:.6rem .7rem;border-block-end:1px solid var(--line);text-align:start;white-space:nowrap}
+.network-analysis-table th{background:var(--canvas);color:var(--ink);font-weight:750}
+@media(max-width:800px){.network-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{.report-external-analysis .network-analysis-data>details{break-inside:auto}.report-external-analysis .network-analysis-table-wrap{overflow:visible}.report-external-analysis .network-analysis-table th,.report-external-analysis .network-analysis-table td{white-space:normal}}

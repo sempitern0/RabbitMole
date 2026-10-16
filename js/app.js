@@ -11,6 +11,7 @@
   const relations = globalThis.AuditRelations;
   const evidenceImages = globalThis.AuditEvidenceImages;
   const pdfAppendices = globalThis.RabbitMolePdfAppendices;
+  const externalNetwork = globalThis.RabbitMoleExternalNetwork;
   const identifiers = globalThis.AuditIdentifiers;
   const templates = globalThis.AuditControlTemplates;
   const quality = globalThis.AuditQuality;
@@ -950,6 +951,7 @@
     findings: [],
     evidence: [],
     pdfAppendices: [],
+    externalNetworkAnalysis: null,
     followupBaseline: null,
   });
   const str = (v) => (typeof v === "string" ? v.slice(0, 20000) : "");
@@ -1012,6 +1014,7 @@
             : out[block][name];
     }
     out.pdfAppendices = pdfAppendices.normalize(raw.pdfAppendices);
+    out.externalNetworkAnalysis = externalNetwork.normalize(raw.externalNetworkAnalysis);
     out.documentControl = docControl.normalize(raw.documentControl);
     out.meta.logo = safeLogo(raw.meta.logo);
     out.meta.auditTeam = normalizeAuditTeam(raw.meta.auditTeam);
@@ -2788,10 +2791,48 @@
         .join("")}</div>
       <p class="subtle">${linked.length} evidencias vinculadas. Puedes revisarlas en «Evidencias».</p></div>`;
   }
+
+  function renderExternalNetworkAnalysis(print=false) {
+    const analysis=externalNetwork.normalize(state.externalNetworkAnalysis);
+    const readonly=state.documentControl?.status==="confirmed";
+    const escape=html;
+    const metrics=externalNetwork.metrics(analysis);
+    const diagnostic=analysis?.diagnostics||{};
+    const table=(items,columns,limit=50)=>items?.length
+      ? `<div class="network-analysis-table-wrap"><table class="network-analysis-table"><thead><tr>${columns.map(c=>`<th scope="col">${escape(c)}</th>`).join("")}</tr></thead><tbody>${items.slice(0,limit).map(item=>`<tr>${columns.map(c=>`<td>${escape(item[c]||"—")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
+      : '<p class="subtle">Sin mediciones importadas en esta categoría.</p>';
+    const wifi=analysis?.aps?.filter(r=>r.Banda&&r["Dirección MAC"]&&!r.SSID.startsWith("[Cliente Lan]"))||[];
+    const tiles=metrics?`<div class="network-analysis-metrics">
+      ${[[metrics.wifi,"Radios/AP WiFi observados"],[metrics.lan,"Clientes LAN listados"],[metrics.observedDevices,"Dispositivos del CSV"],[metrics.latency?.average??"—","Latencia media (ms)"]].map(([value,label])=>`<div><strong>${escape(value)}</strong><span>${escape(label)}</span></div>`).join("")}
+      </div>`:"";
+    const details=analysis?`<div class="network-analysis-data">
+      ${tiles}
+      <p class="subtle">Banda 2,4 GHz: ${metrics.band24} · 5 GHz: ${metrics.band5} · 6 GHz: ${metrics.band6}. La captura de Acrylic puede incluir AP ajenos y clientes LAN; los registros no constituyen automáticamente activos autorizados ni hallazgos.</p>
+      <details ${print?"open":""}><summary>Puntos de acceso y redes WiFi (${wifi.length})</summary>${table(wifi,["SSID","Dirección MAC","RSSI","Canal","Banda","Ancho","WPA2","WPA3","WPS","Fabricante"],print?150:50)}</details>
+      <details ${print?"open":""}><summary>Dispositivos observados (${analysis.devices.length})</summary>${table(analysis.devices,["Dirección MAC","Estado","RSSI","Fabricante"],print?150:35)}</details>
+      <details ${print?"open":""}><summary>Pruebas y conectividad</summary>
+        ${analysis.latency?`<p><strong>Latencia:</strong> ${analysis.latency.count} muestras, mínimo ${escape(analysis.latency.min??"—")} ms, máximo ${escape(analysis.latency.max??"—")} ms, media ${escape(analysis.latency.average??"—")} ms; pérdida media registrada ${escape(analysis.latency.packetLoss??"N/D")}.</p>`:''}
+        ${[["ip","Direcciones IP",["Interfaz Wifi","IPv4 local","Puerta de enlace","Servidores DNS"]],["roaming","Roaming",["Interfaz Wifi","SSID","Dirección MAC","Duración"]],["transfer","Transferencia",["Interfaz Wifi","Bytes enviados","Bytes recibidos","Subida","Bajada"]],["speed","Test de velocidad",["Ancho de Descarga","Fecha"]],["iperf","iPerf",["Ancho de Descarga","Ancho de Subida","Fecha"]]].map(([key,label,columns])=>`<h4>${label}</h4>${table(diagnostic[key],columns)}`).join("")}
+      </details>
+      <p class="subtle">Origen: ${escape(analysis.source)} · Importación: ${escape(analysis.importedAt)} · CSV: ${analysis.files.map(escape).join(", ")}. Se muestran hasta 50 AP por vista; el PDF externo original sigue siendo la fuente íntegra.</p>
+    </div>`:"";
+    if(print)return analysis?`<div class="report-external-analysis"><p>Resumen documental de mediciones aportadas por herramienta externa; no implica validación independiente por RabbitMole.</p>${details}</div>`:"";
+    return `<section class="card external-network-analysis" aria-labelledby="external-network-title">
+      <div class="card-head"><div><h2 id="external-network-title">Análisis WiFi externo · Acrylic</h2>
+      <p class="subtle">Importa los CSV originales y consulta un resumen técnico con métricas y tablas, sin ejecutar HTML externo ni modificar el inventario.</p></div></div>
+      <div class="network-analysis-import">
+        <label for="external-network-files">Añadir resultados de Acrylic (CSV)</label>
+        <input id="external-network-files" type="file" accept=".csv,text/csv" multiple ${readonly?"disabled":""}>
+        <p class="subtle">Admite puntos de acceso, dispositivos, latencia, IP, roaming, transferencia, velocidad e iPerf; hasta 2 MiB por CSV. Procesamiento íntegramente local. Exporta el HTML original a PDF y añádelo como anexo en «Generar informe PDF».</p>
+      </div>
+      ${details||'<p class="notice">Aún no hay resultados de herramientas externas importados. Los CSV se analizarán localmente y no crearán hallazgos automáticamente.</p>'}
+      ${analysis?`<div class="action-row"><button type="button" class="button quiet" data-go="delivery">Adjuntar informe original (PDF) →</button><button type="button" class="button danger" data-network-analysis-clear ${readonly?"disabled":""}>Retirar análisis importado</button></div>`:""}
+    </section>`;
+  }
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -3939,6 +3980,22 @@
       return;
     }
     const t = e.target;
+    if (t.id === "external-network-files" && t.files?.length) {
+      const auditId=currentId;
+      try {
+        if(state.documentControl?.status==="confirmed")throw Error("Abre una rectificación para importar mediciones.");
+        let next=state.externalNetworkAnalysis;
+        for(const file of Array.from(t.files)){
+          const parsed=await externalNetwork.parseFile(file);
+          if(auditId!==currentId||state.documentControl?.status==="confirmed")
+            throw Error("El expediente ha cambiado durante la importación.");
+          next=externalNetwork.merge(next,parsed);
+        }
+        state.externalNetworkAnalysis=next;
+        persist();render();
+      }catch(error){alert("No se pudo importar el análisis de red: "+error.message);t.value="";}
+      return;
+    }
     if (t.id === "pdf-appendix-upload" && t.files?.length) {
       const auditId = currentId;
       try {
@@ -5200,6 +5257,11 @@
       void printReport("final", "technical");
       return;
     }
+    if(b.dataset.networkAnalysisClear!==undefined){
+      if(state.documentControl?.status==="confirmed")return;
+      if(!confirm("¿Retirar del expediente el resumen CSV importado? Los anexos PDF permanecerán intactos."))return;
+      state.externalNetworkAnalysis=null;persist();render();return;
+    }
     if (b.dataset.pdfAppendixDownload) {
       const item = state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixDownload);
       if(item) downloadBlob(item.name,pdfAppendices.asBlob(item));
@@ -6233,8 +6295,8 @@
             [
               5,
               "Infraestructura de redes",
-              state.networks.length
-                ? section(5, "Infraestructura de redes", reportRows("networks"))
+              state.networks.length||state.externalNetworkAnalysis
+                ? section(5, "Infraestructura de redes", (state.networks.length?reportRows("networks"):"") + renderExternalNetworkAnalysis(true))
                 : "",
             ],
             [

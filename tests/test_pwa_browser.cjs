@@ -116,6 +116,11 @@ const {chromium}=require('playwright');
    }
    await page.locator('#palette').selectOption('ocean');
    await page.locator('#wizard-step-select').selectOption('networks');
+   const acrylicCsv='sep=;\nSSID;#;Dirección MAC;RSSI;SNR;Canal;Banda;Ancho;802.11;WEP;WPA;WPA2;WPA3;WPS;Fabricante\nDemo;1;02:00:00:00:00:01;-55;N/A;6;2.4GHz;20;n;;;PSK-CCMP;;';
+   await page.locator('#external-network-files').setInputFiles({name:'acrylic_aps.csv',mimeType:'text/csv',buffer:Buffer.from(acrylicCsv)});
+   await page.waitForFunction(()=>document.querySelector('.network-analysis-metrics')?.textContent.includes('1'));
+   assert.equal(await page.locator('.network-analysis-metrics').count(),1);
+
    await page.locator('[data-add="networks"]').first().click();
    const routerReview=page.locator('.router-security-review').first();
    await routerReview.locator('summary').click();

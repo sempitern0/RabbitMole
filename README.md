@@ -202,3 +202,7 @@ Under **Networks → Router/gateway security**, select a suggested manufacturer 
 Under **Networks → External Wi-Fi analysis**, attach a **PDF produced by any approved tool**, with optional tool/source and observation date. It is stored as a SHA-256-identified complementary document, delivered separately (not merged into the main PDF); the existing limits are 2 MiB per PDF, four documents and 6 MiB overall.
 
 Optionally import **CSV** exports with common Spanish or English SSID/BSSID, device, or latency headers, separated by commas or semicolons. Existing Acrylic CSV exports remain supported, but no tool is required and unrecognized formats can still be documented as PDF. Third-party HTML is never executed; imported observations do not automatically create inventoried assets or findings.
+
+### Managed mitigation actions
+
+Under **Findings → Mitigation plan**, add a tailored action from an offline remediation procedure or create a custom one. Record steps, dependencies, rollback, owner, target date, approval, change ticket, executed work and evidence. Operational statuses document proposed, approved, scheduled, applied, blocked and reverted actions; the PWA **never executes infrastructure changes**. Marking an action applied does not close the finding: independent validation must be documented under **Follow-up**. Actions are kept in the audit JSON and included in the technical remediation plan.

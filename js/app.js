@@ -3296,11 +3296,19 @@
   }
   const reviewState = (mode = "draft") =>
     quality.review(state, relations, { mode });
+  function mitigationOverview(finding) {
+    const actions=mitigation.normalize(finding.mitigationActions);
+    if(!actions.length)return "";
+    return '<div class="remediation-work-orders"><strong>Acciones correctivas ('+actions.length+')</strong><ul>'+
+      actions.map(a=>'<li><strong>'+html(a.title)+'</strong> · '+html(mitigation.STATES[a.status])+
+        ' · '+html(a.owner||'Sin responsable')+' · '+html(a.deadline||'Sin fecha')+
+        (a.status==='applied'?'. Pendiente de verificación independiente.':'')+'</li>').join('')+'</ul></div>';
+  }
   function renderPlanSummary(rows, limit = 6) {
     if (!rows.length)
       return '<p class="subtle">No hay hallazgos documentados. Si no se han encontrado debilidades, explica la cobertura y las limitaciones.</p>';
     const selected = rows.slice(0, limit);
-    return `<div class="remediation-list">${selected.map((item) => `<article class="remediation-item"><div class="remediation-heading"><strong>${html(item.id)} · ${html(item.title)}</strong>${pill(item.severity)}</div><p class="subtle">${html(item.status)} · Responsable: ${html(item.owner || "Por asignar")} · Fecha objetivo: ${html(item.deadline || "Sin acordar")}</p><p><strong>Acción:</strong> ${html(item.recommendation || "Pendiente de definir")}</p><p><strong>Verificación:</strong> ${html(item.verification || "Pendiente de definir")}</p></article>`).join("")}</div>${rows.length > limit ? `<p class="subtle">Se muestran ${limit} de ${rows.length}; el PDF incluirá todos los hallazgos.</p>` : ""}`;
+    return `<div class="remediation-list">${selected.map((item) => `<article class="remediation-item"><div class="remediation-heading"><strong>${html(item.id)} · ${html(item.title)}</strong>${pill(item.severity)}</div><p class="subtle">${html(item.status)} · Responsable: ${html(item.owner || "Por asignar")} · Fecha objetivo: ${html(item.deadline || "Sin acordar")}</p><p><strong>Acción:</strong> ${html(item.recommendation || "Pendiente de definir")}</p><p><strong>Verificación:</strong> ${html(item.verification || "Pendiente de definir")}</p>${mitigationOverview(state.findings.find(f=>f._key===item.key)||{})}</article>`).join("")}</div>${rows.length > limit ? `<p class="subtle">Se muestran ${limit} de ${rows.length}; el PDF incluirá todos los hallazgos.</p>` : ""}`;
   }
   function renderQuality() {
     const audit = reviewState();
@@ -6250,7 +6258,7 @@
         ? reviewed.plan
             .map(
               (item) =>
-                `<div class="report-action"><h3>${html(item.id)} · ${html(item.title)} <span class="report-badge ${level(item.severity)}">${html(item.severity)}</span></h3><p><strong>Estado:</strong> ${html(item.status)} · <strong>Responsable:</strong> ${html(item.owner || "Pendiente de asignar")} · <strong>Fecha objetivo:</strong> ${html(item.deadline || "Por acordar")}</p><p><strong>Acción correctiva:</strong> ${para(item.recommendation || "Sin definir")}</p><p><strong>Criterio de verificación:</strong> ${para(item.verification || "Sin definir")}</p></div>`,
+                `<div class="report-action"><h3>${html(item.id)} · ${html(item.title)} <span class="report-badge ${level(item.severity)}">${html(item.severity)}</span></h3><p><strong>Estado:</strong> ${html(item.status)} · <strong>Responsable:</strong> ${html(item.owner || "Pendiente de asignar")} · <strong>Fecha objetivo:</strong> ${html(item.deadline || "Por acordar")}</p><p><strong>Acción correctiva:</strong> ${para(item.recommendation || "Sin definir")}</p><p><strong>Criterio de verificación:</strong> ${para(item.verification || "Sin definir")}</p>${mitigationOverview(state.findings.find(f=>f._key===item.key)||{})}</div>`,
             )
             .join("")
         : '<p class="report-empty">No se registraron hallazgos que requieran remediación. Esta observación no implica ausencia de riesgos fuera del alcance revisado.</p>',

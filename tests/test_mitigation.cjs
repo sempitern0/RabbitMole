@@ -1,0 +1,28 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const ctx={Date};ctx.globalThis=ctx;
+vm.runInNewContext(fs.readFileSync('js/audit-mitigation.js','utf8'),ctx);
+const m=ctx.AuditMitigation;
+assert(m.TEMPLATES.length>=8);
+assert.equal(m.normalize(undefined).length,0);
+const initial=m.fromTemplate('router-services','action-1',{owner:'Administración TI',deadline:'2026-12-12'});
+assert.equal(initial.status,'proposed');
+assert(initial.steps.length>30);
+assert.throws(()=>m.save(initial,{status:'applied'}),/Transición/);
+const proposal=m.save(initial,{status:'proposed'});
+const approved=m.save(proposal,{status:'approved',approvedBy:'Responsable',approvalDate:'2026-10-16'});
+assert.equal(approved.status,'approved');
+assert.throws(()=>m.save(approved,{status:'applied'}),/Registra/);
+const applied=m.save(approved,{status:'applied',executedBy:'Administrador',executedAt:'2026-10-16',
+  changeNotes:'Cambio aplicado durante la ventana autorizada y probado por administrador'});
+assert.equal(applied.status,'applied');
+assert.throws(()=>m.save(applied,{status:'proposed'}),/Transición/);
+assert.equal(m.metrics([{mitigationActions:[applied]}]).applied,1);
+assert.throws(()=>m.normalize([initial,initial]),/duplicadas/);
+assert.throws(()=>m.save(proposal,{status:'proposed',evidenceKey:'missing'},[]),/evidencia/);
+const state=JSON.parse(JSON.stringify({mitigationActions:[applied]}));
+assert.equal(m.normalize(state.mitigationActions)[0].status,'applied');
+const app=fs.readFileSync('js/app.js','utf8'),html=fs.readFileSync('index.html','utf8');
+assert(app.includes('renderMitigationActions')&&app.includes('mitigationOverview'));
+assert(html.includes('js/audit-mitigation.js'));
+console.log('PASS mitigation plans, approvals, controlled transitions, JSON roundtrip and display');

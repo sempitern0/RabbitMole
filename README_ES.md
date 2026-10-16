@@ -231,3 +231,7 @@ La eliminación de evidencias ahora advierte si el registro se utiliza en hallaz
 ### Gestión CSV WiFi y panel de instalación
 
 Las importaciones CSV nuevas se almacenan por archivo y categoría, con un botón «Quitar CSV» que permite retirar una captura sin afectar al informe PDF ni a los demás CSV. Si se importa otro archivo del mismo tipo, su información pasa a ser la vista activa y la anterior permanece recuperable al quitarlo. Las importaciones anteriores a esta mejora se conservan como grupo histórico, ya que el formato anterior no permitía atribuir filas a cada nombre de archivo. El panel superior de instalación se distingue visualmente de los formularios y mantiene etiquetas, navegación por teclado y contraste por tema.
+
+### Validación táctil previa a auditorías móviles
+
+Se han incorporado comprobaciones de tamaño y desbordamiento del selector de pasos en pantallas de móvil y estilos para evitar el zoom de Safari al enfocar campos pequeños. En dispositivos táctiles se mantienen controles con objetivos de al menos 44 px donde corresponda. Antes de usar un expediente real: instalar y abrir desde el icono, comprobar caché completa, editar y guardar un registro, capturar una evidencia, exportar una copia JSON y verificar el arranque sin conexión. La emulación de Chromium no sustituye una prueba física Android/iOS.

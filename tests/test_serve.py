@@ -18,6 +18,11 @@ class ServeTests(unittest.TestCase):
                      '/backup.json', '/js/hardware-catalog.js/extra'):
             self.assertIsNone(resolve_asset(name), name)
 
+    def test_only_loopback_and_explicit_discovery_switch(self):
+        from serve import LocalHandler
+        self.assertTrue(callable(LocalHandler.do_POST))
+        self.assertTrue(callable(LocalHandler._trusted_request))
+
     def test_csp_explicit_script_sources(self):
         for rule in ("default-src 'none'", "script-src-elem 'self'", "script-src-attr 'none'",
                      "worker-src 'self'"):

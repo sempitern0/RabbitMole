@@ -33,7 +33,9 @@ const {chromium}=require('playwright');
     await page.locator('#pwa-install-button').click();
     await page.waitForFunction(()=>document.getElementById('pwa-install-status').textContent.includes('desde su icono'));
    }
-   await page.locator('#offline-health-check').click();await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Recursos offline completos'));
+   await page.locator('#sidebar-maintenance > summary').click();
+   await page.locator('#offline-health-check').click();
+   await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Recursos offline completos'));
    await page.locator('#global-navigation [data-go="records"]').click();
    assert.equal(await page.locator('#workspace h1').evaluate(el=>getComputedStyle(el).outlineStyle),'none');
    // Programmatic .focus() does not imply :focus-visible in Chromium.

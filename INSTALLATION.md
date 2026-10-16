@@ -57,7 +57,7 @@ python3 serve.py 8765 --bind 127.0.0.1
 
 Add `--no-open` to install without opening a browser. Use `--dir PATH` to choose a destination directory. Both installers include the `js/`, `css/`, `fonts/`, and `icons/` modules.
 
-The local server serves only RabbitMole's PWA files from the repository root, refuses non-loopback binding and returns restrictive CSP/security headers. It does not serve customer reports, secrets, arbitrary filesystem paths or directory listings. This is **not** an Internet-facing HTTPS server.\n\n## HTTPS server deployment (recommended for multiple devices)
+By default, `serve.py` **opens the URL using your default browser**. Pass `--no-open` to suppress it. Opt-in local network discovery with `python3 serve.py --enable-discovery`: the local-only helper accepts bounded private RFC1918 CIDRs (up to 256 addresses), requires typing `AUTORIZO`, and is not available on Cloudflare. Under **Networks → Discovery / assisted capture**, check Nmap/ping, authorize your scan and review results before importing.\n\nThe local server serves only RabbitMole's PWA files from the repository root, refuses non-loopback binding and returns restrictive CSP/security headers. It does not serve customer reports, secrets, arbitrary filesystem paths or directory listings. This is **not** an Internet-facing HTTPS server.\n\n## HTTPS server deployment (recommended for multiple devices)
 
 Use **Docker Compose + Caddy** to serve the static PWA from a stable domain with automatic HTTPS. It does **not** store audit records on the server. See [HTTPS deployment](deploy/README.md) and the [detailed Spanish deployment guide](deploy/README_ES.md) for DNS, TLS, updates, security, and verification.
 

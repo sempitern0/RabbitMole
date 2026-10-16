@@ -224,3 +224,7 @@ The residual-risk form, mitigation dashboard and PDF appendix controls are now r
 Mitigation, residual-risk and attachment event handlers now live in `js/audit-actions.js`, with explicit dependencies and tests for confirmed-audit protections. Browser-local storage keys and the existing JSON v3 contract remain unchanged.
 
 Evidence removal now reports dependent finding, remediation, retest and residual-risk references before confirmation. Quality review warns about missing historic evidence. References are not silently rewritten or removed.
+
+### Storage persistence and mobile PWA
+
+The **Protect storage** control requests persistent browser storage and now reports granted, denied or unsupported outcomes separately from offline-cache health. It does **not** encrypt records or replace exported JSON backups. The audit filter toolbar remains visually distinct while sticky on larger screens, and uses a static layout on narrow screens. On iOS/iPadOS install through Safari Share → Add to Home Screen, then launch from the icon. Browser and OS storage policies differ; verify offline cold start on the actual device before field use.

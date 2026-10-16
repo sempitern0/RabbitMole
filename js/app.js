@@ -4301,7 +4301,15 @@
         obj.routerModel = "";
         refreshRouterModel(obj, Number(t.dataset.index));
       }
-      if (t.dataset.block === "assets" && t.dataset.field === "vendor") {
+      if(t.dataset.block==="assets"&&t.dataset.field==="type"&&previous!==obj.type){
+        const osField=workspace.querySelector(`#f-assets-${t.dataset.index}-os`)?.closest(".field");
+        if(osField)osField.outerHTML=renderField(obj,"assets",groups.assets.fields.find(([key])=>key==="os"),Number(t.dataset.index));
+      }
+      if(t.dataset.block==="assets"&&t.dataset.field==="type"){
+      const osField=workspace.querySelector(`#f-assets-${t.dataset.index}-os`)?.closest(".field");
+      if(osField)osField.outerHTML=renderField(obj,"assets",groups.assets.fields.find(([key])=>key==="os"),Number(t.dataset.index));
+    }
+    if (t.dataset.block === "assets" && t.dataset.field === "vendor") {
         obj.model = "";
         const sibling = workspace
           .querySelector(`#f-assets-${t.dataset.index}-model`)

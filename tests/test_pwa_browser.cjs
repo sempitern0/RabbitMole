@@ -182,6 +182,18 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('[data-finding-image-key]').count()>=2,true,'File and camera controls are both present');
    await page.locator('#wizard-step-select').selectOption('evidence');
    await page.locator('[data-add="evidence"]').first().click();
+   // A linked evidence must warn before deletion; cancelling preserves its record.
+   const evidenceEntry=page.locator('.entry[data-entry-key]').first();
+   const evidenceId=await evidenceEntry.locator('[data-block="evidence"][data-field="id"]').inputValue();
+   await page.locator('#wizard-step-select').selectOption('findings');
+   const findingRef=page.locator('[data-block="findings"][data-field="evidenceIds"]').first();
+   await findingRef.fill(evidenceId);
+   await page.locator('#wizard-step-select').selectOption('evidence');
+   let guarded=false;
+   page.once('dialog',async dialog=>{guarded=dialog.message().includes('referencias');await dialog.dismiss();});
+   await page.locator('[data-remove="evidence"]').first().click();
+   assert(guarded,'Linked evidence deletion must explain dependent records');
+   assert.equal(await page.locator('.entry[data-entry-key]').count(),1,'Cancellation preserves the evidence');
    const upload=page.locator('.file-upload .upload-control').first();
    assert.equal(await upload.locator('input[type="file"]').count(),2);
    assert.equal(await upload.locator('.camera-action').count(),1);

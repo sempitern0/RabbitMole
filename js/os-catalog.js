@@ -1,4 +1,4 @@
-/* Audit Workbench · offline reference catalogue. Presence is not a support/EOL statement. */
+/* RabbitMole · offline reference catalogue. Presence is not a support/EOL statement. */
 'use strict';
 (() => {
  const GROUPS = Object.freeze({
@@ -193,11 +193,14 @@
   ]
 });
  const ALL = Object.freeze([...new Set(Object.values(GROUPS).flat())]);
+ const SERVER_GROUPS=Object.freeze({"Windows Server":["Windows Server 2025 Standard","Windows Server 2025 Datacenter","Windows Server 2022 Standard","Windows Server 2022 Datacenter","Windows Server 2019 Standard","Windows Server 2019 Datacenter","Windows Server 2016 Standard"],"Ubuntu y Debian":["Ubuntu Server 26.04 LTS","Ubuntu Server 24.04 LTS","Ubuntu Server 22.04 LTS","Debian 13 (Trixie)","Debian 12 (Bookworm)","Debian 11 (Bullseye)"],"Linux empresarial y otros":["Red Hat Enterprise Linux 10","Red Hat Enterprise Linux 9","Rocky Linux 10","Rocky Linux 9","AlmaLinux 10","AlmaLinux 9","Oracle Linux 10","Oracle Linux 9","SUSE Linux Enterprise Server 16","SUSE Linux Enterprise Server 15","CentOS Stream 10","Fedora Server","Alpine Linux","FreeBSD 15","FreeBSD 14"],"Virtualización e hipervisores":["Proxmox VE 9","Proxmox VE 8","VMware ESXi 8","VMware ESXi 7","Microsoft Hyper-V","XCP-ng 8","Nutanix AHV"]});
+ const SERVER_PRESETS=Object.freeze([...new Set(Object.values(SERVER_GROUPS).flat())]);
+
  const normalize = v => String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').trim();
  function search(term,limit=25){
   const q=normalize(term);
   if(!q)return ALL.slice(0,limit);
   return ALL.filter(v=>normalize(v).startsWith(q)).concat(ALL.filter(v=>!normalize(v).startsWith(q)&&normalize(v).includes(q))).slice(0,limit);
  }
- globalThis.AuditOSCatalog=Object.freeze({GROUPS,ALL,search});
+ globalThis.AuditOSCatalog=Object.freeze({GROUPS,ALL,SERVER_GROUPS,SERVER_PRESETS,search});
 })();

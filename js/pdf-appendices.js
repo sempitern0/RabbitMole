@@ -45,10 +45,15 @@
         throw Error('Tamaño del anexo inconsistente.');
       total += item.size;
       if (total > MAX_TOTAL_BYTES) throw Error('El conjunto de anexos excede 6 MiB.');
-      return {id:item.id, name, size:item.size, sha256:item.sha256, data:item.data};
+      const category=item.category===undefined?'general':item.category;
+      if(!['general','wifi-analysis'].includes(category))throw Error('Categoría de anexo no válida.');
+      const source=typeof item.source==='string'?item.source.trim().slice(0,100):'';
+      const observedAt=typeof item.observedAt==='string'?item.observedAt:'';
+      if(observedAt&&!/^\d{4}-\d{2}-\d{2}$/.test(observedAt))throw Error('Fecha de análisis no válida.');
+      return {id:item.id, name, size:item.size, sha256:item.sha256, data:item.data, category, source, observedAt};
     });
   }
-  async function fromFile(file) {
+  async function fromFile(file, metadata={}) {
     if (!file || !/\.pdf$/i.test(file.name) || file.size > MAX_PDF_BYTES || file.size === 0)
       throw Error('Selecciona un PDF válido de hasta 2 MiB.');
     if (file.type && file.type !== 'application/pdf' && file.type !== 'application/octet-stream')
@@ -61,7 +66,8 @@
       id: crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(12)), x => x.toString(16).padStart(2,'0')).join(''),
       name: file.name.slice(0, 160), size: bytes.length,
       sha256: Array.from(hash,x => x.toString(16).padStart(2,'0')).join(''),
-      data: b64(bytes)
+      data: b64(bytes), category: metadata.category || 'general',
+      source: metadata.source || '', observedAt: metadata.observedAt || ''
     };
   }
   function asBlob(item) {

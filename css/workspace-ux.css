@@ -713,3 +713,23 @@
 .network-analysis-imports li span{min-width:0;flex:1 1 14rem}
 .network-analysis-imports li small{display:block;color:var(--muted);margin-top:.25rem}
 .network-analysis-imports li .button{min-height:44px}
+
+/* Touch-first audit forms: prevent iOS focus zoom and keep controls reachable.
+ * Does not alter desktop typography, navigation, or printed reports. */
+@media screen and (pointer:coarse) {
+  #workspace :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea),
+  #palette, #record-filter {
+    font-size:16px;
+  }
+  #workspace :is(.button,button[data-add],button[data-go],.camera-action),
+  #pwa-install-card :is(summary,button) {
+    min-height:44px;
+  }
+  #workspace .wizard-buttons .button {min-width:0}
+  #workspace .entry :is(input,select,textarea){max-width:100%}
+}
+@media screen and (max-width:600px) {
+  #workspace .wizard-buttons {flex-wrap:wrap}
+  #workspace .wizard-jump {min-width:0}
+  #workspace .wizard-jump select {min-width:0;max-width:100%}
+}

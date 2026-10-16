@@ -23,6 +23,7 @@
   const auditActions = globalThis.RabbitMoleAuditActions;
   const fieldRenderer = globalThis.RabbitMoleFieldRenderer;
   const rackAudit = globalThis.RabbitMoleRackAudit;
+  const serverInstall = globalThis.RabbitMoleServerInstall;
   const recordNavigatorModule = globalThis.RabbitMoleRecordNavigator;
   const comparison = globalThis.AuditComparison;
   if (!storage)
@@ -38,6 +39,7 @@
   if (!auditActions) throw Error("No se ha cargado el módulo de acciones de auditoría.");
   if (!fieldRenderer) throw Error("No se ha cargado el módulo de formularios de auditoría.");
   if (!rackAudit) throw Error("No se ha cargado el módulo de racks.");
+  if (!serverInstall) throw Error("No se ha cargado el módulo de instalación de servidores.");
   if (!recordNavigatorModule) throw Error("No se ha cargado el módulo de navegación de registros.");
   if (!comparison)
     throw Error("No se ha cargado el resumen comparativo offline.");
@@ -432,6 +434,7 @@
         ...rackAudit.FIELDS,
         ...rackAudit.PHOTO_FIELDS,
         ...rackAudit.PLACEMENT_FIELDS,
+        ...serverInstall.FIELDS,
         [
           "osLicense",
           "Licencia del sistema operativo",
@@ -909,6 +912,7 @@
       ...rackAudit.FIELD_NAMES,
       ...rackAudit.PHOTO_FIELDS.map(([name])=>name),
       ...rackAudit.PLACEMENT_FIELDS.map(([name])=>name),
+      ...serverInstall.NAMES,
     ],
     networks: [
       "ssid",
@@ -2638,7 +2642,7 @@
         "</div>"
       );
     const basic = definitions.filter(([name]) => !extra.has(name));
-    const extended = definitions.filter(([name]) => extra.has(name) && !rackAudit.hasField(name) && !rackAudit.PHOTO_FIELDS.some(field=>field[0]===name) && !rackAudit.PLACEMENT_FIELDS.some(field=>field[0]===name) && (section !== "networks" || !ROUTER_AUDIT_SET.has(name)));
+    const extended = definitions.filter(([name]) => extra.has(name) && !serverInstall.NAMES.includes(name) && !rackAudit.hasField(name) && !rackAudit.PHOTO_FIELDS.some(field=>field[0]===name) && !rackAudit.PLACEMENT_FIELDS.some(field=>field[0]===name) && (section !== "networks" || !ROUTER_AUDIT_SET.has(name)));
     const completed = extended.filter(([name]) =>
       str(record[name]).trim(),
     ).length;
@@ -2650,6 +2654,7 @@
       "</div>" +
       (section === "networks" ? renderRouterAudit(record,index,definitions) : "") +
       (section === "assets" ? rackAudit.render(record,index,renderField,html,state.assets) : "") +
+      (section === "assets" ? serverInstall.render(record,index,renderField,html) : "") +
       (section === "assets" && !rackAudit.isRack(record.type) ? `<details class="inventory-baseline rack-placement"><summary>Ubicación en rack (si procede)</summary><p class="subtle">Usa el ID de un rack del inventario. Indica posición U desde abajo, altura y vista.</p><div class="fields">${rackAudit.PLACEMENT_FIELDS.map(field=>renderField(record,"assets",field,index)).join("")}</div></details>` : "") +
       '<details class="inventory-baseline"><summary><span><strong>Revisión ampliada · situación actual</strong>' +
       "<small>Datos opcionales de software, hardware y redes; documenta solo lo comprobado</small></span>" +

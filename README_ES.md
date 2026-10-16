@@ -223,3 +223,7 @@ Los formularios de riesgo residual, los indicadores de mitigación y los control
 La gestión de acciones correctivas y adjuntos se delega ahora en `js/audit-actions.js`, con dependencias explícitas y pruebas sobre bloqueos documentales. Se preservan las claves locales y el JSON v3.
 
 La eliminación de evidencias ahora advierte si el registro se utiliza en hallazgos, mitigaciones, reevaluaciones o valoraciones residuales. Control de calidad señala referencias históricas cuyo documento haya desaparecido. Estas comprobaciones no eliminan ni reescriben automáticamente las referencias.
+
+### Almacenamiento y PWA móvil
+
+«Proteger almacenamiento» solicita al navegador persistencia para reducir el riesgo de eliminación automática de los datos; ahora comunica claramente si se concede, se rechaza o no está disponible. **No cifra expedientes ni reemplaza las copias JSON**. Los filtros de registros presentan una barra fija diferenciada en pantallas grandes y una disposición no fija en móviles pequeños. Para instalar en iPhone/iPad utiliza Safari → Compartir → Añadir a pantalla de inicio y abre desde el icono. La instalación y las garantías de almacenamiento dependen del navegador y del sistema operativo; prueba el arranque offline antes de trabajar en campo.

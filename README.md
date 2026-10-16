@@ -183,7 +183,7 @@ Python and Node.js are **development tools**, not requirements for using the hos
 
 ## Controlled releases
 
-Run `npm ci` and `npm run deploy:check` from the repository root. The [Cloudflare guide](deploy/CLOUDFLARE_PAGES.md) documents the existing Worker, build/deploy commands, protected production environment and device checks. CI does not deploy automatically. The public browser tab is limited; launching the installed PWA enables the full app. This is a client-side usage policy, not authentication.
+Run `npm ci` and `npm run deploy:check` from the repository root. For **local-only acceptance without GitHub Actions**, run `npx playwright install chromium` once, then `npm run test:local` (static/unit/release checks followed by Chromium PWA and A4 executive/technical PDF checks). To retain both PDFs, set `PDF_ACCEPTANCE_DIR` to a local output directory before running the command. A passing local test does not itself deploy to Cloudflare. The [Cloudflare guide](deploy/CLOUDFLARE_PAGES.md) documents the existing Worker, build/deploy commands, protected production environment and device checks. CI does not deploy automatically. The public browser tab is limited; launching the installed PWA enables the full app. This is a client-side usage policy, not authentication.
 
 ### Wi-Fi assessment from a device
 

@@ -183,7 +183,7 @@ Python y Node.js se usan para **desarrollo y validación**, no son requisitos de
 
 ## Publicar una versión controlada
 
-Desde la raíz: `npm ci` y `npm run deploy:check`. La [guía de Cloudflare](deploy/CLOUDFLARE_PAGES_ES.md) describe el Worker existente, los comandos de build/deploy, el entorno `production` y las pruebas en dispositivos. CI no publica automáticamente.
+Desde la raíz: `npm ci` y `npm run deploy:check`. Para **validar localmente sin GitHub Actions**, instala Chromium una vez con `npx playwright install chromium` y ejecuta `npm run test:local`: comprobaciones estáticas, unitarias y de empaquetado, seguidas de pruebas Chromium para PWA y PDF A4 ejecutivo/técnico. Para conservar ambos PDF, configura `PDF_ACCEPTANCE_DIR` con un directorio local de salida. Superar las pruebas locales no publica automáticamente en Cloudflare. La [guía de Cloudflare](deploy/CLOUDFLARE_PAGES_ES.md) describe el Worker existente, los comandos de build/deploy, el entorno `production` y las pruebas en dispositivos. CI no publica automáticamente.
 
 ### Auditoría WiFi desde un dispositivo
 

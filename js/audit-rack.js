@@ -203,6 +203,11 @@
   Object.freeze(["rackFrontEvidence","IDs de evidencia · vista frontal"]),
   Object.freeze(["rackRearEvidence","IDs de evidencia · vista posterior"])
  ]);
+ const faceKnown=face=>["Frontal","Posterior","Ambas"].includes(face);
+ function collides(slot){
+   return slot.some((current,index)=>faceKnown(current.face)&&slot.slice(index+1).some(other=>
+     faceKnown(other.face)&&(current.face==="Ambas"||other.face==="Ambas"||current.face===other.face)));
+ }
  function layout(rack,assets){
    const height=Number(rack?.rackHeightU);
    const size=Number.isInteger(height)&&height>=1&&height<=60?height:0;
@@ -210,7 +215,9 @@
    const issues=[],placements=[];
    if(!size)issues.push("Indica altura U válida del rack (1–60).");
    for(const asset of assets||[]){
-     if(asset._key===rack._key || ![rack.id,rack._key].filter(Boolean).includes(asset.rackParent))continue;
+     const rackRef=String(asset.rackParent||"").trim().toUpperCase();
+     const linked=rackRef&&[rack.id,rack._key].some(ref=>String(ref||"").trim().toUpperCase()===rackRef);
+     if(asset===rack||(rack._key&&asset._key===rack._key)||!linked)continue;
      const start=Number(asset.rackStartU),units=Number(asset.rackSizeU);
      if(!Number.isInteger(start)||!Number.isInteger(units)||start<1||units<1||!size||start+units-1>size){
        issues.push("Posición no válida: "+(asset.id||asset.name||"Activo"));continue;
@@ -219,7 +226,7 @@
      placements.push(item);
      for(let n=start;n<start+units;n++)slots[n-1].push(item);
    }
-   for(let u=1;u<=size;u++)if(slots[u-1].length>1)issues.push("Solapamiento en U"+u+": "+slots[u-1].map(a=>a.id||a.name).join(", "));
+   for(let u=1;u<=size;u++)if(collides(slots[u-1]))issues.push("Solapamiento en U"+u+": "+slots[u-1].map(a=>a.id||a.name).join(", "));
    return {height:size,slots,issues,placements};
  }
  function renderLayout(rack,assets,html){
@@ -229,7 +236,7 @@
      <h3>Mapa documental de ocupación (U)</h3>
      <p class="subtle">La U1 es la inferior. Posiciones y tamaños introducidos manualmente; no representan peso, alimentación ni compatibilidad.</p>
      ${l.issues.length?`<ul class="rack-layout-warnings" role="status">${l.issues.map(msg=>`<li>${html(msg)}</li>`).join("")}</ul>`:""}
-     ${rows.length?`<ol class="rack-units" aria-label="Mapa de ocupación del rack">${rows.map(({u,slot})=>`<li class="${slot.length>1?"rack-u-conflict":slot.length?"rack-u-used":""}"><span>U${u}</span><span>${slot.length?slot.map(a=>html((a.id||a.name)+" · "+(a.face||"Montaje no indicado"))).join(" / "):"Libre / sin documentar"}</span></li>`).join("")}</ol>`:"<p>Indica primero la altura del rack para visualizar sus unidades.</p>"}
+     ${rows.length?`<ol class="rack-units" aria-label="Mapa de ocupación del rack">${rows.map(({u,slot})=>`<li class="${collides(slot)?"rack-u-conflict":slot.length?"rack-u-used":""}"><span>U${u}</span><span>${slot.length?slot.map(a=>html((a.id||a.name)+" · "+(a.face||"Montaje no indicado"))).join(" / "):"Libre / sin documentar"}</span></li>`).join("")}</ol>`:"<p>Indica primero la altura del rack para visualizar sus unidades.</p>"}
    </div>`;
  }
  const FIELDS=Object.freeze(SECTIONS.flatMap(section=>section.fields.map(field=>Object.freeze(field))));

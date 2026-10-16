@@ -25,7 +25,20 @@ const plan=rack.layout({_key:'rack1',id:'RACK-01',rackHeightU:'6'},[
 ]);
 assert.equal(plan.placements.length,2);
 assert.equal(plan.slots[1].length,2);
-assert(plan.issues.some(issue=>issue.includes('Solapamiento')));
+assert(!plan.issues.some(issue=>issue.includes('Solapamiento')),'Opposing rack faces are not a confirmed collision');
+assert(!rack.renderLayout({_key:'rack1',id:'RACK-01',rackHeightU:'6'},[
+ {_key:'sw',id:'SW-01',rackParent:'RACK-01',rackStartU:'2',rackSizeU:'1',rackFace:'Frontal'},
+ {_key:'fw',id:'FW-01',rackParent:'RACK-01',rackStartU:'2',rackSizeU:'1',rackFace:'Posterior'}
+],html).includes('rack-u-conflict'),'Opposite faces must not be shown as conflicts');
+const sameFace=rack.layout({_key:'rack1',id:'RACK-01',rackHeightU:'6'},[
+ {_key:'sw',id:'SW-01',rackParent:'rack-01',rackStartU:'2',rackSizeU:'1',rackFace:'Frontal'},
+ {_key:'fw',id:'FW-01',rackParent:'RACK-01',rackStartU:'2',rackSizeU:'1',rackFace:'Frontal'}
+]);
+assert(sameFace.issues.some(issue=>issue.includes('Solapamiento')),'Same-face occupancy must conflict');
+const withoutKeys=rack.layout({id:'RACK-01',rackHeightU:'6'},[
+ {id:'SW-01',rackParent:'rack-01',rackStartU:'1',rackSizeU:'1',rackFace:'Ambas'}
+]);
+assert.equal(withoutKeys.placements.length,1,'Legacy inventories without _key must retain mountings');
 assert(rack.renderLayout({_key:'rack1',id:'RACK-01',rackHeightU:'6'},[],html).includes('U6'));
 assert.equal(rack.PHOTO_FIELDS.length,2);
 assert.equal(rack.PLACEMENT_FIELDS.length,4);

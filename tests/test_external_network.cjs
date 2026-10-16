@@ -23,7 +23,7 @@ assert.throws(()=>m.parseText('SSID;SSID;Dirección MAC;Canal;Banda\nx;y;z;6;2.4
 assert.equal(JSON.stringify(data).includes('192.0.2.1'),true);
 (async()=>{
  const bad={name:'capture.html',size:200,arrayBuffer:async()=>new ArrayBuffer(0)};
- await assert.rejects(()=>m.parseFile(bad),/CSV Acrylic/);
+ await assert.rejects(()=>m.parseFile(bad),/CSV WiFi/);
  const cp=Buffer.from(aps.replace('Dirección MAC','Dirección MAC'),'latin1');
  const decoded=await m.parseFile({name:'capture.csv',size:cp.length,arrayBuffer:async()=>cp.buffer.slice(cp.byteOffset,cp.byteOffset+cp.byteLength)});
  assert.equal(decoded.kind,'aps');

@@ -5197,7 +5197,13 @@
     if (b.dataset.remove) {
       const k = b.dataset.remove,
         i = Number(b.dataset.index);
-      if (confirm("¿Eliminar este registro y su contenido?")) {
+      if (!state[k] || !Number.isInteger(i) || i < 0 || i >= state[k].length) return;
+      const record=state[k][i];
+      const dependencies=k==="evidence"?relations.evidenceUsage(state,record):[];
+      const warning=dependencies.length
+        ? "Esta evidencia tiene "+dependencies.length+" referencias en hallazgos, controles o verificaciones. Eliminarla dejará esas referencias históricas sin el original.\n\n"+dependencies.slice(0,6).map(x=>"• "+x.label).join("\n")+"\n\n¿Eliminarla de todos modos? Se recomienda exportar una copia."
+        : "¿Eliminar este registro y su contenido?";
+      if (confirm(warning)) {
         state[k].splice(i, 1);
         persist();
         render();

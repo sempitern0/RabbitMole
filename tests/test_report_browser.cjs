@@ -7,18 +7,24 @@ const {chromium}=require('playwright');
 const phase={name:'boot'};
 const watchdog=setTimeout(()=>{process.stderr.write('[PDF-E2E] Timeout en fase: '+phase.name+'\n');process.exit(1);},60000);
 (async()=>{
+ phase.name='dist-pages';console.error('[PDF-E2E] Leyendo assets');
  const root=path.resolve('dist-pages');
+ phase.name='import Worker';console.error('[PDF-E2E] Importando Worker');
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync('deploy/worker.js')).toString('base64'));
  const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.svg':'image/svg+xml','.woff2':'font/woff2'};
  const env={ASSETS:{fetch:async request=>{const u=new URL(request.url),filename=path.join(root,u.pathname==='/'?'index.html':u.pathname);try{return new Response(fs.readFileSync(filename),{headers:{'Content-Type':mime[path.extname(filename)]||'text/plain'}});}catch{return new Response('Not found',{status:404});}}}};
  const server=http.createServer(async(req,res)=>{try{const response=await worker.fetch(new Request('http://127.0.0.1:'+server.address().port+req.url,{method:req.method}),env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch(e){res.writeHead(500);res.end(String(e));}});
+ phase.name='listen';console.error('[PDF-E2E] Iniciando servidor');
  await new Promise(done=>server.listen(0,'127.0.0.1'));
  let browser;
  try{
+  phase.name='chromium.launch';console.error('[PDF-E2E] Lanzando Chromium');
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage']});
+  phase.name='browser.newContext';console.error('[PDF-E2E] Creando contexto');
   const context=await browser.newContext({viewport:{width:1280,height:900}});
   // The full installed workflow is eligible for local audit editing in the Worker.
   await context.addInitScript(()=>{const old=window.matchMedia.bind(window);window.matchMedia=q=>q==='(display-mode: standalone)'?{matches:true,media:q,addEventListener(){},removeEventListener(){}}:old(q);});
+  phase.name='context.newPage';console.error('[PDF-E2E] Abriendo pestaña');
   const page=await context.newPage(),errors=[];
   page.setDefaultTimeout(12000);
   page.on('pageerror',error=>errors.push(error.message));

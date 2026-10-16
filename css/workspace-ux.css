@@ -669,3 +669,13 @@
 #workspace .network-analysis-pdf{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;padding:.8rem;border:1px solid var(--line);border-radius:.7rem;background:var(--paper)}
 #workspace .network-analysis-pdf>span{flex:1 1 15rem;min-width:0;overflow-wrap:anywhere}
 #workspace .network-analysis-pdf small{display:block;line-height:1.5;color:var(--muted)}
+
+/* Accessible, inline PDF-appendix metadata editor; no browser prompts. */
+.pdf-appendix-tools{display:grid;gap:.45rem;min-width:min(100%,240px);flex:1 1 245px}
+.pdf-appendix-editor{border:1px solid var(--line);border-radius:.65rem;padding:0 .75rem;background:var(--canvas);min-width:0}
+.pdf-appendix-editor>summary{cursor:pointer;padding:.65rem .25rem;min-height:44px;font-weight:700}
+.pdf-appendix-editor>summary:focus-visible{outline:3px solid var(--brand);outline-offset:3px;border-radius:5px}
+.pdf-appendix-editor .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,185px),1fr));gap:.65rem;margin:.75rem 0}
+.pdf-appendix-editor .field{display:grid;gap:.3rem;min-width:0}
+.pdf-appendix-editor input{width:100%;min-height:44px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:.6rem;font:inherit}
+.pdf-appendix-editor .button{margin:0 0 .75rem}

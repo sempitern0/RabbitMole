@@ -679,3 +679,15 @@
 .pdf-appendix-editor .field{display:grid;gap:.3rem;min-width:0}
 .pdf-appendix-editor input{width:100%;min-height:44px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:.6rem;font:inherit}
 .pdf-appendix-editor .button{margin:0 0 .75rem}
+
+/* Distinguish the sticky audit filters from editable records without masking them. */
+#workspace .record-navigator{background:var(--paper);border:2px solid var(--brand);border-inline-start:5px solid var(--brand);box-shadow:0 9px 25px #00000029,0 2px 6px #00000014;isolation:isolate;scroll-margin-block-start:1rem}
+#workspace .record-navigator::before{content:"FILTROS Y NAVEGACIÓN";display:block;flex:1 0 100%;font-size:.73rem;font-weight:800;letter-spacing:.075em;color:var(--brand)}
+#workspace .record-navigator :is(input,select){background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:.55rem}
+#workspace .record-navigator :is(input,select):focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+#workspace .record-navigator>p{color:var(--muted);line-height:1.4}
+#offline-storage-status{margin-top:.55rem!important;padding:.55rem .7rem;border:1px solid var(--line);border-radius:.5rem;line-height:1.5}
+#offline-storage-status[data-result="granted"]{border-inline-start:4px solid #388765}
+#offline-storage-status[data-result="denied"],#offline-storage-status[data-result="unsupported"],#offline-storage-status[data-result="error"]{border-inline-start:4px solid #b87828}
+@media(max-width:600px){#workspace .record-navigator{position:static;padding:.75rem;box-shadow:0 3px 12px #0000001a}}
+@media(prefers-reduced-motion:reduce){#workspace .record-navigator{scroll-behavior:auto}}

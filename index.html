@@ -272,10 +272,12 @@
           <p id="pwa-install-status" role="status" aria-live="polite"></p>
           <button type="button" class="button accent" id="pwa-install-button" hidden>Instalar RabbitMole</button>
           <details><summary>Instalación y funcionamiento sin conexión</summary>
-            <ol><li>Chrome o Edge: pulsa «Instalar RabbitMole» cuando aparezca o usa la opción de instalación del menú del navegador.</li>
-            <li>iPhone/iPad: abre esta URL en Safari, pulsa Compartir y «Añadir a pantalla de inicio»; activa «Abrir como app web» si se ofrece.</li>
-            <li>Abre la aplicación desde su icono y usa «Comprobar modo offline» en «Protección del trabajo offline». Espera a que indique que está preparada.</li>
-            <li>Activa modo avión, cierra y vuelve a abrir la aplicación. Conserva copias JSON o cifradas fuera del navegador.</li></ol>
+            <ol class="pwa-steps">
+              <li><span class="pwa-step-icon" aria-hidden="true">▣</span><span><strong>Chrome, Edge o Brave:</strong> utiliza «Instalar RabbitMole» en el menú del navegador y <em>abre desde su icono</em>.</span></li>
+              <li><span class="pwa-step-icon" aria-hidden="true">◧</span><span><strong>iPhone y iPad:</strong> desde Safari pulsa <strong>Compartir → Añadir a pantalla de inicio</strong> y habilita «Abrir como app web» cuando aparezca.</span></li>
+              <li><span class="pwa-step-icon" aria-hidden="true">✓</span><span><strong>Antes de desconectarte:</strong> abre la PWA y pulsa <strong>Comprobar</strong> en «Protección del trabajo offline». Espera a que la caché esté completa.</span></li>
+              <li><span class="pwa-step-icon" aria-hidden="true">✈</span><span><strong>Prueba en modo avión:</strong> cierra todas las ventanas, desconecta Internet y <em>vuelve a abrir desde el icono</em>. Conserva copias JSON cifradas o protegidas fuera del navegador.</span></li>
+            </ol>
             <p>La instalación depende del navegador y del sistema. Si no admite PWA, puedes usar la web limitada o un navegador compatible. La instalación no otorga permisos del sistema ni sustituye la autorización de los servicios externos.</p>
           </details>
         </section>

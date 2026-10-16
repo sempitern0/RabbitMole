@@ -429,3 +429,14 @@
 @media (prefers-reduced-motion: reduce) {
   .topbar .actionbar-group .button { transition:none; }
 }
+
+/* Install help remains secondary, but steps are clear on tablets. */
+.pwa-install-card .pwa-steps{list-style:none;display:grid;gap:.75rem;padding:0;margin:1rem 0}
+.pwa-install-card .pwa-steps li{display:grid;grid-template-columns:2.1rem minmax(0,1fr);align-items:start;gap:.75rem;margin:0;padding:0;line-height:1.65}
+.pwa-install-card .pwa-step-icon{display:grid;place-items:center;width:2rem;height:2rem;border:1px solid var(--line);border-radius:.6rem;background:var(--brand-tint);color:var(--brand);font-weight:800}
+.pwa-install-card .pwa-steps strong{color:var(--ink)}
+.pwa-install-card .pwa-steps em{font-style:normal;text-decoration:underline;text-decoration-color:var(--brand);text-underline-offset:.16em}
+
+.camera-input{position:absolute!important;width:1px;height:1px;opacity:0;overflow:hidden;clip-path:inset(50%)}
+.camera-action{display:inline-flex;align-items:center;gap:.35rem;margin:.45rem .6rem .45rem 0;cursor:pointer}
+.camera-input:focus-visible + .camera-action{outline:3px solid var(--brand)}

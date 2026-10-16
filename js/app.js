@@ -15,6 +15,7 @@
   const identifiers = globalThis.AuditIdentifiers;
   const templates = globalThis.AuditControlTemplates;
   const quality = globalThis.AuditQuality;
+  const reportData = globalThis.RabbitMoleReportData;
   const assist = globalThis.AuditFieldAssist;
   const docControl = globalThis.AuditDocumentControl;
   const retest = globalThis.AuditRetest;
@@ -33,6 +34,7 @@
   if (!templates)
     throw Error("No se ha cargado el catálogo de controles offline.");
   if (!quality) throw Error("No se ha cargado la revisión de calidad offline.");
+  if (!reportData) throw Error("No se ha cargado la preparación de datos del informe.");
   if (!retest) throw Error("No se ha cargado el módulo de reevaluación.");
   if (!mitigation) throw Error("No se ha cargado el módulo de mitigación.");
   if (!workflowViews) throw Error("No se ha cargado el módulo de vistas de auditoría.");
@@ -5737,16 +5739,14 @@
     reportProfile = "executive";
   function buildReport() {
     byId("report").dataset.palette = selectedPalette;
+    const prepared=reportData.prepareAudit(state,{
+      severity,quality,relations,docControl,mitigation,
+      asOf:new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)
+    });
     const today = new Date().toLocaleDateString("es-ES");
-    const count = Object.fromEntries(
-      severity.map((s) => [
-        s,
-        state.findings.filter((x) => x.severity === s).length,
-      ]),
-    );
-    const meta = state.meta,
-      ending = state.final;
-    const reportDocument = docControl.normalize(state.documentControl);
+    const count=prepared.severityCounts;
+    const meta=state.meta,ending=state.final;
+    const reportDocument=prepared.document;
     const cover = `<div class="report-cover"><div class="sup">AUDIT / SECURITY · ${reportProfile === "technical" ? "INFORME TÉCNICO" : "INFORME EJECUTIVO"} <span class="report-theme-name">${html(selectedPalette)}</span></div>${meta.logo ? `<img class="report-logo" src="${meta.logo}" alt="Logo corporativo">` : ""}<h1>Informe ${reportProfile === "technical" ? "técnico" : "ejecutivo"}<br>de auditoría</h1><h2>${html(meta.project || "Infraestructura, sistemas y ciberseguridad")}</h2><p class="classify">${html(meta.classification || "Confidencial")}</p><div class="cover-meta"><div><span class="report-number">CLIENTE</span><h3>${html(meta.client || "No indicado")}</h3><p>${html(meta.contact || "")}</p></div><div><span class="report-number">ENTREGA</span><h3>${html(today)}</h3><p>Ref. ${html(meta.reportId || "Sin referencia")} · Rev. ${html(reportDocument.status === "confirmed" ? String(reportDocument.revision) : meta.revision || "1.0")}</p><p>${html(auditorNames(meta) || "Equipo auditor pendiente de asignar")}</p><p>${html(settings.company || "")}</p><p>${html(settings.taxId || "")}</p></div></div></div>`;
     const documentState = reportDocument;
     const documentNote =
@@ -5793,15 +5793,7 @@
         ) +
         `<h3>Equipo responsable de la auditoría</h3>${teamTable}`,
     );
-    const summaryCounts = {
-      assets: state.assets.length,
-      controls: state.controls.length,
-      verified: state.controls.filter(
-        (c) =>
-          !["Pendiente", "No verificado", ""].includes(str(c.status).trim()),
-      ).length,
-      findings: state.findings.length,
-    };
+    const summaryCounts=prepared.summaryCounts;
     const executive = section(
       3,
       "Resumen ejecutivo",
@@ -5886,8 +5878,8 @@
           })
           .join(""),
     );
-    const reviewed = reviewState("final"); // El borrador debe mostrar también los impedimentos para una entrega definitiva.
-    const riskPortfolio=mitigation.portfolio(state.findings,new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
+    const reviewed=prepared.review; // Drafts show the exact final-release issues too.
+    const riskPortfolio=prepared.riskPortfolio;
     const residualReport='<div class="report-action"><h3>Indicadores de mitigación y riesgo residual</h3>'+
       '<p>Acciones: '+riskPortfolio.counts.total+' · Vencidas: '+riskPortfolio.counts.overdue+
       ' · Eficacia verificada individualmente: '+riskPortfolio.counts.verified+
@@ -6113,10 +6105,9 @@
   }
   function buildRetestReport() {
     byId("report").dataset.palette = selectedPalette;
-    const meta = state.meta,
-      counts = retest.summary(state),
-      comparisonState = comparison.compare(state, retest),
-      today = new Date().toLocaleDateString("es-ES");
+    const prepared=reportData.prepareRetest(state,{retest,comparison});
+    const meta=state.meta,counts=prepared.counts,comparisonState=prepared.comparisonState,
+      today=new Date().toLocaleDateString("es-ES");
     const title = "Informe de reevaluación de seguridad";
     const cover = `<div class="report-cover"><div class="sup">AUDIT / SECURITY · SEGUIMIENTO DE CORRECCIONES</div>${meta.logo ? `<img class="report-logo" src="${meta.logo}" alt="Logo corporativo">` : ""}<h1>Informe de<br>reevaluación</h1><h2>${html(meta.project || "Auditoría técnica")}</h2><p class="classify">${html(meta.classification || "Confidencial")}</p><div class="cover-meta"><div><span class="report-number">CLIENTE</span><h3>${html(meta.client || "No indicado")}</h3><p>Referencia: ${html(meta.reportId || "No indicada")}</p></div><div><span class="report-number">FECHA DE EMISIÓN</span><h3>${html(today)}</h3><p>Documento de seguimiento · Rev. ${html(meta.revision || "1.0")}</p></div></div></div>`;
     const summary = section(

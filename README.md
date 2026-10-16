@@ -264,3 +264,7 @@ Physical and virtual server assets now display grouped, touch-friendly operating
 ### Inventory code consolidation
 
 Inventory suggestions now live in `js/audit-inventory-presets.js`, with `js/os-catalog.js` as the sole OS source. Existing custom values, JSON v3 records, navigation and local storage are unchanged. Rack test expectations match the current signature.
+
+### Infrastructure consistency checks and report data separation
+
+Quality review now adds **non-blocking** warnings for documented but inconsistent rack/server information: U height and occupancy, rack references, out-of-bounds placements, same-face overlap, installation dates and missing linked photographs. Unfilled optional fields are not treated as defects. The `js/audit-report-data.js` module prepares counts, final-release checks, remediation metrics and follow-up comparisons separately from the existing executive, technical and retest HTML layouts. JSON v3, local audit storage, offline assets and Android navigation remain unchanged.

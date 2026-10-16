@@ -269,3 +269,7 @@ Al registrar un activo de tipo **Servidor físico** o **Servidor virtual**, el c
 ### Consolidación del inventario
 
 Las listas reutilizables del inventario residen en `js/audit-inventory-presets.js`. El catálogo de sistemas operativos tiene una sola fuente: `js/os-catalog.js`. Sin cambios en expedientes JSON v3, almacenamiento, navegación ni personalizaciones. La prueba de racks se ha ajustado a la firma actual.
+
+### Calidad de instalaciones e informes modulares
+
+Control de calidad revisa ahora la coherencia de los datos **documentados** de racks y servidores: altura/ocupación U, vínculos con racks, posiciones fuera de capacidad, solapamientos en la misma cara, fechas de instalación y fotografías referenciadas que falten. Son **avisos**, nunca evaluaciones automáticas de conformidad; los campos opcionales sin rellenar no bloquean auditorías anteriores. La preparación de estadísticas, revisión documental, cartera de mitigación y reevaluación se ha separado en `js/audit-report-data.js` sin alterar el HTML de los informes ejecutivos, técnicos o de seguimiento. Se mantienen los expedientes JSON v3, la caché offline y la navegación Android.

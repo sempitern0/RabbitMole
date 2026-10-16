@@ -16,6 +16,8 @@ COMMANDS = [
     ['node', 'tests/test_field_renderer.cjs'],
     ['node', 'tests/test_rack_audit.cjs'],
     ['node', 'tests/test_server_install.cjs'],
+    ['node', 'tests/test_infrastructure_quality.cjs'],
+    ['node', 'tests/test_report_data.cjs'],
     ['node', 'tests/test_inventory_presets.cjs'],
     ['node', 'tests/test_mitigation.cjs'],
     ['node', 'tests/test_workflow_views.cjs'],

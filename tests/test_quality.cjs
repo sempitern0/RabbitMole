@@ -63,7 +63,8 @@ assert(appSource.includes("addEventListener('click',()=>exportJson())"),'Export 
 assert(appSource.includes('anchor.hidden=true')&&appSource.includes('document.body.appendChild(anchor)'),'Download anchor must be attached before clicking');
 assert(appSource.includes('showExportFeedback(message)'),'Successful preparation must display feedback');
 assert(appSource.includes('id="delivery-export-status"'),'Delivery page needs inline status');
-assert(appSource.includes("const reviewed=reviewState('final')"),'Draft cover must describe blockers for final release');
+assert(appSource.includes('const reviewed=prepared.review'),'Draft cover must describe blockers for final release');
+assert(appSource.includes('reportData.prepareAudit(state'),'Report must prepare data in an isolated module');
 assert(!appSource.includes('<h3>Nota adicional del auditor</h3>'),'Duplicate legal appendix must not add an extra PDF page');
 assert(themeCss.includes('.export-feedback-toast'),'Missing download toast styles');
 const duplicated={...audit,assets:[{id:'ACT-001'},{id:'act-001'}]};

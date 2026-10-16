@@ -219,3 +219,5 @@ La aplicación utiliza únicamente el esquema JSON v3 actual. Se han retirado ru
 ### Modularización gradual
 
 Los formularios de riesgo residual, los indicadores de mitigación y los controles de anexos PDF se renderizan ahora desde `js/audit-workflow-views.js`, un módulo sin efectos secundarios que se precarga para trabajar offline. `js/app.js` conserva las responsabilidades de estado, almacenamiento, bloqueo documental, informes y navegación. La validación `npm run check` incluye pruebas específicas del contrato de estas vistas. Se mantienen el esquema JSON vigente y las claves de almacenamiento local.
+
+La gestión de acciones correctivas y adjuntos se delega ahora en `js/audit-actions.js`, con dependencias explícitas y pruebas sobre bloqueos documentales. Se preservan las claves locales y el JSON v3.

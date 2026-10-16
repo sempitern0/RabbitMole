@@ -3,7 +3,7 @@
  */
 "use strict";
 (()=>{
-  function render(obj,block,def,index,{html,str,identifiers,assist,state,osCatalog,vendorModels,routerModels,glossary,glossaryHelpIcon}) {
+  function render(obj,block,def,index,{html,str,identifiers,assist,state,osCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon}) {
     const [name, label, type, choices] = def;
     const attrs =
       `data-block="${html(block)}" data-field="${html(name)}"` +
@@ -61,9 +61,9 @@
           : block === "assets" && name === "model"
             ? vendorModels[obj.vendor] || []
             : block === "networks" && name === "routerVendor"
-              ? Object.keys(routerModels)
+              ? (networkDevices?.vendors(obj.networkDeviceType)||Object.keys(routerModels))
               : block === "networks" && name === "routerModel"
-                ? routerModels[obj.routerVendor] || []
+                ? (networkDevices?.models(obj.networkDeviceType,obj.routerVendor)||routerModels[obj.routerVendor]||[])
                 : assist.suggestions(state, block, name, choices);
       const custom = Boolean(value) && !options.includes(value);
       control = `<select id="${id}" ${attrs} data-preset="true" aria-label="${html(label)}"><option value="">${(block === "assets" && name === "model" && !obj.vendor) || (block === "networks" && name === "routerModel" && !obj.routerVendor) ? "Selecciona primero un fabricante…" : "Seleccionar…"}</option>${options.map((x) => `<option value="${html(x)}"${x === value ? " selected" : ""}>${html(x)}</option>`).join("")}<option value="__custom__"${custom ? " selected" : ""}>Otro / escribir…</option></select><input ${attrs} data-custom="true" aria-label="${html(label)} personalizado" placeholder="Especifica el valor" value="${custom ? html(value) : ""}" maxlength="20000" ${custom ? "" : "hidden"}>`;

@@ -36,6 +36,19 @@ assert.equal(m.normalize(JSON.parse(JSON.stringify([checked])))[0].checks[0].id,
 assert.throws(()=>m.recordVerification(checked,{date:'2026-10-18',result:'failed',by:'Auditora',notes:'Medida ineficaz tras repetir las comprobaciones'},[],()=> 'check-1'),/duplicado/);
 const failed=m.recordVerification(checked,{date:'2026-10-18',result:'failed',by:'Auditora',notes:'La medida no cumple el criterio esperado de seguridad.'},[],()=> 'check-2');
 assert.equal(m.verification({},failed),'action-failed');
+const residual=m.recordResidual({severity:'Alta'},{level:'Media',decision:'monitor',assessedBy:'Auditora',assessedAt:'2026-10-16',nextReview:'2026-11-16',rationale:'Se revisó el entorno y persiste una exposición limitada.'},[],()=> 'res-1');
+assert.equal(residual.length,1);
+assert.equal(m.latestResidual({residualAssessments:residual}).level,'Media');
+assert.equal(m.normalizeResidual(JSON.parse(JSON.stringify(residual)))[0].id,'res-1');
+assert.throws(()=>m.recordResidual({residualAssessments:residual},{level:'Media',decision:'monitor',assessedBy:'Auditora',assessedAt:'2026-10-16',rationale:'Una reevaluación documentada en el expediente.'},[],()=> 'res-1'),/duplicado/);
+assert.throws(()=>m.recordResidual({}, {level:'Alta',decision:'monitor',assessedBy:'Auditora',assessedAt:'2026-10-16',rationale:'Exposición documentada.',evidenceKey:'missing'},[],()=> 'res-2'),/evidencia/);
+const portfolio=m.portfolio([{_key:'finding-1',id:'FND-1',mitigationActions:[{...initial,deadline:'2026-10-15'}],residualAssessments:residual}], '2026-10-16');
+assert.equal(portfolio.counts.overdue,1);
+assert.equal(portfolio.counts.residualAssessed,1);
+assert.equal(portfolio.counts.residualHigh,0);
+assert.equal(portfolio.overdue[0].findingId,'FND-1');
+assert.equal(m.portfolio([{mitigationActions:[applied]}],'2026-10-16').counts.unchecked,1);
+assert.equal(m.portfolio([{mitigationActions:[failed]}],'2026-10-16').counts.failed,1);
 assert.throws(()=>m.normalize([initial,initial]),/duplicadas/);
 assert.throws(()=>m.save(proposal,{status:'proposed',evidenceKey:'missing'},[]),/evidencia/);
 const state=JSON.parse(JSON.stringify({mitigationActions:[applied]}));
@@ -44,5 +57,7 @@ const app=fs.readFileSync('js/app.js','utf8'),html=fs.readFileSync('index.html',
 assert(app.includes('renderMitigationActions')&&app.includes('mitigationOverview'));
 assert(app.includes('data-mitigation-verify')&&app.includes('data-mitigation-check-field'));
 assert(app.includes('data-pdf-appendix-edit')&&app.includes('data-remove-evidence-photo'));
+assert(app.includes('renderResidualAssessment')&&app.includes('renderMitigationDashboard')&&app.includes('data-save-residual'));
+assert(app.includes('record.residualAssessments = mitigation.normalizeResidual(item.residualAssessments)'));
 assert(html.includes('js/audit-mitigation.js'));
 console.log('PASS mitigation plans, approvals, controlled transitions, JSON roundtrip and display');

@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v69-risk-portfolio";
+const CACHE_NAME = "rabbitmole-shell-v70-ui-maintenance";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,

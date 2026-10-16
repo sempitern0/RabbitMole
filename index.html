@@ -368,6 +368,18 @@
         </footer>
       </div>
     </div>
+    <dialog id="camera-capture-dialog" class="camera-capture-dialog" aria-labelledby="camera-capture-title">
+      <div class="camera-capture-content">
+        <h2 id="camera-capture-title">Fotografía para la auditoría</h2>
+        <p>Autoriza la cámara del equipo. La imagen se procesará localmente y no se enviará a servidores.</p>
+        <video id="camera-capture-preview" autoplay playsinline muted></video>
+        <p id="camera-capture-status" role="status" aria-live="polite"></p>
+        <div class="action-row">
+          <button type="button" class="button accent" id="camera-capture-take">Tomar fotografía</button>
+          <button type="button" class="button quiet" id="camera-capture-cancel">Cancelar</button>
+        </div>
+      </div>
+    </dialog>
     <dialog
       id="audit-import-dialog"
       class="audit-import-dialog"
@@ -421,6 +433,7 @@
     <script src="js/pdf-appendices.js" defer></script>
     <script src="js/pwa-updates.js" defer></script>
     <script src="js/pwa-install.js" defer></script>
+    <script src="js/camera-capture.js" defer></script>
     <script src="js/offline-health.js" defer></script>
     <script src="js/app.js" defer></script>
   </body>

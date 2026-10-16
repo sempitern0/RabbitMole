@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v61-local-discovery";
+const CACHE_NAME = "rabbitmole-shell-v62-camera-discovery";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -44,6 +44,7 @@ const CORE = [
   "./js/pwa-updates.js",
   "./js/pwa-install.js",
   "./js/offline-health.js",
+  "./js/camera-capture.js",
   "./css/glossary.css",
   "./css/atkinson.css",
   "./css/workspace-ux.css",

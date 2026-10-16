@@ -440,3 +440,11 @@
 .camera-input{position:absolute!important;width:1px;height:1px;opacity:0;overflow:hidden;clip-path:inset(50%)}
 .camera-action{display:inline-flex;align-items:center;gap:.35rem;margin:.45rem .6rem .45rem 0;cursor:pointer}
 .camera-input:focus-visible + .camera-action{outline:3px solid var(--brand)}
+
+/* Compact appendix management; attachments remain separate from printed PDF pages. */
+.pdf-appendices{display:grid;gap:.65rem}.pdf-appendices p{line-height:1.6}.pdf-appendices label{font-weight:700}
+.pdf-appendix-list{padding:0;margin:.3rem 0;list-style:none;display:grid;gap:.6rem}
+.pdf-appendix-list li{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;padding:.75rem;border:1px solid var(--line);border-radius:.75rem}
+.pdf-appendix-list li span:first-child{min-width:0;overflow-wrap:anywhere;flex:1 1 14rem}
+.pdf-appendix-list small{display:block;margin-top:.25rem;color:var(--muted);overflow-wrap:anywhere}
+.pdf-appendix-list .action-row{margin:0}

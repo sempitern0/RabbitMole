@@ -10,6 +10,7 @@
   const importPlan = globalThis.AuditImportPlan;
   const relations = globalThis.AuditRelations;
   const evidenceImages = globalThis.AuditEvidenceImages;
+  const pdfAppendices = globalThis.RabbitMolePdfAppendices;
   const identifiers = globalThis.AuditIdentifiers;
   const templates = globalThis.AuditControlTemplates;
   const quality = globalThis.AuditQuality;
@@ -919,6 +920,7 @@
     controls: [],
     findings: [],
     evidence: [],
+    pdfAppendices: [],
     followupBaseline: null,
   });
   const str = (v) => (typeof v === "string" ? v.slice(0, 20000) : "");
@@ -980,6 +982,7 @@
             ? str(raw[block][name])
             : out[block][name];
     }
+    out.pdfAppendices = pdfAppendices.normalize(raw.pdfAppendices);
     out.documentControl = docControl.normalize(raw.documentControl);
     out.meta.logo = safeLogo(raw.meta.logo);
     out.meta.auditTeam = normalizeAuditTeam(raw.meta.auditTeam);
@@ -3059,6 +3062,19 @@
     return `<section class="card document-control"><h2>Control documental · ${confirmed ? "Confirmado" : amending ? "Rectificación abierta" : "Borrador"}</h2><p class="subtle">${confirmed ? "Revisión " + dc.revision + " confirmada. Solo se permiten rectificaciones justificadas." : amending ? "Modificaciones excepcionales pendientes de validación. El informe final queda suspendido." : "Revisa los avisos y confirma el expediente; los controles pendientes se documentan sin impedir la entrega."}</p>${dc.confirmed ? `<p class="subtle">Última confirmación: ${html(dc.confirmed.at)} · Responsable: ${html(dc.confirmed.author)} · SHA-256: <code>${html(dc.confirmed.digest)}</code></p>` : ""}${!confirmed && !amending ? `<div class="fields"><div class="field"><label for="document-author">Responsable de confirmación</label><input id="document-author" placeholder="Nombre y apellidos"></div></div><div class="action-row"><button type="button" class="button accent" id="document-confirm">Confirmar expediente</button></div>` : ""}${confirmed ? `<div class="fields"><div class="field"><label for="amend-author">Responsable de la rectificación</label><input id="amend-author" placeholder="Nombre y apellidos"></div><div class="field full"><label for="amend-reason">Motivo documentado de la rectificación</label><textarea id="amend-reason" placeholder="Qué debe corregirse y por qué" rows="3"></textarea></div></div><button class="button quiet" type="button" id="amend-begin">Abrir rectificación</button>` : ""}${amending ? `<button class="button accent" type="button" id="amend-finish">Validar cambios y cerrar rectificación</button>` : ""}<p class="subtle">La huella SHA-256 permite detectar cambios accidentales, pero no constituye firma digital ni registro inalterable. Conserva externamente los PDFs y JSON entregados.</p>${dc.history.length ? `<details><summary>Historial documental (${dc.history.length})</summary><ol>${dc.history.map((x) => `<li>Rev. ${x.revision} · ${html(x.at)} · ${html(x.author)} · ${x.type === "confirmation" ? "Confirmación" : "Rectificación"}${x.reason ? " · " + html(x.reason) : ""}${x.changes ? " · " + x.changes.length + " campos afectados" : ""}</li>`).join("")}</ol></details>` : ""}</section>`;
   }
 
+  function renderPdfAppendices() {
+    const list = pdfAppendices.normalize(state.pdfAppendices);
+    const readonly = state.documentControl?.status === "confirmed";
+    return `<section class="card pdf-appendices" aria-labelledby="pdf-appendices-title">
+      <h2 id="pdf-appendices-title">Documentación complementaria (PDF)</h2>
+      <p>Adjunta documentos externos para acompañar la entrega: <strong>máximo cuatro PDF, 2 MiB por archivo y 6 MiB en total</strong>.
+      Se guardan dentro del JSON local; el informe los referencia por nombre y SHA-256, pero <strong>no fusiona sus páginas</strong>. Descarga los originales y entrégalos junto al informe por un medio autorizado.</p>
+      <label for="pdf-appendix-upload">Añadir PDF al expediente</label>
+      <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly || list.length>=pdfAppendices.MAX_COUNT?'disabled':''}>
+      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span><span class="action-row"><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?'disabled':''}>Quitar</button></span></li>`).join('')}</ul>
+      <p class="subtle">Los anexos pueden incluir datos confidenciales. No se cargan a servidores ni se visualizan dentro de la app.</p>
+    </section>`;
+  }
   function renderDelivery() {
     const audit = reviewState("final"),
       fieldProblems = invalidFields();
@@ -3174,6 +3190,7 @@
         </details>
 
       </section>
+      ${renderPdfAppendices()}
       <section class="card" id="delivery-signatures">
         <h2>Firmas del equipo auditor</h2>
         <p>Estas son las firmas guardadas en este expediente y que se incluirán en el PDF.</p>
@@ -3620,6 +3637,18 @@
       return;
     }
     const t = e.target;
+    if (t.id === "pdf-appendix-upload" && t.files?.length) {
+      const auditId = currentId;
+      try {
+        if (state.documentControl?.status === "confirmed") throw Error("Abre una rectificación antes de adjuntar documentos.");
+        const file = await pdfAppendices.fromFile(t.files[0]);
+        if (auditId !== currentId || state.documentControl?.status === "confirmed") throw Error("El expediente ha cambiado durante la carga.");
+        state.pdfAppendices = pdfAppendices.normalize([...state.pdfAppendices, file]);
+        persist();
+        render();
+      } catch (error) { alert("No se pudo adjuntar el PDF: " + error.message); t.value = ""; }
+      return;
+    }
     if (t.id === "intake-file" && t.files?.length) {
       try {
         const file = t.files[0];
@@ -4863,6 +4892,17 @@
       void printReport("final", "technical");
       return;
     }
+    if (b.dataset.pdfAppendixDownload) {
+      const item = state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixDownload);
+      if(item) downloadBlob(item.name,pdfAppendices.asBlob(item));
+      return;
+    }
+    if (b.dataset.pdfAppendixRemove) {
+      if (state.documentControl?.status === "confirmed") return;
+      if (!confirm("¿Quitar este anexo del expediente? Conserva una copia externa si la necesitas.")) return;
+      state.pdfAppendices = state.pdfAppendices.filter(x=>x.id!==b.dataset.pdfAppendixRemove);
+      persist();render();return;
+    }
     if (b.id === "delivery-json") {
       exportJson();
       return;
@@ -5924,6 +5964,11 @@
             [13, "Comprobaciones y limitaciones pendientes", reviewNotice],
             [1, "Confidencialidad y límites de la evaluación", executiveLegal],
           ];
+    if (state.pdfAppendices?.length) {
+      chapters.push([14, "Anexos PDF externos", section(14, "Anexos PDF externos",
+        '<p>Los documentos relacionados se entregan separadamente del PDF principal. Conserva originales, comprueba las huellas SHA-256 y usa un canal protegido.</p>' +
+        '<ul>' + state.pdfAppendices.map(item=>'<li>' + html(item.name) + ' · ' + item.size + ' bytes · SHA-256 ' + html(item.sha256) + '</li>').join('') + '</ul>')]);
+    }
     const activeChapters = chapters.filter(([_id, _title, content]) =>
       Boolean(content),
     );

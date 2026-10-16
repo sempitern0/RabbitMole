@@ -3,6 +3,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const env={};env.globalThis=env;
 vm.runInNewContext(fs.readFileSync('js/router-catalog.js','utf8'),env);
 const catalog=env.AuditRouterCatalog;
+const typed=env.AuditNetworkDeviceCatalog;
+for(const type of typed.TYPES){
+ assert(typed.vendors(type).length>=6,'Incomplete '+type+' vendors');
+ assert(typed.vendors(type).every(v=>typed.models(type,v).length>0),'Missing models for '+type);
+}
+assert(typed.models('ONT','Nokia').includes('XS-010X-Q'));
+assert(typed.models('Firewall','Fortinet').includes('FortiGate 90G'));
 const vendors=Object.keys(catalog);
 assert(vendors.length>=12,'Common router vendors missing');
 for(const vendor of vendors){

@@ -192,3 +192,7 @@ El **Diccionario técnico → WiFi** incorpora 20 conceptos y cuatro mini guías
 ### Ayuda técnica contextual durante la auditoría
 
 El icono de información de cada campo abre una ficha superpuesta del diccionario sin sustituir el formulario, cambiar de paso ni modificar el historial. Consulta definiciones, comprobaciones, evidencias y advertencias incluso sin conexión. Ciérrala con **Escape**, «Volver al campo» o el icono de cierre. «Abrir ficha completa» conserva el regreso al paso original mediante el historial del navegador.
+
+### Selección de fabricante y modelo del router
+
+En **Redes → Seguridad del router/gateway**, selecciona fabricante y modelo mediante listas relacionadas. «Otro / escribir…» permite introducir equipos que no figuren en el catálogo offline. Las sugerencias no acreditan el modelo, firmware ni el estado de soporte: confirma siempre la identificación mediante evidencias. Los iconos de ayuda utilizan un SVG uniforme, legible con todas las paletas.

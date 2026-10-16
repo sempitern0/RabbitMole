@@ -150,3 +150,22 @@
   .glossary-quick-footer .button{flex:1 1 10rem}
 }
 @media print{.glossary-quick-dialog{display:none!important}}
+
+/* One fixed-grid, vector information icon across all audit themes and densities. */
+.field-heading { align-items:center; flex-wrap:wrap; gap:.4rem .55rem; }
+.glossary-help {
+  display:inline-grid; place-items:center; flex:0 0 40px;
+  box-sizing:border-box; width:40px; height:40px; min-width:40px;
+  border:1px solid var(--line); border-radius:10px;
+  color:var(--brand); background:var(--brand-tint);
+  line-height:1; padding:0; vertical-align:middle;
+  cursor:pointer;
+}
+.glossary-help .glossary-help-icon,
+.glossary-stage-link .glossary-help-icon {
+  display:block; width:20px; height:20px; flex:none;
+  shape-rendering:auto; stroke-width:2;
+}
+.glossary-help:is(:hover,:focus-visible) { background:var(--paper); border-color:var(--brand); }
+.glossary-help:focus-visible { outline:3px solid var(--brand); outline-offset:2px; }
+.glossary-stage-link { display:inline-flex; align-items:center; gap:.4rem; }

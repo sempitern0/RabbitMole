@@ -57,6 +57,7 @@
   // The curated catalogue is offline and has no automatic compatibility claims.
   // Existing custom models remain editable even when absent from the catalogue.
   const vendorModels = window.AuditHardwareCatalog || Object.freeze({});
+  const routerModels = globalThis.AuditRouterCatalog || Object.freeze({});
   const osCatalog = globalThis.AuditOSCatalog;
   const glossary = globalThis.AuditGlossary;
   const hardwareVendors = Object.keys(vendorModels);
@@ -590,7 +591,9 @@
         ],
         ["contractedRate", "Velocidad contratada (Mbps; si corresponde)"],
         ["measuredRate", "Velocidad medida (Mbps; método en observaciones)"],
-        ["routerDevice","Router / modelo / versión de firmware observados"],
+        ["routerVendor","Fabricante del router / gateway","picker",[]],
+        ["routerModel","Modelo del router / gateway","picker",[]],
+        ["routerDevice","Versión de firmware / identificación adicional observada"],
         ["routerCredentials","Credenciales administrativas de fábrica","select",["","No verificado","Cambio de fábrica acreditado","Credenciales predeterminadas vigentes","No aplica"]],
         ["routerAccounts","Cuentas y privilegios","select",["","No verificado","Cuentas diferenciadas y privilegios mínimos","Cuenta compartida o privilegios excesivos","No aplica"]],
         ["routerMfa","MFA administrativo (si está disponible)","select",["","No verificado","Habilitado","Disponible, deshabilitado","No disponible / excepción documentada","No aplica"]],
@@ -894,6 +897,8 @@
       "wifiBand",
       "contractedRate",
       "measuredRate",
+      "routerVendor",
+      "routerModel",
       "routerDevice",
       "routerCredentials",
       "routerAccounts",
@@ -1816,6 +1821,7 @@
   function download(filename, content, type) {
     downloadBlob(filename, new Blob([content], { type }));
   }
+  const glossaryHelpIcon = '<svg class="glossary-help-icon" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8"></circle><path d="M10 9v5"></path><circle cx="10" cy="6" r="1" fill="currentColor" stroke="none"></circle></svg>';
   function renderField(obj, block, def, index) {
     const [name, label, type, choices] = def;
     const attrs =
@@ -1873,9 +1879,13 @@
             ]
           : block === "assets" && name === "model"
             ? vendorModels[obj.vendor] || []
-            : assist.suggestions(state, block, name, choices);
+            : block === "networks" && name === "routerVendor"
+              ? Object.keys(routerModels)
+              : block === "networks" && name === "routerModel"
+                ? routerModels[obj.routerVendor] || []
+                : assist.suggestions(state, block, name, choices);
       const custom = Boolean(value) && !options.includes(value);
-      control = `<select id="${id}" ${attrs} data-preset="true" aria-label="${html(label)}"><option value="">${block === "assets" && name === "model" && !obj.vendor ? "Selecciona primero un fabricante…" : "Seleccionar…"}</option>${options.map((x) => `<option value="${html(x)}"${x === value ? " selected" : ""}>${html(x)}</option>`).join("")}<option value="__custom__"${custom ? " selected" : ""}>Otro / escribir…</option></select><input ${attrs} data-custom="true" aria-label="${html(label)} personalizado" placeholder="Especifica el valor" value="${custom ? html(value) : ""}" maxlength="20000" ${custom ? "" : "hidden"}>`;
+      control = `<select id="${id}" ${attrs} data-preset="true" aria-label="${html(label)}"><option value="">${(block === "assets" && name === "model" && !obj.vendor) || (block === "networks" && name === "routerModel" && !obj.routerVendor) ? "Selecciona primero un fabricante…" : "Seleccionar…"}</option>${options.map((x) => `<option value="${html(x)}"${x === value ? " selected" : ""}>${html(x)}</option>`).join("")}<option value="__custom__"${custom ? " selected" : ""}>Otro / escribir…</option></select><input ${attrs} data-custom="true" aria-label="${html(label)} personalizado" placeholder="Especifica el valor" value="${custom ? html(value) : ""}" maxlength="20000" ${custom ? "" : "hidden"}>`;
     } else
       control = `<input id="${id}" type="${type === "date" ? "date" : type === "time" ? "time" : "text"}" ${attrs} value="${html(value)}" maxlength="20000"${key === "decimal" ? ' inputmode="decimal"' : ""}>`;
     if (["controls", "findings"].includes(block) && name === "evidenceIds") {
@@ -1886,7 +1896,7 @@
     const termId = glossary?.CONTEXT_HELP?.fields?.[block]?.[name];
     const term = termId ? glossary.byId(termId) : null;
     const help = term
-      ? `<button type="button" class="glossary-help" data-glossary-term="${html(term.id)}" data-glossary-field="${html(id)}" aria-label="Consultar ${html(term.title)} y volver a este campo"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5"></path><circle cx="12" cy="7.5" r=".85" fill="currentColor" stroke="none"></circle></svg></button>`
+      ? `<button type="button" class="glossary-help" data-glossary-term="${html(term.id)}" data-glossary-field="${html(id)}" aria-label="Consultar ${html(term.title)} y volver a este campo">${glossaryHelpIcon}</button>`
       : "";
     return `<div class="field${type === "textarea" ? " full" : ""}"><div class="field-heading"><label for="${id}">${html(label)}</label>${help}</div>${control}</div>`;
   }
@@ -2393,7 +2403,7 @@
     const id = glossary?.CONTEXT_HELP?.stages?.[block];
     const term = id ? glossary.byId(id) : null;
     return term
-      ? `<p class="glossary-stage-hint">Referencia técnica: <button type="button" class="glossary-stage-link" data-glossary-term="${html(term.id)}" title="Consultar definición y comprobaciones de ${html(term.title)}">${html(term.title)} ↗</button></p>`
+      ? `<p class="glossary-stage-hint">Referencia técnica: <button type="button" class="glossary-stage-link" data-glossary-term="${html(term.id)}" title="Consultar definición y comprobaciones de ${html(term.title)}">${glossaryHelpIcon}<span>${html(term.title)}</span></button></p>`
       : "";
   }
   let intakePreview = null,
@@ -2588,7 +2598,7 @@
   }
 
   // Optional router checklist is documentary: never capture passwords or probe credentials.
-  const ROUTER_AUDIT_FIELDS = Object.freeze(["routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"]);
+  const ROUTER_AUDIT_FIELDS = Object.freeze(["routerVendor","routerModel","routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"]);
   const ROUTER_AUDIT_SET = new Set(ROUTER_AUDIT_FIELDS);
   function renderRouterAudit(record,index,definitions) {
     const routerFields=definitions.filter(([name])=>ROUTER_AUDIT_SET.has(name));
@@ -3754,6 +3764,12 @@
     )
       event.target.dataset.originalClient = event.target.value;
   });
+  function refreshRouterModel(record,index) {
+    const sibling = workspace.querySelector(`#f-networks-${index}-routerModel`)?.closest(".field");
+    if (sibling) sibling.outerHTML = renderField(
+      record, "networks", groups.networks.fields.find(([name])=>name==="routerModel"), index
+    );
+  }
   workspace.addEventListener("input", (e) => {
     if (e.target.id === "record-search") {
       refreshRecordNavigator();
@@ -3834,7 +3850,13 @@
     }
     const obj = fieldTarget(t);
     if (obj) {
+      const previous = obj[t.dataset.field];
       obj[t.dataset.field] = t.value;
+      if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
+          t.dataset.custom !== undefined && previous !== t.value) {
+        obj.routerModel = "";
+        refreshRouterModel(obj, Number(t.dataset.index));
+      }
       if (
         t.dataset.block === "meta" &&
         ["project", "client", "reportId"].includes(t.dataset.field)
@@ -4272,10 +4294,16 @@
     }
     if (identifiers.isLockedField(t.dataset.block, t.dataset.field)) return;
     if (t.dataset.preset) {
+      const previous = obj[t.dataset.field];
       const custom = t.closest(".field").querySelector("[data-custom]");
       const isOther = t.value === "__custom__";
       custom.hidden = !isOther;
       obj[t.dataset.field] = isOther ? custom.value : t.value;
+      if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
+          previous !== obj.routerVendor) {
+        obj.routerModel = "";
+        refreshRouterModel(obj, Number(t.dataset.index));
+      }
       if (t.dataset.block === "assets" && t.dataset.field === "vendor") {
         obj.model = "";
         const sibling = workspace

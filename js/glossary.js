@@ -4863,6 +4863,8 @@
       "dns": "term-25",
       "firewall": "term-14",
       "exposure": "term-136",
+      "routerVendor": "term-175",
+      "routerModel": "term-175",
       "routerDevice": "term-175",
       "routerCredentials": "term-176",
       "routerAccounts": "term-177",

@@ -21,3 +21,6 @@ assert(!/<span class="nav-mark">/.test(html),'Global menu must not use font glyp
 assert(css.includes('#global-navigation button .nav-icon'),'SVG sizing must be defined');
 require('./support/sw-contract.js').assertCached('js/app.js');
 console.log('PASS glossary navigation, five sharp SVG icons and PWA cache');
+
+assert(app.includes('glossaryHelpIcon')&&app.includes('refreshRouterModel'),'Unified field help and dependent router model expected');
+assert(html.includes('js/router-catalog.js')&&sw.includes('./js/router-catalog.js'),'Router catalog must be available offline');

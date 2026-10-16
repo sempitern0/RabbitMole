@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v62-camera-discovery";
+const CACHE_NAME = "rabbitmole-shell-v63-router-catalog";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -32,6 +32,7 @@ const CORE = [
   "./css/print.css",
   "./js/exporters.js",
   "./js/hardware-catalog.js",
+  "./js/router-catalog.js",
   "./js/software-catalog.js",
   "./js/os-catalog.js",
   "./js/glossary.js",

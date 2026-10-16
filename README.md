@@ -192,3 +192,7 @@ The offline **Technical dictionary → WiFi** includes 20 concepts and four conc
 ### Contextual technical help during an audit
 
 Select a field's information icon to consult glossary definitions, checks and evidence in an accessible overlay. It preserves the active step, fields and local data without changing browser history. Close with **Escape**, **Return to field**, or the close icon. **Open full dictionary entry** retains the original history-based return mechanism. The guidance is available offline.
+
+### Router vendor and model entry
+
+Under **Networks → Router/gateway security**, select a suggested manufacturer and model. The model list follows the selected vendor, and **Other / enter manually** supports equipment not included in the offline catalog. Suggestions are not a verification of model, firmware, support status or security. The same sharp vector help icon opens context-sensitive glossary guidance on every field.

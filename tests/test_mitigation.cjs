@@ -18,6 +18,13 @@ const applied=m.save(approved,{status:'applied',executedBy:'Administrador',execu
 assert.equal(applied.status,'applied');
 assert.throws(()=>m.save(applied,{status:'proposed'}),/Transición/);
 assert.equal(m.metrics([{mitigationActions:[applied]}]).applied,1);
+assert.equal(m.verification({status:'Abierto',retests:[]},applied),'awaiting-retest');
+assert.equal(m.verification({status:'Cerrado',retests:[{date:'2026-10-15',result:'verified'}]},applied),'awaiting-retest');
+assert.equal(m.verification({status:'Cerrado',retests:[{date:'2026-10-17',result:'verified'}]},applied),'finding-verified');
+assert.equal(m.verification({status:'Abierto',retests:[{date:'2026-10-17',result:'pending'}]},applied),'finding-persists');
+assert.equal(m.verification({status:'Abierto',retests:[{date:'2026-10-17',result:'unverified'}]},applied),'inconclusive');
+assert.equal(m.verification({status:'Cerrado',retests:[{date:'2026-10-17',result:'verified'}]},approved),'not-applicable');
+
 assert.throws(()=>m.normalize([initial,initial]),/duplicadas/);
 assert.throws(()=>m.save(proposal,{status:'proposed',evidenceKey:'missing'},[]),/evidencia/);
 const state=JSON.parse(JSON.stringify({mitigationActions:[applied]}));

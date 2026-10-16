@@ -1,0 +1,78 @@
+/* Android touch ergonomics. Only activated by an Android UA + coarse pointer.
+ * Does not alter desktop, iOS, print layouts, or application state.
+ */
+html.android-touch #workspace{
+  --form-gap:1.15rem;
+  --form-inline-gap:1.15rem;
+}
+html.android-touch #workspace .fields,
+html.android-touch #workspace .inventory-fields .fields{
+  align-items:start;
+  row-gap:var(--form-gap);
+  column-gap:var(--form-inline-gap);
+}
+html.android-touch #workspace .field{
+  min-width:0;
+  gap:.45rem;
+}
+html.android-touch #workspace .field :is(label,.field-heading label),
+html.android-touch #workspace :is(.finding-attachments,.file-upload) > label{
+  font-size:1rem;
+  line-height:1.45;
+  font-weight:720;
+}
+html.android-touch #workspace :is(.field-hint,.identifier-hint,.field-assist small,.subtle){
+  font-size:.9rem;
+  line-height:1.55;
+}
+html.android-touch #workspace :is(
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,textarea
+){
+  font-size:1rem;
+  min-height:52px;
+  padding:.8rem .9rem;
+  line-height:1.45;
+}
+html.android-touch #workspace textarea{min-height:8rem;line-height:1.6}
+html.android-touch #workspace .action-row{align-items:stretch;gap:.7rem}
+html.android-touch #workspace .action-row > :is(button,.button),
+html.android-touch #workspace .wizard-buttons :is(button,.button),
+html.android-touch #workspace .record-navigator > button{
+  min-height:48px;
+  font-size:.96rem;
+  line-height:1.4;
+  white-space:normal;
+}
+html.android-touch #workspace .entry{
+  padding:clamp(.9rem,1.8vw,1.25rem);
+  scroll-margin-block-start:1rem;
+}
+html.android-touch #workspace .entry-head{align-items:flex-start;gap:.8rem}
+html.android-touch #workspace .entry-head > div{min-width:0;overflow-wrap:anywhere;line-height:1.5}
+html.android-touch #workspace .record-navigator{
+  gap:.7rem;
+  padding:.85rem;
+}
+html.android-touch #workspace .record-navigator label{font-size:.94rem;line-height:1.45}
+html.android-touch #workspace .upload-control{align-items:stretch;gap:.75rem}
+html.android-touch #workspace .upload-control > .camera-action{min-height:48px}
+@media screen and (max-width:700px){
+ html.android-touch #workspace .fields{grid-template-columns:minmax(0,1fr)}
+ html.android-touch #workspace .field.full{grid-column:auto}
+ html.android-touch #workspace .entry-head > button{flex:0 0 auto;min-height:48px}
+ html.android-touch #workspace .action-row > :is(button,.button){flex:1 1 100%}
+ html.android-touch #workspace .wizard-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
+ html.android-touch #workspace .wizard-jump{grid-column:1/-1;width:100%}
+ html.android-touch #workspace .wizard-jump select{width:100%;max-width:100%}
+ html.android-touch #workspace .wizard-buttons > :is(button,.button){width:100%;min-width:0;flex:none}
+ html.android-touch #workspace .upload-control > input[type="file"]:not(.camera-input),
+ html.android-touch #workspace .upload-control > .camera-action{flex:1 1 100%;width:100%}
+}
+@media screen and (min-width:701px) and (max-width:1180px){
+ html.android-touch #workspace .fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ html.android-touch #workspace .action-row > :is(button,.button){flex:0 1 auto}
+}
+@media(prefers-reduced-motion:reduce){
+ html.android-touch #workspace :is(input,select,textarea,button){transition:none}
+}

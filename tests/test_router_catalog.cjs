@@ -18,8 +18,9 @@ for(const vendor of vendors){
 }
 for(const vendor of ['Cisco','MikroTik','Ubiquiti','TP-Link (Omada)','AVM (FRITZ!Box)','Fortinet'])
  assert(vendors.includes(vendor),'Missing vendor '+vendor);
-const app=fs.readFileSync('js/app.js','utf8'),style=fs.readFileSync('css/glossary.css','utf8');
-for(const part of ['routerVendor','routerModel','refreshRouterModel','glossaryHelpIcon','Otro / escribir…'])
+const app=fs.readFileSync('js/app.js','utf8'),field=fs.readFileSync('js/audit-field-renderer.js','utf8'),style=fs.readFileSync('css/glossary.css','utf8');
+for(const part of ['routerVendor','routerModel','refreshRouterModel','glossaryHelpIcon'])
  assert(app.includes(part),'Missing router UX '+part);
+assert(field.includes('Otro / escribir…') && field.includes('data-custom="true"'),'Missing custom network-device entry in the field renderer');
 assert(style.includes('.glossary-help-icon'),'Unified SVG sizing is required');
 console.log('PASS offline router catalog, dependent selectors and consistent SVG assistance');

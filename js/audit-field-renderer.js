@@ -22,7 +22,7 @@
       control = `<input id="${id}" type="text" value="${html(value)}" readonly aria-readonly="true" class="identifier-readonly" title="Código generado por la aplicación; no editable" autocomplete="off"><small class="identifier-hint">Identificador asignado automáticamente · solo lectura</small>`;
     } else if (type === "textarea")
       control = `<textarea id="${id}" ${attrs} maxlength="20000">${html(value)}</textarea>`;
-    else if(block==="assets"&&name==="os"&&/^(servidor\\b|hypervisor\\b|hipervisor\\b)/i.test(String(obj.type||"").trim())){
+    else if(block==="assets"&&name==="os"&&/^(servidor\b|hypervisor\b|hipervisor\b)/i.test(String(obj.type||"").trim())){
       const groups=osCatalog?.SERVER_GROUPS||{};
       const options=Object.values(groups).flat();
       const custom=Boolean(value)&&!options.includes(value);

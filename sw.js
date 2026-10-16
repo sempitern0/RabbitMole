@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v60-pdf-appendices";
+const CACHE_NAME = "rabbitmole-shell-v61-local-discovery";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
@@ -193,6 +193,8 @@ self.addEventListener("fetch", (event) => {
     !url.pathname.startsWith(new URL(self.registration.scope).pathname)
   )
     return;
+  // Local Discovery has no offline cache or Cloudflare equivalent; always hit the loopback helper.
+  if (url.pathname.startsWith(new URL("./_local/discovery/",self.registration.scope).pathname)) return;
   // Connectivity probes must not be answered from CacheStorage.
   if (request.cache === "no-store" && request.mode !== "navigate") {
     event.respondWith(fetch(request));

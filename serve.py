@@ -5,12 +5,15 @@ This is a local development/auditor server, not an HTTPS or multi-user deploymen
 Python 3.9+ standard library, Windows/Linux/macOS compatible.
 """
 import argparse
-from functools import partial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
-import mimetypes
 from pathlib import Path
 import socket
+import secrets
+import json
+import threading
+import webbrowser
+import sys
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent
@@ -26,6 +29,8 @@ ALLOWED = {
 }
 FOLDERS = {"css", "js", "fonts", "icons"}
 FILES = {"index.html", "sw.js", "manifest.webmanifest"}
+DISCOVERY_PATH = "/_local/discovery/"
+
 CSP = (
     "default-src 'none'; script-src 'self'; script-src-elem 'self'; "
     "script-src-attr 'none'; style-src 'self'; font-src 'self'; "
@@ -68,14 +73,95 @@ class LocalHandler(BaseHTTPRequestHandler):
     server_version = "RabbitMoleLocal/1"
     sys_version = ""
 
+    def _trusted_request(self, require_origin=False):
+        host = self.headers.get("Host", "")
+        bound = self.server.server_address[0]
+        if bound in ("::1", "0:0:0:0:0:0:0:1"):
+            expected = f"[::1]:{self.server.server_port}"
+        else:
+            expected = f"{bound}:{self.server.server_port}"
+        if host != expected:
+            self.send_error(403, "Invalid Host")
+            return False
+        origin = self.headers.get("Origin")
+        if (require_origin and origin != f"http://{expected}") or (
+            origin and origin != f"http://{expected}"
+        ):
+            self.send_error(403, "Invalid Origin")
+            return False
+        return True
+
+    def _json(self, code, body):
+        data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        try:
+            self.wfile.write(data)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
     def do_GET(self):
+        if not self._trusted_request():
+            return
+        if urlsplit(self.path).path == DISCOVERY_PATH + "status":
+            if not self.server.discovery_enabled:
+                return self._json(404, {"error": "Discovery local desactivado."})
+            from discovery import discover, wizard
+            info = discover.doctor()
+            self._json(200, {"available": True, "tools": {
+                "nmap": bool(info["tools"]["nmap"]),
+                "ping": bool(info["tools"]["ping"])
+            }, "backend": info["preferred_backend"],
+                "interfaces": wizard.interface_candidates(), "csrf": self.server.csrf_token})
+            return
         self._serve(True)
 
     def do_HEAD(self):
+        if not self._trusted_request():
+            return
         self._serve(False)
 
     def do_POST(self):
-        self.send_error(405, "Read-only server")
+        if not self._trusted_request(require_origin=True):
+            return
+        if urlsplit(self.path).path != DISCOVERY_PATH + "scan" or not self.server.discovery_enabled:
+            return self._json(404, {"error": "Discovery no disponible."})
+        if self.headers.get("Content-Type", "").split(";")[0].strip().lower() != "application/json" or (
+            not secrets.compare_digest(self.headers.get("X-RabbitMole-Token", ""), self.server.csrf_token)
+        ):
+            return self._json(403, {"error": "Solicitud de escaneo no autorizada."})
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if length < 1 or length > 512:
+                raise ValueError("Solicitud demasiado grande.")
+            payload = json.loads(self.rfile.read(length))
+            if not isinstance(payload, dict) or set(payload) != {"cidr", "confirmation"}:
+                raise ValueError("Parámetros no admitidos.")
+            if payload["confirmation"] != "AUTORIZO" or not isinstance(payload["cidr"], str):
+                raise ValueError("Se requiere confirmar el alcance escribiendo AUTORIZO.")
+            from discovery import discover
+            scope = discover.scope_network(payload["cidr"], max_hosts=256)
+            if not self.server.scan_lock.acquire(blocking=False):
+                return self._json(409, {"error": "Ya hay un reconocimiento en ejecución."})
+            try:
+                info = discover.doctor()
+                backend = info["preferred_backend"]
+                if backend is None:
+                    raise RuntimeError("Nmap y ping no están disponibles en este equipo.")
+                tool_path = info["tools"]["nmap" if backend == "nmap" else "ping"]
+                hosts = discover.scan_nmap(scope, tool_path) if backend == "nmap" else discover.scan_native(scope, tool_path, 16)
+                capture = discover.discovery_document(scope, backend, hosts)
+                if len(json.dumps(capture).encode("utf-8")) > discover.MAX_XML:
+                    raise ValueError("El resultado es demasiado grande.")
+                self._json(200, {"capture": capture, "hosts": len(hosts)})
+            finally:
+                self.server.scan_lock.release()
+        except (ValueError, TypeError, RuntimeError, OSError) as error:
+            self._json(400, {"error": str(error)[:250]})
+
 
     def do_PUT(self):
         self.send_error(405, "Read-only server")
@@ -115,6 +201,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="RabbitMole: static PWA server on local loopback only")
     parser.add_argument("port", nargs="?", type=int, default=8765)
     parser.add_argument("--bind", default="127.0.0.1", help="Loopback IP (127.0.0.1 or ::1)")
+    parser.add_argument("--no-open", action="store_true", help="No abrir navegador automáticamente.")
+    parser.add_argument("--enable-discovery", action="store_true",
+                        help="Habilitar reconocimiento CIDR autorizado desde ESTE servidor local.")
     args = parser.parse_args(argv)
     if not 1 <= args.port <= 65535:
         parser.error("Port must be between 1 and 65535")
@@ -130,9 +219,19 @@ def main(argv=None):
     try:
         with Server((args.bind, args.port), LocalHandler) as server:
             server.root = ROOT
+            server.discovery_enabled = args.enable_discovery
+            server.csrf_token = secrets.token_urlsafe(32)
+            server.scan_lock = threading.Lock()
             host = f"[{args.bind}]" if ip.version == 6 else args.bind
             print(f"RabbitMole local: http://{host}:{args.port}/", flush=True)
-            print("Only static PWA resources are available; no uploads or network exposure.", flush=True)
+            print("Solo se escucha en loopback. Discovery: " +
+                  ("habilitado (requiere consentimiento por CIDR)" if args.enable_discovery else "desactivado"), flush=True)
+            if not args.no_open:
+                try:
+                    if not webbrowser.open(f"http://{host}:{args.port}/"):
+                        print("Abre manualmente la dirección indicada.", flush=True)
+                except Exception:
+                    print("No se pudo abrir el navegador; usa la dirección indicada.", flush=True)
             server.serve_forever(poll_interval=0.25)
     except KeyboardInterrupt:
         print("\nServidor detenido.")

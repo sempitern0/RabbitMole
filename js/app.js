@@ -1043,6 +1043,7 @@
           record.originControlKey = str(item.originControlKey).slice(0, 100);
           record.retests = retest.normalize(item.retests);
           record.mitigationActions = mitigation.normalize(item.mitigationActions);
+          record.residualAssessments = mitigation.normalizeResidual(item.residualAssessments);
         }
         if (block === "evidence") {
           const pic =
@@ -2391,6 +2392,37 @@
         : "";
     return `<div class="control-extras">${guide}${existing}${button}</div>`;
   }
+  function renderResidualAssessment(finding){
+    const entries=mitigation.normalizeResidual(finding.residualAssessments);
+    const current=entries.at(-1),locked=state.documentControl?.status==="confirmed";
+    const evidenceOptions=state.evidence.map(e=>`<option value="${html(e._key)}">${html(e.id||e.title||"Evidencia")}</option>`).join("");
+    const today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+    return `<details class="residual-assessment"><summary>Riesgo residual · ${current?html(current.level):"Sin valoración"} · ${entries.length} evaluaciones</summary>
+      <p class="subtle">Valoración manual. No implica aceptación formal del riesgo, disminución calculada ni cierre del hallazgo. Las notas de riesgo residual existentes permanecen intactas.</p>
+      ${current?`<p><strong>Última valoración:</strong> ${html(current.level)} · ${html(mitigation.RESIDUAL_DECISIONS[current.decision])} · ${html(current.assessedAt)}</p>`:""}
+      ${entries.length?`<details><summary>Historial de valoraciones (${entries.length})</summary><ol class="retest-history">${[...entries].reverse().map(v=>`<li><strong>${html(v.assessedAt)} · ${html(v.level)}</strong><p>${html(mitigation.RESIDUAL_DECISIONS[v.decision])} · ${html(v.assessedBy)}</p><p>${html(v.rationale)}</p>${v.nextReview?`<small>Próxima revisión: ${html(v.nextReview)}</small>`:""}${v.evidenceId?`<small> · Evidencia: ${html(v.evidenceId)}</small>`:""}</li>`).join("")}</ol></details>`:""}
+      <div class="fields">
+        <label class="field">Nivel residual valorado<select data-residual-field="level" ${locked?"disabled":""}><option value="">Selecciona…</option>${mitigation.RESIDUAL_LEVELS.map(v=>`<option value="${html(v)}">${html(v)}</option>`).join("")}</select></label>
+        <label class="field">Tratamiento propuesto<select data-residual-field="decision" ${locked?"disabled":""}><option value="">Selecciona…</option>${Object.entries(mitigation.RESIDUAL_DECISIONS).map(([k,v])=>`<option value="${html(k)}">${html(v)}</option>`).join("")}</select></label>
+        <label class="field">Fecha de valoración<input type="date" data-residual-field="assessedAt" value="${today}" ${locked?"disabled":""}></label>
+        <label class="field">Auditor responsable<input data-residual-field="assessedBy" maxlength="160" ${locked?"disabled":""}></label>
+        <label class="field">Próxima revisión (opcional)<input type="date" data-residual-field="nextReview" ${locked?"disabled":""}></label>
+        <label class="field">Evidencia (opcional)<select data-residual-field="evidenceKey" ${locked?"disabled":""}><option value="">Sin evidencia adicional</option>${evidenceOptions}</select></label>
+        <label class="field full">Justificación de la valoración<textarea data-residual-field="rationale" maxlength="3000" rows="3" ${locked?"disabled":""}></textarea></label>
+      </div>
+      <button type="button" class="button accent" data-save-residual="${html(finding._key)}" ${locked||entries.length>=mitigation.MAX_RESIDUAL_REVIEWS?"disabled":""}>Registrar valoración</button>
+    </details>`;
+  }
+  function renderMitigationDashboard(){
+    const today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+    const result=mitigation.portfolio(state.findings,today),k=result.counts;
+    const stats=[[k.total,"Acciones registradas"],[k.overdue,"Acciones vencidas"],[k.verified,"Eficacia comprobada"],[k.failed,"Verificaciones fallidas"],[k.unchecked,"Aplicadas sin comprobar"],[k.residualPending,"Hallazgos sin valoración residual"],[k.residualHigh,"Residual alto o crítico"]];
+    return `<section class="card mitigation-dashboard" aria-labelledby="mitigation-dashboard-title"><h2 id="mitigation-dashboard-title">Seguimiento de mitigaciones y riesgo residual</h2>
+      <p class="subtle">Indicadores basados en el expediente a fecha ${html(today)}. Las acciones verificadas se cuentan individualmente; no equivalen a hallazgos cerrados. Un vencimiento corresponde a una acción no aplicada ni revertida cuya fecha objetivo ya pasó.</p>
+      <div class="mitigation-stat-grid">${stats.map(([num,label])=>`<div><strong>${num}</strong><span>${label}</span></div>`).join("")}</div>
+      ${result.overdue.length?`<details><summary>Revisar acciones vencidas (${k.overdue})</summary><ul class="mitigation-overdue">${result.overdue.slice(0,20).map(a=>`<li><strong>${html(a.findingId||"Hallazgo")} · ${html(a.title)}</strong> — ${html(a.owner||"Sin asignar")} · ${html(a.deadline)} <button type="button" class="button quiet small" data-quality-section="findings" data-quality-key="${html(a.findingKey)}">Revisar</button></li>`).join("")}</ul></details>`:""}
+      <p class="subtle">Otras situaciones: ${k.noDeadline} acciones sin fecha, ${k.inconclusive} verificaciones no concluyentes. No se estima automáticamente una reducción cuantitativa del riesgo.</p></section>`;
+  }
   function renderMitigationActions(finding) {
     const actions=mitigation.normalize(finding.mitigationActions);
     const htmlField=(name,label,value,type="text")=>`<label class="field${["steps","impact","rollback","acceptance","changeNotes"].includes(name)?" full":""}">${label}${type==="textarea"?
@@ -2890,7 +2922,7 @@
         ? rows
             .map(
               (r, i) =>
-                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) + renderMitigationActions(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${block === "cves" && !PUBLIC_DEMO ? `<div class="cve-tools"><button class="button quiet small" type="button" data-cve-check="${i}">Consultar CVE online (opcional)</button><button class="button small" type="button" data-cve-link="${i}">Ver en CVE.org ↗</button><span class="subtle">Solo se envía el identificador CVE, nunca los datos del cliente.</span></div>` : ""}${
+                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) + renderMitigationActions(r) + renderResidualAssessment(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${block === "cves" && !PUBLIC_DEMO ? `<div class="cve-tools"><button class="button quiet small" type="button" data-cve-check="${i}">Consultar CVE online (opcional)</button><button class="button small" type="button" data-cve-link="${i}">Ver en CVE.org ↗</button><span class="subtle">Solo se envía el identificador CVE, nunca los datos del cliente.</span></div>` : ""}${
                   block === "evidence"
                     ? `<div class="file-upload"><label for="evidence-upload-${i}"><strong>Añadir foto o captura</strong> (PNG, JPG o WebP, hasta 5 MiB)</label><p class="subtle">Se guarda una copia optimizada. El SHA-256 identifica el archivo original, que debes conservar por separado.</p>${r.fileSha256 ? `<p class="evidence-digest">Archivo: ${html(r.fileName || "Sin nombre")} · ${(r.fileBytes || 0).toLocaleString("es-ES")} bytes <span>SHA-256 ${html(r.fileSha256)}</span></p>` : ""}${renderCaptureControls(`evidence-upload-${i}`,`evidence-camera-${i}`,`data-image-index="${i}"`,`data-image-index="${i}"`)}<div class="evidence-image-grid">${evidenceImages
                         .list(r)
@@ -3330,7 +3362,7 @@
               .join("")}`
           : '<p class="notice">Todos los puntos comprobados están resueltos. La revisión profesional del contenido sigue siendo necesaria.</p>'
       }</section>
-      <section class="card"><h2>Plan de remediación automático</h2><p class="subtle">Se ordena por severidad técnica y deja al final los casos cerrados o mitigados. No asigna plazos ni prioridades inventadas.</p>${renderPlanSummary(audit.plan)}<div class="action-row"><button class="button accent" type="button" data-go="delivery">Ir al informe final →</button><button class="button quiet" type="button" data-go="findings">Editar hallazgos</button></div></section>`;
+      ${renderMitigationDashboard()}<section class="card"><h2>Plan de remediación automático</h2><p class="subtle">Se ordena por severidad técnica y deja al final los casos cerrados o mitigados. No asigna plazos ni prioridades inventadas.</p>${renderPlanSummary(audit.plan)}<div class="action-row"><button class="button accent" type="button" data-go="delivery">Ir al informe final →</button><button class="button quiet" type="button" data-go="findings">Editar hallazgos</button></div></section>`;
   }
   function renderComparison() {
     const result = comparison.compare(state, retest);
@@ -3384,6 +3416,7 @@
     return `<span class="eyebrow">SEGUIMIENTO / REEVALUACIÓN</span><h1 class="page-title">¿Qué ha corregido el cliente?</h1><p class="lead">Documenta cada revisión en su hallazgo. Solo marca como corregido lo que has comprobado: una promesa de corrección no es una verificación.</p>
       ${glossaryStageHint("followup")}<section class="card"><h2>Estado de las correcciones</h2><div class="retest-summary">${tiles.map(([key, label]) => `<div><strong>${counts[key]}</strong><span>${label}</span></div>`).join("")}</div><p class="subtle">Se muestra el último resultado de cada hallazgo. Los históricos permanecen conservados en el expediente.</p>
       <div class="action-row"><button type="button" class="button accent" id="retest-pdf" ${!state.findings.length ? "disabled" : ""}>Informe de reevaluación PDF ↗</button><button type="button" class="button quiet" data-go="findings">Editar hallazgos</button></div></section>
+      ${renderMitigationDashboard()}
       ${renderComparison()}
       ${
         state.findings.length
@@ -3843,7 +3876,10 @@
         element.dataset.remove ||
         element.dataset.applyTemplate ||
         element.dataset.clearImage ||
-        element.dataset.saveRetest
+        element.dataset.saveRetest ||
+        element.dataset.saveResidual ||
+        element.dataset.mitigationSave ||
+        element.dataset.mitigationVerify
       )
         element.disabled = true;
     }
@@ -4733,6 +4769,19 @@
       } catch (error) {
         alert(error.message);
       }
+      return;
+    }
+    if(b.dataset.saveResidual!==undefined){
+      if(state.documentControl?.status==="confirmed"){alert("Abre una rectificación antes de valorar el riesgo residual.");return;}
+      const finding=state.findings.find(f=>f._key===b.dataset.saveResidual);
+      const card=b.closest(".residual-assessment");if(!finding||!card)return;
+      const data={};for(const field of card.querySelectorAll("[data-residual-field]"))data[field.dataset.residualField]=field.value;
+      try{
+        finding.residualAssessments=mitigation.recordResidual(finding,data,state.evidence,uid);
+        const key=finding._key;persist();render();
+        const target=[...workspace.querySelectorAll(".residual-assessment")].find(el=>el.closest("[data-entry-key]")?.dataset.entryKey===key);
+        if(target){target.open=true;target.querySelector("summary")?.focus();}
+      }catch(error){alert("No se pudo registrar la valoración: "+error.message);}
       return;
     }
     if(b.dataset.mitigationAdd!==undefined){
@@ -6276,17 +6325,25 @@
           .join(""),
     );
     const reviewed = reviewState("final"); // El borrador debe mostrar también los impedimentos para una entrega definitiva.
+    const riskPortfolio=mitigation.portfolio(state.findings,new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
+    const residualReport='<div class="report-action"><h3>Indicadores de mitigación y riesgo residual</h3>'+
+      '<p>Acciones: '+riskPortfolio.counts.total+' · Vencidas: '+riskPortfolio.counts.overdue+
+      ' · Eficacia verificada individualmente: '+riskPortfolio.counts.verified+
+      ' · Verificaciones fallidas: '+riskPortfolio.counts.failed+
+      ' · Aplicadas sin comprobar: '+riskPortfolio.counts.unchecked+
+      ' · Hallazgos sin valoración residual: '+riskPortfolio.counts.residualPending+'.</p>'+
+      '<p>Las valoraciones son manuales. La aplicación no calcula automáticamente reducción de riesgo.</p></div>';
     const actionPlan = section(
       11,
       "Plan de remediación y comprobación",
-      reviewed.plan.length
+      (reviewed.plan.length
         ? reviewed.plan
             .map(
               (item) =>
-                `<div class="report-action"><h3>${html(item.id)} · ${html(item.title)} <span class="report-badge ${level(item.severity)}">${html(item.severity)}</span></h3><p><strong>Estado:</strong> ${html(item.status)} · <strong>Responsable:</strong> ${html(item.owner || "Pendiente de asignar")} · <strong>Fecha objetivo:</strong> ${html(item.deadline || "Por acordar")}</p><p><strong>Acción correctiva:</strong> ${para(item.recommendation || "Sin definir")}</p><p><strong>Criterio de verificación:</strong> ${para(item.verification || "Sin definir")}</p>${mitigationOverview(state.findings.find(f=>f._key===item.key)||{})}</div>`,
+                `<div class="report-action"><h3>${html(item.id)} · ${html(item.title)} <span class="report-badge ${level(item.severity)}">${html(item.severity)}</span></h3><p><strong>Estado:</strong> ${html(item.status)} · <strong>Responsable:</strong> ${html(item.owner || "Pendiente de asignar")} · <strong>Fecha objetivo:</strong> ${html(item.deadline || "Por acordar")}</p><p><strong>Acción correctiva:</strong> ${para(item.recommendation || "Sin definir")}</p><p><strong>Criterio de verificación:</strong> ${para(item.verification || "Sin definir")}</p>${mitigationOverview(state.findings.find(f=>f._key===item.key)||{})}${(()=>{const v=mitigation.latestResidual(state.findings.find(f=>f._key===item.key));return v?`<p><strong>Riesgo residual valorado:</strong> ${html(v.level)} · ${html(mitigation.RESIDUAL_DECISIONS[v.decision])} · ${html(v.assessedBy)} · ${html(v.assessedAt)}</p><p>${html(v.rationale)}</p>`:"<p>Sin valoración residual documentada.</p>"})()}</div>`,
             )
             .join("")
-        : '<p class="report-empty">No se registraron hallazgos que requieran remediación. Esta observación no implica ausencia de riesgos fuera del alcance revisado.</p>',
+        : '<p class="report-empty">No se registraron hallazgos que requieran remediación. Esta observación no implica ausencia de riesgos fuera del alcance revisado.</p>') + residualReport,
     );
     const draftMarker =
       reportDeliveryMode === "final" && reviewed.ready

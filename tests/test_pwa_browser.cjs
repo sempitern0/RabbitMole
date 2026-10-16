@@ -18,6 +18,7 @@ const {chromium}=require('playwright');
    // Emulate display mode only: actual device installation remains a manual acceptance check.
    if(installed)await context.addInitScript(()=>{const original=window.matchMedia.bind(window);window.matchMedia=q=>q==='(display-mode: standalone)'?{matches:true,media:q,addEventListener(){},removeEventListener(){}}:original(q);});
    const page=await context.newPage(),errors=[],external=[];
+   page.setDefaultTimeout(12000);
    page.on('pageerror',e=>errors.push(e.message));page.on('request',req=>{if(!req.url().startsWith(origin)&&!req.url().startsWith('data:'))external.push(req.url());});
    await page.goto(origin);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
    await page.waitForSelector('#pwa-install-card:not([hidden])');

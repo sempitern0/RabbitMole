@@ -27,8 +27,17 @@ jobs:
       - name: Shell syntax
         run: bash -n rabbitmole.sh collect-local.sh discovery/run.sh discovery/setup.sh
       - run: npx playwright install --with-deps chromium
-      - name: Browser, persistence and offline acceptance
+      - name: Browser, PDF, persistence and offline acceptance
+        env:
+          PDF_ACCEPTANCE_DIR: artifacts/pdf
         run: npm run test:browser
+      - name: Save A4 acceptance PDFs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rabbitmole-report-pdfs-${{ github.sha }}
+          path: artifacts/pdf/*.pdf
+          if-no-files-found: ignore
       - name: Upload validated bundle
         uses: actions/upload-artifact@v4
         with:

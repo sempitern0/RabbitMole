@@ -11,7 +11,7 @@
     "build": "python3 deploy/build-pages-demo.py",
     "check": "python3 deploy/validate.py",
     "test": "npm run check",
-    "test:browser": "node tests/test_pwa_browser.cjs && node tests/test_report_browser.cjs",
+    "test:browser": "node tests/test_report_browser.cjs && node tests/test_pwa_browser.cjs",
     "deploy": "npm run check && wrangler deploy",
     "deploy:check": "npm run check && wrangler deploy --dry-run"
   },

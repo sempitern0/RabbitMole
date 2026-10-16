@@ -18,6 +18,7 @@ const {chromium}=require('playwright');
   // The full installed workflow is eligible for local audit editing in the Worker.
   await context.addInitScript(()=>{const old=window.matchMedia.bind(window);window.matchMedia=q=>q==='(display-mode: standalone)'?{matches:true,media:q,addEventListener(){},removeEventListener(){}}:old(q);});
   const page=await context.newPage(),errors=[];
+  page.setDefaultTimeout(12000);
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/');
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller);

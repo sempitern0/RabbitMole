@@ -21,6 +21,7 @@
   const mitigation = globalThis.AuditMitigation;
   const workflowViews = globalThis.RabbitMoleWorkflowViews;
   const auditActions = globalThis.RabbitMoleAuditActions;
+  const recordNavigatorModule = globalThis.RabbitMoleRecordNavigator;
   const comparison = globalThis.AuditComparison;
   if (!storage)
     throw Error("No se ha cargado el módulo de almacenamiento offline.");
@@ -33,6 +34,7 @@
   if (!mitigation) throw Error("No se ha cargado el módulo de mitigación.");
   if (!workflowViews) throw Error("No se ha cargado el módulo de vistas de auditoría.");
   if (!auditActions) throw Error("No se ha cargado el módulo de acciones de auditoría.");
+  if (!recordNavigatorModule) throw Error("No se ha cargado el módulo de navegación de registros.");
   if (!comparison)
     throw Error("No se ha cargado el resumen comparativo offline.");
   const SETTINGS_KEY = "rabbitmole:settings:v1";
@@ -2721,102 +2723,18 @@
       "</div></div></details>"
     );
   }
-  const recordQueries = new Map();
-  const recordQueryKey = () => String(currentId) + "/" + page;
-  const searchText = (value) =>
-    str(value)
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("es");
-  function recordMatches(record, block, query) {
-    const text = searchText(
-      groups[block].fields.map(([name]) => record[name] || "").join(" "),
-    );
-    return searchText(query)
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .every((term) => text.includes(term));
-  }
-  function recordLabel(record, index) {
-    return [record.id, record.title || record.name || "Registro " + (index + 1)]
-      .filter(Boolean)
-      .join(" · ");
-  }
-  function renderRecordNavigator(block) {
-    return `<div class="record-navigator" aria-label="Buscar y navegar por registros">
-      <div><label for="record-search">Buscar en ${html(groups[block].title.toLocaleLowerCase("es"))}</label><input id="record-search" type="search" autocomplete="off" placeholder="Código, nombre, estado o texto…" value="${html(recordQueries.get(recordQueryKey()) || "")}" aria-describedby="record-search-count"></div>
-      <div><label for="record-jump">Acceso rápido a un registro</label><select id="record-jump"><option value="">Selecciona un registro…</option></select></div>
-      <button type="button" class="button quiet small" id="record-search-clear">Mostrar todos</button>
-      <button type="button" class="button accent small" data-add="${block}">+ Añadir registro</button>
-      <p id="record-search-count" role="status" aria-live="polite"></p>
-    </div><p id="record-search-empty" class="empty" hidden>No hay registros que coincidan. Prueba otro término o pulsa «Mostrar todos».</p>`;
-  }
-  function refreshRecordNavigator(filter = true) {
-    const search = byId("record-search"),
-      jump = byId("record-jump");
-    if (!search || !jump || !groups[page]) return;
-    const query = search.value;
-    recordQueries.set(recordQueryKey(), query);
-    const matches = state[page]
-      .map((record, index) => ({ record, index }))
-      .filter(({ record }) => recordMatches(record, page, query));
-    const keys = new Set(matches.map(({ record }) => record._key));
-    const selected = jump.value;
-    jump.innerHTML =
-      '<option value="">Selecciona un registro…</option>' +
-      matches
-        .map(
-          ({ record, index }) =>
-            `<option value="${html(record._key)}">${html(recordLabel(record, index))}</option>`,
-        )
-        .join("");
-    if (keys.has(selected)) jump.value = selected;
-    if (filter) {
-      for (const entry of workspace.querySelectorAll(".entry[data-entry-key]"))
-        entry.hidden = !keys.has(entry.dataset.entryKey);
-      byId("record-search-empty").hidden =
-        matches.length > 0 || state[page].length === 0;
-      byId("record-search-count").textContent =
-        matches.length +
-        " de " +
-        state[page].length +
-        " registros. La búsqueda no modifica los informes ni las exportaciones.";
-    }
-  }
-  function clearRecordSearch() {
-    const search = byId("record-search");
-    if (search) {
-      search.value = "";
-      refreshRecordNavigator();
-    }
-  }
-  function focusAddedRecord(key) {
-    clearRecordSearch();
-    const entry = [...workspace.querySelectorAll("[data-entry-key]")].find(
-      (item) => item.dataset.entryKey === key,
-    );
-    if (!entry) return;
-    const editable = [
-      ...entry.querySelectorAll(
-        "input[data-field], select[data-field], textarea[data-field]",
-      ),
-    ].find(
-      (field) =>
-        !field.disabled &&
-        !field.readOnly &&
-        !field.hidden &&
-        !field.dataset.custom,
-    );
-    // Focus first for screen-reader feedback, then scroll the entry just below the viewport edge.
-    (editable || entry).focus({ preventScroll: true });
-    entry.scrollIntoView({
-      block: "start",
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-    });
-  }
+  const recordNavigation=recordNavigatorModule.create({
+    groups,html,str,byId,
+    getCurrentId:()=>currentId,
+    getPage:()=>page,
+    getState:()=>state,
+    getWorkspace:()=>workspace,
+    getWindow:()=>window
+  });
+  const renderRecordNavigator=recordNavigation.render;
+  const refreshRecordNavigator=recordNavigation.refresh;
+  const clearRecordSearch=recordNavigation.clear;
+  const focusAddedRecord=recordNavigation.focus;
   function renderCaptureControls(fileId, cameraId, attributes, cameraAttributes) {
     return `<div class="upload-control">
       <input type="file" id="${html(fileId)}" accept="image/png,image/jpeg,image/webp" multiple ${attributes}>

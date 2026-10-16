@@ -184,3 +184,7 @@ Python y Node.js se usan para **desarrollo y validación**, no son requisitos de
 ## Publicar una versión controlada
 
 Desde la raíz: `npm ci` y `npm run deploy:check`. La [guía de Cloudflare](deploy/CLOUDFLARE_PAGES_ES.md) describe el Worker existente, los comandos de build/deploy, el entorno `production` y las pruebas en dispositivos. CI no publica automáticamente.
+
+### Auditoría WiFi desde un dispositivo
+
+El **Diccionario técnico → WiFi** incorpora 20 conceptos y cuatro mini guías para WiFi corporativa, invitados, cobertura y revisión desde móviles/tablets. Incluye referencias oficiales, evidencias recomendadas y limitaciones. Sus comandos son orientativos y de lectura; RabbitMole no ejecuta escaneos radio desde el navegador. Verifica alcance y autorización antes de probar conectividad o segmentación.

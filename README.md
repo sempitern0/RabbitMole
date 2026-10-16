@@ -184,3 +184,7 @@ Python and Node.js are **development tools**, not requirements for using the hos
 ## Controlled releases
 
 Run `npm ci` and `npm run deploy:check` from the repository root. The [Cloudflare guide](deploy/CLOUDFLARE_PAGES.md) documents the existing Worker, build/deploy commands, protected production environment and device checks. CI does not deploy automatically. The public browser tab is limited; launching the installed PWA enables the full app. This is a client-side usage policy, not authentication.
+
+### Wi-Fi assessment from a device
+
+The offline **Technical dictionary → WiFi** includes 20 concepts and four concise field guides covering enterprise and guest Wi-Fi, coverage, and mobile/tablet checks. Guidance includes authoritative references, suggested evidence, and limitations. Console commands are read-only examples; the browser app cannot perform radio scans. Obtain documented authorization before testing connectivity or network segmentation.

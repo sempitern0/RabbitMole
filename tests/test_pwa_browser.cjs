@@ -34,6 +34,24 @@ const {chromium}=require('playwright');
     await page.waitForFunction(()=>document.getElementById('pwa-install-status').textContent.includes('desde su icono'));
    }
    await page.locator('#sidebar-maintenance > summary').click();
+   // Every palette retains a dark, legible maintenance panel independently of the workspace theme.
+   for(const palette of ['ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+    await page.locator('#palette').selectOption(palette);
+    const contrast=await page.locator('#offline-health-panel').evaluate(el=>{
+      const style=getComputedStyle(el), child=getComputedStyle(el.querySelector('strong'));
+      const lum=v=>{
+        const rgb=v.match(/[\\d.]+/g)?.slice(0,3).map(Number)||[0,0,0];
+        const [r,g,b]=rgb.map(n=>{const x=n/255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});
+        return .2126*r+.7152*g+.0722*b;
+      };
+      const bg=lum(style.backgroundColor), fg=lum(child.color);
+      return {ratio:(Math.max(bg,fg)+.05)/(Math.min(bg,fg)+.05),
+        bg:style.backgroundColor, fg:child.color, palette:document.documentElement.dataset.palette};
+    });
+    assert.equal(contrast.palette,palette);
+    assert(contrast.ratio>=4.5,palette+' maintenance title has insufficient contrast: '+JSON.stringify(contrast));
+   }
+   await page.locator('#palette').selectOption('ocean');
    await page.locator('#offline-health-check').click();
    await page.waitForFunction(()=>document.getElementById('offline-health-status').textContent.includes('Recursos offline completos'));
    await page.locator('#global-navigation [data-go="records"]').click();

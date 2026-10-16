@@ -2069,6 +2069,7 @@
     return `<article class="glossary-article">${glossaryReturn || currentId ? '<button type="button" class="glossary-inline-back" data-glossary-back="true">← Volver al asistente</button>' : ""}<span class="glossary-kicker">${html(t.category)}</span><h2>${html(t.title)}</h2>${glossaryTermPlatforms(t)}${t.fullName ? `<p class="glossary-fullname"><strong>Denominación completa:</strong> ${html(t.fullName)}</p>` : ""}<div class="glossary-definition">${glossaryEmphasis(t.description)}</div>
       ${t.why ? `<section class="glossary-section glossary-why"><h3>Por qué importa</h3><p>${glossaryEmphasis(t.why)}</p></section>` : ""}
       <section class="glossary-section glossary-check"><h3>Qué comprobar en la auditoría</h3><p>${glossaryEmphasis(t.check)}</p></section>
+      ${Array.isArray(t.steps) && t.steps.length ? `<section class="glossary-section glossary-audit-steps"><h3>Mini guía paso a paso</h3><ol>${t.steps.map(step => `<li>${html(step)}</li>`).join("")}</ol></section>` : ""}
       ${t.evidence ? `<section class="glossary-section glossary-evidence"><h3>Qué evidencia solicitar</h3><p>${html(t.evidence)}</p></section>` : ""}
       ${t.caution ? `<section class="glossary-section glossary-caution"><h3>Evita esta confusión</h3><p>${html(t.caution)}</p></section>` : ""}
       ${renderGlossaryGuide(t)}

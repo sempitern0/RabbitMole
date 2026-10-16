@@ -102,3 +102,12 @@
 .glossary-caution { border-inline-start:3px solid var(--line); padding-inline-start:1rem; }
 .glossary-evidence h3,.glossary-caution h3 { margin-bottom:.35rem; }
 .glossary-evidence p,.glossary-caution p { margin:0; line-height:1.65; }
+
+/* Compact, accessible field checklists from the offline WiFi guide. */
+.glossary-audit-steps {
+  border-inline-start: 3px solid var(--brand);
+  padding-inline-start: clamp(.8rem, 2vw, 1.1rem);
+}
+.glossary-audit-steps ol { display: grid; gap: .5rem; margin: .55rem 0 0; padding-inline-start: 1.4rem; }
+.glossary-audit-steps li { padding-inline-start: .25rem; line-height: 1.58; overflow-wrap: anywhere; }
+.glossary-audit-steps li::marker { color: var(--brand); font-weight: 750; }

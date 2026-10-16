@@ -84,3 +84,16 @@ assert(app.includes('class="field-heading"')&&app.includes('glossary-help')&&app
 assert(app.includes('backToAudit()')&&app.includes('glossary-inline-back'),'Glossary return shortcut missing');
 assert(!app.includes('${html(label)}${help}</label>'),'Help must not be nested inside label');
 console.log('PASS offline glossary: concepts, synonyms, filters, contextual guidance');
+
+const wifi=g.TERMS.filter(t=>t.category.startsWith('WiFi ·'));
+assert.equal(wifi.length,20,'20 WiFi field topics must be available offline');
+assert.equal(new Set(wifi.map(t=>t.id)).size,20,'WiFi identifiers must be unique');
+assert(wifi.every(t=>t.references?.length && t.evidence && t.caution && t.example),'WiFi entries need references, evidence and cautions');
+assert.deepEqual([...new Set(wifi.map(t=>t.category))].sort().join('|'),['WiFi · conceptos','WiFi · cobertura','WiFi · guías','WiFi · seguridad'].sort().join('|'));
+assert(g.search('wifi').length>=20,'WiFi entries must be discoverable by generic search');
+for(const term of wifi.filter(t=>t.category==='WiFi · guías')) {
+ assert(term.steps.length>=5,'Practical mini guides must have clear audit steps');
+ assert(g.GUIDES[term.id]?.commands?.length>=2,'Mini guides should have passive diagnostics');
+}
+assert(g.CONTEXT_HELP.fields.networks.ssid==='term-155','Network SSID contextual help missing');
+assert(app.includes('glossary-audit-steps'),'Step by step WiFi help UI missing');

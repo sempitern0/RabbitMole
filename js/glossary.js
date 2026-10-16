@@ -2645,6 +2645,546 @@
         "url": "https://csrc.nist.gov/pubs/sp/800/92/final"
       }
     ]
+  },
+  {
+    "id": "term-155",
+    "title": "SSID",
+    "category": "WiFi · conceptos",
+    "description": "Nombre lógico que identifica una red inalámbrica. Un mismo SSID puede anunciarse desde varios puntos de acceso.",
+    "check": "Identifica los SSID corporativos, invitados, IoT y obsoletos; contrasta con el inventario autorizado.",
+    "why": "Un SSID visible no demuestra su propietario ni que la conexión sea segura.",
+    "example": "SSID Oficina y SSID Invitados tienen políticas y alcances distintos.",
+    "evidence": "Captura de redes disponibles y listado de SSID aprobados.",
+    "caution": "Ocultar el SSID no aporta una protección criptográfica real.",
+    "aliases": [
+      "nombre wifi",
+      "nombre de red"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-156",
+    "title": "BSSID",
+    "category": "WiFi · conceptos",
+    "description": "Identificador de la interfaz radio de un punto de acceso, generalmente representado como dirección MAC.",
+    "check": "Registra los BSSID observados para distinguir radios/AP que publican el mismo SSID y compáralos con el controlador.",
+    "why": "Ayuda a detectar AP inesperados, pero su identidad puede falsificarse.",
+    "example": "Dos BSSID distintos anuncian Oficina en dos plantas.",
+    "evidence": "Listado de BSSID con canal, fecha y ubicación; inventario de AP autorizado.",
+    "caution": "Un BSSID desconocido no prueba por sí solo la existencia de un AP malicioso.",
+    "aliases": [
+      "mac del ap",
+      "identificador ap"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-157",
+    "title": "WPA2-Personal / PSK",
+    "category": "WiFi · seguridad",
+    "description": "Modo de acceso WiFi basado en una clave precompartida común a los clientes autorizados.",
+    "check": "Revisa longitud y custodia de la contraseña, rotación, personal con acceso y segmentación de esa red.",
+    "why": "La compartición de clave dificulta atribuir acciones individualmente.",
+    "example": "Una clave de invitados se rota después de terminar un evento.",
+    "evidence": "Política de claves, configuración del SSID y registro de rotaciones, sin copiar la contraseña.",
+    "caution": "WPA2-AES no es equivalente a WEP o TKIP ni garantiza por sí solo seguridad de extremo a extremo.",
+    "aliases": [
+      "psk",
+      "wpa2 personal",
+      "clave compartida"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-158",
+    "title": "WPA3-Personal / SAE",
+    "category": "WiFi · seguridad",
+    "description": "Autenticación personal WiFi mediante Simultaneous Authentication of Equals, que mejora la resistencia frente a ataques de diccionario offline.",
+    "check": "Comprueba SAE, PMF, firmware de AP y clientes, excepciones y modo de transición WPA2/WPA3.",
+    "why": "Permite reforzar el acceso personal sin necesidad de cuentas 802.1X.",
+    "example": "El SSID nuevo usa WPA3-SAE y los dispositivos incompatibles se aíslan.",
+    "evidence": "Configuración AP, capacidades de cliente y lista de excepciones.",
+    "caution": "SAE no impide contraseñas compartidas ni corrige una mala segmentación.",
+    "aliases": [
+      "sae",
+      "wpa3 personal"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-159",
+    "title": "802.1X en WiFi",
+    "category": "WiFi · seguridad",
+    "description": "Marco de autenticación de red utilizado habitualmente con EAP y un servidor RADIUS.",
+    "check": "Comprueba método EAP, identidad por usuario o dispositivo, validación del servidor y revocación.",
+    "why": "Permite aplicar permisos diferenciados y registrar accesos.",
+    "example": "La baja de una cuenta revoca su acceso a la WLAN corporativa.",
+    "evidence": "Política WLAN, registros de acceso anonimizados y parámetros de 802.1X.",
+    "caution": "802.1X no especifica por sí solo un método EAP seguro; debe revisarse la configuración.",
+    "aliases": [
+      "dot1x",
+      "eap",
+      "autenticacion wifi empresarial"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "RFC 5216 · EAP-TLS",
+        "url": "https://www.rfc-editor.org/rfc/rfc5216"
+      }
+    ]
+  },
+  {
+    "id": "term-160",
+    "title": "PEAP / EAP-MSCHAPv2",
+    "category": "WiFi · seguridad",
+    "description": "Autenticación basada en usuario y contraseña dentro de un túnel TLS usado en algunas redes 802.1X.",
+    "check": "Verifica que el cliente valide la CA y el nombre del servidor RADIUS; analiza evolución a métodos con certificados.",
+    "why": "Una validación del servidor incorrecta puede exponer credenciales a suplantación.",
+    "example": "El perfil corporativo preconfigura CA y nombre exacto del RADIUS.",
+    "evidence": "Perfil de cliente, autoridad certificadora y políticas del servidor sin secretos.",
+    "caution": "Aceptar certificados de cualquier servidor anula una protección esencial del túnel.",
+    "aliases": [
+      "peap",
+      "mschapv2"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "RFC 5216 · EAP-TLS",
+        "url": "https://www.rfc-editor.org/rfc/rfc5216"
+      }
+    ]
+  },
+  {
+    "id": "term-161",
+    "title": "WPS",
+    "category": "WiFi · seguridad",
+    "description": "Wi-Fi Protected Setup simplifica el alta de equipos, pero ciertos mecanismos y configuraciones pueden aumentar el riesgo.",
+    "check": "Comprueba si el servicio WPS está habilitado y documenta por qué es necesario; desactívalo cuando no exista una necesidad aprobada.",
+    "why": "Evitar altas no controladas reduce exposición de la WLAN.",
+    "example": "El controlador confirma WPS deshabilitado en SSID corporativos.",
+    "evidence": "Configuración AP o controlador y excepción aprobada, si existe.",
+    "caution": "No confundas WPS con WPA2 o WPA3: son funciones diferentes.",
+    "aliases": [
+      "wifi protected setup",
+      "wps pin"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-162",
+    "title": "RSSI",
+    "category": "WiFi · cobertura",
+    "description": "Indicador de potencia de señal recibida, presentado a menudo en dBm negativos.",
+    "check": "Recoge potencia aproximada, banda, fecha y ubicación; compara mediciones en zonas de uso real.",
+    "why": "Una señal débil puede causar retransmisiones, roaming inestable y mala experiencia.",
+    "example": "En una sala el cliente indica -78 dBm y presenta cortes.",
+    "evidence": "Captura de parámetros de radio y mapa de zonas medidas.",
+    "caution": "RSSI depende del hardware y no mide ruido ni calidad por sí solo.",
+    "aliases": [
+      "intensidad wifi",
+      "dBm wifi"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-163",
+    "title": "SNR (señal/ruido)",
+    "category": "WiFi · cobertura",
+    "description": "Diferencia entre potencia de señal útil y ruido recibido, normalmente expresada en dB.",
+    "check": "Si el equipo lo permite, registra SNR junto con RSSI, banda, canal y ubicación.",
+    "why": "Una cobertura visible puede ser inutilizable si existe interferencia elevada.",
+    "example": "Dos salas muestran RSSI parecido pero SNR y estabilidad muy diferentes.",
+    "evidence": "Medición del equipo/herramienta compatible y condiciones del entorno.",
+    "caution": "No todos los móviles o sistemas exponen SNR directamente.",
+    "aliases": [
+      "signal to noise ratio",
+      "ruido wifi"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-164",
+    "title": "Canal y anchura WiFi",
+    "category": "WiFi · cobertura",
+    "description": "Frecuencia de operación y ancho del canal que determinan solapamientos, capacidad y coexistencia.",
+    "check": "Registra canal, banda, anchura y densidad de AP; contrasta con plan radio y normativa local.",
+    "why": "Canales solapados o anchuras demasiado grandes pueden degradar redes densas.",
+    "example": "En 2,4 GHz varias radios vecinas compiten por el mismo canal.",
+    "evidence": "Inventario de canales del controlador y observaciones por ubicación.",
+    "caution": "Más MHz o barras de señal no implican automáticamente más rendimiento.",
+    "aliases": [
+      "canal wifi",
+      "ancho de canal",
+      "channel width"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-165",
+    "title": "DFS (selección dinámica de frecuencia)",
+    "category": "WiFi · cobertura",
+    "description": "Mecanismo de coexistencia de ciertas frecuencias de 5 GHz con sistemas de radar; puede exigir cambiar de canal.",
+    "check": "Revisa qué canales DFS utiliza cada AP y los eventos de detección y cambio.",
+    "why": "Explica desconexiones esporádicas que no necesariamente son incidencias de seguridad.",
+    "example": "Un AP deja temporalmente el canal tras detectar radar.",
+    "evidence": "Historial de eventos radio y configuración regional del controlador.",
+    "caution": "La disponibilidad y reglas DFS varían por país y banda.",
+    "aliases": [
+      "dynamic frequency selection",
+      "radar wifi"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-166",
+    "title": "Aislamiento de clientes WiFi",
+    "category": "WiFi · seguridad",
+    "description": "Control que limita la comunicación directa entre clientes asociados al mismo entorno inalámbrico.",
+    "check": "Verifica política por SSID y, con autorización, conectividad entre dos dispositivos de prueba controlados.",
+    "why": "En invitados puede reducir exposiciones laterales entre clientes.",
+    "example": "Dos equipos de laboratorio en Invitados no deben poder acceder entre sí.",
+    "evidence": "Política del AP y resultado de una prueba pactada con direcciones de laboratorio.",
+    "caution": "La opción de aislamiento no sustituye las reglas de routing/firewall hacia otras VLAN.",
+    "aliases": [
+      "ap isolation",
+      "client isolation"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-167",
+    "title": "Portal cautivo",
+    "category": "WiFi · seguridad",
+    "description": "Página o flujo que solicita autenticación, aceptación de condiciones o información antes de permitir ciertos accesos.",
+    "check": "Comprueba proceso de alta, caducidad de sesión, HTTPS del portal, accesibilidad y alcance efectivo tras aceptar.",
+    "why": "El portal organiza el acceso, pero no sustituye necesariamente el cifrado de radio.",
+    "example": "Un visitante acepta condiciones y recibe acceso únicamente a Internet.",
+    "evidence": "Capturas del portal con datos personales ocultos y configuración de políticas.",
+    "caution": "Un portal cautivo no demuestra identidad fiable ni aislamiento entre clientes.",
+    "aliases": [
+      "captive portal",
+      "portal invitados"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-168",
+    "title": "Roaming WiFi",
+    "category": "WiFi · cobertura",
+    "description": "Cambio de punto de acceso mientras un cliente se mueve dentro de la misma red inalámbrica.",
+    "check": "Recorre zonas aprobadas y documenta cortes, latencia y BSSID, cuando el dispositivo lo permita.",
+    "why": "Fallos de transición afectan llamadas, tablets y movilidad en oficinas.",
+    "example": "Una videollamada se interrumpe al pasar entre plantas.",
+    "evidence": "Registro de prueba con hora, zona, BSSID y calidad percibida.",
+    "caution": "802.11k/v/r ayudan al roaming, pero el comportamiento final depende del cliente.",
+    "aliases": [
+      "itinerancia wifi",
+      "802.11r",
+      "802.11k",
+      "802.11v"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-169",
+    "title": "Inventario de AP autorizados",
+    "category": "WiFi · conceptos",
+    "description": "Relación de puntos de acceso aprobados, sus radios, versiones, ubicaciones y propietarios.",
+    "check": "Contrasta AP y BSSID observados con controlador y planos, revisa firmware y altas/bajas.",
+    "why": "Facilita identificar dispositivos desconocidos y equipos sin mantenimiento.",
+    "example": "El inventario contiene AP-12, pero en planta aparece una radio adicional pendiente de validar.",
+    "evidence": "Exportación del controlador y observaciones en sitio con alcance autorizado.",
+    "caution": "Identificadores inalámbricos observados no prueban la identidad física del dispositivo.",
+    "aliases": [
+      "inventario puntos de acceso",
+      "ap autorizado"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-170",
+    "title": "Bandas WiFi 2,4 / 5 / 6 GHz",
+    "category": "WiFi · cobertura",
+    "description": "Bandas de frecuencia con capacidades, alcance y requisitos regulatorios distintos según dispositivo y país.",
+    "check": "Comprueba soporte de clientes, SSID por banda, políticas de seguridad y planificación de cobertura.",
+    "why": "La banda elegida condiciona interferencias, compatibilidad y rendimiento.",
+    "example": "Un móvil antiguo solo ve 2,4/5 GHz mientras otro soporta 6 GHz.",
+    "evidence": "Ficha de radios AP, compatibilidad de dispositivos y mediciones autorizadas.",
+    "caution": "6 GHz no está disponible en todos los equipos ni usa idénticas reglas en todos los países.",
+    "aliases": [
+      "2.4ghz",
+      "5ghz",
+      "6ghz",
+      "wifi 6e",
+      "wifi 7"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ]
+  },
+  {
+    "id": "term-171",
+    "title": "Mini guía · WiFi corporativa",
+    "category": "WiFi · guías",
+    "description": "Secuencia de comprobaciones de una WLAN corporativa desde un dispositivo autorizado, sin alterar su configuración.",
+    "check": "Identifica SSID y seguridad, valida credenciales/certificado, documenta IP/DNS/rutas y compara acceso efectivo con el alcance pactado.",
+    "why": "Permite registrar hechos comprobables y detectar limitaciones antes de emitir un hallazgo.",
+    "example": "Un portátil corporativo muestra EAP-TLS, CA esperada y acceso solo a destinos aprobados.",
+    "evidence": "Capturas anonimizadas, perfil de autenticación y acta de pruebas.",
+    "caution": "Un cliente no permite certificar por sí solo la configuración completa del controlador.",
+    "aliases": [
+      "auditar wifi corporativa",
+      "wifi enterprise"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ],
+    "steps": [
+      "Identifica SSID y BSSID esperado sin conectar a redes ajenas.",
+      "Confirma WPA2/WPA3-Enterprise y el método EAP declarado.",
+      "Con credenciales aprobadas verifica CA y nombre exacto del servidor de autenticación; nunca aceptes un certificado desconocido.",
+      "Registra IP, puerta de enlace y DNS del cliente autorizado.",
+      "Prueba solo el acceso a recursos pactados con el responsable de red.",
+      "Documenta evidencias, limitaciones y fecha; solicita la política del controlador para cerrar la conclusión."
+    ]
+  },
+  {
+    "id": "term-172",
+    "title": "Mini guía · WiFi invitados",
+    "category": "WiFi · guías",
+    "description": "Secuencia para verificar el comportamiento del SSID de visitas desde equipos de prueba.",
+    "check": "Valida portal, navegación prevista, bloqueo de recursos internos y aislamiento con destinos expresamente permitidos.",
+    "why": "Comprueba si la separación anunciada para visitantes se aplica realmente.",
+    "example": "Una tablet invitada navega por Internet, pero no llega a un servidor interno de pruebas.",
+    "evidence": "Resultados positivos y negativos de pruebas acordadas, SSID y segmento IP.",
+    "caution": "Evita enumerar redes corporativas o probar equipos ajenos sin alcance escrito.",
+    "aliases": [
+      "auditar wifi invitados",
+      "guest wifi"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ],
+    "steps": [
+      "Identifica la red de invitados y el mecanismo de autenticación/portal.",
+      "Conecta un equipo expresamente autorizado y documenta IP/DNS.",
+      "Valida salida a Internet solo si está permitida en el alcance.",
+      "Comprueba aislamiento respecto de un servidor corporativo de prueba aprobado.",
+      "Si está autorizado, verifica aislamiento entre dos clientes propios.",
+      "Anota lo observado, excepciones y controles no verificables desde el cliente."
+    ]
+  },
+  {
+    "id": "term-173",
+    "title": "Mini guía · Cobertura y estabilidad WiFi",
+    "category": "WiFi · guías",
+    "description": "Recorrido reproducible para registrar calidad de señal y conectividad en ubicaciones de trabajo.",
+    "check": "Fija ubicaciones, horas y dispositivos; observa RSSI/SNR si están disponibles, canal, roaming y cortes.",
+    "why": "Conecta las incidencias percibidas con evidencia y condiciones reales de medición.",
+    "example": "Se documenta una zona de reuniones con cortes recurrentes al desplazarse.",
+    "evidence": "Matriz ubicación-fecha-dispositivo, capturas y resultados de pruebas permitidas.",
+    "caution": "Una medición puntual no representa todas las cargas ni horas de ocupación.",
+    "aliases": [
+      "auditoria cobertura wifi",
+      "wifi site survey basico"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ],
+    "steps": [
+      "Selecciona zonas representativas y prepara una tabla de mediciones.",
+      "Usa el mismo dispositivo y anota fecha, hora, banda y SSID.",
+      "Mide RSSI/SNR si la plataforma los facilita; registra canal/BSSID disponible.",
+      "Realiza un recorrido autorizado y registra cortes o cambios de AP.",
+      "Repite en condiciones comparables y contrasta con requisitos del negocio.",
+      "Entrega mapa de incidencias y las limitaciones de cada medición."
+    ]
+  },
+  {
+    "id": "term-174",
+    "title": "Mini guía · Auditoría WiFi desde móvil o tablet",
+    "category": "WiFi · guías",
+    "description": "Revisión básica de una WLAN desde opciones y diagnósticos accesibles del dispositivo móvil.",
+    "check": "Revisa SSID, seguridad visible, asignación IP/DNS, portal y conectividad autorizada; guarda capturas sin datos personales.",
+    "why": "Facilita verificaciones rápidas cuando no hay consola de administrador.",
+    "example": "Un iPad verifica el SSID invitado y documenta un portal cautivo con acceso limitado.",
+    "evidence": "Capturas de ajustes y pruebas con fecha y ubicación sin secretos.",
+    "caution": "iOS/Android no muestran todas las métricas radio y la PWA no puede escanear WLAN ni ejecutar comandos del sistema.",
+    "aliases": [
+      "auditar wifi con movil",
+      "wifi ios android"
+    ],
+    "references": [
+      {
+        "label": "NIST SP 800-153 · Security of Wireless Local Area Networks",
+        "url": "https://csrc.nist.gov/pubs/sp/800/153/final"
+      },
+      {
+        "label": "Wi-Fi Alliance · Seguridad WiFi",
+        "url": "https://www.wi-fi.org/discover-wi-fi/security"
+      }
+    ],
+    "steps": [
+      "Abre ajustes WiFi del dispositivo y confirma el SSID previsto.",
+      "Comprueba el tipo de seguridad mostrado y posibles advertencias.",
+      "Con permiso conecta y anota IP, puerta de enlace y DNS visibles.",
+      "Observa portal cautivo, acceso esperado y experiencia básica de roaming.",
+      "Realiza capturas con datos personales y credenciales ocultos.",
+      "Completa la evidencia con configuración del AP/controlador facilitada por TI."
+    ]
   }
 ]);
  // Read-only diagnostic playbooks. Commands are examples, NEVER executed by this PWA.
@@ -3810,6 +4350,168 @@
         "lookFor": "Inventario de interfaces; el soporte MACsec se verifica con el fabricante o controlador."
       }
     ]
+  },
+  {
+    "id": "term-155",
+    "symptom": "Aparecen redes antiguas o nombres no reconocidos.",
+    "verify": "Compara nombres con la consola WiFi; registra solo observación pasiva del equipo y pregunta por altas/bajas.",
+    "interpret": "La presencia de un SSID no demuestra que el AP pertenezca a la organización.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "netsh wlan show networks mode=bssid",
+        "lookFor": "SSID y BSSID visibles; no conecta a redes."
+      },
+      {
+        "platform": "Linux",
+        "command": "nmcli --fields SSID,BSSID,CHAN,SIGNAL,SECURITY device wifi list --rescan no",
+        "lookFor": "Lista ya observada; no fuerza un reescaneo de radios."
+      }
+    ]
+  },
+  {
+    "id": "term-156",
+    "symptom": "Varios AP comparten un SSID o aparece uno no identificado.",
+    "verify": "Contrasta BSSID, canal y ubicación con el inventario y el controlador.",
+    "interpret": "MAC de radio no identifica con certeza el origen físico.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "netsh wlan show networks mode=bssid",
+        "lookFor": "BSSID por SSID, si el adaptador lo muestra."
+      },
+      {
+        "platform": "Linux",
+        "command": "nmcli -f SSID,BSSID,CHAN,SECURITY device wifi list --rescan no",
+        "lookFor": "BSSID y canal de datos visibles actualmente."
+      }
+    ]
+  },
+  {
+    "id": "term-158",
+    "symptom": "Una WLAN usa modo mixto o clientes antiguos no conectan.",
+    "verify": "Revisa configuración y capacidad del cliente, PMF y excepciones.",
+    "interpret": "WPA3-SAE mejora autenticación, pero no corrige una mala clave compartida.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "netsh wlan show drivers",
+        "lookFor": "Tipos de autenticación admitidos por el driver."
+      },
+      {
+        "platform": "Linux",
+        "command": "nmcli -f IN-USE,SSID,SECURITY device wifi list --rescan no",
+        "lookFor": "Seguridad anunciada; no es prueba de política del controlador."
+      }
+    ]
+  },
+  {
+    "id": "term-162",
+    "symptom": "Cobertura irregular o señal débil en una zona.",
+    "verify": "Anota ubicación y fecha, consulta conexión actual y registra valores cuando estén disponibles.",
+    "interpret": "RSSI aislado no identifica interferencias ni garantiza rendimiento.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "netsh wlan show interfaces",
+        "lookFor": "Señal del enlace WiFi actual según el driver."
+      },
+      {
+        "platform": "Linux",
+        "command": "nmcli -f IN-USE,SSID,SIGNAL,CHAN device wifi list --rescan no",
+        "lookFor": "Señal estimada y canal de redes ya observadas."
+      }
+    ]
+  },
+  {
+    "id": "term-167",
+    "symptom": "Usuarios no pueden completar la conexión a invitados.",
+    "verify": "Conéctate solo con credenciales autorizadas; revisa las políticas publicadas y apertura de recursos de prueba.",
+    "interpret": "El portal no sustituye cifrado, 802.1X ni aislamiento.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Dirección, puerta de enlace y DNS tras conectar."
+      },
+      {
+        "platform": "Linux",
+        "command": "nmcli -f GENERAL,IP4 device show",
+        "lookFor": "Configuración IP asignada a interfaces locales."
+      }
+    ]
+  },
+  {
+    "id": "term-171",
+    "symptom": "Se desconoce si el SSID corporativo aplica la política anunciada.",
+    "verify": "Sigue los pasos de la guía, registrando perfil de autenticación, certificado, IP/DNS y acceso únicamente al destino de prueba autorizado.",
+    "interpret": "Es una muestra de cliente; para una conclusión global requiere controlador, RADIUS y firewall.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "netsh wlan show interfaces",
+        "lookFor": "SSID, BSSID, señal y autenticación visibles al equipo."
+      },
+      {
+        "platform": "macOS",
+        "command": "system_profiler SPAirPortDataType",
+        "lookFor": "Datos WiFi visibles en macOS según hardware y versión."
+      }
+    ]
+  },
+  {
+    "id": "term-172",
+    "symptom": "La red invitada alcanza recursos no previstos.",
+    "verify": "Usa dos dispositivos de prueba autorizados y destinos aprobados; conserva evidencias de accesos permitidos y bloqueados.",
+    "interpret": "Un único bloqueo no garantiza el aislamiento de toda la infraestructura.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "IP y DNS asignados al cliente invitado."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show",
+        "lookFor": "Rutas configuradas localmente, sin exploración remota."
+      }
+    ]
+  },
+  {
+    "id": "term-173",
+    "symptom": "Cortes al moverse entre zonas.",
+    "verify": "Registra ubicación, banda, señal aproximada, BSSID y hora usando un recorrido repetible.",
+    "interpret": "Los resultados son relativos al dispositivo y al momento de muestreo.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "netsh wlan show interfaces",
+        "lookFor": "Datos de conexión y nivel de señal."
+      },
+      {
+        "platform": "Linux",
+        "command": "nmcli -f IN-USE,SSID,BSSID,CHAN,SIGNAL device wifi list --rescan no",
+        "lookFor": "BSSID y señal disponible en el entorno de prueba."
+      }
+    ]
+  },
+  {
+    "id": "term-174",
+    "symptom": "Se dispone solo de un móvil o tablet para revisar una WLAN.",
+    "verify": "Usa Ajustes → Wi-Fi; documenta seguridad, IP y pruebas de navegación permitidas.",
+    "interpret": "La PWA carece de APIs para obtener BSSID, escanear redes o enumerar AP.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "netsh wlan show interfaces",
+        "lookFor": "Alternativa desde un equipo Windows autorizado."
+      },
+      {
+        "platform": "macOS",
+        "command": "networksetup -getairportnetwork en0",
+        "lookFor": "SSID asociado cuando la interfaz en0 corresponde a WiFi."
+      }
+    ]
   }
 ].map(({id,...guide})=>[id,Object.freeze(guide)])));
  const MAC_COMMANDS=[{"id":"term-25","platform":"macOS","command":"scutil --dns","lookFor":"Resolutores DNS efectivos por interfaz y orden de búsqueda."},{"id":"term-28","platform":"macOS","command":"lsof -nP -iTCP -sTCP:LISTEN","lookFor":"Procesos y puertos TCP en escucha (privilegios según proceso)."},{"id":"term-29","platform":"macOS","command":"curl -Iv https://servidor.autorizado.invalid","lookFor":"Validación TLS y respuesta de cabeceras del host aprobado."},{"id":"term-30","platform":"macOS","command":"security find-certificate -a -p /Library/Keychains/System.keychain","lookFor":"Certificados públicos del llavero del sistema; no extrae claves privadas."},{"id":"term-40","platform":"macOS","command":"fdesetup status","lookFor":"Estado FileVault del volumen de arranque; puede requerir permisos."},{"id":"term-15","platform":"macOS","command":"shasum -a 256 '/ruta/evidencia.bin'","lookFor":"SHA-256 reproducible de evidencia."},{"id":"term-72","platform":"macOS","command":"shasum -a 256 '/ruta/evidencia.bin'","lookFor":"Comprueba integridad en una copia preservada."},{"id":"term-100","platform":"macOS","command":"systemsetup -getusingnetworktime; systemsetup -getnetworktimeserver","lookFor":"Estado/configuración NTP; ciertos datos requieren privilegios."},{"id":"term-36","platform":"macOS","command":"lsof -nP -iTCP -sTCP:LISTEN","lookFor":"Servicios en escucha."},{"id":"term-21","platform":"macOS","command":"ifconfig; netstat -rn -f inet","lookFor":"Direcciones/prefijos y rutas IPv4."},{"id":"term-19","platform":"macOS","command":"scutil --nwi; netstat -rn -f inet","lookFor":"Contexto de interfaces y rutas para VPN."},{"id":"term-34","platform":"macOS","command":"softwareupdate --list","lookFor":"Actualizaciones ofrecidas al host; no instala actualizaciones."},{"id":"term-99","platform":"macOS","command":"log show --last 1h --style compact --predicate 'messageType == error'","lookFor":"Errores recientes; filtra sin guardar datos personales innecesarios."},{"id":"term-101","platform":"macOS","command":"log show --last 1h --style compact --predicate 'process == \"sshd\"'","lookFor":"Eventos recientes del servicio SSH cuando existan."},{"id":"term-26","platform":"macOS","command":"ipconfig getpacket en0","lookFor":"Parámetros DHCP de en0; comprobar interfaz activa."},{"id":"term-31","platform":"macOS","command":"system_profiler SPAirPortDataType","lookFor":"Seguridad y configuración Wi-Fi visible desde el cliente."},{"id":"term-42","platform":"macOS","command":"systemextensionsctl list","lookFor":"Extensiones de sistema presentes; verificar estado EDR en consola del fabricante."},{"id":"term-39","platform":"macOS","command":"system_profiler SPiBridgeDataType","lookFor":"Componentes de seguridad disponibles según hardware Apple (no implica TPM)."}];
@@ -3828,6 +4530,11 @@
     },
     "networks": {
       "cidr": "term-3",
+      "ssid": "term-155",
+      "wifiSecurity": "term-158",
+      "wifiSignal": "term-162",
+      "wifiChannel": "term-164",
+      "wifiBand": "term-170",
       "vlan": "term-2",
       "dns": "term-25",
       "firewall": "term-14",
@@ -3882,7 +4589,7 @@
    if(category!=='Todas'&&t.category!==category)return false;
    if(!tokens.length)return true;
    const guide=GUIDES[t.id];
-   const haystack=normalize([t.title,t.category,t.description,t.check,t.why,t.example,t.fullName,...Object.values(t.help||{}),...(t.references||[]).map(x=>x.label),...(t.aliases||[]),guide?.symptom,guide?.verify,guide?.interpret,...(guide?.commands||[]).flatMap(c=>[c.platform,c.command,c.lookFor])].join(' '));
+   const haystack=normalize([t.title,t.category,t.description,t.check,t.why,t.example,t.evidence,t.caution,...(t.steps||[]),t.fullName,...Object.values(t.help||{}),...(t.references||[]).map(x=>x.label),...(t.aliases||[]),guide?.symptom,guide?.verify,guide?.interpret,...(guide?.commands||[]).flatMap(c=>[c.platform,c.command,c.lookFor])].join(' '));
    return tokens.every(token=>haystack.includes(token));
   }).sort((a,b)=>{
    if(!tokens.length)return a.title.localeCompare(b.title,'es');

@@ -2406,9 +2406,9 @@
   function renderIntake() {
     const block = intakePreview?.block || intakeBlock;
     const csvSamples = {
-      assets: "hostname,ip,os\\nequipo-demo,192.0.2.10,Linux",
-      networks: "name,cidr,gateway\\nred-laboratorio,192.0.2.0/24,192.0.2.1",
-      software: "name,version,asset\\naplicacion-demo,1.0,equipo-demo"
+      assets: "hostname,ip,os\nequipo-demo,192.0.2.10,Linux",
+      networks: "name,cidr,gateway\nred-laboratorio,192.0.2.0/24,192.0.2.1",
+      software: "name,version,asset\naplicacion-demo,1.0,equipo-demo"
     };
     const currentSample = csvSamples[block];
     const importPanel = `<section class="card intake-card" aria-labelledby="intake-upload-title">

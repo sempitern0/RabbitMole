@@ -41,9 +41,9 @@ const {chromium}=require('playwright');
       const style=getComputedStyle(el), child=getComputedStyle(el.querySelector('strong'));
       const lum=v=>{
         // Chromium may serialize color-mix() as color(srgb ...) rather than rgb(...).
-        const srgb=v.match(/^color\\(srgb\\s+([0-9.]+)\\s+([0-9.]+)\\s+([0-9.]+)/);
-        const rgb=v.match(/^rgba?\\(\\s*([0-9.]+)[,\\s]+([0-9.]+)[,\\s]+([0-9.]+)/);
-        const channel=srgb?[...srgb.slice(1,4)].map(Number):rgb?[...rgb.slice(1,4)].map(n=>Number(n)/255):null;
+        const srgb=v.match(/^color[(]srgb +([0-9.]+) +([0-9.]+) +([0-9.]+)/);
+        const rgb=v.match(/^rgba?[(] *([0-9.]+)[, ]+([0-9.]+)[, ]+([0-9.]+)/);
+        const channel=srgb?srgb.slice(1,4).map(Number):rgb?rgb.slice(1,4).map(n=>Number(n)/255):null;
         if(!channel)throw Error('Unsupported CSS color '+v);
         const [r,g,b]=channel.map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4);
         return .2126*r+.7152*g+.0722*b;

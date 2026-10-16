@@ -57,7 +57,10 @@ const app=fs.readFileSync('js/app.js','utf8'),html=fs.readFileSync('index.html',
 assert(app.includes('renderMitigationActions')&&app.includes('mitigationOverview'));
 assert(app.includes('data-mitigation-verify')&&app.includes('data-mitigation-check-field'));
 assert(app.includes('data-pdf-appendix-save')&&app.includes('data-remove-evidence-photo'));
-assert(app.includes('renderResidualAssessment')&&app.includes('renderMitigationDashboard')&&app.includes('data-save-residual'));
+assert(app.includes('renderResidualAssessment')&&app.includes('renderMitigationDashboard'));
+assert(app.includes('workflowViews.renderResidualAssessment')&&app.includes('workflowViews.renderMitigationDashboard'));
+const views=fs.readFileSync('js/audit-workflow-views.js','utf8');
+assert(views.includes('data-save-residual')&&views.includes('data-residual-field'));
 assert(app.includes('record.residualAssessments = mitigation.normalizeResidual(item.residualAssessments)'));
 assert(html.includes('js/audit-mitigation.js'));
 console.log('PASS mitigation plans, approvals, controlled transitions, JSON roundtrip and display');

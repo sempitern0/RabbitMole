@@ -3,9 +3,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const ctx={TextDecoder,Uint8Array,Date};ctx.globalThis=ctx;
 vm.runInNewContext(fs.readFileSync('js/external-network-analysis.js','utf8'),ctx);
 const m=ctx.RabbitMoleExternalNetwork;
-const aps=['sep=;','SSID;#;Dirección MAC;RSSI;SNR;Canal;Banda;Ancho;802.11;WEP;WPA;WPA2;WPA3;WPS;Fabricante',
- 'Lab;1;02:00:00:00:00:01;-49;N/A;6;2.4GHz;20;n;;;PSK-CCMP;;',
- '[Cliente Lan] - 192.0.2.1;;02:00:00:00:00:02;;;;;;;;;;;;'].join('\n');
+const columns=['SSID','#','Dirección MAC','RSSI','SNR','Canal','Banda','Ancho','802.11','WEP','WPA','WPA2','WPA3','WPS','Fabricante'];
+const makeRow=values=>columns.map(h=>values[h]||'').join(';');
+const aps=['sep=;',columns.join(';'),
+ makeRow({SSID:'Lab','#':'1','Dirección MAC':'02:00:00:00:00:01',RSSI:'-49',Canal:'6',Banda:'2.4GHz',Ancho:'20','802.11':'n',WPA2:'PSK-CCMP'}),
+ makeRow({SSID:'[Cliente Lan] - 192.0.2.1','Dirección MAC':'02:00:00:00:00:02'})].join('\n');
 const parsed=m.parseText(aps);
 assert.equal(parsed.kind,'aps');assert.equal(parsed.items.length,2);
 let data=m.merge(null,{...parsed,filename:'aps.csv'});

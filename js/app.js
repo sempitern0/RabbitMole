@@ -2397,7 +2397,7 @@
     const current=entries.at(-1),locked=state.documentControl?.status==="confirmed";
     const evidenceOptions=state.evidence.map(e=>`<option value="${html(e._key)}">${html(e.id||e.title||"Evidencia")}</option>`).join("");
     const today=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
-    return `<details class="residual-assessment"><summary>Riesgo residual · ${current?html(current.level):"Sin valoración"} · ${entries.length} evaluaciones</summary>
+    return `<details class="residual-assessment" data-ui-expand="residual-${html(finding._key)}"><summary>Riesgo residual · ${current?html(current.level):"Sin valoración"} · ${entries.length} evaluaciones</summary>
       <p class="subtle">Valoración manual. No implica aceptación formal del riesgo, disminución calculada ni cierre del hallazgo. Las notas de riesgo residual existentes permanecen intactas.</p>
       ${current?`<p><strong>Última valoración:</strong> ${html(current.level)} · ${html(mitigation.RESIDUAL_DECISIONS[current.decision])} · ${html(current.assessedAt)}</p>`:""}
       ${entries.length?`<details><summary>Historial de valoraciones (${entries.length})</summary><ol class="retest-history">${[...entries].reverse().map(v=>`<li><strong>${html(v.assessedAt)} · ${html(v.level)}</strong><p>${html(mitigation.RESIDUAL_DECISIONS[v.decision])} · ${html(v.assessedBy)}</p><p>${html(v.rationale)}</p>${v.nextReview?`<small>Próxima revisión: ${html(v.nextReview)}</small>`:""}${v.evidenceId?`<small> · Evidencia: ${html(v.evidenceId)}</small>`:""}</li>`).join("")}</ol></details>`:""}
@@ -2428,7 +2428,7 @@
     const htmlField=(name,label,value,type="text")=>`<label class="field${["steps","impact","rollback","acceptance","changeNotes"].includes(name)?" full":""}">${label}${type==="textarea"?
       `<textarea data-mitigation-field="${name}" rows="3">${html(value||"")}</textarea>`:
       `<input type="${type}" data-mitigation-field="${name}" value="${html(value||"")}" maxlength="500">`}</label>`;
-    return `<details class="mitigation-actions" data-mitigation-finding="${html(finding._key)}">
+    return `<details class="mitigation-actions" data-mitigation-finding="${html(finding._key)}" data-ui-expand="mitigation-${html(finding._key)}">
       <summary>Plan de mitigación · ${actions.length} acciones</summary>
       <p class="subtle">Las acciones registran cambios autorizados, no los ejecutan. Aplicada no equivale a corregida: exige reevaluación posterior.</p>
       <div class="mitigation-add"><label>Procedimiento reutilizable <select data-mitigation-template><option value="custom">Acción personalizada</option>
@@ -2454,7 +2454,7 @@
           ${state.evidence.map(e=>`<option value="${html(e._key)}" ${e._key===action.evidenceKey?"selected":""}>${html(e.id||"Evidencia")} · ${html(e.title||"")}</option>`).join("")}</select></label>
           ${htmlField("changeNotes","Resultado e incidencias",action.changeNotes,"textarea")}
         </div>
-        ${action.status==="applied"?`<details class="mitigation-checks"><summary tabindex="0">Verificación individual · ${action.checks.length} registros</summary><p class="subtle">Registro independiente del cierre global del hallazgo.</p><ol class="retest-history">${action.checks.map(check=>`<li><strong>${html(check.date)} · ${html(mitigation.CHECK_RESULTS[check.result])}</strong><p>${html(check.by)} · ${html(check.notes)}</p>${check.evidenceId?`<small>Evidencia: ${html(check.evidenceId)} · SHA-256: ${html(check.evidenceSha256||"No registrado")}</small>`:""}</li>`).join("")}</ol><div class="fields"><label class="field">Resultado<select data-mitigation-check-field="result"><option value="">Selecciona…</option>${Object.entries(mitigation.CHECK_RESULTS).map(([key,value])=>`<option value="${key}">${html(value)}</option>`).join("")}</select></label><label class="field">Fecha<input type="date" data-mitigation-check-field="date" value="${new Date().toISOString().slice(0,10)}"></label><label class="field">Auditor<input data-mitigation-check-field="by" maxlength="160"></label><label class="field">Evidencia<select data-mitigation-check-field="evidenceKey"><option value="">Sin nueva evidencia</option>${state.evidence.map(e=>`<option value="${html(e._key)}">${html(e.id||e.title||"Evidencia")}</option>`).join("")}</select></label><label class="field full">Prueba y resultado<textarea data-mitigation-check-field="notes" rows="3" maxlength="3000"></textarea></label></div><button type="button" class="button accent" data-mitigation-verify="${html(action.key)}" ${action.checks.length>=mitigation.MAX_CHECKS?"disabled":""}>Registrar comprobación</button></details>`:""}
+        ${action.status==="applied"?`<details class="mitigation-checks" data-ui-expand="check-${html(action.key)}"><summary tabindex="0">Verificación individual · ${action.checks.length} registros</summary><p class="subtle">Registro independiente del cierre global del hallazgo.</p><ol class="retest-history">${action.checks.map(check=>`<li><strong>${html(check.date)} · ${html(mitigation.CHECK_RESULTS[check.result])}</strong><p>${html(check.by)} · ${html(check.notes)}</p>${check.evidenceId?`<small>Evidencia: ${html(check.evidenceId)} · SHA-256: ${html(check.evidenceSha256||"No registrado")}</small>`:""}</li>`).join("")}</ol><div class="fields"><label class="field">Resultado<select data-mitigation-check-field="result"><option value="">Selecciona…</option>${Object.entries(mitigation.CHECK_RESULTS).map(([key,value])=>`<option value="${key}">${html(value)}</option>`).join("")}</select></label><label class="field">Fecha<input type="date" data-mitigation-check-field="date" value="${new Date().toISOString().slice(0,10)}"></label><label class="field">Auditor<input data-mitigation-check-field="by" maxlength="160"></label><label class="field">Evidencia<select data-mitigation-check-field="evidenceKey"><option value="">Sin nueva evidencia</option>${state.evidence.map(e=>`<option value="${html(e._key)}">${html(e.id||e.title||"Evidencia")}</option>`).join("")}</select></label><label class="field full">Prueba y resultado<textarea data-mitigation-check-field="notes" rows="3" maxlength="3000"></textarea></label></div><button type="button" class="button accent" data-mitigation-verify="${html(action.key)}" ${action.checks.length>=mitigation.MAX_CHECKS?"disabled":""}>Registrar comprobación</button></details>`:""}
         <div class="action-row"><button class="button accent" type="button" data-mitigation-save="${html(action.key)}">Guardar acción</button>
         <button class="button quiet" type="button" data-go="followup">Ir a reevaluación</button></div>
       </section>`).join("")}
@@ -2864,6 +2864,23 @@
       <p class="subtle">${linked.length} evidencias vinculadas. Puedes revisarlas en «Evidencias».</p></div>`;
   }
 
+  // One keyboard-accessible inline editor in both Wi-Fi and delivery views.
+  function renderAppendixActions(item,readonly){
+    return `<div class="pdf-appendix-tools"><div class="action-row">
+      <button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button>
+      <button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?"disabled":""}>Quitar PDF</button></div>
+      <details class="pdf-appendix-editor" data-ui-expand="appendix-${html(item.id)}">
+        <summary>Editar información del PDF</summary>
+        <p class="subtle">Solo se actualizan los datos descriptivos; el archivo y su SHA-256 no se modifican.</p>
+        <div class="fields">
+          <label class="field">Nombre del PDF (.pdf)<input data-appendix-field="name" maxlength="160" value="${html(item.name)}" ${readonly?"disabled":""}></label>
+          <label class="field">Procedencia (opcional)<input data-appendix-field="source" maxlength="100" value="${html(item.source||"")}" ${readonly?"disabled":""}></label>
+          <label class="field">Fecha de observación (opcional)<input type="date" data-appendix-field="observedAt" value="${html(item.observedAt||"")}" ${readonly?"disabled":""}></label>
+        </div>
+        <button type="button" class="button accent small" data-pdf-appendix-save="${html(item.id)}" ${readonly?"disabled":""}>Guardar datos</button>
+      </details>
+    </div>`;
+  }
   function renderExternalNetworkAnalysis(print=false) {
     const analysis=externalNetwork.normalize(state.externalNetworkAnalysis);
     const readonly=state.documentControl?.status==="confirmed";
@@ -2903,7 +2920,7 @@
         <label for="external-wifi-pdf">Informe externo en PDF</label>
         <input id="external-wifi-pdf" type="file" accept=".pdf,application/pdf" ${readonly||pdfAppendices.normalize(state.pdfAppendices).length>=pdfAppendices.MAX_COUNT?"disabled":""}>
         <p class="subtle">Se incorpora como documento complementario del expediente y se entrega por separado, con SHA-256. Máximo 2 MiB por PDF, cuatro anexos en total. Si tu herramienta produce HTML, conviértelo a PDF antes de adjuntarlo.</p>
-        ${pdfAppendices.normalize(state.pdfAppendices).filter(item=>item.category==="wifi-analysis").map(item=>`<div class="network-analysis-pdf"><span><strong>${html(item.name)}</strong><small>${html(item.source||"Origen no indicado")} · ${html(item.observedAt||"Fecha no indicada")} · SHA-256 ${html(item.sha256)}</small></span><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button quiet small" data-pdf-appendix-edit="${html(item.id)}" ${readonly?"disabled":""}>Editar datos</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?"disabled":""}>Quitar</button></div>`).join("")}
+        ${pdfAppendices.normalize(state.pdfAppendices).filter(item=>item.category==="wifi-analysis").map(item=>`<div class="network-analysis-pdf"><span><strong>${html(item.name)}</strong><small>${html(item.source||"Origen no indicado")} · ${html(item.observedAt||"Fecha no indicada")} · SHA-256 ${html(item.sha256)}</small></span>${renderAppendixActions(item,readonly)}</div>`).join("")}
       </div>
       <details class="network-analysis-import"><summary>2 · Importar mediciones CSV (opcional)</summary>
         <label for="external-network-files">CSV de análisis WiFi</label>
@@ -3495,7 +3512,7 @@
       Se guardan dentro del JSON local; el informe los referencia por nombre y SHA-256, pero <strong>no fusiona sus páginas</strong>. Descarga los originales y entrégalos junto al informe por un medio autorizado.</p>
       <label for="pdf-appendix-upload">Añadir PDF al expediente</label>
       <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly || list.length>=pdfAppendices.MAX_COUNT?'disabled':''}>
-      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span><span class="action-row"><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button quiet small" data-pdf-appendix-edit="${html(item.id)}" ${readonly?"disabled":""}>Editar datos</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?'disabled':''}>Quitar</button></span></li>`).join('')}</ul>
+      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span>${renderAppendixActions(item,readonly)}</li>`).join('')}</ul>
       <p class="subtle">Los anexos pueden incluir datos confidenciales. No se cargan a servidores ni se visualizan dentro de la app.</p>
     </section>`;
   }
@@ -3787,9 +3804,18 @@
       updateValidation(target);
   }
   const originalRender = render;
+  let previousRenderPage="",previousRenderAudit="";
   render = function () {
+    // Save the open audit panels only when repainting the same audit and page.
+    const samePage=previousRenderPage===page&&previousRenderAudit===currentId;
+    const expanded=samePage?[...workspace.querySelectorAll("details[open][data-ui-expand]")].map(el=>el.dataset.uiExpand):[];
     originalRender();
+    if(expanded.length){
+      const open=new Set(expanded);
+      for(const el of workspace.querySelectorAll("details[data-ui-expand]"))if(open.has(el.dataset.uiExpand))el.open=true;
+    }
     applyDocumentLock();
+    previousRenderPage=page;previousRenderAudit=currentId;
   };
   function move(section, { fromHistory = false } = {}) {
     if (PUBLIC_DEMO && ["connections", "online"].includes(section)) return;
@@ -3875,7 +3901,6 @@
         element.dataset.add ||
         element.dataset.remove ||
         element.dataset.applyTemplate ||
-        element.dataset.clearImage ||
         element.dataset.saveRetest ||
         element.dataset.saveResidual ||
         element.dataset.mitigationSave ||
@@ -5314,14 +5339,6 @@
       }
       return;
     }
-    if (b.dataset.clearImage !== undefined) {
-      if (confirm("¿Eliminar la imagen incrustada?")) {
-        state.evidence[Number(b.dataset.clearImage)].image = "";
-        persist();
-        render();
-      }
-      return;
-    }
     if (b.id === "document-confirm") {
       try {
         await flush();
@@ -5393,7 +5410,6 @@
       (b.dataset.add !== undefined ||
         b.dataset.remove !== undefined ||
         b.dataset.applyTemplate !== undefined ||
-        b.dataset.clearImage !== undefined ||
         b.dataset.saveRetest !== undefined)
     ) {
       alert("Expediente confirmado. Abre una rectificación justificada.");
@@ -5425,14 +5441,17 @@
       if(item) downloadBlob(item.name,pdfAppendices.asBlob(item));
       return;
     }
-    if(b.dataset.pdfAppendixEdit){
-      if(state.documentControl?.status==="confirmed"){alert("Abre una rectificación para editar anexos.");return;}
-      const item=state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixEdit);if(!item)return;
-      const name=prompt("Nombre descriptivo del PDF (.pdf). El archivo y SHA-256 permanecen intactos.",item.name);if(name===null)return;
-      const source=prompt("Procedencia (opcional)",item.source||"");if(source===null)return;
-      const observedAt=prompt("Fecha de observación (AAAA-MM-DD; opcional)",item.observedAt||"");if(observedAt===null)return;
-      try{state.pdfAppendices=pdfAppendices.normalize(state.pdfAppendices.map(x=>x.id===item.id?{...x,name,source,observedAt}:x));persist();render();}
-      catch(error){alert("No se pudieron editar los datos: "+error.message);}
+    if(b.dataset.pdfAppendixSave){
+      if(state.documentControl?.status==="confirmed"){alert("Abre una rectificación antes de editar anexos.");return;}
+      const editor=b.closest(".pdf-appendix-editor"),id=b.dataset.pdfAppendixSave;
+      if(!editor||!state.pdfAppendices.some(item=>item.id===id))return;
+      const fields={};for(const el of editor.querySelectorAll("[data-appendix-field]"))fields[el.dataset.appendixField]=el.value;
+      try{
+        state.pdfAppendices=pdfAppendices.normalize(state.pdfAppendices.map(item=>item.id===id?{...item,...fields}:item));
+        persist();render();
+        const updated=[...workspace.querySelectorAll(".pdf-appendix-editor")].find(el=>el.dataset.uiExpand==="appendix-"+id);
+        if(updated){updated.open=true;updated.querySelector("summary")?.focus();}
+      }catch(error){alert("No se pudieron guardar los datos del PDF: "+error.message);}
       return;
     }
     if (b.dataset.pdfAppendixRemove) {

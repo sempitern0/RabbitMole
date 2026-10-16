@@ -168,6 +168,17 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#pdf-appendices-title').textContent(),'Documentación complementaria (PDF)');
    await page.locator('#wizard-step-select').selectOption('findings');
    await page.locator('[data-add="findings"]').first().click();
+   // Extracted views preserve keyboard access, record identity and the current audit step.
+   const residualPanel=page.locator('.residual-assessment').first();
+   assert.equal(await residualPanel.count(),1);
+   await residualPanel.locator('summary').click();
+   assert.equal(await residualPanel.locator('[data-residual-field="level"]').count(),1);
+   const selectedStep=await page.locator('#wizard-step-select').inputValue();
+   assert.equal(selectedStep,'findings');
+   const mitigationPanel=page.locator('.mitigation-actions').first();
+   await mitigationPanel.locator('summary').click();
+   assert.equal(await mitigationPanel.locator('[data-mitigation-add]').count(),1);
+
    assert.equal(await page.locator('[data-finding-image-key]').count()>=2,true,'File and camera controls are both present');
    await page.locator('#wizard-step-select').selectOption('evidence');
    await page.locator('[data-add="evidence"]').first().click();

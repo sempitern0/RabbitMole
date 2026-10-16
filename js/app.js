@@ -18,6 +18,7 @@
   const assist = globalThis.AuditFieldAssist;
   const docControl = globalThis.AuditDocumentControl;
   const retest = globalThis.AuditRetest;
+  const mitigation = globalThis.AuditMitigation;
   const comparison = globalThis.AuditComparison;
   if (!storage)
     throw Error("No se ha cargado el módulo de almacenamiento offline.");
@@ -27,6 +28,7 @@
     throw Error("No se ha cargado el catálogo de controles offline.");
   if (!quality) throw Error("No se ha cargado la revisión de calidad offline.");
   if (!retest) throw Error("No se ha cargado el módulo de reevaluación.");
+  if (!mitigation) throw Error("No se ha cargado el módulo de mitigación.");
   if (!comparison)
     throw Error("No se ha cargado el resumen comparativo offline.");
   const SETTINGS_KEY = "rabbitmole:settings:v1";
@@ -1040,6 +1042,7 @@
         if (block === "findings") {
           record.originControlKey = str(item.originControlKey).slice(0, 100);
           record.retests = retest.normalize(item.retests);
+          record.mitigationActions = mitigation.normalize(item.mitigationActions);
         }
         if (block === "evidence") {
           const pic =
@@ -2388,6 +2391,42 @@
         : "";
     return `<div class="control-extras">${guide}${existing}${button}</div>`;
   }
+  function renderMitigationActions(finding) {
+    const actions=mitigation.normalize(finding.mitigationActions);
+    const htmlField=(name,label,value,type="text")=>`<label class="field${["steps","impact","rollback","acceptance","changeNotes"].includes(name)?" full":""}">${label}${type==="textarea"?
+      `<textarea data-mitigation-field="${name}" rows="3">${html(value||"")}</textarea>`:
+      `<input type="${type}" data-mitigation-field="${name}" value="${html(value||"")}" maxlength="500">`}</label>`;
+    return `<details class="mitigation-actions" data-mitigation-finding="${html(finding._key)}">
+      <summary>Plan de mitigación · ${actions.length} acciones</summary>
+      <p class="subtle">Las acciones registran cambios autorizados, no los ejecutan. Aplicada no equivale a corregida: exige reevaluación posterior.</p>
+      <div class="mitigation-add"><label>Procedimiento reutilizable <select data-mitigation-template><option value="custom">Acción personalizada</option>
+        ${mitigation.TEMPLATES.map(t=>`<option value="${html(t.id)}">${html(t.category)} · ${html(t.title)}</option>`).join("")}</select></label>
+        <button type="button" class="button accent" data-mitigation-add="${html(finding._key)}" ${actions.length>=mitigation.MAX_ACTIONS?"disabled":""}>Añadir acción</button></div>
+      ${actions.map(action=>`<section class="mitigation-order" data-mitigation-key="${html(action.key)}">
+        <h4>${html(action.title)} · ${html(mitigation.STATES[action.status])}</h4>
+        <div class="fields">
+          ${htmlField("title","Objetivo",action.title)}
+          <label class="field">Estado<select data-mitigation-field="status">${Object.entries(mitigation.STATES).map(([v,label])=>`<option value="${v}" ${v===action.status?"selected":""}>${label}</option>`).join("")}</select></label>
+          ${htmlField("owner","Responsable de ejecución",action.owner)}
+          ${htmlField("deadline","Fecha objetivo",action.deadline,"date")}
+          ${htmlField("steps","Procedimiento",action.steps,"textarea")}
+          ${htmlField("impact","Impacto y dependencias",action.impact,"textarea")}
+          ${htmlField("rollback","Plan de reversión",action.rollback,"textarea")}
+          ${htmlField("acceptance","Criterio de aceptación",action.acceptance,"textarea")}
+          ${htmlField("approvedBy","Aprobado por",action.approvedBy)}
+          ${htmlField("approvalDate","Fecha de aprobación",action.approvalDate,"date")}
+          ${htmlField("changeRef","Referencia del cambio",action.changeRef)}
+          ${htmlField("executedBy","Intervención registrada por",action.executedBy)}
+          ${htmlField("executedAt","Fecha de intervención",action.executedAt,"date")}
+          <label class="field">Evidencia<select data-mitigation-field="evidenceKey"><option value="">No seleccionada</option>
+          ${state.evidence.map(e=>`<option value="${html(e._key)}" ${e._key===action.evidenceKey?"selected":""}>${html(e.id||"Evidencia")} · ${html(e.title||"")}</option>`).join("")}</select></label>
+          ${htmlField("changeNotes","Resultado e incidencias",action.changeNotes,"textarea")}
+        </div>
+        <div class="action-row"><button class="button accent" type="button" data-mitigation-save="${html(action.key)}">Guardar acción</button>
+        <button class="button quiet" type="button" data-go="followup">Ir a reevaluación</button></div>
+      </section>`).join("")}
+    </details>`;
+  }
   function renderFindingOrigin(finding) {
     const options = state.controls
       .map(
@@ -2850,7 +2889,7 @@
         ? rows
             .map(
               (r, i) =>
-                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${block === "cves" && !PUBLIC_DEMO ? `<div class="cve-tools"><button class="button quiet small" type="button" data-cve-check="${i}">Consultar CVE online (opcional)</button><button class="button small" type="button" data-cve-link="${i}">Ver en CVE.org ↗</button><span class="subtle">Solo se envía el identificador CVE, nunca los datos del cliente.</span></div>` : ""}${
+                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) + renderMitigationActions(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${block === "cves" && !PUBLIC_DEMO ? `<div class="cve-tools"><button class="button quiet small" type="button" data-cve-check="${i}">Consultar CVE online (opcional)</button><button class="button small" type="button" data-cve-link="${i}">Ver en CVE.org ↗</button><span class="subtle">Solo se envía el identificador CVE, nunca los datos del cliente.</span></div>` : ""}${
                   block === "evidence"
                     ? `<div class="file-upload"><label for="evidence-upload-${i}"><strong>Añadir foto o captura</strong> (PNG, JPG o WebP, hasta 5 MiB)</label><p class="subtle">Se guarda una copia optimizada. El SHA-256 identifica el archivo original, que debes conservar por separado.</p>${r.fileSha256 ? `<p class="evidence-digest">Archivo: ${html(r.fileName || "Sin nombre")} · ${(r.fileBytes || 0).toLocaleString("es-ES")} bytes <span>SHA-256 ${html(r.fileSha256)}</span></p>` : ""}${renderCaptureControls(`evidence-upload-${i}`,`evidence-camera-${i}`,`data-image-index="${i}"`,`data-image-index="${i}"`)}<div class="evidence-image-grid">${evidenceImages
                         .list(r)
@@ -4685,6 +4724,28 @@
       } catch (error) {
         alert(error.message);
       }
+      return;
+    }
+    if(b.dataset.mitigationAdd!==undefined){
+      const finding=state.findings.find(f=>f._key===b.dataset.mitigationAdd);
+      if(!finding||state.documentControl?.status==="confirmed")return;
+      try{
+        finding.mitigationActions=mitigation.normalize([...(finding.mitigationActions||[]),
+          mitigation.fromTemplate(b.closest("[data-mitigation-finding]")?.querySelector("[data-mitigation-template]")?.value||"custom",uid(),finding)]);
+        persist();render();
+      }catch(error){alert("No se pudo añadir la acción: "+error.message);}
+      return;
+    }
+    if(b.dataset.mitigationSave!==undefined){
+      const finding=state.findings.find(f=>(f.mitigationActions||[]).some(a=>a.key===b.dataset.mitigationSave));
+      if(!finding||state.documentControl?.status==="confirmed")return;
+      const card=b.closest("[data-mitigation-key]");if(!card)return;
+      const data={};for(const el of card.querySelectorAll("[data-mitigation-field]"))data[el.dataset.mitigationField]=el.value;
+      try{
+        finding.mitigationActions=mitigation.normalize(finding.mitigationActions.map(a=>
+          a.key===b.dataset.mitigationSave?mitigation.save(a,data,state.evidence):a));
+        persist();render();
+      }catch(error){alert("No se pudo guardar la acción: "+error.message);}
       return;
     }
     if (b.dataset.saveRetest !== undefined) {

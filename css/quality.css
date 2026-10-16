@@ -33,3 +33,12 @@
 .quality-review-section summary{font-weight:800;cursor:pointer;padding:14px 4px;min-height:48px}
 .quality-review-section[open] summary{margin-bottom:8px;border-bottom:1px solid var(--line)}
 .quality-review-section .quality-issues{padding-bottom:14px}
+
+.mitigation-actions{border:1px solid var(--line);border-radius:.85rem;margin:1.1rem 0;padding:0 1rem;background:var(--canvas)}
+.mitigation-actions>summary{cursor:pointer;min-height:48px;padding:.85rem 0;font-weight:760}
+.mitigation-add{display:flex;align-items:end;gap:.75rem;flex-wrap:wrap;margin:1rem 0}
+.mitigation-add>label{flex:1 1 240px;display:grid;gap:.4rem;font-weight:700}
+.mitigation-order{padding:1rem;margin:1rem 0;border:1px solid var(--line);background:var(--paper);border-radius:.75rem}
+.mitigation-order>h4{margin:0 0 1rem;line-height:1.45}
+.mitigation-order .fields{margin-bottom:1rem}
+.mitigation-order .field{min-width:0}

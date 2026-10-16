@@ -3302,7 +3302,7 @@
     return '<div class="remediation-work-orders"><strong>Acciones correctivas ('+actions.length+')</strong><ul>'+
       actions.map(a=>'<li><strong>'+html(a.title)+'</strong> · '+html(mitigation.STATES[a.status])+
         ' · '+html(a.owner||'Sin responsable')+' · '+html(a.deadline||'Sin fecha')+
-        (a.status==='applied'?'. Pendiente de verificación independiente.':'')+'</li>').join('')+'</ul></div>';
+        (a.status==='applied'?({ 'finding-verified':'. Hallazgo verificado en una reevaluación posterior (no acredita por separado esta acción).', 'finding-persists':'. Reevaluación posterior: la debilidad persiste o se reabrió.', 'inconclusive':'. Reevaluación posterior no concluyente.', 'awaiting-retest':'. Pendiente de reevaluación posterior.' }[mitigation.verification(finding,a)]||''):'')+'</li>').join('')+'</ul></div>';
   }
   function renderPlanSummary(rows, limit = 6) {
     if (!rows.length)

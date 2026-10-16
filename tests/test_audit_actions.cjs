@@ -1,0 +1,30 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const context={};context.globalThis=context;
+vm.runInNewContext(fs.readFileSync('js/audit-actions.js','utf8'),context);
+const actions=context.RabbitMoleAuditActions;
+(async()=>{
+ assert.equal(await actions.handleChange({id:'other',files:[]},{state:{}}),false);
+ assert.equal(await actions.handleClick({id:'other',dataset:{}},{state:{}}),false);
+ let persisted=0,rendered=0,asked=0,alerts=0;
+ const state={documentControl:{status:'draft'},pdfAppendices:[{id:'one',name:'one.pdf'},{id:'two',name:'two.pdf'}],findings:[],evidence:[],externalNetworkAnalysis:{source:'Lab'}};
+ const ctx={state,persist:()=>persisted++,render:()=>rendered++,confirm:()=>{asked++;return true;},alert:()=>alerts++,
+    workspace:{querySelectorAll:()=>[]},pdfAppendices:{normalize:x=>x}};
+ assert.equal(await actions.handleClick({dataset:{pdfAppendixRemove:'one'},id:''},ctx),true);
+ assert.equal(state.pdfAppendices.length,1);
+ assert.equal(persisted,1);assert.equal(rendered,1);assert.equal(asked,1);
+ state.documentControl.status='confirmed';
+ assert.equal(await actions.handleClick({dataset:{pdfAppendixRemove:'two'},id:''},ctx),true);
+ assert.equal(state.pdfAppendices.length,1);
+ assert.equal(persisted,1);
+ assert.equal(await actions.handleClick({dataset:{networkAnalysisClear:''},id:''},ctx),true);
+ assert(state.externalNetworkAnalysis);
+ state.documentControl.status='draft';
+ assert.equal(await actions.handleClick({dataset:{networkAnalysisClear:''},id:''},ctx),true);
+ assert.equal(state.externalNetworkAnalysis,null);
+ const app=fs.readFileSync('js/app.js','utf8'),html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
+ assert(app.includes('auditActions.handleClick')&&app.includes('auditActions.handleChange'));
+ assert(html.indexOf('js/audit-actions.js')<html.indexOf('js/app.js'));
+ assert(sw.includes('./js/audit-actions.js'));
+ console.log('PASS isolated audit actions, permissions, confirmations and offline module order');
+})().catch(e=>{console.error(e);process.exitCode=1});

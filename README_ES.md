@@ -227,3 +227,7 @@ La eliminación de evidencias ahora advierte si el registro se utiliza en hallaz
 ### Almacenamiento y PWA móvil
 
 «Proteger almacenamiento» solicita al navegador persistencia para reducir el riesgo de eliminación automática de los datos; ahora comunica claramente si se concede, se rechaza o no está disponible. **No cifra expedientes ni reemplaza las copias JSON**. Los filtros de registros presentan una barra fija diferenciada en pantallas grandes y una disposición no fija en móviles pequeños. Para instalar en iPhone/iPad utiliza Safari → Compartir → Añadir a pantalla de inicio y abre desde el icono. La instalación y las garantías de almacenamiento dependen del navegador y del sistema operativo; prueba el arranque offline antes de trabajar en campo.
+
+### Gestión CSV WiFi y panel de instalación
+
+Las importaciones CSV nuevas se almacenan por archivo y categoría, con un botón «Quitar CSV» que permite retirar una captura sin afectar al informe PDF ni a los demás CSV. Si se importa otro archivo del mismo tipo, su información pasa a ser la vista activa y la anterior permanece recuperable al quitarlo. Las importaciones anteriores a esta mejora se conservan como grupo histórico, ya que el formato anterior no permitía atribuir filas a cada nombre de archivo. El panel superior de instalación se distingue visualmente de los formularios y mantiene etiquetas, navegación por teclado y contraste por tema.

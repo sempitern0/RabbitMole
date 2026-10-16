@@ -4725,7 +4725,7 @@
       }
       return;
     }
-    if(await auditActions.handleClick(b,{state,mitigation,uid,persist,render,workspace,alert,confirm,evidenceImages,pdfAppendices,downloadBlob}))return;
+    if(await auditActions.handleClick(b,{state,mitigation,uid,persist,render,workspace,alert,confirm,evidenceImages,pdfAppendices,externalNetwork,downloadBlob}))return;
     if (b.dataset.saveRetest !== undefined) {
       const finding = state.findings.find(
         (f) => f._key === b.dataset.saveRetest,

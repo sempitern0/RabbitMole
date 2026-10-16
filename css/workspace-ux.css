@@ -674,3 +674,8 @@
   .intake-flow { grid-template-columns:minmax(0,1fr); }
   .intake-flow button { min-height:43px; }
 }
+
+/* Router-specific audit checklist inherits current theme and never displays stored secrets. */
+.router-security-review { border-inline-start:3px solid var(--brand); }
+.router-security-review .inventory-baseline-content > p { line-height:1.6; max-width:92ch; }
+.router-security-review .action-row { margin-block-start:.7rem; }

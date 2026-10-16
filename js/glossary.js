@@ -3185,6 +3185,186 @@
       "Realiza capturas con datos personales y credenciales ocultos.",
       "Completa la evidencia con configuración del AP/controlador facilitada por TI."
     ]
+  },
+  {
+    "id": "term-175",
+    "title": "Revisión segura de router / gateway",
+    "category": "Redes · routers",
+    "description": "Auditoría de cuentas, administración, firmware, firewall, servicios y recuperación de routers.",
+    "check": "Inventaría modelo, firmware, interfaces y responsable; revisa cada medida desde consola autorizada y documenta lo no verificado.",
+    "why": "Un router comprometido o mal configurado puede afectar varias redes.",
+    "example": "Router de sede con administración limitada a VLAN de gestión.",
+    "evidence": "Inventario, capturas saneadas de consola y políticas.",
+    "caution": "No ejecutes pruebas de contraseñas ni cambios de configuración sin autorización.",
+    "aliases": [
+      "auditar router",
+      "gateway",
+      "router security"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ],
+    "steps": [
+      "Delimita equipo, IP de gestión y alcance escrito.",
+      "Recoge modelo, versión, soporte y evidencia de configuración saneada.",
+      "Verifica mediante documentación que se sustituyeron las credenciales de fábrica; no solicites contraseñas.",
+      "Revisa cuentas, MFA disponible, protocolos de gestión y acceso WAN.",
+      "Comprueba servicios auxiliares, DNS/DHCP y firewall IPv4/IPv6.",
+      "Solicita evidencia de copia protegida y restauración probada.",
+      "Marca no verificados y traslada riesgos sustentados a controles o hallazgos."
+    ]
+  },
+  {
+    "id": "term-176",
+    "title": "Credenciales de fábrica del router",
+    "category": "Redes · routers",
+    "description": "Cuentas y contraseñas de administración predeterminadas por fabricante o instalador.",
+    "check": "Solicita evidencias de sustitución y proceso de custodia, cuentas actuales y bloqueo por intentos; una comprobación de acceso, si procede, la realiza un administrador autorizado.",
+    "why": "Los valores de fábrica activos facilitan accesos no autorizados.",
+    "example": "Ticket de alta y política de cuentas acreditan sustitución inicial.",
+    "evidence": "Política y capturas de configuración sin secretos.",
+    "caution": "Nunca guardes contraseñas, ni pruebes listas de credenciales.",
+    "aliases": [
+      "contraseña por defecto",
+      "default password",
+      "usuario admin router"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ]
+  },
+  {
+    "id": "term-177",
+    "title": "Administración del router y acceso WAN",
+    "category": "Redes · routers",
+    "description": "Interfaces HTTPS, SSH, Telnet, HTTP, APIs y permisos de gestión desde redes internas o Internet.",
+    "check": "Confirma protocolos seguros, accesos desde redes de gestión, restricciones WAN, sesiones, registros y MFA si existe.",
+    "why": "Una gestión WAN expuesta aumenta la superficie de ataque.",
+    "example": "SSH disponible solo desde subred administrativa autorizada.",
+    "evidence": "ACL y registro de accesos saneado.",
+    "caution": "HTTPS no garantiza cuentas seguras; evita accesos de prueba no pactados.",
+    "aliases": [
+      "panel router",
+      "router management",
+      "acceso remoto router"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ]
+  },
+  {
+    "id": "term-178",
+    "title": "Firmware y soporte de router",
+    "category": "Redes · routers",
+    "description": "Versión de sistema y disponibilidad de parches y soporte del fabricante.",
+    "check": "Revisa firmware exacto, EOL, boletines, mantenimiento y excepciones aprobadas.",
+    "why": "El firmware sin soporte puede mantener vulnerabilidades sin solución.",
+    "example": "Una actualización pendiente se documenta con su boletín.",
+    "evidence": "Versión, boletín de proveedor y plan de cambio.",
+    "caution": "No actualices o reinicies durante la auditoría.",
+    "aliases": [
+      "firmware router",
+      "router eol"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ]
+  },
+  {
+    "id": "term-179",
+    "title": "UPnP, WPS y servicios auxiliares",
+    "category": "Redes · routers",
+    "description": "Funciones de apertura de puertos, conexión asistida y servicios de administración opcionales.",
+    "check": "Contrasta necesidad y configuración de UPnP, WPS, SNMP, HTTP y Telnet con políticas.",
+    "why": "Servicios innecesarios amplían la exposición.",
+    "example": "UPnP deshabilitado y cambios de NAT sujetos a aprobación.",
+    "evidence": "Inventario de servicios y excepciones aprobadas.",
+    "caution": "No confundas UPnP con WPS; tienen propósitos distintos.",
+    "aliases": [
+      "upnp router",
+      "wps router"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ]
+  },
+  {
+    "id": "term-180",
+    "title": "Firewall, NAT e IPv6 de gateway",
+    "category": "Redes · routers",
+    "description": "Reglas del perímetro, puertos publicados y filtros de tráfico IPv4 e IPv6.",
+    "check": "Comprueba reglas, excepciones, port forwarding, accesos WAN e IPv6 según alcance autorizado.",
+    "why": "NAT no reemplaza un firewall; IPv6 también exige reglas.",
+    "example": "Se elimina una apertura temporal ya caducada.",
+    "evidence": "Reglas y tabla de publicaciones saneadas.",
+    "caution": "No escanees direcciones externas sin permiso escrito.",
+    "aliases": [
+      "port forwarding",
+      "nat router"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ]
+  },
+  {
+    "id": "term-181",
+    "title": "DNS y DHCP administrados por router",
+    "category": "Redes · routers",
+    "description": "Configuración de resolutores, direcciones entregadas, rutas y reservas.",
+    "check": "Verifica rangos, DNS, DHCP y cambios autorizados contra diseño de red.",
+    "why": "Configuraciones erróneas pueden redirigir tráfico o interrumpir servicios.",
+    "example": "Clientes reciben DNS corporativos aprobados.",
+    "evidence": "Pantallas de configuración y parámetros de clientes de prueba.",
+    "caution": "Una configuración diferente no demuestra automáticamente manipulación.",
+    "aliases": [
+      "dns router",
+      "dhcp router"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ]
+  },
+  {
+    "id": "term-182",
+    "title": "Respaldo y recuperación del router",
+    "category": "Redes · routers",
+    "description": "Custodia y restauración de archivos de configuración protegidos.",
+    "check": "Comprueba respaldos, fecha, roles con acceso y ensayos de recuperación.",
+    "why": "Una copia verificable reduce tiempo de recuperación ante fallo.",
+    "example": "Se documenta restauración en equipo de laboratorio.",
+    "evidence": "Acta de recuperación y política de backups.",
+    "caution": "Los backups suelen contener secretos: no los adjuntes en bruto.",
+    "aliases": [
+      "backup router",
+      "restaurar router"
+    ],
+    "references": [
+      {
+        "label": "NIST IR 8425A · Router Product Security",
+        "url": "https://csrc.nist.gov/pubs/ir/8425/a/final"
+      }
+    ]
   }
 ]);
  // Read-only diagnostic playbooks. Commands are examples, NEVER executed by this PWA.
@@ -4512,6 +4692,150 @@
         "lookFor": "SSID asociado cuando la interfaz en0 corresponde a WiFi."
       }
     ]
+  },
+  {
+    "id": "term-175",
+    "symptom": "Estado desconocido de Revisión segura de router / gateway.",
+    "verify": "Inventaría modelo, firmware, interfaces y responsable; revisa cada medida desde consola autorizada y documenta lo no verificado.",
+    "interpret": "No ejecutes pruebas de contraseñas ni cambios de configuración sin autorización.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
+  },
+  {
+    "id": "term-176",
+    "symptom": "Estado desconocido de Credenciales de fábrica del router.",
+    "verify": "Solicita evidencias de sustitución y proceso de custodia, cuentas actuales y bloqueo por intentos; una comprobación de acceso, si procede, la realiza un administrador autorizado.",
+    "interpret": "Nunca guardes contraseñas, ni pruebes listas de credenciales.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
+  },
+  {
+    "id": "term-177",
+    "symptom": "Estado desconocido de Administración del router y acceso WAN.",
+    "verify": "Confirma protocolos seguros, accesos desde redes de gestión, restricciones WAN, sesiones, registros y MFA si existe.",
+    "interpret": "HTTPS no garantiza cuentas seguras; evita accesos de prueba no pactados.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
+  },
+  {
+    "id": "term-178",
+    "symptom": "Estado desconocido de Firmware y soporte de router.",
+    "verify": "Revisa firmware exacto, EOL, boletines, mantenimiento y excepciones aprobadas.",
+    "interpret": "No actualices o reinicies durante la auditoría.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
+  },
+  {
+    "id": "term-179",
+    "symptom": "Estado desconocido de UPnP, WPS y servicios auxiliares.",
+    "verify": "Contrasta necesidad y configuración de UPnP, WPS, SNMP, HTTP y Telnet con políticas.",
+    "interpret": "No confundas UPnP con WPS; tienen propósitos distintos.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
+  },
+  {
+    "id": "term-180",
+    "symptom": "Estado desconocido de Firewall, NAT e IPv6 de gateway.",
+    "verify": "Comprueba reglas, excepciones, port forwarding, accesos WAN e IPv6 según alcance autorizado.",
+    "interpret": "No escanees direcciones externas sin permiso escrito.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
+  },
+  {
+    "id": "term-181",
+    "symptom": "Estado desconocido de DNS y DHCP administrados por router.",
+    "verify": "Verifica rangos, DNS, DHCP y cambios autorizados contra diseño de red.",
+    "interpret": "Una configuración diferente no demuestra automáticamente manipulación.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
+  },
+  {
+    "id": "term-182",
+    "symptom": "Estado desconocido de Respaldo y recuperación del router.",
+    "verify": "Comprueba respaldos, fecha, roles con acceso y ensayos de recuperación.",
+    "interpret": "Los backups suelen contener secretos: no los adjuntes en bruto.",
+    "commands": [
+      {
+        "platform": "Windows · CMD",
+        "command": "ipconfig /all",
+        "lookFor": "Gateway/DNS del cliente, no credenciales."
+      },
+      {
+        "platform": "Linux",
+        "command": "ip route show default",
+        "lookFor": "Ruta por defecto del cliente; no explora el router."
+      }
+    ]
   }
 ].map(({id,...guide})=>[id,Object.freeze(guide)])));
  const MAC_COMMANDS=[{"id":"term-25","platform":"macOS","command":"scutil --dns","lookFor":"Resolutores DNS efectivos por interfaz y orden de búsqueda."},{"id":"term-28","platform":"macOS","command":"lsof -nP -iTCP -sTCP:LISTEN","lookFor":"Procesos y puertos TCP en escucha (privilegios según proceso)."},{"id":"term-29","platform":"macOS","command":"curl -Iv https://servidor.autorizado.invalid","lookFor":"Validación TLS y respuesta de cabeceras del host aprobado."},{"id":"term-30","platform":"macOS","command":"security find-certificate -a -p /Library/Keychains/System.keychain","lookFor":"Certificados públicos del llavero del sistema; no extrae claves privadas."},{"id":"term-40","platform":"macOS","command":"fdesetup status","lookFor":"Estado FileVault del volumen de arranque; puede requerir permisos."},{"id":"term-15","platform":"macOS","command":"shasum -a 256 '/ruta/evidencia.bin'","lookFor":"SHA-256 reproducible de evidencia."},{"id":"term-72","platform":"macOS","command":"shasum -a 256 '/ruta/evidencia.bin'","lookFor":"Comprueba integridad en una copia preservada."},{"id":"term-100","platform":"macOS","command":"systemsetup -getusingnetworktime; systemsetup -getnetworktimeserver","lookFor":"Estado/configuración NTP; ciertos datos requieren privilegios."},{"id":"term-36","platform":"macOS","command":"lsof -nP -iTCP -sTCP:LISTEN","lookFor":"Servicios en escucha."},{"id":"term-21","platform":"macOS","command":"ifconfig; netstat -rn -f inet","lookFor":"Direcciones/prefijos y rutas IPv4."},{"id":"term-19","platform":"macOS","command":"scutil --nwi; netstat -rn -f inet","lookFor":"Contexto de interfaces y rutas para VPN."},{"id":"term-34","platform":"macOS","command":"softwareupdate --list","lookFor":"Actualizaciones ofrecidas al host; no instala actualizaciones."},{"id":"term-99","platform":"macOS","command":"log show --last 1h --style compact --predicate 'messageType == error'","lookFor":"Errores recientes; filtra sin guardar datos personales innecesarios."},{"id":"term-101","platform":"macOS","command":"log show --last 1h --style compact --predicate 'process == \"sshd\"'","lookFor":"Eventos recientes del servicio SSH cuando existan."},{"id":"term-26","platform":"macOS","command":"ipconfig getpacket en0","lookFor":"Parámetros DHCP de en0; comprobar interfaz activa."},{"id":"term-31","platform":"macOS","command":"system_profiler SPAirPortDataType","lookFor":"Seguridad y configuración Wi-Fi visible desde el cliente."},{"id":"term-42","platform":"macOS","command":"systemextensionsctl list","lookFor":"Extensiones de sistema presentes; verificar estado EDR en consola del fabricante."},{"id":"term-39","platform":"macOS","command":"system_profiler SPiBridgeDataType","lookFor":"Componentes de seguridad disponibles según hardware Apple (no implica TPM)."}];
@@ -4538,7 +4862,19 @@
       "vlan": "term-2",
       "dns": "term-25",
       "firewall": "term-14",
-      "exposure": "term-136"
+      "exposure": "term-136",
+      "routerDevice": "term-175",
+      "routerCredentials": "term-176",
+      "routerAccounts": "term-177",
+      "routerMfa": "term-177",
+      "routerMgmt": "term-177",
+      "routerRemote": "term-177",
+      "routerFirmware": "term-178",
+      "routerServices": "term-179",
+      "routerPerimeter": "term-180",
+      "routerDns": "term-181",
+      "routerBackups": "term-182",
+      "routerAuditEvidence": "term-175"
     },
     "software": {
       "support": "term-9",

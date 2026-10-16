@@ -97,3 +97,6 @@ for(const term of wifi.filter(t=>t.category==='WiFi · guías')) {
 }
 assert(g.CONTEXT_HELP.fields.networks.ssid==='term-155','Network SSID contextual help missing');
 assert(app.includes('glossary-audit-steps'),'Step by step WiFi help UI missing');
+
+for(const id of Array.from({length:8},(_,i)=>'term-'+(175+i))){assert(g.byId(id)?.category==='Redes · routers');assert(g.GUIDES[id]?.commands.length>=2)}
+for(const field of ["routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"])assert(g.CONTEXT_HELP.fields.networks[field],'Missing router field help '+field);

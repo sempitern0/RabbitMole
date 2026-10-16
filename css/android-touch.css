@@ -5,16 +5,12 @@ html.android-touch #workspace{
   --form-gap:1.15rem;
   --form-inline-gap:1.15rem;
 }
-html.android-touch #workspace .fields,
-html.android-touch #workspace .inventory-fields .fields{
+html.android-touch #workspace .fields{
   align-items:start;
   row-gap:var(--form-gap);
   column-gap:var(--form-inline-gap);
 }
-html.android-touch #workspace .field{
-  min-width:0;
-  gap:.45rem;
-}
+html.android-touch #workspace .field{gap:.45rem;}
 html.android-touch #workspace .field :is(label,.field-heading label),
 html.android-touch #workspace :is(.finding-attachments,.file-upload) > label{
   font-size:1rem;
@@ -59,8 +55,7 @@ html.android-touch #workspace .upload-control{align-items:stretch;gap:.75rem}
 html.android-touch #workspace .upload-control > .camera-action{min-height:48px}
 @media screen and (max-width:700px){
  html.android-touch #workspace .fields{grid-template-columns:minmax(0,1fr)}
- html.android-touch #workspace .field.full{grid-column:auto}
- html.android-touch #workspace .entry-head > button{flex:0 0 auto;min-height:48px}
+  html.android-touch #workspace .entry-head > button{flex:0 0 auto;min-height:48px}
  html.android-touch #workspace .action-row > :is(button,.button){flex:1 1 100%}
  html.android-touch #workspace .wizard-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}
  html.android-touch #workspace .wizard-jump{grid-column:1/-1;width:100%}

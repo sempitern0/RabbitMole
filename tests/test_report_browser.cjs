@@ -15,7 +15,7 @@ const watchdog=setTimeout(()=>{process.stderr.write('[PDF-E2E] Timeout en fase: 
  const env={ASSETS:{fetch:async request=>{const u=new URL(request.url),filename=path.join(root,u.pathname==='/'?'index.html':u.pathname);try{return new Response(fs.readFileSync(filename),{headers:{'Content-Type':mime[path.extname(filename)]||'text/plain'}});}catch{return new Response('Not found',{status:404});}}}};
  const server=http.createServer(async(req,res)=>{try{const response=await worker.fetch(new Request('http://127.0.0.1:'+server.address().port+req.url,{method:req.method}),env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch(e){res.writeHead(500);res.end(String(e));}});
  phase.name='listen';console.error('[PDF-E2E] Iniciando servidor');
- await new Promise(done=>server.listen(0,'127.0.0.1'));
+ await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
  let browser;
  try{
   phase.name='chromium.launch';console.error('[PDF-E2E] Lanzando Chromium');

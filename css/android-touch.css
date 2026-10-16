@@ -11,7 +11,7 @@ html.android-touch #workspace .fields{
   column-gap:var(--form-inline-gap);
 }
 html.android-touch #workspace .field{gap:.45rem;}
-html.android-touch #workspace .field :is(label,.field-heading label),
+html.android-touch #workspace .field label,
 html.android-touch #workspace :is(.finding-attachments,.file-upload) > label{
   font-size:1rem;
   line-height:1.45;

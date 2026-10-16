@@ -20,4 +20,8 @@ assert.equal(rel.referenceProblems(audit).length,1);
 audit.evidence[0].links.assets=[];
 audit.evidence.push({_key:'ev-2',id:'EVD-001',links:null});
 assert.match(rel.referenceProblems(audit).join(' '),/repetido/);
+const dependent={findings:[{_key:'f',id:'FND-001',evidenceIds:'EVD-001',mitigationActions:[{evidenceKey:'ev-1',checks:[{evidenceKey:'ev-1'}]}],retests:[{evidenceKey:'ev-1'}],residualAssessments:[{evidenceKey:'ev-1'}]}],evidence:[]};
+const used=rel.evidenceUsage(dependent,{_key:'ev-1',id:'EVD-001',links:{findings:['f']}});
+assert.equal(used.length,6);
+assert.equal(rel.evidenceUsage(dependent,{_key:'none',id:'EVD-099'}).length,0);
 console.log('PASS: stable IDs, links, audit diagnostics and SHA-256 manifest');

@@ -97,7 +97,7 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('.intake-command pre').count()>=3,true);
    await page.locator('[data-intake-mode="local"]').click();
    assert.equal(await page.locator('#discovery-check').count(),1);
-   await page.locator('[data-go="networks"]').first().click();
+   await page.locator('[data-go="networks"]').last().click();
    await page.locator('#wizard-step-select').selectOption('delivery');
    assert.equal(await page.locator('#pdf-appendix-upload').count(),1);
    assert.equal(await page.locator('#pdf-appendices-title').textContent(),'Documentación complementaria (PDF)');

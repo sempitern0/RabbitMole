@@ -22,6 +22,7 @@
   const workflowViews = globalThis.RabbitMoleWorkflowViews;
   const auditActions = globalThis.RabbitMoleAuditActions;
   const fieldRenderer = globalThis.RabbitMoleFieldRenderer;
+  const rackAudit = globalThis.RabbitMoleRackAudit;
   const recordNavigatorModule = globalThis.RabbitMoleRecordNavigator;
   const comparison = globalThis.AuditComparison;
   if (!storage)
@@ -36,6 +37,7 @@
   if (!workflowViews) throw Error("No se ha cargado el módulo de vistas de auditoría.");
   if (!auditActions) throw Error("No se ha cargado el módulo de acciones de auditoría.");
   if (!fieldRenderer) throw Error("No se ha cargado el módulo de formularios de auditoría.");
+  if (!rackAudit) throw Error("No se ha cargado el módulo de racks.");
   if (!recordNavigatorModule) throw Error("No se ha cargado el módulo de navegación de registros.");
   if (!comparison)
     throw Error("No se ha cargado el resumen comparativo offline.");
@@ -256,6 +258,7 @@
       "CPD principal",
       "CPD secundario",
       "Rack de comunicaciones",
+      "Rack de servidores",
       "Oficina central",
       "Delegación",
       "Sucursal",
@@ -425,6 +428,7 @@
           ["Por revisar", "En servicio", "Obsoleto", "Fuera de servicio"],
         ],
         ["notes", "Observaciones", "textarea"],
+        ...rackAudit.FIELDS,
         [
           "osLicense",
           "Licencia del sistema operativo",
@@ -898,6 +902,7 @@
       "processReview",
       "localAccounts",
       "adminAccounts",
+      ...rackAudit.FIELD_NAMES,
     ],
     networks: [
       "ssid",
@@ -2626,7 +2631,7 @@
         "</div>"
       );
     const basic = definitions.filter(([name]) => !extra.has(name));
-    const extended = definitions.filter(([name]) => extra.has(name) && (section !== "networks" || !ROUTER_AUDIT_SET.has(name)));
+    const extended = definitions.filter(([name]) => extra.has(name) && !rackAudit.hasField(name) && (section !== "networks" || !ROUTER_AUDIT_SET.has(name)));
     const completed = extended.filter(([name]) =>
       str(record[name]).trim(),
     ).length;
@@ -2637,6 +2642,7 @@
         .join("") +
       "</div>" +
       (section === "networks" ? renderRouterAudit(record,index,definitions) : "") +
+      (section === "assets" ? rackAudit.render(record,index,renderField,html) : "") +
       '<details class="inventory-baseline"><summary><span><strong>Revisión ampliada · situación actual</strong>' +
       "<small>Datos opcionales de software, hardware y redes; documenta solo lo comprobado</small></span>" +
       '<span class="inventory-baseline-count">' +
@@ -4642,6 +4648,7 @@
       return;
     }
     if (b.dataset.routerControls !== undefined) { selectedTemplatePack = "networks"; move("controls"); return; }
+    if (b.dataset.rackControls !== undefined) { selectedTemplatePack = "physical-racks"; move("controls"); return; }
     if (b.dataset.go) {
       if (
         b.dataset.go === "intake" &&

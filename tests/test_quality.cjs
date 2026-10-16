@@ -71,4 +71,6 @@ assert(review(duplicated,relations,{mode:'final'}).blockers.some(issue=>issue.co
 assert(review(duplicated,relations).warnings.some(issue=>issue.code==='ID_DUPLICADO'));
 const missingAuthorization={...audit,meta:{...audit.meta,rules:''}};
 assert(review(missingAuthorization,relations,{mode:'final'}).blockers.some(issue=>issue.code==='AUTORIZACION'));
+const brokenHistory={...audit,findings:[{...audit.findings[0],status:'Abierto',verification:'Comprobar',mitigationActions:[{evidenceKey:'missing-evidence'}]}]};
+assert(review(brokenHistory,relations).warnings.some(issue=>issue.code==='TRAZABILIDAD_EVIDENCIA_NO_DISPONIBLE'));
 console.log('PASS audit quality checks, no false conformity, evidence links, plan priority and closure');

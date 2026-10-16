@@ -71,6 +71,7 @@
   // Existing custom models remain editable even when absent from the catalogue.
   const vendorModels = window.AuditHardwareCatalog || Object.freeze({});
   const routerModels = globalThis.AuditRouterCatalog || Object.freeze({});
+  const networkDevices = globalThis.AuditNetworkDeviceCatalog;
   const osCatalog = globalThis.AuditOSCatalog;
   const glossary = globalThis.AuditGlossary;
   const hardwareVendors = Object.keys(vendorModels);
@@ -606,8 +607,9 @@
         ],
         ["contractedRate", "Velocidad contratada (Mbps; si corresponde)"],
         ["measuredRate", "Velocidad medida (Mbps; método en observaciones)"],
-        ["routerVendor","Fabricante del router / gateway","picker",[]],
-        ["routerModel","Modelo del router / gateway","picker",[]],
+        ["networkDeviceType","Tipo de equipo de red","select",["","Router","ONT","Firewall"]],
+        ["routerVendor","Fabricante del router / ONT / firewall","picker",[]],
+        ["routerModel","Modelo del router / ONT / firewall","picker",[]],
         ["routerDevice","Versión de firmware / identificación adicional observada"],
         ["routerCredentials","Credenciales administrativas de fábrica","select",["","No verificado","Cambio de fábrica acreditado","Credenciales predeterminadas vigentes","No aplica"]],
         ["routerAccounts","Cuentas y privilegios","select",["","No verificado","Cuentas diferenciadas y privilegios mínimos","Cuenta compartida o privilegios excesivos","No aplica"]],
@@ -925,6 +927,7 @@
       "routerServices",
       "routerPerimeter",
       "routerDns",
+      "networkDeviceType",
       "routerBackups",
       "routerAuditEvidence",
     ],
@@ -1844,7 +1847,7 @@
   const glossaryHelpIcon = '<svg class="glossary-help-icon" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8"></circle><path d="M10 9v5"></path><circle cx="10" cy="6" r="1" fill="currentColor" stroke="none"></circle></svg>';
   function renderField(obj, block, def, index) {
     return fieldRenderer.render(obj,block,def,index,{
-      html,str,identifiers,assist,state,osCatalog,vendorModels,routerModels,glossary,glossaryHelpIcon
+      html,str,identifiers,assist,state,osCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon
     });
   }
   function pill(v) {
@@ -3842,9 +3845,14 @@
     if (obj) {
       const previous = obj[t.dataset.field];
       obj[t.dataset.field] = t.value;
-      if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
+      if (t.dataset.block === "networks" && ["routerVendor","networkDeviceType"].includes(t.dataset.field) &&
           t.dataset.custom !== undefined && previous !== t.value) {
         obj.routerModel = "";
+        if(t.dataset.field==="networkDeviceType"){
+          obj.routerVendor="";
+          const sibling=workspace.querySelector(`#f-networks-${t.dataset.index}-routerVendor`)?.closest(".field");
+          if(sibling)sibling.outerHTML=renderField(obj,"networks",groups.networks.fields.find(([name])=>name==="routerVendor"),Number(t.dataset.index));
+        }
         refreshRouterModel(obj, Number(t.dataset.index));
       }
       if (
@@ -4279,7 +4287,7 @@
       custom.hidden = !isOther;
       obj[t.dataset.field] = isOther ? custom.value : t.value;
       if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
-          previous !== obj.routerVendor) {
+          previous !== (t.dataset.field === "networkDeviceType" ? obj.networkDeviceType : obj.routerVendor)) {
         obj.routerModel = "";
         refreshRouterModel(obj, Number(t.dataset.index));
       }

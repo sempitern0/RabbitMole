@@ -2807,26 +2807,39 @@
       </div>`:"";
     const details=analysis?`<div class="network-analysis-data">
       ${tiles}
-      <p class="subtle">Banda 2,4 GHz: ${metrics.band24} · 5 GHz: ${metrics.band5} · 6 GHz: ${metrics.band6}. La captura de Acrylic puede incluir AP ajenos y clientes LAN; los registros no constituyen automáticamente activos autorizados ni hallazgos.</p>
+      <p class="subtle">Banda 2,4 GHz: ${metrics.band24} · 5 GHz: ${metrics.band5} · 6 GHz: ${metrics.band6}. La captura de una herramienta externa puede incluir AP ajenos y clientes LAN; los registros no constituyen automáticamente activos autorizados ni hallazgos.</p>
       <details ${print?"open":""}><summary>Puntos de acceso y redes WiFi (${wifi.length})</summary>${table(wifi,["SSID","Dirección MAC","RSSI","Canal","Banda","Ancho","WPA2","WPA3","WPS","Fabricante"],print?150:50)}</details>
       <details ${print?"open":""}><summary>Dispositivos observados (${analysis.devices.length})</summary>${table(analysis.devices,["Dirección MAC","Estado","RSSI","Fabricante"],print?150:35)}</details>
       <details ${print?"open":""}><summary>Pruebas y conectividad</summary>
         ${analysis.latency?`<p><strong>Latencia:</strong> ${analysis.latency.count} muestras, mínimo ${escape(analysis.latency.min??"—")} ms, máximo ${escape(analysis.latency.max??"—")} ms, media ${escape(analysis.latency.average??"—")} ms; pérdida media registrada ${escape(analysis.latency.packetLoss??"N/D")}.</p>`:''}
         ${[["ip","Direcciones IP",["Interfaz Wifi","IPv4 local","Puerta de enlace","Servidores DNS"]],["roaming","Roaming",["Interfaz Wifi","SSID","Dirección MAC","Duración"]],["transfer","Transferencia",["Interfaz Wifi","Bytes enviados","Bytes recibidos","Subida","Bajada"]],["speed","Test de velocidad",["Ancho de Descarga","Fecha"]],["iperf","iPerf",["Ancho de Descarga","Ancho de Subida","Fecha"]]].map(([key,label,columns])=>`<h4>${label}</h4>${table(diagnostic[key],columns)}`).join("")}
       </details>
-      <p class="subtle">Origen: ${escape(analysis.source)} · Importación: ${escape(analysis.importedAt)} · CSV: ${analysis.files.map(escape).join(", ")}. Se muestran hasta 50 AP por vista; el PDF externo original sigue siendo la fuente íntegra.</p>
+      <p class="subtle">Herramienta: ${escape(analysis.source||"No indicada")} · Fecha de análisis: ${escape(analysis.observedAt||"No indicada")} · Importación: ${escape(analysis.importedAt)} · CSV: ${analysis.files.map(escape).join(", ")}. Se muestran hasta 50 AP por vista; el PDF externo original sigue siendo la fuente íntegra.</p>
     </div>`:"";
     if(print)return analysis?`<div class="report-external-analysis"><p>Resumen documental de mediciones aportadas por herramienta externa; no implica validación independiente por RabbitMole.</p>${details}</div>`:"";
     return `<section class="card external-network-analysis" aria-labelledby="external-network-title">
-      <div class="card-head"><div><h2 id="external-network-title">Análisis WiFi externo · Acrylic</h2>
-      <p class="subtle">Importa los CSV originales y consulta un resumen técnico con métricas y tablas, sin ejecutar HTML externo ni modificar el inventario.</p></div></div>
+      <div class="card-head"><div><h2 id="external-network-title">Análisis WiFi externo</h2>
+      <p class="subtle">Adjunta un informe PDF de cualquier herramienta y, opcionalmente, importa mediciones CSV compatibles. El expediente no ejecuta HTML externo ni modifica automáticamente el inventario.</p></div></div>
       <div class="network-analysis-import">
-        <label for="external-network-files">Añadir resultados de Acrylic (CSV)</label>
-        <input id="external-network-files" type="file" accept=".csv,text/csv" multiple ${readonly?"disabled":""}>
-        <p class="subtle">Admite puntos de acceso, dispositivos, latencia, IP, roaming, transferencia, velocidad e iPerf; hasta 2 MiB por CSV. Procesamiento íntegramente local. Exporta el HTML original a PDF y añádelo como anexo en «Generar informe PDF».</p>
+        <h3>1 · Adjuntar informe original</h3>
+        <div class="fields">
+          <div class="field"><label for="network-analysis-source">Herramienta o procedencia (opcional)</label>
+            <input id="network-analysis-source" maxlength="100" placeholder="Analizador WiFi, controlador, consultora…" value="${html(analysis?.source||"")}" ${readonly?"disabled":""}></div>
+          <div class="field"><label for="network-analysis-date">Fecha del análisis (opcional)</label>
+            <input id="network-analysis-date" type="date" value="${html(analysis?.observedAt||"")}" ${readonly?"disabled":""}></div>
+        </div>
+        <label for="external-wifi-pdf">Informe externo en PDF</label>
+        <input id="external-wifi-pdf" type="file" accept=".pdf,application/pdf" ${readonly||pdfAppendices.normalize(state.pdfAppendices).length>=pdfAppendices.MAX_COUNT?"disabled":""}>
+        <p class="subtle">Se incorpora como documento complementario del expediente y se entrega por separado, con SHA-256. Máximo 2 MiB por PDF, cuatro anexos en total. Si tu herramienta produce HTML, conviértelo a PDF antes de adjuntarlo.</p>
+        ${pdfAppendices.normalize(state.pdfAppendices).filter(item=>item.category==="wifi-analysis").map(item=>`<div class="network-analysis-pdf"><span><strong>${html(item.name)}</strong><small>${html(item.source||"Origen no indicado")} · ${html(item.observedAt||"Fecha no indicada")} · SHA-256 ${html(item.sha256)}</small></span><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?"disabled":""}>Quitar</button></div>`).join("")}
       </div>
+      <details class="network-analysis-import"><summary>2 · Importar mediciones CSV (opcional)</summary>
+        <label for="external-network-files">CSV de análisis WiFi</label>
+        <input id="external-network-files" type="file" accept=".csv,text/csv" multiple ${readonly?"disabled":""}>
+        <p class="subtle">Reconoce cabeceras habituales en español e inglés (SSID, BSSID/MAC, RSSI, canal, banda, latencia…). Admite punto y coma o coma. Si el formato no es compatible, puedes conservar igualmente su informe PDF. Hasta 2 MiB por CSV; los datos se procesan localmente.</p>
+      </details>
       ${details||'<p class="notice">Aún no hay resultados de herramientas externas importados. Los CSV se analizarán localmente y no crearán hallazgos automáticamente.</p>'}
-      ${analysis?`<div class="action-row"><button type="button" class="button quiet" data-go="delivery">Adjuntar informe original (PDF) →</button><button type="button" class="button danger" data-network-analysis-clear ${readonly?"disabled":""}>Retirar análisis importado</button></div>`:""}
+      ${analysis?`<div class="action-row"><button type="button" class="button quiet" data-go="delivery">Ver documentación de entrega →</button><button type="button" class="button danger" data-network-analysis-clear ${readonly?"disabled":""}>Retirar análisis importado</button></div>`:""}
     </section>`;
   }
   function renderGroup(block) {
@@ -3401,7 +3414,7 @@
       Se guardan dentro del JSON local; el informe los referencia por nombre y SHA-256, pero <strong>no fusiona sus páginas</strong>. Descarga los originales y entrégalos junto al informe por un medio autorizado.</p>
       <label for="pdf-appendix-upload">Añadir PDF al expediente</label>
       <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly || list.length>=pdfAppendices.MAX_COUNT?'disabled':''}>
-      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span><span class="action-row"><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?'disabled':''}>Quitar</button></span></li>`).join('')}</ul>
+      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span><span class="action-row"><button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button><button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?'disabled':''}>Quitar</button></span></li>`).join('')}</ul>
       <p class="subtle">Los anexos pueden incluir datos confidenciales. No se cargan a servidores ni se visualizan dentro de la app.</p>
     </section>`;
   }
@@ -3980,6 +3993,18 @@
       return;
     }
     const t = e.target;
+    if (t.id === "external-wifi-pdf" && t.files?.length) {
+      const auditId=currentId;
+      try {
+        if(state.documentControl?.status==="confirmed")throw Error("Abre una rectificación antes de adjuntar documentos.");
+        const meta={category:"wifi-analysis",source:byId("network-analysis-source")?.value?.trim()||"",observedAt:byId("network-analysis-date")?.value||""};
+        const file=await pdfAppendices.fromFile(t.files[0],meta);
+        if(auditId!==currentId||state.documentControl?.status==="confirmed")throw Error("El expediente ha cambiado.");
+        state.pdfAppendices=pdfAppendices.normalize([...state.pdfAppendices,file]);
+        persist();render();
+      }catch(error){alert("No se pudo adjuntar el informe WiFi: "+error.message);t.value="";}
+      return;
+    }
     if (t.id === "external-network-files" && t.files?.length) {
       const auditId=currentId;
       try {
@@ -3989,7 +4014,7 @@
           const parsed=await externalNetwork.parseFile(file);
           if(auditId!==currentId||state.documentControl?.status==="confirmed")
             throw Error("El expediente ha cambiado durante la importación.");
-          next=externalNetwork.merge(next,parsed);
+          next=externalNetwork.merge(next,parsed,{source:byId("network-analysis-source")?.value||"",observedAt:byId("network-analysis-date")?.value||""});
         }
         state.externalNetworkAnalysis=next;
         persist();render();
@@ -4000,7 +4025,7 @@
       const auditId = currentId;
       try {
         if (state.documentControl?.status === "confirmed") throw Error("Abre una rectificación antes de adjuntar documentos.");
-        const file = await pdfAppendices.fromFile(t.files[0]);
+        const file = await pdfAppendices.fromFile(t.files[0],{category:"general"});
         if (auditId !== currentId || state.documentControl?.status === "confirmed") throw Error("El expediente ha cambiado durante la carga.");
         state.pdfAppendices = pdfAppendices.normalize([...state.pdfAppendices, file]);
         persist();
@@ -6337,7 +6362,7 @@
     if (state.pdfAppendices?.length) {
       chapters.push([14, "Anexos PDF externos", section(14, "Anexos PDF externos",
         '<p>Los documentos relacionados se entregan separadamente del PDF principal. Conserva originales, comprueba las huellas SHA-256 y usa un canal protegido.</p>' +
-        '<ul>' + state.pdfAppendices.map(item=>'<li>' + html(item.name) + ' · ' + item.size + ' bytes · SHA-256 ' + html(item.sha256) + '</li>').join('') + '</ul>')]);
+        '<ul>' + state.pdfAppendices.map(item=>'<li>' + (item.category==='wifi-analysis'?'Análisis WiFi externo · ':'') + html(item.name) + (item.source?' · '+html(item.source):'') + (item.observedAt?' · '+html(item.observedAt):'') + ' · ' + item.size + ' bytes · SHA-256 ' + html(item.sha256) + '</li>').join('') + '</ul>')]);
     }
     const activeChapters = chapters.filter(([_id, _title, content]) =>
       Boolean(content),

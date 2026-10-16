@@ -660,3 +660,12 @@
 .network-analysis-table th{background:var(--canvas);color:var(--ink);font-weight:750}
 @media(max-width:800px){.network-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media print{.report-external-analysis .network-analysis-data>details{break-inside:auto}.report-external-analysis .network-analysis-table-wrap{overflow:visible}.report-external-analysis .network-analysis-table th,.report-external-analysis .network-analysis-table td{white-space:normal}}
+
+/* Generic WiFi supplementary documents are surfaced directly in Networks. */
+#workspace .external-network-analysis .network-analysis-import{gap:.85rem}
+#workspace .network-analysis-import>h3{margin:0;color:var(--ink)}
+#workspace .network-analysis-import>summary{font-weight:750;cursor:pointer;padding:.4rem 0}
+#workspace .network-analysis-import>label{display:block;margin-top:.35rem}
+#workspace .network-analysis-pdf{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;padding:.8rem;border:1px solid var(--line);border-radius:.7rem;background:var(--paper)}
+#workspace .network-analysis-pdf>span{flex:1 1 15rem;min-width:0;overflow-wrap:anywhere}
+#workspace .network-analysis-pdf small{display:block;line-height:1.5;color:var(--muted)}

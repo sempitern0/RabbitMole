@@ -240,3 +240,7 @@ Android phones and tablets with a coarse pointer use a dedicated style layer for
 ### Incremental record-navigation maintenance
 
 Record search, filtering, quick jump and focus handling now live in `js/audit-record-navigation.js`. `js/app.js` continues to own audit state, persistence and routing. Existing UI identifiers stay unchanged and the adapted regression test protects accent-insensitive searching and query isolation between audits. The Android touch stylesheet also drops redundant selectors without changing desktop or iOS styles.
+
+### Incremental audit field renderer
+
+Form field markup (text, selects, touch-friendly pickers, datalists, evidence links and contextual glossary help) is rendered by `js/audit-field-renderer.js`. App state, validation and local persistence remain in `app.js`. Eleven representative field variants were compared byte-for-byte with their previous HTML output. The renderer is precached for offline use and covered by a contract test; JSON v3 and Android interactions remain unchanged.

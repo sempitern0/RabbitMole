@@ -27,10 +27,14 @@ jobs:
       - name: Shell syntax
         run: bash -n rabbitmole.sh collect-local.sh discovery/run.sh discovery/setup.sh
       - run: npx playwright install --with-deps chromium
-      - name: Browser, PDF, persistence and offline acceptance
+      - name: PDF executive and technical acceptance
+        timeout-minutes: 3
         env:
           PDF_ACCEPTANCE_DIR: artifacts/pdf
-        run: npm run test:browser
+        run: node tests/test_report_browser.cjs
+      - name: PWA browser, persistence and offline acceptance
+        timeout-minutes: 3
+        run: node tests/test_pwa_browser.cjs
       - name: Save A4 acceptance PDFs
         if: always()
         uses: actions/upload-artifact@v4

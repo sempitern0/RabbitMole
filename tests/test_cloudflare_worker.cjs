@@ -13,6 +13,26 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
  for(const path of ['/deploy/worker.js','/.env','/tests/test_static.py','/rabbitmole.sh','/audit.json','/js/nested/private.js','/js/%2e%2e/deploy/worker.js']){
   const before=calls;assert.equal((await worker.fetch(new Request('https://rabbit.example'+path),env)).status,404,path);assert.equal(calls,before);
  }
+ // Emulate html_handling="none": the binding never implicitly maps / to index.
+ // The Worker must serve both PWA document URLs directly without redirects.
+ const routed=[];
+ const strict={ASSETS:{fetch:async request=>{
+  const path=new URL(request.url).pathname;routed.push(path);
+  return path==='/index.html'
+   ?new Response('<!doctype html><title>RabbitMole</title>',{status:200,headers:{'Content-Type':'text/html;charset=utf-8'}})
+   :new Response('not found',{status:404});
+ }}};
+ for(const address of ['https://rabbit.example/','https://rabbit.example/index.html',
+  'https://rabbit.example/?source=homescreen']){
+  const response=await worker.fetch(new Request(address),strict);
+  assert.equal(response.status,200,'PWA canonical route '+address);
+  assert.equal(response.headers.get('Content-Type'),'text/html;charset=utf-8');
+  assert.equal(await response.text(),'<!doctype html><title>RabbitMole</title>');
+ }
+ assert.deepEqual(routed,['/index.html','/index.html','/index.html'],
+  'Both shell URLs must fetch the same exact asset, without redirects');
+ const config=fs.readFileSync('wrangler.toml','utf8');
+ assert.match(config,/html_handling\\s*=\\s*"none"/,'Disable Cloudflare HTML redirects for offline shell URLs');
  for(const method of ['POST','PUT','DELETE'])assert.equal((await worker.fetch(new Request('https://rabbit.example/',{method}),env)).status,405);
  assert.equal(await (await worker.fetch(new Request('https://rabbit.example/',{method:'HEAD'}),env)).text(),'');
  console.log('PASS Worker allowlist, methods, headers and no data endpoints');

@@ -19,7 +19,13 @@ export default {
     if (!ROOT_FILES.has(url.pathname) && !ASSET_PATH.test(url.pathname)) {
       return new Response("Not found", {status:404, headers:{"Cache-Control":"no-store"}});
     }
-    const response = await env.ASSETS.fetch(request);
+    // The shell caches both / and /index.html. Never let Static Assets redirect
+    // the canonical document URL while the service worker installs.
+    const assetUrl = new URL(request.url);
+    if (assetUrl.pathname === "/") assetUrl.pathname = "/index.html";
+    const assetRequest = assetUrl.pathname === url.pathname
+      ? request : new Request(assetUrl, request);
+    const response = await env.ASSETS.fetch(assetRequest);
     const headers = new Headers(response.headers);
     headers.set("X-Content-Type-Options","nosniff");
     headers.set("X-Frame-Options","DENY");

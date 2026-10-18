@@ -277,3 +277,9 @@ Control de calidad revisa ahora la coherencia de los datos **documentados** de r
 ### Informe ejecutivo, técnico y pruebas de impresión
 
 El **ejecutivo** incluye una síntesis de cobertura física y servidores, sin direcciones IP, versiones de sistemas ni inventario detallado; las decisiones siguen fundamentadas en los hallazgos documentados, nunca en supuestas conformidades. El **técnico** añade ubicación documental en racks, posiciones U, sistemas y funciones de servidores y referencias a evidencias frontal/posterior, además del inventario, los controles y la trazabilidad existentes. Los PDF externos se enumeran por nombre y SHA-256: se entregan aparte, no se fusionan. La impresión conserva la página de firmas y controla títulos, tablas y fotografías al paginar. El conjunto E2E de Chromium verifica los dos perfiles y genera PDF A4 en el entorno CI; `PDF_ACCEPTANCE_DIR` permite guardar las muestras para revisión visual. La impresión real de iOS/Android no se considera validada por esta emulación.
+
+### Versión visible y recuperación offline
+
+El pie de la aplicación muestra la versión del producto (`package.json`: `1.0.0`) de forma discreta y legible en todos los temas. El identificador técnico del shell activo aparece al situar el puntero sobre la versión; no requiere consultar un servidor ni expone datos de la auditoría.
+
+El service worker precarga todos los recursos esenciales antes de aceptar una actualización. Si no puede completarse, se conserva el release instalado. Si la caché más reciente deja de ser utilizable, se selecciona una caché anterior completa cuando el navegador todavía la conserva, sin mezclar archivos estáticos entre versiones. Antes de trabajar sin conexión, utiliza «Mantenimiento y modo offline → Comprobar» y verifica un arranque desde el icono. Los navegadores pueden eliminar cachés por espacio; exporta periódicamente el expediente JSON.

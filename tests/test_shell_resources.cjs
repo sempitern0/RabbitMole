@@ -18,3 +18,6 @@ for(const asset of [...scripts,...styles]){
 assert(scripts.indexOf('js/audit-storage.js')<scripts.indexOf('js/app.js'));
 assert(sw.includes("'./fonts/AtkinsonHyperlegible-Regular.woff2'") || sw.includes("AtkinsonHyperlegible-"));
 console.log('PASS organized assets: HTML, SW, Bash, PowerShell');
+
+assert(scripts.includes('js/app-version.js'),'Version script must be packaged and pre-cached');
+assert(html.includes('id="app-version"'),'Version must have an accessible label');

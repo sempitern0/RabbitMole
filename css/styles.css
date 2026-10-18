@@ -524,9 +524,20 @@ main {
   border-top: 1px solid var(--line);
   padding: 18px clamp(18px, 3vw, 48px);
   text-align: right;
-  color: #95a2b0;
+  color: var(--muted);
   font-size: 11px;
 }
+.app-version {
+  display: inline-block;
+  margin-inline-start: .65rem;
+  padding-inline-start: .65rem;
+  border-inline-start: 1px solid var(--line);
+  font-size: .75rem;
+  letter-spacing: .015em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media print { .app-version { display: none; } }
 .empty {
   padding: 35px 20px;
   text-align: center;

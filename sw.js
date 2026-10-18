@@ -1,7 +1,11 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v85-report-e2e";
+const CACHE_NAME = "rabbitmole-shell-v86-offline-fallback";
 const CACHE_PREFIX = "rabbitmole-shell-";
+const VERSION = "1.0.0";
+const READY_KEY = "./.rabbitmole-shell-ready";
+const clientCache = new Map();
+
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
 );
@@ -11,6 +15,7 @@ const CORE = [
   "./css/styles.css",
   "./js/app.js",
   "./js/deployment-profile.js",
+  "./js/app-version.js",
   "./js/audit-storage.js",
   "./js/audit-import-plan.js",
   "./css/normalize.css",
@@ -73,6 +78,47 @@ const CORE = [
   "./icons/icon-512.png",
 ];
 const urlFor = (path) => new URL(path, self.registration.scope).href;
+const isShellCache = (name) => name.startsWith(CACHE_PREFIX);
+async function usableShell(name) {
+  const cache = await caches.open(name);
+  const marker = await cache.match(urlFor(READY_KEY));
+  if (marker) return true;
+  // Older releases have no completion marker: validate the actual HTML dependencies.
+  const page = await cache.match(urlFor("./index.html"));
+  if (!page) return false;
+  const html = await page.text();
+  const assets = [
+    ...html.matchAll(/<script\s+src="([^"]+)"/g),
+    ...html.matchAll(/<link[^>]+href="([^"]+\.css)"/g),
+  ].map((match) => match[1]);
+  if (!assets.length || !(await cache.match(urlFor("./js/app.js")))) return false;
+  for (const path of assets) {
+    if (!path.startsWith("js/") && !path.startsWith("css/")) return false;
+    if (!(await cache.match(urlFor("./" + path)))) return false;
+  }
+  return true;
+}
+async function chooseShell() {
+  // CacheStorage is always available in browsers; tolerate minimal test doubles.
+  if (typeof caches.keys !== "function") return CACHE_NAME;
+  const names = (await caches.keys()).filter(isShellCache);
+  if (names.includes(CACHE_NAME) && await usableShell(CACHE_NAME)) return CACHE_NAME;
+  for (const name of names.reverse()) {
+    if (name !== CACHE_NAME && await usableShell(name)) return name;
+  }
+  return null;
+}
+async function shellForClient(event) {
+  const id = event.clientId || event.resultingClientId;
+  if (id && clientCache.has(id)) {
+    const name = clientCache.get(id);
+    if ((await caches.keys()).includes(name) && await usableShell(name)) return name;
+    clientCache.delete(id);
+  }
+  const name = await chooseShell();
+  if (id && name) clientCache.set(id, name);
+  return name;
+}
 const reply = (event, payload) => {
   try {
     event.ports?.[0]?.postMessage(payload);
@@ -86,6 +132,8 @@ async function shellHealth() {
   return {
     ok: missing.length === 0,
     version: CACHE_NAME,
+    appVersion: VERSION,
+    activeCache: await chooseShell(),
     total: CORE.length,
     cached: CORE.length - missing.length,
     missing: missing.slice(0, 8),
@@ -168,6 +216,7 @@ self.addEventListener("install", (event) => {
               }),
           ),
         );
+        await cache.put(urlFor(READY_KEY), new Response("ready"));
         const readiness = await shellHealth();
         if (!readiness.ok) throw Error("La versión offline está incompleta.");
         await Promise.all(
@@ -192,11 +241,14 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // Keep one previous shell as a recovery reserve; cap historical storage use.
-      const keys = (await caches.keys()).filter(
-        (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME,
-      );
-      await Promise.all(keys.slice(0, -1).map((key) => caches.delete(key)));
+      // Preserve the newest usable predecessor and any cache still owned by a live client.
+      const names = (await caches.keys()).filter(isShellCache);
+      const previous = [];
+      for (const name of names) {
+        if (name !== CACHE_NAME && await usableShell(name)) previous.push(name);
+      }
+      const keep = new Set([CACHE_NAME, previous.at(-1), ...clientCache.values()]);
+      await Promise.all(names.filter((name) => !keep.has(name)).map((name) => caches.delete(name)));
       await self.clients.claim();
     })(),
   );
@@ -219,15 +271,19 @@ self.addEventListener("fetch", (event) => {
   }
   event.respondWith(
     (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      const hit = await cache.match(request);
-      if (hit) return hit;
-      // Handles ?query navigation and PWA launches when Python/HTTPS server is unavailable.
-      if (request.mode === "navigate") {
-        const shell =
-          (await cache.match(urlFor("./index.html"))) ||
-          (await cache.match(urlFor("./")));
-        if (shell) return shell;
+      const selected = await shellForClient(event);
+      if (selected) {
+        const cache = await caches.open(selected);
+        if (request.mode === "navigate") {
+          const shell = await cache.match(urlFor("./index.html"));
+          if (shell) return shell;
+        } else {
+          const hit = await cache.match(request, { ignoreSearch: true });
+          if (hit) return hit;
+          // A missing JS/CSS asset must not be silently mixed with another release.
+          if (/\.(?:js|css)$/.test(url.pathname))
+            return new Response("Recurso ausente en la versión offline activa.", {status:503});
+        }
       }
       try {
         const response = await fetch(request);
@@ -237,7 +293,7 @@ self.addEventListener("fetch", (event) => {
           url.pathname.endsWith(".woff2") &&
           url.pathname.includes("/fonts/")
         ) {
-          event.waitUntil(cache.put(request, response.clone()));
+          if (selected) event.waitUntil(caches.open(selected).then((cache) => cache.put(request, response.clone())));
         }
         return response;
       } catch (_error) {

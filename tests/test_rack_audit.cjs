@@ -43,8 +43,9 @@ assert(rack.renderLayout({_key:'rack1',id:'RACK-01',rackHeightU:'6'},[],html).in
 assert.equal(rack.PHOTO_FIELDS.length,2);
 assert.equal(rack.PLACEMENT_FIELDS.length,4);
 const app=fs.readFileSync('js/app.js','utf8'),page=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
-assert(app.includes('...rackAudit.FIELDS')&&app.includes('...rackAudit.FIELD_NAMES'));
-assert(app.includes('rackAudit.render(record,index,renderField,html,state.assets)'));
+const definitions=fs.readFileSync('js/app-definitions.js','utf8');
+assert(definitions.includes('...rackAudit.FIELDS')&&definitions.includes('...rackAudit.FIELD_NAMES'));
+assert(app.replace(/\s/g,'').includes('rackAudit.render(record,index,renderField,html,state.assets)'));
 assert(page.indexOf('js/audit-rack.js')<page.indexOf('js/app.js'));
 assert(sw.includes('./js/audit-rack.js'));
 console.log('PASS rack auditing, optional inventory, checklist and offline module');

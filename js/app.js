@@ -464,7 +464,8 @@
     storageError = false,
     dirty = false,
     saveTimer = null,
-    writeQueue = Promise.resolve();
+    writeQueue = Promise.resolve(),
+    pendingWrites = 0;
   let selectedPalette = DEFAULT_PALETTE,
     deferredInstallPrompt = null;
   function updateStatus(message, warning = false) {
@@ -473,7 +474,8 @@
     node.classList.toggle("warning", warning);
   }
   function enqueue(action) {
-    writeQueue = writeQueue.catch(() => {}).then(action);
+    pendingWrites++;
+    writeQueue = writeQueue.catch(() => {}).then(action).finally(() => { pendingWrites--; });
     return writeQueue;
   }
   function selectPalette(value, userSelected = false) {
@@ -5515,6 +5517,12 @@
     if (document.visibilityState === "hidden") void saveCurrent();
   });
   window.addEventListener("pagehide", () => void saveCurrent());
+  window.addEventListener("beforeunload", (event) => {
+    if (!dirty && !storageError && pendingWrites === 0) return;
+    void saveCurrent();
+    event.preventDefault();
+    event.returnValue = "";
+  });
   byId("network-check")?.addEventListener(
     "click",
     () => void checkNetworkServer(),
@@ -5545,6 +5553,6 @@
   });
   globalThis.AuditPwaUpdates?.init({
     saveBeforeReload: flush,
-    isSafeToReload: () => !dirty && !storageError && !saveTimer,
+    isSafeToReload: () => !dirty && !storageError && !saveTimer && pendingWrites === 0,
   });
 })();

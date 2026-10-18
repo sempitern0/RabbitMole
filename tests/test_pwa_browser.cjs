@@ -22,6 +22,22 @@ const {chromium}=require('playwright');
    page.on('pageerror',e=>errors.push(e.message));page.on('request',req=>{if(!req.url().startsWith(origin)&&!req.url().startsWith('data:'))external.push(req.url());});
    await page.goto(origin);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
    await page.waitForFunction(()=>document.getElementById('pwa-install-status')?.textContent?.length>0);
+   // Real IndexedDB: a synchronous error after a queued put must roll it back.
+   assert.equal(await page.evaluate(async()=>{
+     const repo=AuditStorage.createRepository();await repo.init();
+     await repo.put({id:'atomic-test',audit:{marker:'original'}});
+     let rejected=false;
+     try {await repo.putMany([
+       {id:'atomic-test',audit:{marker:'overwritten'}},
+       {id:'uncloneable-test',audit:{invalid:()=>{}}}
+     ]);} catch(error) {rejected=error.name==='DataCloneError';}
+     const saved=await repo.list();
+     const intact=saved.find(r=>r.id==='atomic-test')?.audit.marker==='original';
+     const absent=!saved.some(r=>r.id==='uncloneable-test');
+     await repo.remove('atomic-test');
+     return rejected&&intact&&absent;
+   }),true,'Failed batches must preserve the original library');
+
    assert.equal(await page.locator('#pwa-install-card').isVisible(),false);
    await page.locator('#global-navigation [data-go="device"]').click();
    assert.equal(await page.locator('#pwa-install-card').isVisible(),true);
@@ -73,7 +89,7 @@ const {chromium}=require('playwright');
      text:el.textContent,weight:parseInt(getComputedStyle(el).fontWeight,10),
      radius:parseFloat(getComputedStyle(el).borderTopLeftRadius)
    }));
-   assert.match(versionStyle.text,/Versión 1\\.0\\.0/);
+   assert.match(versionStyle.text,/Versión 1\.0\.0/);
    assert(versionStyle.weight>=700 && versionStyle.radius>=15,'Version badge must be distinct and understated');
    await page.locator('#sidebar-maintenance > summary').click();
    // Every palette retains a dark, legible maintenance panel independently of the workspace theme.
@@ -295,6 +311,7 @@ const {chromium}=require('playwright');
    await page.locator('#sidebar-toggle').click();
    assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'false');
 
+   await page.locator("[data-open]").first().click();
    // Emulate touch input and a phone viewport for layout/keyboard-related regressions.
    const touchMetrics=await page.locator('#wizard-step-select').evaluate(el=>{
      const r=el.getBoundingClientRect(),s=getComputedStyle(el);
@@ -307,6 +324,7 @@ const {chromium}=require('playwright');
    await page.locator('#global-navigation [data-go="device"]').click();
    assert.equal(await page.locator('#pwa-install-card').evaluate(el=>getComputedStyle(el).borderLeftWidth!=='0px'),true);
    await page.locator('#global-navigation [data-go="records"]').click();
+   await page.locator('[data-open]').first().click();
    await page.locator('#wizard-step-select').selectOption('networks');
    assert.equal(await page.locator('.record-navigator').evaluate(el=>getComputedStyle(el).position),'static','Mobile filters must not cover editable records');
    await page.setViewportSize({width:1280,height:900});
@@ -357,7 +375,7 @@ const {chromium}=require('playwright');
    await ram.selectOption('16 GiB');
    assert.equal(await ram.inputValue(),'16 GiB');
    await ram.selectOption('__custom__');
-   const customRam=ram.closest('.field').locator('[data-custom]');
+   const customRam=ram.locator('xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " field ")][1]').locator('[data-custom]');
    await customRam.fill('24 GiB verificados');
    assert.equal(await customRam.isVisible(),true);
    await page.locator('#wizard-step-select').selectOption('networks');
@@ -365,10 +383,10 @@ const {chromium}=require('playwright');
    assert.equal(await networkStandard.locator('option[value="802.11ax / Wi-Fi 6"]').count(),1);
    await page.locator('#wizard-step-select').selectOption('assets');
    assert.equal(await page.locator('#f-assets-0-ram').inputValue(),'__custom__');
-   assert.equal(await page.locator('#f-assets-0-ram').closest('.field').locator('[data-custom]').inputValue(),'24 GiB verificados');
+   assert.equal(await page.locator('#f-assets-0-ram').locator('xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " field ")][1]').locator('[data-custom]').inputValue(),'24 GiB verificados');
 
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
-   await page.waitForTimeout(600);
+   await page.waitForFunction(()=>document.getElementById('save-status').textContent.includes('Guardado'));
    await context.setOffline(true);await page.reload();
    await page.waitForFunction(()=>!!document.querySelector('[data-new]')||!!document.querySelector('#wizard-step-select'));
    // Start from library if navigation was not persisted, then reopen the audit.

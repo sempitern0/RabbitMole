@@ -52,7 +52,7 @@ PWA **offline-first** para expedientes de auditoría de infraestructura y cibers
 El menú lateral se pliega desde `#sidebar-toggle` con `js/ui-layout.js` (preferencia `rabbitmole:ui:sidebar-collapsed:v1`), conservando una barra de iconos accesible en escritorio y plegando contenido en móvil/tablet. El navegador sticky de registros se pliega con `#record-nav-toggle` mediante `js/audit-record-navigation.js` (preferencia `rabbitmole:ui:record-filters-collapsed:v1`); `css/layout-collapse.css` es el último CSS de pantalla y rige animaciones/estados. Respetar `aria-expanded`, `inert`, foco, ausencia de scroll horizontal y `prefers-reduced-motion`; ambas preferencias son locales y no pertenecen al expediente JSON.
 
 ## Fase 1: estabilidad
-El service worker local usa `rabbitmole-shell-v88-palette-icons` y debe cambiar su nombre en cada release local que altere CORE o lógica SW; el builder Cloudflare ya genera el hash de versión. La marca `.rabbitmole-shell-ready` **no demuestra por sí sola** integridad: validar CORE completo (caché actual) y dependencias HTML (fallback heredado). Reparar únicamente una release idéntica, escribir la marca al final y no mezclar versiones. Probar cache eviction, fallback, inicio offline y shell incompleto. Antes de fusionar ejecutar CI y Playwright y documentar explícitamente las pruebas no ejecutadas.
+El service worker local usa `rabbitmole-shell-v98-field-audit-readiness` y debe cambiar su nombre en cada release local que altere CORE o lógica SW; el builder Cloudflare ya genera el hash de versión. La marca `.rabbitmole-shell-ready` **no demuestra por sí sola** integridad: validar CORE completo (caché actual) y dependencias HTML (fallback heredado). Reparar únicamente una release idéntica, escribir la marca al final y no mezclar versiones. Probar cache eviction, fallback, inicio offline y shell incompleto. Antes de fusionar ejecutar CI y Playwright y documentar explícitamente las pruebas no ejecutadas.
 
 
 ## Conexiones online · propietario y contrato
@@ -91,3 +91,9 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 ## Diccionario: servidores, software y licencias
 - Entradas `term-183` a `term-212` en `js/glossary-terms.js`: categorías Servidores, Almacenamiento, Operación de software y Licencias. `js/glossary-guides.js` contiene diagnósticos de lectura; las licencias se verifican contra documentos del editor, nunca por activación automática.
 - Mantener IDs y contratos de datos, `CONTEXT_HELP` enlazado con los campos existentes de Software y Hardware, sin alteración de esquema JSON v3. Ejecutar `tests/test_glossary_data.cjs`, `tests/test_glossary.cjs`, `tests/test_glossary_guide.cjs` y navegador; actualizar versión de SW si cambia el catálogo.
+
+## Preparación de auditoría de campo
+- `js/audit-storage.js`: si `action(objectStore)` lanza una excepción síncrona, abortar la transacción antes de rechazar; una Promise rechazada no revierte IndexedDB por sí sola. Mantener la regresión real de lote parcial en `tests/test_pwa_browser.cjs`.
+- `js/app.js`: `pendingWrites` cuenta todas las operaciones en cola y se decrementa en `finally`. La recarga por actualización exige cero escrituras pendientes además de los controles dirty/error/timer. `tests/test_pending_writes.cjs` pertenece a la puerta de entrega.
+- `sw.js`: navegación y salud verifican integridad completa; recursos concurrentes comparten la verificación y se asocian al `resultingClientId` de la navegación. Mantener regresiones de eviction/fallback y límite de lecturas en `tests/test_pwa_protocol.cjs`.
+- Aceptación real de campo y limitaciones de las pruebas históricas: `docs/RELEASE_READINESS_ES.md` / `docs/RELEASE_READINESS.md`.

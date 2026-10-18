@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v97-server-software-licenses";
+const CACHE_NAME = "rabbitmole-shell-v98-field-audit-readiness";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -123,24 +123,25 @@ async function usableShell(name, fresh = false) {
   if (!valid) verifiedShells.delete(name);
   return valid;
 }
-async function chooseShell() {
+async function chooseShell(fresh = true) {
   // CacheStorage is always available in browsers; tolerate minimal test doubles.
   if (typeof caches.keys !== "function") return CACHE_NAME;
   const names = (await caches.keys()).filter(isShellCache);
-  if (names.includes(CACHE_NAME) && await usableShell(CACHE_NAME, true)) return CACHE_NAME;
+  if (names.includes(CACHE_NAME) && await usableShell(CACHE_NAME, fresh)) return CACHE_NAME;
   for (const name of names.reverse()) {
-    if (name !== CACHE_NAME && await usableShell(name, true)) return name;
+    if (name !== CACHE_NAME && await usableShell(name, fresh)) return name;
   }
   return null;
 }
 async function shellForClient(event) {
-  const id = event.clientId || event.resultingClientId;
+  const id = event.resultingClientId || event.clientId;
   if (id && clientCache.has(id)) {
     const name = clientCache.get(id);
     if ((await caches.keys()).includes(name) && await usableShell(name, event.request?.mode === "navigate")) return name;
     clientCache.delete(id);
   }
-  const name = await chooseShell();
+  // Navigation verifies integrity; its assets share that verification promise.
+  const name = await chooseShell(event.request?.mode === "navigate");
   if (id && name) clientCache.set(id, name);
   return name;
 }

@@ -4,7 +4,7 @@ const {loadWorker}=require('./support/sw-contract.js');
 const currentCache=fs.readFileSync('sw.js','utf8').match(/const CACHE_NAME\s*=\s*"([^"]+)"/)?.[1];
 assert.match(currentCache,/^rabbitmole-shell-v\d+-/);
 (async()=>{
- const worker=loadWorker({caches:{open:async()=>({match:async key=>new Response(
+ const worker=loadWorker({caches:{open:async()=>({put:async()=>{},match:async key=>new Response(
    String(key).endsWith('/index.html') ? '<link href="css/styles.css"><script src="js/app.js"></script>' : 'cached'
  )})}});
  const source=fs.readFileSync('js/offline-health.js','utf8');
@@ -88,5 +88,29 @@ assert.match(currentCache,/^rabbitmole-shell-v\d+-/);
  let asset;
  legacy.handlers.fetch({request:{method:'GET',url:'https://audit.example/js/app.js',mode:'cors',cache:'default'},clientId:'offline-client',respondWith:p=>asset=p,waitUntil:()=>{}});
  assert.equal(await (await asset).text(),'legacy');
+ // Concurrent first-load assets must share one complete-shell verification.
+ let reads=0;
+ const shared=loadWorker({
+  self:{location:{origin:'https://audit.example'}},
+  caches:{keys:async()=>[currentCache],open:async()=>({match:async key=>{
+   reads++;
+   const url=typeof key==='string'?key:key.url;
+   return new Response(url.endsWith('/index.html')?legacyHTML:'cached');
+  }})},fetch:async()=>{throw Error('offline');}
+ });
+ const responses=[];
+ for(let i=0;i<20;i++)shared.handlers.fetch({
+  request:{method:'GET',url:'https://audit.example/js/app.js',mode:'cors',cache:'default'},
+  clientId:'fresh-'+i,respondWith:p=>responses.push(p),waitUntil:()=>{}
+ });
+ await Promise.all(responses);
+ console.log('Concurrent shell verification: '+reads+' cache reads for 20 assets');
+ assert(reads<shared.core.length*3,'Concurrent assets must not revalidate the entire shell per request: '+reads);
+ const beforeNavigation=reads;
+ let freshNavigation;
+ shared.handlers.fetch({request:{method:'GET',url:'https://audit.example/',mode:'navigate',cache:'default'},
+  resultingClientId:'new-document',respondWith:p=>freshNavigation=p,waitUntil:()=>{}});
+ await freshNavigation;
+ assert(reads-beforeNavigation>=shared.core.length,'Navigation must still recheck evicted resources');
  console.log('PASS offline protocol, cold launch, last-complete-shell fallback and connectivity probe');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -406,3 +406,7 @@ En **Dispositivo e instalación → Preparar terminal y Discovery** encontrarás
 El diccionario offline alcanza **212 conceptos**, **96 guías de diagnóstico** y **221 referencias**. Añade 30 entradas sobre roles y gestión de servidores, Server Core, BMC/iDRAC/iLO, RAID/SMART, SAN/NAS/iSCSI, SAI, hipervisores, capacidad, dependencias, despliegues, soporte y recuperación; y sobre SAM/ITAM, derechos de uso, OEM/retail/volumen, CAL, modelos por núcleo y por usuario, SaaS, BYOL, EULA, software libre y licencias SPDX. Incluye 17 guías prácticas con comprobaciones principalmente de solo lectura, evidencias esperadas y cautelas. No se realizan conexiones ni se ejecutan comandos automáticamente.
 
 La ayuda contextual de **Hardware** incorpora rol, modalidad, almacenamiento y administración del servidor; la de **Software** incorpora licencia, estado, modelo, versión, soporte y actualizaciones. Esta información es orientativa: **una instalación detectada o una clave de activación no prueban conformidad contractual**. Antes de emitir conclusiones verifica condiciones y derechos del producto/edición concreta con el titular.
+
+## Aceptación para auditoría de campo
+
+Consulta [la preparación de auditoría](docs/RELEASE_READINESS_ES.md): correcciones de guardado, pruebas de entrega y comprobación en el dispositivo real antes de la visita.

@@ -44,6 +44,10 @@
       learned=[...(audit?.assets||[]).map(x=>x.owner),...(audit?.findings||[]).map(x=>x.owner)];
     else if(field==='vendor'&&block==='software')learned=rows.map(x=>x.vendor);
     else if(block==='networks'&&['gateway','dns','firewall'].includes(field))learned=rows.map(x=>x[field]);
+    else if({
+      assets:['avProduct'],networks:['wifiStandard','wifiChannel'],
+      controls:['reference'],cves:['source'],evidence:['source']
+    }[block]?.includes(field))learned=(audit?.[block]||[]).map(x=>x[field]);
     return unique([...learned,...base]);
   }
   function refs(value){

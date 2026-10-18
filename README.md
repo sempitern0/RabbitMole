@@ -348,3 +348,7 @@ Installation instructions and the field-readiness checklist are now reached via 
 ### Glossary and assistant spacing
 
 Glossary examples, evidence, cautions, step-by-step guidance and the contextual glossary drawer retain responsive internal insets independently of each section's vertical rhythm. Shared section CSS no longer resets horizontal padding. The audit's card, form, command, network-analysis and risk-acceptance panels were also reviewed for unintended padding overrides; no new runtime dependencies are introduced.
+
+### Faster mobile and tablet data entry
+
+Native selectors with **Other / type…** now cover common hardware CPU/RAM/storage/location/endpoint protection choices, Wi-Fi standard/channel, control framework and CVE/evidence source. Values already entered in the audit appear as suggestions and legacy custom values remain editable; nothing is marked verified automatically. IPs, identifiers, versions and narrative evidence remain free-text. JSON v3 is unchanged.

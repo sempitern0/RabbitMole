@@ -380,3 +380,7 @@ La instalación y lista previa a auditorías móviles están disponibles en **Me
 ### Legibilidad y espaciado del diccionario
 
 Las fichas del diccionario (incluidos «Ejemplo», evidencias, advertencias, mini-guías y el panel de ayuda contextual) mantienen márgenes interiores adaptados a la pantalla en todas las paletas. El espaciado vertical de las secciones ya no elimina el padding de sus recuadros. También se han revisado los contenedores de controles, formularios, comandos, análisis de red y aceptación de riesgo para conservar su separación sin añadir elementos de interfaz.
+
+### Selectores ágiles en móvil y tablet
+
+Para reducir escritura, Inventario ofrece listas nativas para CPU, RAM, almacenamiento, ubicación y antivirus/EDR; Redes, para canal y estándar Wi-Fi; Controles, para el marco de referencia; CVE y Evidencias, para la fuente de información. La opción **«Otro / escribir…»** acepta cualquier valor documentado, también valores procedentes de importaciones anteriores. Se sugieren primero valores ya utilizados en el expediente, pero nunca se rellenan comprobaciones automáticamente. IP, CIDR, gateway, hostname, número de serie, versiones y observaciones siguen admitiendo texto libre. No cambia el formato JSON v3 ni las exportaciones.

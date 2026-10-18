@@ -340,6 +340,22 @@ const {chromium}=require('playwright');
    });
    assert(uploadLayout.button>=100&&uploadLayout.fileWidth>=160,'File and camera actions need independent space: '+JSON.stringify(uploadLayout));
    await page.locator('#wizard-step-select').selectOption('assets');await page.locator('[data-add="assets"]').first().click();
+   // Touch-friendly native pickers must retain custom technical values.
+   const ram=page.locator('#f-assets-0-ram');
+   assert.equal(await ram.locator('option[value="16 GiB"]').count(),1);
+   await ram.selectOption('16 GiB');
+   assert.equal(await ram.inputValue(),'16 GiB');
+   await ram.selectOption('__custom__');
+   const customRam=ram.closest('.field').locator('[data-custom]');
+   await customRam.fill('24 GiB verificados');
+   assert.equal(await customRam.isVisible(),true);
+   await page.locator('#wizard-step-select').selectOption('networks');
+   const networkStandard=page.locator('#f-networks-0-wifiStandard');
+   assert.equal(await networkStandard.locator('option[value="802.11ax / Wi-Fi 6"]').count(),1);
+   await page.locator('#wizard-step-select').selectOption('assets');
+   assert.equal(await page.locator('#f-assets-0-ram').inputValue(),'__custom__');
+   assert.equal(await page.locator('#f-assets-0-ram').closest('.field').locator('[data-custom]').inputValue(),'24 GiB verificados');
+
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
    await page.waitForTimeout(600);
    await context.setOffline(true);await page.reload();

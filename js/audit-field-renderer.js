@@ -39,8 +39,9 @@
       control = `<input id="${id}" type="text" ${attrs} list="${listId}" value="${html(value)}" maxlength="20000" autocomplete="off"><datalist id="${listId}">${known.map((x) => `<option value="${html(x)}"></option>`).join("")}</datalist>`;
     } else if (
       type === "picker" &&
-      ["os", "cpu", "ram", "storage", "site", "name"].includes(name) &&
-      (name !== "name" || block === "software")
+      // Large OS/software catalogues stay searchable; finite field presets
+      // use a native touch-friendly select with a reversible custom value.
+      (name === "os" || (name === "name" && block === "software"))
     ) {
       const options =
         name === "os"

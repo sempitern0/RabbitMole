@@ -56,7 +56,7 @@ async function permissionCheck(granted){
  for(const text of ['modo avión','expediente ficticio','JSON','Autorización','Privacidad','Termux'])
   assert(section.includes(text),'Field checklist missing: '+text);
  assert(css.includes('#pwa-install-card .mobile-field-items input:focus-visible'),'Keyboard focus in field checklist');
- assert(sw.includes('rabbitmole-shell-v91-glossary-spacing'),'Mobile shell change must update cache version');
+ assert(sw.includes('rabbitmole-shell-v92-touch-pickers'),'Mobile shell change must update cache version');
  assert(css.includes('#pwa-install-card.pwa-install-card:not([hidden])'));
  assert(css.includes('@media(forced-colors:active)'));
  assert(css.includes('min-height:44px'));

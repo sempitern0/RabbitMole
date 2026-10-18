@@ -53,3 +53,9 @@ El menú lateral se pliega desde `#sidebar-toggle` con `js/ui-layout.js` (prefer
 
 ## Fase 1: estabilidad
 El service worker local usa `rabbitmole-shell-v87-integrity` y debe cambiar su nombre en cada release local que altere CORE o lógica SW; el builder Cloudflare ya genera el hash de versión. La marca `.rabbitmole-shell-ready` **no demuestra por sí sola** integridad: validar CORE completo (caché actual) y dependencias HTML (fallback heredado). Reparar únicamente una release idéntica, escribir la marca al final y no mezclar versiones. Probar cache eviction, fallback, inicio offline y shell incompleto. Antes de fusionar ejecutar CI y Playwright y documentar explícitamente las pruebas no ejecutadas.
+
+
+## Conexiones online · propietario y contrato
+- `js/secure-transfer.js`: WebDAV HTTPS, cifrado JSON, preflight `PROPFIND Depth: 0` sin escritura, subidas con `If-None-Match: *`, comparticiones OCS con contraseña/caducidad y revocación. Exigir `private-full`, CORS explícito y prohibir URL con credenciales o parámetros.
+- `js/secure-transfer-ui.js`: respaldo/PDF y enlace temporal; `js/app.js`: perfil cifrado, selector de canal, estado efímero `connectionVerified` y opciones avanzadas. Una comprobación satisfactoria **no acredita escritura**. Resetear verificación al guardar, desbloquear u olvidar perfil.
+- No efectuar conexiones automáticamente, no sobrescribir copias existentes, no convertir correo en envío automático ni asumir OAuth para proveedores no implementados. No persistir contraseñas de aplicación sin cifrar, frases, tokens ni enlaces temporales. Probar código 207, 401/403/404, CORS, privacidad de perfiles y autorización antes de entregar.

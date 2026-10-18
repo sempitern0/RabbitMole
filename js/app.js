@@ -1787,6 +1787,7 @@
   const utf8 = new TextEncoder(),
     decoder = new TextDecoder();
   let unlockedConnection = null,
+    connectionVerified = false,
     connectionChannel = "nextcloud";
   function bytesB64(bytes) {
     return btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(""));
@@ -1873,20 +1874,20 @@
     if (PUBLIC_DEMO)
       return '<section class="card"><h1>Conexiones desactivadas</h1><p>La versión web no permite credenciales ni transferencias. Tus expedientes son locales.</p></section>';
     const exists = Boolean(localStorage.getItem(CONNECTION_KEY));
+    const verified = Boolean(unlockedConnection && connectionVerified);
     return `<span class="eyebrow">CONECTORES / OPCIONAL</span><h1 class="page-title">Conexiones y entrega</h1>
-      <p class="lead">La auditoría funciona offline. Las transferencias son opcionales y requieren confirmación explícita. Distingue exportación JSON sin cifrar, backup cifrado y entrega de PDF.</p>
-      <section class="card"><h2>1 · Elige un canal</h2><div class="connection-methods"><label><input type="radio" name="channel" value="nextcloud" ${connectionChannel === "nextcloud" ? "checked" : ""}> Nextcloud / WebDAV (subir JSON cifrando la conexión TLS)</label><label><input type="radio" name="channel" value="email" ${connectionChannel === "email" ? "checked" : ""}> Email (abre tu cliente de correo)</label><label><input type="radio" name="channel" value="share" ${connectionChannel === "share" ? "checked" : ""}> Compartir con el sistema</label></div></section>
+      <p class="lead">Elige cómo entregar el informe. Ningún archivo se transfiere automáticamente. Recomendamos copia cifrada para respaldos y PDF revisado para destinatarios.</p><div class="connection-intro" role="note"><strong>Antes de empezar</strong><span>1. Abre una auditoría · 2. Elige canal · 3. Comprueba el destino · 4. Confirma cada envío.</span></div>
+      <section class="card"><h2>1 · Elige un canal</h2><div class="connection-methods"><label><input type="radio" name="channel" value="nextcloud" ${connectionChannel === "nextcloud" ? "checked" : ""}> Nextcloud · copia cifrada o PDF</label><label><input type="radio" name="channel" value="email" ${connectionChannel === "email" ? "checked" : ""}> Email (abre tu cliente de correo)</label><label><input type="radio" name="channel" value="share" ${connectionChannel === "share" ? "checked" : ""}> Compartir con el sistema</label></div></section>
       <section class="card" id="connection-nextcloud" ${connectionChannel === "nextcloud" ? "" : "hidden"}><h2>2 · Configura Nextcloud</h2><p class="subtle">Usa una contraseña de aplicación revocable, no la contraseña principal. El perfil queda cifrado localmente mediante AES-GCM y una frase de paso que no almacenamos. El navegador debe permitir CORS en el servidor WebDAV.</p>
       <div class="fields"><div class="field full"><label for="dav-url">URL WebDAV HTTPS</label><input id="dav-url" type="url" autocomplete="off" placeholder="https://nube.example/remote.php/dav/files/usuario/"></div>
       <div class="field"><label for="dav-user">Usuario</label><input id="dav-user" autocomplete="off"></div><div class="field"><label for="dav-secret">Contraseña de aplicación</label><input id="dav-secret" type="password" autocomplete="new-password"></div>
       <div class="field full"><label for="dav-passphrase">Frase de paso local (12 caracteres mínimo)</label><input id="dav-passphrase" type="password" autocomplete="new-password"></div></div>
-      <div class="action-row"><button class="button accent" id="dav-save">Guardar conexión cifrada</button><button class="button quiet" id="dav-unlock" ${exists ? "" : "disabled"}>Desbloquear conexión</button><button class="button danger" id="dav-forget" ${exists ? "" : "disabled"}>Borrar conexión</button></div>
-      <p class="subtle" id="dav-status" role="status">${unlockedConnection ? "Conexión desbloqueada en esta sesión." : exists ? "Hay un perfil cifrado. Introduce la frase de paso para desbloquearlo." : "Todavía no hay una conexión guardada."}</p></section>
-      <section class="card" id="connection-upload" ${connectionChannel === "nextcloud" ? "" : "hidden"}><h2>3 · Entrega bajo consentimiento</h2><p class="subtle">Subida JSON original SIN CIFRAR, solo mediante HTTPS. Para backups remotos, prefiere la nueva opción «Subir copia cifrada» de abajo. Puede contener información confidencial y evidencias incrustadas. No se sincroniza automáticamente.</p>
-      <div class="action-row"><button class="button accent" id="dav-upload" ${unlockedConnection && currentId ? "" : "disabled"}>Subir expediente JSON</button><button class="button quiet" id="open-email" ${currentId ? "" : "disabled"}>Preparar correo</button><button class="button quiet" id="native-share-json" ${currentId ? "" : "disabled"}>Compartir JSON</button></div><p class="subtle" id="dav-upload-status" role="status"></p></section>
+      <div class="action-row"><button class="button accent" id="dav-save">Guardar perfil cifrado</button><button class="button quiet" id="dav-unlock" ${exists ? "" : "disabled"}>Desbloquear perfil</button><button class="button quiet" id="dav-test" ${unlockedConnection ? "" : "disabled"}>Comprobar conexión (sin subir)</button><button class="button danger" id="dav-forget" ${exists ? "" : "disabled"}>Olvidar perfil</button></div>
+      <p class="subtle" id="dav-status" role="status">${unlockedConnection ? "Conexión desbloqueada en esta sesión." : exists ? "Hay un perfil cifrado. Introduce la frase de paso para desbloquearlo." : "Todavía no hay una conexión guardada."}</p><p class="connection-check" id="dav-test-status" role="status" aria-live="polite">${verified ? "Comprobación WebDAV satisfactoria en esta sesión. No confirma permisos de escritura." : "Pendiente de comprobar. Ninguna operación remota se ha iniciado."}</p></section>
+      <section class="card" id="connection-upload" ${connectionChannel === "nextcloud" ? "" : "hidden"}><details class="connection-advanced"><summary>Opciones avanzadas · JSON original sin cifrar</summary><p class="subtle">No recomendado para respaldos: la conexión usa TLS, pero el servidor recibe el JSON legible. El nombre es único y nunca se sobrescribe un archivo existente.</p><div class="action-row"><button class="button quiet" id="dav-upload" ${verified && currentId ? "" : "disabled"}>Subir JSON legible (avanzado)</button></div><p id="dav-upload-status" role="status"></p></details></section>
       <section class="card" id="connection-email" ${connectionChannel === "email" ? "" : "hidden"}><h2>2 · Envío por correo</h2><p class="subtle">Abre un correo con asunto y texto preparados. Los navegadores no pueden adjuntar automáticamente un PDF a un enlace mailto. Genera y revisa el PDF, adjúntalo en tu cliente y verifica destinatarios antes de enviar.</p><button type="button" class="button accent" id="open-email" ${currentId ? "" : "disabled"}>Redactar correo</button></section>
       <section class="card" id="connection-share" ${connectionChannel === "share" ? "" : "hidden"}><h2>2 · Compartir mediante el dispositivo</h2><p class="subtle">Utiliza Web Share API si el dispositivo la ofrece; elige manualmente la aplicación de destino. También puedes exportar JSON y compartir el PDF ya generado desde el gestor de archivos.</p><button type="button" class="button accent" id="native-share-json" ${currentId ? "" : "disabled"}>Compartir expediente JSON</button></section>
-      ${globalThis.AuditSecureTransferUI.view(Boolean(currentId), Boolean(unlockedConnection))}<section class="card"><h2>Otros proveedores</h2><p class="subtle">Drive, OneDrive y Microsoft 365 requieren OAuth mediante PKCE, registro de aplicación y políticas CORS. No guardes <em>client secrets</em> de OAuth en una aplicación JavaScript distribuida: no pueden mantenerse secretos en un cliente público. Se añadirán integraciones específicas cuando tengan un flujo seguro verificado.</p></section>`;
+      <div id="connection-nextcloud-transfer" ${connectionChannel === "nextcloud" ? "" : "hidden"}>${globalThis.AuditSecureTransferUI.view(Boolean(currentId), verified)}</div><section class="card"><h2>Otros proveedores</h2><p class="subtle">Drive, OneDrive y Microsoft 365 requieren OAuth mediante PKCE, registro de aplicación y políticas CORS. No guardes <em>client secrets</em> de OAuth en una aplicación JavaScript distribuida: no pueden mantenerse secretos en un cliente público. Se añadirán integraciones específicas cuando tengan un flujo seguro verificado.</p></section>`;
   }
   function renderConnections() {
     return connectionSettingsMarkup();
@@ -1894,14 +1895,10 @@
   async function uploadDav() {
     if (PUBLIC_DEMO)
       throw Error("WebDAV no está disponible en la versión web.");
-    if (!currentId || !unlockedConnection)
-      throw Error("Abre un expediente y desbloquea la conexión primero.");
-    const filename =
-      "auditoria-" +
-      slug(state.meta.client) +
-      "-" +
-      slug(state.meta.reportId || "informe") +
-      ".json";
+    if (!currentId || !unlockedConnection || !connectionVerified)
+      throw Error("Abre un expediente y verifica la conexión primero.");
+    if (!connectionVerified) throw Error("Comprueba primero la conexión WebDAV.");
+    const filename = globalThis.AuditSecureTransfer.safeFilename("backup").replace(/\\.rmenc$/, ".json");
     const body = JSON.stringify(state, null, 2);
     if (
       !confirm(
@@ -1909,8 +1906,7 @@
       )
     )
       return;
-    const target = new URL(encodeURIComponent(filename), unlockedConnection.url)
-      .href;
+    const target = globalThis.AuditSecureTransfer.target(unlockedConnection, filename);
     const authorization =
       "Basic " +
       btoa(
@@ -1928,15 +1924,14 @@
       headers: {
         Authorization: authorization,
         "Content-Type": "application/json;charset=utf-8",
+        "If-None-Match": "*",
       },
       body,
       redirect: "error",
       referrerPolicy: "no-referrer",
     });
-    if (!reply.ok)
-      throw Error(
-        "WebDAV devolvió HTTP " + reply.status + ". Revisa permisos y CORS.",
-      );
+    if (reply.status === 412) throw Error("El archivo ya existe: no se sobrescribe.");
+    if (!reply.ok) throw Error("WebDAV devolvió HTTP " + reply.status + ". Revisa permisos y CORS.");
     byId("dav-upload-status").textContent =
       "Expediente enviado por HTTPS. Conserva igualmente una copia offline.";
   }
@@ -2900,9 +2895,9 @@
     if (t.name === "channel") {
       if (PUBLIC_DEMO) return;
       connectionChannel = t.value;
-      for (const key of ["nextcloud", "upload", "email", "share"])
+      for (const key of ["nextcloud", "upload", "email", "share", "nextcloud-transfer"])
         byId("connection-" + key).hidden =
-          key === "upload" || key === "nextcloud"
+          ["upload","nextcloud","nextcloud-transfer"].includes(key)
             ? connectionChannel !== "nextcloud"
             : connectionChannel !== key;
       return;
@@ -3659,6 +3654,7 @@
         const envelope = await encryptProfile(profile, pass);
         localStorage.setItem(CONNECTION_KEY, JSON.stringify(envelope));
         unlockedConnection = profile;
+        connectionVerified = false;
         render();
         alert(
           "Conexión guardada cifrada. Necesitarás la frase de paso para desbloquearla de nuevo.",
@@ -3675,6 +3671,7 @@
         );
         const pass = byId("dav-passphrase").value;
         unlockedConnection = await decryptProfile(envelope, pass);
+        connectionVerified = false;
         validateWebdavProfile(
           unlockedConnection.url,
           unlockedConnection.user,
@@ -3684,6 +3681,7 @@
         alert("Conexión desbloqueada para esta sesión.");
       } catch (error) {
         unlockedConnection = null;
+        connectionVerified = false;
         alert("No se pudo desbloquear: contraseña incorrecta o perfil dañado.");
       }
       return;
@@ -3694,8 +3692,27 @@
       ) {
         localStorage.removeItem(CONNECTION_KEY);
         unlockedConnection = null;
+        connectionVerified = false;
         render();
       }
+      return;
+    }
+    if (b.id === "dav-test") {
+      const status = byId("dav-test-status");
+      b.disabled = true;
+      if (status) status.textContent = "Consultando WebDAV mediante PROPFIND de solo lectura…";
+      try {
+        connectionVerified = false;
+        if (!unlockedConnection) throw Error("Guarda o desbloquea el perfil.");
+        const result = await globalThis.AuditSecureTransfer.testConnection(unlockedConnection);
+        connectionVerified = true;
+        render();
+        const output = byId("dav-test-status");
+        if (output) output.textContent = "Conexión HTTPS verificada con " + result.origin + ". Carpeta accesible; escritura no comprobada.";
+      } catch(error) {
+        connectionVerified = false;
+        if (status) status.textContent = "No se pudo comprobar: " + error.message;
+      } finally { if (b.isConnected) b.disabled = false; }
       return;
     }
     if (b.id === "dav-upload") {
@@ -5410,7 +5427,7 @@
   selectPalette(palettePreferences.initial(localStorage, palettes, DEFAULT_PALETTE));
   if (!PUBLIC_DEMO)
     globalThis.AuditSecureTransferUI.bind({
-      getProfile: () => unlockedConnection,
+      getProfile: () => connectionVerified ? unlockedConnection : null,
       getAudit: () => (currentId ? state : null),
       download,
       flush,

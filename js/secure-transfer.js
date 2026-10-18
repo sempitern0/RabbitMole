@@ -74,6 +74,32 @@
     // Encodes UTF-8 usernames/app passwords, does not persist or log them.
     return 'Basic '+btoa(Array.from(encoder.encode(profile.user+':'+profile.secret),b=>String.fromCharCode(b)).join(''));
   }
+  async function testConnection(profile){
+    remoteAccess();
+    const url=validateDavUrl(profile.url);
+    if(!profile.user?.trim()||!profile.secret)
+      throw Error('Indica el usuario y una contraseña de aplicación para probar la conexión.');
+    let result;
+    try{
+      result=await fetch(url.href,{
+        method:'PROPFIND',mode:'cors',credentials:'omit',redirect:'error',
+        cache:'no-store',referrerPolicy:'no-referrer',
+        headers:{Authorization:auth(profile),Depth:'0',Accept:'application/xml'},
+        signal:AbortSignal.timeout(12000)
+      });
+    }catch(error){
+      if(error?.name==='TimeoutError'||error?.name==='AbortError')
+        throw Error('Tiempo de espera agotado (12 s). Comprueba la dirección HTTPS y la red.');
+      throw Error('No se pudo consultar Nextcloud. Revisa el certificado HTTPS, la VPN, el DNS y CORS/PROPFIND del servidor.');
+    }
+    if(result.status===401)throw Error('Credenciales rechazadas (401). Genera una contraseña de aplicación en Nextcloud.');
+    if(result.status===403)throw Error('Acceso denegado (403). Comprueba los permisos de la carpeta.');
+    if(result.status===404)throw Error('Carpeta no encontrada (404). Verifica la ruta WebDAV.');
+    if([405,501].includes(result.status))throw Error('El servidor no acepta PROPFIND. Revisa proxy y configuración WebDAV/CORS.');
+    if(![200,207].includes(result.status))
+      throw Error('La comprobación devolvió HTTP '+result.status+'. Revisa el registro del servidor.');
+    return {origin:url.origin,folder:url.pathname,readOnly:true,status:result.status};
+  }
   function safeFilename(type){
     const token=Array.from(crypt().getRandomValues(new Uint8Array(6)),b=>b.toString(16).padStart(2,'0')).join('');
     const date=new Date().toISOString().replace(/[-:]/g,'').replace(/\..+$/,'').replace('T','-');
@@ -136,5 +162,5 @@
     const bytes=new Uint8Array(await file.slice(0,5).arrayBuffer());
     return String.fromCharCode(...bytes)==='%PDF-';
   }
-  globalThis.AuditSecureTransfer=Object.freeze({KIND,encryptBackup,decryptBackup,validateDavUrl,target,shareApiInfo,safeFilename,upload,expiryDate,createExpiringShare,revokeShare,isPdf});
+  globalThis.AuditSecureTransfer=Object.freeze({KIND,encryptBackup,decryptBackup,validateDavUrl,target,shareApiInfo,testConnection,safeFilename,upload,expiryDate,createExpiringShare,revokeShare,isPdf});
 })();

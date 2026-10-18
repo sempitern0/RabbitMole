@@ -348,3 +348,19 @@ Usa **Contraer menú** en la cabecera lateral para dejar en escritorio una barra
 ### Fase 1: integridad y recuperación offline
 
 RabbitMole verifica que el shell actual conserve la marca de instalación y los recursos esenciales; la marca sola no basta. Si pierde archivos puede elegir una caché anterior completa que permanezca en el navegador. El service worker local utiliza una versión de caché propia, mientras que Cloudflare la genera a partir del contenido del bundle. No borres manualmente CacheStorage para intentar recuperar un expediente: los datos de auditoría se almacenan aparte y deben exportarse regularmente en JSON. Valida actualización, arranque sin conexión y recuperación antes de desplegar.
+
+
+## Guía práctica: Conexiones online (Nextcloud, correo y compartir)
+
+**Conexiones online es opcional.** No sincroniza expedientes ni funciona como almacenamiento remoto automático. En la **PWA instalada** abre una auditoría y entra en **Conexiones online**. En la vista web pública permanecen desactivadas las credenciales y las transferencias.
+
+### Nextcloud en cuatro pasos
+
+1. En Nextcloud, crea una **contraseña de aplicación revocable** para el auditor y una carpeta destinada a sus entregas. Copia la URL WebDAV HTTPS de esa carpeta, por ejemplo `https://nube.example/remote.php/dav/files/usuario/Auditorias/`. Evita parámetros o credenciales en la URL. El certificado debe ser confiable y el servidor permitir CORS para el origen exacto de la PWA, incluidas las cabeceras de autorización y el método `PROPFIND`.
+2. En RabbitMole selecciona **Nextcloud**, introduce URL, usuario, contraseña de aplicación y frase de paso local (mínimo 12 caracteres). Pulsa **Guardar perfil cifrado**. La configuración queda cifrada mediante AES-256-GCM/PBKDF2 en el dispositivo; la frase no se conserva y se necesitará para **Desbloquear perfil** en futuras sesiones.
+3. Pulsa **Comprobar conexión (sin subir)**. Se hace una petición `PROPFIND Depth: 0` al directorio configurado. HTTP 207 o 200 confirma acceso de lectura a la carpeta, **no** permiso de escritura ni éxito de una futura transferencia. Un error 401 apunta a credenciales; 403 a permisos; 404 a ruta incorrecta; un error de red puede deberse a certificado, VPN, DNS o CORS. No se envía ningún expediente durante la comprobación.
+4. Elige la operación: **Subir copia cifrada** (recomendado para respaldo) cifra el expediente localmente; **Subir PDF** requiere seleccionar y revisar un PDF ya generado; opcionalmente crea un enlace de lectura con contraseña y caducidad de 1–7 días. Todas las subidas requieren confirmación manual. El JSON legible queda bajo **Opciones avanzadas**, usa nombres únicos y no sobrescribe archivos ya existentes. La subida no garantiza por sí misma que el archivo sea una copia restaurable: verifica las entregas en Nextcloud.
+
+El correo abre el cliente con un borrador: los adjuntos se añaden **manualmente**. **Compartir con el sistema** usa la función nativa del navegador cuando existe. Ninguno de esos canales requiere configurar Nextcloud. Google Drive/OneDrive/Microsoft 365 no cuentan todavía con un conector OAuth funcional; no introduzcas tokens ni claves de estos servicios.
+
+**Seguridad y límites:** una copia cifrada protege el contenido antes del envío; un PDF o un JSON legible solo están protegidos durante el transporte HTTPS y quedan legibles en el destino. Entrega las contraseñas por un canal distinto. El botón de prueba no configura CORS ni comprueba que el destino tenga espacio. No se realizan sincronizaciones automáticas ni se almacenan tokens de compartición entre sesiones.

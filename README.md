@@ -323,3 +323,12 @@ Use **Collapse menu** in the sidebar header to switch to an icon rail on desktop
 ### Phase 1: offline integrity and recovery
 
 The active offline shell now requires both the completion marker and its complete core file set; the marker alone is insufficient. A retained older complete cache may be used as fallback. The local service worker has a distinct cache version, while Cloudflare derives a content-based version. Do not clear browser site data to troubleshoot audit files; keep protected JSON exports and verify offline launch, updates and recovery before deployment.
+
+
+## Online connections — Nextcloud and alternative delivery methods
+
+Online connections are **optional**, available in the installed PWA, and never synchronize audits automatically. Open an audit, select **Online connections** and choose a delivery channel. Email opens a draft (you must attach the exported PDF yourself); device sharing uses the browser's native share API when supported.
+
+For **Nextcloud**, create a revocable app password and an audit folder. Enter its trusted HTTPS WebDAV URL (`https://cloud.example/remote.php/dav/files/user/Audits/`), username, app password and a local passphrase. Save the encrypted profile (AES-256-GCM/PBKDF2); unlock it with the same passphrase on subsequent sessions. Use **Test connection (no upload)** to send a read-only `PROPFIND Depth: 0` request. HTTP 200/207 confirms directory read access, not upload permissions. Status 401 indicates credentials, 403 authorization, 404 path, and network errors may involve certificate, DNS, VPN or CORS. The server must allow the installed PWA's origin, Authorization headers, and PROPFIND. No audit data is sent in this check.
+
+After successful preflight, upload an **encrypted backup** (recommended), select and review a PDF before upload, or create a password-protected, short-lived read-only Nextcloud share (1–7 days). Each transfer asks for confirmation. Plain JSON upload is an explicitly advanced operation using unique filenames and overwrite prevention. PDF and plain JSON remain readable on the destination; TLS only protects transport. Keep your passwords separate and verify the uploaded objects on Nextcloud. Drive/OneDrive/M365 OAuth integrations are not yet supported; do not paste their client secrets into the PWA.

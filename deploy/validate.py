@@ -12,6 +12,7 @@ COMMANDS = [
     [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_discovery_service.py', '-v'],
     ['node', 'tests/test_discovery_bridge.cjs'],
     ['node', 'tests/test_app_modules.cjs'],
+    ['node', 'tests/test_palette_preferences.cjs'],
     ['node', 'tests/test_pdf_appendices.cjs'],
     ['node', 'tests/test_external_network.cjs'],
     ['node', 'tests/test_router_catalog.cjs'],

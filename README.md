@@ -309,3 +309,9 @@ npm run deploy:check
 ```
 
 Chromium/Playwright must be installed for browser tests. Confirm CI, CSP, public/installed profiles, installation and offline launch before deployment.
+
+### Responsive tablet/phone layout and legacy palette migration
+
+The default RabbitMole palette matches its midnight-blue, blue-steel and warm-ivory icon. Earlier releases automatically stored `ocean` even without user selection: on the first updated launch this legacy value moves to `rabbitmole` once. A subsequently selected Ocean theme is recorded as an explicit preference; other saved themes stay unchanged. Historical Ocean intent cannot be reconstructed reliably. No site-data reset is required.
+
+At **tablet widths (up to 1000px)** the fixed sidebar becomes a horizontal layout; on **phones (up to 720px)** the global menu uses responsive grid navigation and audit section tabs remain horizontally scrollable. Form controls and actions reflow, and overflow stays within its own tables/command panels rather than moving the entire viewport. Android-specific touch sizing remains in `css/android-touch.css`. Printed PDFs are unaffected. Check actual tablet/phone layout and offline launch before field use.

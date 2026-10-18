@@ -76,6 +76,7 @@ const {chromium}=require('playwright');
       palette+' sidebar palette selector is not accessible');
    }
    await page.locator('#palette').selectOption('ocean');
+   assert.equal(await page.evaluate(()=>localStorage.getItem('rabbitmole:palette:explicit:v1')),'ocean');
    // Storage permission has independent feedback; health checks must not overwrite it.
    await page.evaluate(()=>{Object.defineProperty(navigator,'storage',{configurable:true,value:{
      persist:async()=>false,persisted:async()=>false,estimate:async()=>({quota:1000000,usage:1000})

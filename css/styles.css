@@ -1072,12 +1072,6 @@ nav button.active {
   }
 }
 @media (max-width: 720px) {
-  .theme-select {
-    font-size: 0;
-  }
-  .theme-select select {
-    font-size: 13px;
-  }
   .actions {
     gap: 7px;
   }

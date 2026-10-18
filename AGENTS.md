@@ -43,3 +43,7 @@ PWA **offline-first** para expedientes de auditoría de infraestructura y cibers
 `README_ES.md`/`README.md`: uso y arquitectura; `INSTALLATION_ES.md`: instalación; `discovery/README_ES.md`: escaneos autorizados y modo Android; `SECURITY_ES.md`: restricciones; `docs/FEATURE_REFERENCE_ES.md`: catálogo funcional; `deploy/validate.py`: puerta de validación.
 
 **Al entregar:** propietarios, cambios, reducción medida, pruebas realmente efectuadas, limitaciones, commit y PR.
+
+## Responsive and palette migration
+- `js/palette-preferences.js` is the single owner of migration from auto-saved legacy `ocean` to `rabbitmole`; it never writes the default on first load. `selectPalette(value,true)` marks actual user choices with `rabbitmole:palette:explicit:v1`. **Do not erase localStorage or reset audit records to fix UI themes.**
+- `css/styles.css` supplies general workstation layout; `css/workspace-ux.css` is the last screen stylesheet and owns responsive tablet/mobile overrides; `css/android-touch.css` adds Android+coarse-pointer spacing only. Avoid accumulating additional breakpoint collisions or hiding navigation. Test widths 390, 768, 1024 and 1280 px, including dark palettes, keyboard, overflow, PDF and landscape orientation.

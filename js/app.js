@@ -52,7 +52,7 @@
     "rabbitmole:encrypted-nextcloud:v1";
   const ACTIVE_KEY = "rabbitmole:active:v3";
   const FALLBACK_KEY = "rabbitmole:records:v3";
-  const PALETTE_KEY = "rabbitmole:palette:v1";
+  const palettePreferences = globalThis.RabbitMolePalettePreferences;
   const BACKUP_KEY = "rabbitmole:backup-settings:v1";
   const BACKUP_DB = "rabbitmole-backup-directory";
   const DEFAULT_PALETTE = "rabbitmole";
@@ -471,16 +471,14 @@
     writeQueue = writeQueue.catch(() => {}).then(action);
     return writeQueue;
   }
-  function selectPalette(value) {
+  function selectPalette(value, userSelected = false) {
     selectedPalette = palettes.includes(value) ? value : DEFAULT_PALETTE;
     document.documentElement.dataset.palette = selectedPalette;
     byId("palette").value = selectedPalette;
     byId("report").dataset.palette = selectedPalette;
     byId("pdf-theme").textContent =
       byId("palette").selectedOptions[0]?.textContent || selectedPalette;
-    try {
-      localStorage.setItem(PALETTE_KEY, selectedPalette);
-    } catch (_ignored) {}
+    if (userSelected) palettePreferences.remember(localStorage, selectedPalette);
   }
   const newRecord = (audit = fresh()) => ({
     id: uid(),
@@ -5380,7 +5378,7 @@
       .forEach((button) => (button.hidden = true));
   }
   byId("palette").addEventListener("change", (event) =>
-    selectPalette(event.target.value),
+    selectPalette(event.target.value, true),
   );
   byId("open-library").addEventListener("click", async () => {
     try {
@@ -5408,11 +5406,7 @@
   });
   refreshNetworkStatus();
   byId("local-date").textContent = new Date().toLocaleDateString("es-ES");
-  try {
-    selectPalette(localStorage.getItem(PALETTE_KEY) || DEFAULT_PALETTE);
-  } catch (_ignored) {
-    selectPalette(DEFAULT_PALETTE);
-  }
+  selectPalette(palettePreferences.initial(localStorage, palettes, DEFAULT_PALETTE));
   if (!PUBLIC_DEMO)
     globalThis.AuditSecureTransferUI.bind({
       getProfile: () => unlockedConnection,

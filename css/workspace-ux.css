@@ -341,11 +341,6 @@
   gap:.48rem; min-height:44px; margin:0; white-space:nowrap;
 }
 .topbar .actionbar-icon { width:1.1rem; height:1.1rem; flex:none; }
-.topbar .theme-select { gap:.45rem; color:var(--muted); white-space:nowrap; }
-.topbar .theme-select select {
-  background:var(--paper); color:var(--ink); border-color:var(--line);
-  min-height:44px; max-width:11rem;
-}
 .topbar .actionbar-group :is(.pwa-update-status):not(:empty) {
   flex:1 1 100%; max-width:none; padding:.25rem 0 0;
 }
@@ -383,7 +378,6 @@
   .topbar-context { align-items:flex-start; flex-wrap:wrap; }
   .topbar .save-status { flex-basis:100%; width:fit-content; }
   .topbar .actionbar-group { padding-inline:0; }
-  .topbar .theme-select { font-size:.8rem; }
   .topbar .actionbar-group .button { flex:1 1 auto; }
   .topbar .offline-health .action-row { width:100%; }
   .topbar .offline-health .action-row > button { flex:1 1 auto; }
@@ -872,3 +866,52 @@
   outline:2px solid var(--sidebar-panel-focus); outline-offset:2px;
 }
 @media print {.offline-storage-help{display:none!important}}
+
+
+/* Unified tablet / mobile workbench rules.
+   Keep wide datasets scrollable inside their own panel, never the whole page. */
+@media screen and (max-width: 1000px) {
+  .app { display:block; min-width:0; }
+  .sidebar { position:relative; inset:auto; width:100%; height:auto; }
+  .content-wrap { width:100%; min-width:0; }
+  .sidebar #navigation { flex:1 1 100%; min-width:0; max-height:14rem; overflow:auto; scrollbar-width:thin; }
+  .sidebar .sidebar-appearance { min-width:min(100%,15rem); }
+  .topbar, .topbar .actions, #workspace { min-width:0; }
+  #workspace :is(.card,.entry,.fields,.field,.report-workflow,.record-navigator,.glossary-shell) { min-width:0; max-width:100%; }
+  #workspace :is(.network-analysis-table-wrap,.intake-command pre,.glossary-command pre) { max-width:100%; overflow-x:auto; }
+  #workspace :is(.network-analysis-metrics,.report-delivery-grid) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media screen and (max-width: 720px) {
+  :root { font-size:16px; }
+  .sidebar { padding: .85rem; gap:.7rem; align-items:stretch; }
+  .sidebar .brand { min-width:0; }
+  #global-navigation { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; gap:.45rem; flex-basis:100%; overflow:visible; }
+  #global-navigation button { min-width:0; width:100%; min-height:44px; justify-content:flex-start; white-space:normal; text-align:start; padding:.6rem; }
+  #global-navigation button span { overflow-wrap:anywhere; }
+  .sidebar #navigation { display:flex; width:100%; flex:1 1 100%; overflow-x:auto; overflow-y:hidden; white-space:nowrap; max-height:none; gap:.35rem; }
+  .sidebar #navigation button { flex:0 0 auto; white-space:nowrap; min-height:44px; }
+  .sidebar .sidebar-appearance { flex:1 1 100%; max-width:none; width:100%; margin:0; }
+  .topbar { margin:.5rem .7rem; padding:.8rem; }
+  .topbar .actions { width:100%; }
+  .topbar .actionbar-group { min-width:0; }
+  .topbar .actionbar-group .button { min-width:0; white-space:normal; }
+  .topbar .breadcrumb { white-space:normal; overflow-wrap:anywhere; }
+  #workspace { max-width:100%; }
+  #workspace :is(.fields,.grid-two,.report-delivery-grid,.network-analysis-metrics) { grid-template-columns:minmax(0,1fr); }
+  #workspace :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) { max-width:100%; }
+  #workspace .record-navigator { position:static; }
+  #workspace :is(.action-row,.wizard-buttons) { flex-wrap:wrap; }
+  #workspace .action-row > :is(button,.button) { min-height:44px; min-width:0; }
+  #workspace :is(.report-expandable,.intake-shell,.glossary-detail) { min-width:0; }
+  #workspace .glossary-categories { flex-wrap:wrap; }
+  .app-footer { text-align:start; line-height:1.65; overflow-wrap:anywhere; }
+}
+@media screen and (max-width: 400px) {
+  #global-navigation { grid-template-columns:minmax(0,1fr); }
+  .sidebar .sidebar-appearance { flex-wrap:wrap; }
+  .sidebar .sidebar-appearance #palette { flex:1 1 100%; }
+  .topbar .actionbar-group .button { flex:1 1 100%; justify-content:center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar :is(button,select),.topbar .button { scroll-behavior:auto; transition:none; }
+}

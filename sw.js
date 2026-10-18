@@ -14,6 +14,7 @@ const CORE = [
   "./index.html",
   "./css/styles.css",
   "./js/app.js",
+  "./js/palette-preferences.js",
   "./js/app-definitions.js",
   "./js/app-team.js",
   "./js/app-model.js",

@@ -857,25 +857,25 @@ main {
   --hero-c: #146a68;
   --sidebar-active: #34c4a7;
 }
-/* RabbitMole signature palette: ink-blue surfaces and jade accent used sparingly.
-   A deliberately light reading canvas keeps long audits comfortable and printable. */
+/* RabbitMole signature palette: midnight blue, slate and warm ivory from the icon.
+   Brand blue-steel is subtly darkened for legible white text on primary buttons. */
 :root[data-palette="rabbitmole"] {
-  --navy: #102635;
-  --navy2: #1b3c48;
-  --ink: #172c35;
-  --muted: #506b70;
-  --line: #cddfda;
-  --paper: #ffffff;
-  --canvas: #f0f6f3;
-  --brand: #176b66;
-  --brand-hover: #10534f;
-  --brand-tint: #e2f1e9;
-  --teal: #176b66;
-  --light-teal: #e2f1e9;
-  --hero-a: #102635;
-  --hero-b: #17454d;
-  --hero-c: #287367;
-  --sidebar-active: #73e0ba;
+  --navy: #081425;
+  --navy2: #14273d;
+  --ink: #1b2c39;
+  --muted: #61707c;
+  --line: #d7dee3;
+  --paper: #fcf8f1;
+  --canvas: #eef2f4;
+  --brand: #587680;
+  --brand-hover: #4d6972;
+  --brand-tint: #e7ecef;
+  --teal: #587680;
+  --light-teal: #e7ecef;
+  --hero-a: #081425;
+  --hero-b: #17304a;
+  --hero-c: #5f7d87;
+  --sidebar-active: #eadcc5;
 }
 :root[data-palette="forest"] {
   --navy: #17281f;
@@ -1108,11 +1108,11 @@ nav button.active {
   --report-cover: #132d3f;
 }
 :root[data-palette="rabbitmole"] {
-  --report-accent: #176b66;
-  --report-heading: #193e44;
-  --report-tint: #e8f3ed;
-  --report-muted: #4e6868;
-  --report-cover: #102635;
+  --report-accent: #587680;
+  --report-heading: #223345;
+  --report-tint: #edf1f2;
+  --report-muted: #6a7278;
+  --report-cover: #0c1a2a;
 }
 :root[data-palette="forest"] {
   --report-accent: #287e59;
@@ -1752,9 +1752,13 @@ textarea {
   --pdf-cover-sub: #285a64;
 }
 :root[data-palette="rabbitmole"] {
-  --pdf-cover-bg: #e2f1e9;
-  --pdf-cover-ink: #102e38;
-  --pdf-cover-sub: #355f5d;
+  --pdf-cover-bg: #0c1a2a;
+  --pdf-cover-ink: #f3e6d2;
+  --pdf-cover-sub: #a5bcc5;
+}
+/* Light report-accent on dark branded cover for WCAG AA. */
+:root[data-palette="rabbitmole"] .report-cover .sup {
+  color: #b7cbd0;
 }
 :root[data-palette="forest"] {
   --pdf-cover-bg: #e6f4e5;

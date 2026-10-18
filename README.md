@@ -280,4 +280,4 @@ The `navigator.storage.persist()` request is controlled by the browser and canno
 
 ### Default signature palette
 
-New profiles use **RabbitMole · Brand** (ink navy, restrained jade and neutral reading surfaces) instead of Ocean. All prior palettes remain available, and existing `rabbitmole:palette:v1` preferences are preserved. Selected themes still apply to report covers without compromising white-page archival readability. The palette is based on the application's existing brand tokens rather than an automated pixel extraction from the PNG asset.
+New profiles use **RabbitMole · Brand** (midnight blue, blue-steel, slate and warm ivory taken from the app icon) instead of Ocean. All prior palettes remain available, and existing `rabbitmole:palette:v1` preferences are preserved. Selected themes still apply to report covers without compromising white-page archival readability. The palette is based on the application's existing brand tokens rather than an automated pixel extraction from the PNG asset.

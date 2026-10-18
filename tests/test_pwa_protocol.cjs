@@ -1,6 +1,8 @@
 'use strict';
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const {loadWorker}=require('./support/sw-contract.js');
+const currentCache=fs.readFileSync('sw.js','utf8').match(/const CACHE_NAME\s*=\s*"([^"]+)"/)?.[1];
+assert.match(currentCache,/^rabbitmole-shell-v\d+-/);
 (async()=>{
  const worker=loadWorker({caches:{open:async()=>({match:async key=>new Response(
    String(key).endsWith('/index.html') ? '<link href="css/styles.css"><script src="js/app.js"></script>' : 'cached'
@@ -14,7 +16,7 @@ const {loadWorker}=require('./support/sw-contract.js');
  // Cold launch must work when Chromium marks a navigation no-store.
  const nav=loadWorker({
    self:{location:{origin:'https://audit.example'}},
-   caches:{keys:async()=>['rabbitmole-shell-v93-photo-hints'],
+   caches:{keys:async()=>[currentCache],
      open:async()=>({match:async key=>{
        if (typeof key==='string'&&key.endsWith('/index.html'))
          return new Response('<link href="css/styles.css"><script src="js/app.js"></script>');
@@ -39,7 +41,7 @@ const {loadWorker}=require('./support/sw-contract.js');
  assert.equal(probes,1);
 
  // If the new shell is missing, a complete legacy shell should start offline.
- const prior='rabbitmole-shell-v85-report-e2e',current='rabbitmole-shell-v93-photo-hints';
+ const prior='rabbitmole-shell-v85-report-e2e',current=currentCache;
  const legacyHTML='<link href="css/styles.css"><script src="js/app.js"></script>';
  const seen=[];
  const legacy=loadWorker({

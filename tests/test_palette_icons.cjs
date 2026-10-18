@@ -36,5 +36,6 @@ assert(workspace.includes('.sidebar #navigation button .nav-mark') &&
  workspace.includes('.sidebar #navigation button:is(.active,:hover,[aria-current="page"]) .nav-mark'),
  'Wizard symbols must support idle, hover and active themes');
 assert(workspace.includes('prefers-reduced-motion')||styles.includes('prefers-reduced-motion'));
-assert(sw.includes('rabbitmole-shell-v88-palette-icons'), 'Version cache after CSS change');
+const cacheVersion=Number(sw.match(/const CACHE_NAME\s*=\s*"rabbitmole-shell-v(\d+)-/)?.[1]);
+assert(Number.isInteger(cacheVersion)&&cacheVersion>88, 'Theme changes need a bumped shell cache');
 console.log('PASS all navigation palettes, icon contracts and contrast');

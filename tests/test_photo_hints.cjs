@@ -17,7 +17,18 @@ assert.equal(combined.fields.model,'PowerEdge R740');
 assert.equal(merge(['https://bad.test','password:secret']),null);
 const app=fs.readFileSync('js/app.js','utf8');
 assert(app.includes('evidenceImages.add(record, prepared);')&&app.includes('RabbitMolePhotoHints.prompt'));
-assert(app.indexOf('evidenceImages.add(record, prepared);')<app.indexOf('RabbitMolePhotoHints.prompt'));
+const helperStart=app.indexOf('async function suggestDetailsFromPhoto(');
+const helperEnd=app.indexOf('workspace.addEventListener("change", async (e) => {',helperStart);
+assert(helperStart>=0&&helperEnd>helperStart,'Hints must be an isolated helper');
+const helper=app.slice(helperStart,helperEnd);
+assert(helper.includes('catch (error)')&&helper.includes('console.warn('),'Optional scan errors must be caught locally');
+const findingPath=app.slice(app.indexOf('if (t.dataset.findingImageKey !== undefined'),app.indexOf('if (t.dataset.imageIndex !== undefined'));
+const evidencePath=app.slice(app.indexOf('if (t.dataset.imageIndex !== undefined'),app.indexOf('if (t.dataset.addEvidenceLink !== undefined'));
+for(const section of [findingPath,evidencePath]){
+ assert(section.includes('evidenceImages.add(record, prepared);'),'Evidence must be attached first');
+ assert(section.indexOf('persist();')<section.indexOf('await suggestDetailsFromPhoto(t, id);'),'Persist before optional recognition');
+}
+assert.equal(app.split('await suggestDetailsFromPhoto(t, id);').length-1,2,'Both camera entry points must offer suggestions');
 assert(app.includes('if(str(asset[key]).trim())continue'),'Detected values cannot overwrite recorded facts');
 const html=fs.readFileSync('index.html','utf8');
 assert(html.includes('id="photo-hint-dialog"')&&html.includes('Omitir · conservar fotografía'));

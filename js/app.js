@@ -2740,6 +2740,39 @@
       updateValidation(t);
     }
   });
+  // Progressive enhancement only: the evidence was persisted before this is called.
+  async function suggestDetailsFromPhoto(input, auditId) {
+    try {
+        // Photo storage never depends on recognition; detection is optional.
+        const photographed=globalThis.RabbitMoleCameraCapture?.consume(input);
+        if(photographed && currentId===auditId && state.documentControl?.status!=="confirmed"){
+          const hint=await globalThis.RabbitMolePhotoHints?.scan(photographed);
+          if(hint && currentId===auditId){
+            const targets=state.assets.map(asset=>({key:asset._key,label:(asset.id||"Activo")+" · "+(asset.name||asset.model||"Sin nombre")}));
+            const suggestion=await globalThis.RabbitMolePhotoHints.prompt(hint,targets);
+            if(suggestion && currentId===auditId && state.documentControl?.status!=="confirmed"){
+              const target=suggestion.target==="__new__"?null:state.assets.find(a=>a._key===suggestion.target);
+              if(!target && state.assets.length>=LIMIT_ROWS)alert("No se puede crear otro activo: límite alcanzado. La foto permanece guardada.");
+              else {
+                const asset=target||{_key:uid(),id:relations.nextCode(state.assets,"assets")};
+                let changed=0;
+                for(const [key,value] of Object.entries(suggestion.fields)){
+                  if(!["vendor","model","serial","name"].includes(key))continue;
+                  if(str(asset[key]).trim())continue; // Never overwrite audited facts.
+                  asset[key]=value;changed++;
+                }
+                if(changed){
+                  if(!target)state.assets.unshift(asset);
+                  persist();render();
+                  alert("Datos propuestos añadidos a "+(asset.id||"activo")+". Revisa fabricante, modelo y serie. La fotografía sigue en Evidencias.");
+                }else alert("El activo ya tenía esos campos completos. No se ha sobrescrito ningún dato; la fotografía permanece guardada.");
+              }
+            }
+          }
+        }    } catch (error) {
+      console.warn("No se pudieron analizar los datos de la foto; la evidencia ya está guardada.", error);
+    }
+  }
   workspace.addEventListener("change", async (e) => {
     if (e.target.id === "record-jump") {
       const entry = [
@@ -3061,6 +3094,7 @@
         persist();
         render();
         focusAddedRecord(finding._key);
+        await suggestDetailsFromPhoto(t, id);
       } catch (error) {
         alert("No se pudieron adjuntar las imágenes: " + error.message);
         t.value = "";
@@ -3088,33 +3122,8 @@
         evidenceImages.add(record, prepared);
         persist();
         render();
-        // Photo storage never depends on recognition; detection is optional.
-        const photographed=globalThis.RabbitMoleCameraCapture?.consume(t);
-        if(photographed && currentId===id && state.documentControl?.status!=="confirmed"){
-          const hint=await globalThis.RabbitMolePhotoHints?.scan(photographed);
-          if(hint && currentId===id){
-            const targets=state.assets.map(asset=>({key:asset._key,label:(asset.id||"Activo")+" · "+(asset.name||asset.model||"Sin nombre")}));
-            const suggestion=await globalThis.RabbitMolePhotoHints.prompt(hint,targets);
-            if(suggestion && currentId===id && state.documentControl?.status!=="confirmed"){
-              const target=suggestion.target==="__new__"?null:state.assets.find(a=>a._key===suggestion.target);
-              if(!target && state.assets.length>=LIMIT_ROWS)alert("No se puede crear otro activo: límite alcanzado. La foto permanece guardada.");
-              else {
-                const asset=target||{_key:uid(),id:relations.nextCode(state.assets,"assets")};
-                let changed=0;
-                for(const [key,value] of Object.entries(suggestion.fields)){
-                  if(!["vendor","model","serial","name"].includes(key))continue;
-                  if(str(asset[key]).trim())continue; // Never overwrite audited facts.
-                  asset[key]=value;changed++;
-                }
-                if(changed){
-                  if(!target)state.assets.unshift(asset);
-                  persist();render();
-                  alert("Datos propuestos añadidos a "+(asset.id||"activo")+". Revisa fabricante, modelo y serie. La fotografía sigue en Evidencias.");
-                }else alert("El activo ya tenía esos campos completos. No se ha sobrescrito ningún dato; la fotografía permanece guardada.");
-              }
-            }
-          }
-        }
+        // Recognition errors must never be reported as a failed photo attachment.
+        await suggestDetailsFromPhoto(t, id);
       } catch (error) {
         alert("No se pudieron incorporar las imágenes: " + error.message);
         t.value = "";

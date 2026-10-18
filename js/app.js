@@ -774,6 +774,25 @@
       )
       .join("");
   }
+
+  const glossaryIconPaths=Object.freeze({"back":"<path d=\"m14 7-5 5 5 5\"/><path d=\"M9 12h11\"/>","check":"<path d=\"M4 12l5 5L20 6\"/>","investigate":"<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5\"/>","terminal":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"m7 9 3 3-3 3m5 0h5\"/>","meaning":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5m0-9h.01\"/>","evidence":"<path d=\"M8 3h8l4 4v14H4V3h4\"/><path d=\"M8 12h8M8 16h6\"/>","caution":"<path d=\"m12 3 10 18H2L12 3Z\"/><path d=\"M12 9v5m0 3h.01\"/>","workflow":"<rect x=\"4\" y=\"4\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"13\" y=\"13\" width=\"7\" height=\"7\" rx=\"1\"/><path d=\"M7.5 11v6h5.5\"/>","link":"<path d=\"M10 13a5 5 0 0 0 7 .3l3-3a5 5 0 0 0-7-7l-1.7 1.7\"/><path d=\"M14 11a5 5 0 0 0-7-.3l-3 3a5 5 0 0 0 7 7l1.7-1.7\"/>"});
+  function glossaryIcon(name){
+    return '<svg class="glossary-section-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(glossaryIconPaths[name]||glossaryIconPaths.meaning)+'</svg>';
+  }
+  function glossaryHeading(title,icon){
+    return '<h3>'+glossaryIcon(icon)+'<span>'+title+'</span></h3>';
+  }
+  function renderGlossaryProtocol(t,guide){
+    if(!guide)return "";
+    const steps=glossary?.PROTOCOLS?.[t.id]||[
+      'Confirma propietario, sistemas afectados, ventana y autorización expresa para el alcance del análisis.',
+      guide.verify,
+      'Revisa el comando compatible con el sistema, sus privilegios y los destinos antes de utilizarlo.',
+      guide.interpret+' Corrobora cualquier indicio con una segunda fuente o configuración.',
+      'Documenta hora, origen, evidencia y limitaciones; elimina secretos y datos personales innecesarios.'
+    ];
+    return '<section class="glossary-section glossary-protocol">'+glossaryHeading('Procedimiento de verificación','workflow')+'<p class="glossary-protocol-intro">Orientación para una auditoría autorizada; la PWA no ejecuta comandos.</p><ol>'+steps.map(v=>'<li>'+html(v)+'</li>').join('')+'</ol></section>';
+  }
   function renderGlossary() {
     const terms = glossaryResults();
     if (!terms.some((t) => t.id === glossarySelected))
@@ -789,7 +808,7 @@
         </div>
         <div class="glossary-categories" role="group" aria-label="Filtrar por temática">${cats.map((cat) => `<button type="button" class="glossary-category ${cat === glossaryCategory ? "is-active" : ""}" data-glossary-category="${html(cat)}" aria-pressed="${cat === glossaryCategory}">${html(cat)}</button>`).join("")}</div>
         <div class="glossary-layout">
-          <div class="glossary-index-panel"><h2>Índice de conceptos</h2><div id="glossary-index" class="glossary-index" role="group" aria-label="Conceptos disponibles">${renderGlossaryIndex(terms)}</div></div>
+          <div class="glossary-index-panel"><h2>${glossaryIcon('evidence')}<span>Índice de conceptos</span></h2><div id="glossary-index" class="glossary-index" role="group" aria-label="Conceptos disponibles">${renderGlossaryIndex(terms)}</div></div>
           <div id="glossary-detail" class="glossary-detail" aria-live="polite">${renderGlossaryDetail(selected)}</div>
         </div>
       </section>`;
@@ -857,11 +876,11 @@
   function renderGlossaryGuide(t) {
     const guide = glossary?.GUIDES?.[t.id];
     if (!guide) return "";
-    return `<section class="glossary-section glossary-troubleshoot"><h3>Diagnóstico y troubleshooting</h3>
+    return `<section class="glossary-section glossary-troubleshoot">${glossaryHeading('Diagnóstico y troubleshooting','investigate')}
       <dl class="glossary-diagnostic"><dt>Patrón o síntoma</dt><dd>${html(guide.symptom)}</dd><dt>Cómo investigarlo</dt><dd>${html(guide.verify)}</dd><dt>Interpretación</dt><dd>${html(guide.interpret)}</dd></dl></section>
-      <section class="glossary-section glossary-console"><h3>Alternativas por consola</h3>
+      <section class="glossary-section glossary-console">${glossaryHeading('Comandos por plataforma','terminal')}
         <p class="glossary-console-intro">Comandos de referencia; solo lectura salvo conexiones explícitamente indicadas. Sustituye rutas y destinos, verifica permisos y alcance. La aplicación no ejecuta nada.</p>
-        ${guide.commands.map((item, i) => `<div class="glossary-command"><div class="glossary-command-head"><span class="glossary-command-platform">${glossaryPlatformIcon(item.platform)}${html(item.platform)}</span><button type="button" class="glossary-copy" data-glossary-copy="${i}" data-glossary-id="${html(t.id)}" aria-label="Copiar comando ${html(item.platform)}">Copiar</button></div><pre><code>${html(item.command)}</code></pre><p><strong>Qué observar:</strong> ${html(item.lookFor)}</p></div>`).join("")}
+        ${guide.commands.map((item, i) => `<div class="glossary-command"><div class="glossary-command-head"><span class="glossary-command-platform">${glossaryPlatformIcon(item.platform)}${html(item.platform)}</span><button type="button" class="glossary-copy" data-glossary-copy="${i}" data-glossary-id="${html(t.id)}" aria-label="Copiar comando ${html(item.platform)}">Copiar</button></div><pre aria-label="Comando para ${html(item.platform)}"><code>${html(item.command)}</code></pre><p class="glossary-command-interpret"><strong>Qué observar:</strong> ${html(item.lookFor)}</p></div>`).join("")}
       </section>`;
   }
   function renderGlossaryHelp(t) {
@@ -882,18 +901,23 @@
   function renderGlossaryDetail(t, contextual = false) {
     if (!t)
       return '<div class="glossary-empty">Selecciona un concepto del índice.</div>';
-    return `<article class="glossary-article">${!contextual && (glossaryReturn || currentId) ? '<button type="button" class="glossary-inline-back" data-glossary-back="true">← Volver al asistente</button>' : ""}<span class="glossary-kicker">${html(t.category)}</span><h2>${html(t.title)}</h2>${glossaryTermPlatforms(t)}${t.fullName ? `<p class="glossary-fullname"><strong>Denominación completa:</strong> ${html(t.fullName)}</p>` : ""}<div class="glossary-definition">${glossaryEmphasis(t.description)}</div>
-      ${t.why ? `<section class="glossary-section glossary-why"><h3>Por qué importa</h3><p>${glossaryEmphasis(t.why)}</p></section>` : ""}
-      <section class="glossary-section glossary-check"><h3>Qué comprobar en la auditoría</h3><p>${glossaryEmphasis(t.check)}</p></section>
-      ${Array.isArray(t.steps) && t.steps.length ? `<section class="glossary-section glossary-audit-steps"><h3>Mini guía paso a paso</h3><ol>${t.steps.map(step => `<li>${html(step)}</li>`).join("")}</ol></section>` : ""}
-      ${t.evidence ? `<section class="glossary-section glossary-evidence"><h3>Qué evidencia solicitar</h3><p>${html(t.evidence)}</p></section>` : ""}
-      ${t.caution ? `<section class="glossary-section glossary-caution"><h3>Evita esta confusión</h3><p>${html(t.caution)}</p></section>` : ""}
+    return `<article class="glossary-article">
+      <div class="glossary-detail-top">${!contextual && (glossaryReturn || currentId) ? '<button type="button" class="glossary-inline-back" data-glossary-back="true">'+glossaryIcon('back')+'<span>Volver al asistente</span></button>' : ""}<span class="glossary-kicker">${html(t.category)}</span></div>
+      <h2>${html(t.title)}</h2>${glossaryTermPlatforms(t)}
+      ${t.fullName ? `<p class="glossary-fullname"><strong>Denominación completa:</strong> ${html(t.fullName)}</p>` : ""}
+      <div class="glossary-definition">${glossaryEmphasis(t.description)}</div>
+      ${t.why ? `<section class="glossary-section glossary-why">${glossaryHeading('Por qué importa','meaning')}<p>${glossaryEmphasis(t.why)}</p></section>` : ""}
+      <section class="glossary-section glossary-check">${glossaryHeading('Qué comprobar en la auditoría','check')}<p>${glossaryEmphasis(t.check)}</p></section>
+      ${Array.isArray(t.steps)&&t.steps.length ? `<section class="glossary-section glossary-audit-steps">${glossaryHeading('Mini guía paso a paso','workflow')}<ol>${t.steps.map(step=>`<li>${html(step)}</li>`).join("")}</ol></section>` : ""}
+      ${t.evidence ? `<section class="glossary-section glossary-evidence">${glossaryHeading('Qué evidencia solicitar','evidence')}<p>${html(t.evidence)}</p></section>` : ""}
+      ${t.caution ? `<section class="glossary-section glossary-caution">${glossaryHeading('Evita esta confusión','caution')}<p>${html(t.caution)}</p></section>` : ""}
+      ${renderGlossaryProtocol(t,glossary?.GUIDES?.[t.id])}
       ${renderGlossaryGuide(t)}
       ${renderGlossaryHelp(t)}
-      ${t.example ? `<section class="glossary-section glossary-example"><h3>Ejemplo</h3><p>${html(t.example)}</p></section>` : ""}
-      ${t.references?.length ? `<section class="glossary-section glossary-references"><h3>Referencias y recursos oficiales</h3><ul>${t.references.map((ref) => `<li><a href="${html(ref.url)}" target="_blank" rel="noopener noreferrer external">${html(ref.label)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ul><p class="glossary-external-note">Estos recursos requieren conexión y se abren fuera de la aplicación.</p></section>` : ""}
+      ${t.example ? `<section class="glossary-section glossary-example">${glossaryHeading('Ejemplo','meaning')}<p>${html(t.example)}</p></section>` : ""}
+      ${t.references?.length ? `<section class="glossary-section glossary-references">${glossaryHeading('Referencias oficiales','link')}<ul>${t.references.map(ref=>`<li><a href="${html(ref.url)}" target="_blank" rel="noopener noreferrer external">${html(ref.label)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ul><p class="glossary-external-note">Se requiere conexión para abrir los recursos externos.</p></section>` : ""}
       ${t.aliases?.length ? `<p class="glossary-aliases"><strong>También se busca como:</strong> ${html(t.aliases.join(", "))}</p>` : ""}
-      <p class="glossary-disclaimer">Referencia orientativa. Documenta la prueba realizada y contrasta los criterios con el contexto del cliente.</p></article>`;
+      <p class="glossary-disclaimer">Referencia orientativa. Documenta la prueba y contrasta los criterios con el contexto del cliente.</p></article>`;
   }
 
   // The quick view never navigates or rerenders an audit field.
@@ -923,7 +947,7 @@
     byId("glossary-quick-title").textContent = term.title;
     body.innerHTML = renderGlossaryDetail(term, true);
     const article = body.querySelector(".glossary-article");
-    const advanced = [".glossary-audit-steps",".glossary-troubleshoot",".glossary-console",
+    const advanced = [".glossary-audit-steps",".glossary-protocol",".glossary-troubleshoot",".glossary-console",
       ".glossary-help-resource",".glossary-references"].map(selector=>article?.querySelector(selector)).filter(Boolean);
     if (article && advanced.length) {
       const details = document.createElement("details"), summary = document.createElement("summary");

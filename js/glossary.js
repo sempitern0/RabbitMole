@@ -4918,6 +4918,29 @@
     "followup": "term-83"
   }
 });
+ // Approved-scope audit workflows; reference text only, never executed by the PWA.
+ const PROTOCOLS=Object.freeze({
+  "term-1": Object.freeze([
+   "Obtén diagrama y matriz de flujos; confirma propietario, segmentos origen/destino, IPv4/IPv6 y autorización para la ventana de prueba.",
+   "Consulta rutas, puertas de enlace y políticas interzona desde los equipos expresamente autorizados, sin modificar configuración.",
+   "Realiza únicamente las conexiones puntuales autorizadas; comprueba flujos permitidos y denegados y registra el resultado real.",
+   "Contrasta cada observación con reglas efectivas y registros del firewall; una VLAN por sí sola no demuestra aislamiento.",
+   "Guarda hora, origen, destino, puerto, matriz aprobada, excepciones y evidencia depurada de secretos."
+  ]),
+  "term-2": Object.freeze([
+   "Documenta cada VLAN, finalidad, ubicación, responsable, ID y puertos incluidos en el alcance aprobado.",
+   "Consulta los puertos access/trunk, VLAN nativa, etiquetas y uplinks utilizando comandos de solo lectura.",
+   "Corrobora rutas y filtros L3/L4 con las políticas vigentes; etiquetado 802.1Q no equivale a aislamiento.",
+   "Registra diferencias, cambios propuestos y evidencias sin contraseñas; solicita aprobación antes de modificar uplinks."
+  ]),
+  "term-25": Object.freeze([
+   "Identifica sistema, interfaz, dominio de prueba, resolver autorizado y momento de la auditoría.",
+   "Consulta los resolutores efectivos con el comando correspondiente a la plataforma, sin modificar ajustes del dispositivo.",
+   "Comprueba respuestas, tipos de registro, errores y TTL únicamente mediante consultas al DNS autorizado.",
+   "Contrasta con zonas, delegaciones, caché y DNSSEC si procede; una respuesta aislada no demuestra disponibilidad global.",
+   "Documenta resolutor, hora, consultas permitidas, resultados y límites; no remitas dominios internos a DNS públicos."
+  ])
+ });
  const CATEGORIES=Object.freeze([...new Set(TERMS.map(t=>t.category))]);
  const normalize = input=>String(input??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').trim();
  const byId=id=>TERMS.find(t=>t.id===id)||null;
@@ -4938,5 +4961,5 @@
    return score(b)-score(a)||a.title.localeCompare(b.title,'es');
   });
  };
- globalThis.AuditGlossary=Object.freeze({TERMS,CATEGORIES,GUIDES,CONTEXT_HELP,search,byId,normalize});
+ globalThis.AuditGlossary=Object.freeze({TERMS,CATEGORIES,GUIDES,PROTOCOLS,CONTEXT_HELP,search,byId,normalize});
 })();

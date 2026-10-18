@@ -100,3 +100,12 @@ assert(app.includes('glossary-audit-steps'),'Step by step WiFi help UI missing')
 
 for(const id of Array.from({length:8},(_,i)=>'term-'+(175+i))){assert(g.byId(id)?.category==='Redes · routers');assert(g.GUIDES[id]?.commands.length>=2)}
 for(const field of ["routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"])assert(g.CONTEXT_HELP.fields.networks[field],'Missing router field help '+field);
+
+assert(app.includes('glossary-detail-top')&&app.includes('glossaryIcon')&&app.includes('renderGlossaryProtocol'),'Detail navigation, icons and protocol rendering required');
+assert(css.includes('.glossary-categories{display:flex;flex-wrap:wrap;overflow:visible'),'Category filters should wrap rather than clip');
+assert(css.includes('.glossary-command pre{background:var(--navy)'),'Readable terminal command surface');
+for(const id of ['term-1','term-2','term-25']){
+ assert(g.PROTOCOLS[id]?.length>=4,'Missing scoped protocol: '+id);
+ assert(g.PROTOCOLS[id].every(text=>typeof text==='string'&&text.length>40));
+}
+assert(fs.readFileSync(path.join(root,'index.html'),'utf8').includes('<option value="rabbitmole">Predeterminado</option>'),'Brand palette label');

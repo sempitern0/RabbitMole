@@ -755,3 +755,88 @@
 #workspace .rack-placement{margin-block:1rem}
 @media(max-width:700px){#workspace .rack-units li{grid-template-columns:2.7rem minmax(0,1fr);font-size:.92rem}}
 @media(forced-colors:active){#workspace .rack-units li{border:1px solid CanvasText}}
+
+/* Palette control is a sidebar utility, not part of the audit toolbar.
+   Sidebar colors stay dark in all nine palettes regardless of workbench theme. */
+.sidebar .sidebar-appearance {
+  display: grid;
+  gap: .48rem;
+  flex-shrink: 0;
+  min-width: 0;
+  margin: .55rem .1rem .1rem;
+  padding: .65rem .7rem .75rem;
+  border: 1px solid var(--sidebar-panel-border);
+  border-radius: .8rem;
+  background: var(--sidebar-panel-bg);
+  color: var(--sidebar-panel-text);
+}
+.sidebar .sidebar-appearance-label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--sidebar-panel-text);
+  font-size: .81rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+.sidebar .sidebar-appearance-label svg {
+  color: var(--sidebar-panel-focus);
+  flex: none;
+}
+.sidebar .sidebar-appearance #palette {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: .5rem .6rem;
+  border: 1px solid var(--sidebar-panel-muted);
+  border-radius: .6rem;
+  background: var(--sidebar-panel-raised);
+  color: var(--sidebar-panel-text);
+  color-scheme: dark;
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.sidebar .sidebar-appearance #palette:hover {
+  border-color: var(--sidebar-panel-focus);
+}
+.sidebar .sidebar-appearance #palette:focus-visible {
+  outline: 3px solid var(--sidebar-panel-focus);
+  outline-offset: 2px;
+}
+@media (max-width: 1000px) {
+  .sidebar .sidebar-appearance {
+    flex: 1 1 14rem;
+    max-width: 21rem;
+    margin: 0;
+  }
+}
+@media (max-width: 720px) {
+  .sidebar .sidebar-appearance {
+    flex-basis: 100%;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  .sidebar .sidebar-appearance-label { flex: 0 0 auto; }
+  .sidebar .sidebar-appearance #palette { flex: 1 1 auto; width: auto; }
+}
+@media (max-width: 360px) {
+  .sidebar .sidebar-appearance { flex-wrap: wrap; }
+  .sidebar .sidebar-appearance #palette { flex-basis: 100%; }
+}
+@media (forced-colors: active) {
+  .sidebar .sidebar-appearance { border-color: CanvasText; }
+  .sidebar .sidebar-appearance #palette {
+    color-scheme: normal;
+    border-color: ButtonText;
+    background: Field;
+    color: FieldText;
+  }
+  .sidebar .sidebar-appearance #palette:focus-visible {
+    outline-color: Highlight;
+  }
+}
+@media print { .sidebar .sidebar-appearance { display: none !important; } }

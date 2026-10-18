@@ -528,12 +528,19 @@ main {
   font-size: 11px;
 }
 .app-version {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   margin-inline-start: .65rem;
-  padding-inline-start: .65rem;
-  border-inline-start: 1px solid var(--line);
-  font-size: .75rem;
-  letter-spacing: .015em;
+  padding: .18rem .66rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 42%, var(--line));
+  border-radius: 999px;
+  box-shadow: inset 2px 0 var(--brand);
+  background: color-mix(in srgb, var(--brand) 8%, var(--paper));
+  color: var(--ink);
+  font-size: .76rem;
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: .02em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }

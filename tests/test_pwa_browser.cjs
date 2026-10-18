@@ -34,6 +34,14 @@ const {chromium}=require('playwright');
     await page.locator('#pwa-install-button').click();
     await page.waitForFunction(()=>document.getElementById('pwa-install-status').textContent.includes('desde su icono'));
    }
+   assert.equal(await page.locator('.topbar #palette').count(),0);
+   assert.equal(await page.locator('.sidebar .sidebar-appearance #palette').count(),1);
+   const versionStyle=await page.locator('#app-version').evaluate(el=>({
+     text:el.textContent,weight:parseInt(getComputedStyle(el).fontWeight,10),
+     radius:parseFloat(getComputedStyle(el).borderTopLeftRadius)
+   }));
+   assert.match(versionStyle.text,/Versión 1\\.0\\.0/);
+   assert(versionStyle.weight>=700 && versionStyle.radius>=15,'Version badge must be distinct and understated');
    await page.locator('#sidebar-maintenance > summary').click();
    // Every palette retains a dark, legible maintenance panel independently of the workspace theme.
    for(const palette of ['ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
@@ -55,6 +63,14 @@ const {chromium}=require('playwright');
     });
     assert.equal(contrast.palette,palette);
     assert(contrast.ratio>=4.5,palette+' maintenance title has insufficient contrast: '+JSON.stringify(contrast));
+    const selector=await page.locator('#palette').evaluate(el=>{
+      const fg=getComputedStyle(el).color,bg=getComputedStyle(el).backgroundColor;
+      const label=document.querySelector('label[for="palette"]');
+      return {insideSidebar:!!el.closest('.sidebar'),height:el.getBoundingClientRect().height,
+        label:label?.textContent.trim(),foreground:fg,background:bg};
+    });
+    assert(selector.insideSidebar && selector.height>=44 && selector.label.includes('Paleta de colores'),
+      palette+' sidebar palette selector is not accessible');
    }
    await page.locator('#palette').selectOption('ocean');
    // Storage permission has independent feedback; health checks must not overwrite it.

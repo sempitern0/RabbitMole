@@ -857,6 +857,26 @@ main {
   --hero-c: #146a68;
   --sidebar-active: #34c4a7;
 }
+/* RabbitMole signature palette: ink-blue surfaces and jade accent used sparingly.
+   A deliberately light reading canvas keeps long audits comfortable and printable. */
+:root[data-palette="rabbitmole"] {
+  --navy: #102635;
+  --navy2: #1b3c48;
+  --ink: #172c35;
+  --muted: #506b70;
+  --line: #cddfda;
+  --paper: #ffffff;
+  --canvas: #f0f6f3;
+  --brand: #176b66;
+  --brand-hover: #10534f;
+  --brand-tint: #e2f1e9;
+  --teal: #176b66;
+  --light-teal: #e2f1e9;
+  --hero-a: #102635;
+  --hero-b: #17454d;
+  --hero-c: #287367;
+  --sidebar-active: #73e0ba;
+}
 :root[data-palette="forest"] {
   --navy: #17281f;
   --navy2: #284532;
@@ -1086,6 +1106,13 @@ nav button.active {
   --report-tint: #ebf3f5;
   --report-muted: #557285;
   --report-cover: #132d3f;
+}
+:root[data-palette="rabbitmole"] {
+  --report-accent: #176b66;
+  --report-heading: #193e44;
+  --report-tint: #e8f3ed;
+  --report-muted: #4e6868;
+  --report-cover: #102635;
 }
 :root[data-palette="forest"] {
   --report-accent: #287e59;
@@ -1723,6 +1750,11 @@ textarea {
   --pdf-cover-bg: #def3f5;
   --pdf-cover-ink: #153747;
   --pdf-cover-sub: #285a64;
+}
+:root[data-palette="rabbitmole"] {
+  --pdf-cover-bg: #e2f1e9;
+  --pdf-cover-ink: #102e38;
+  --pdf-cover-sub: #355f5d;
 }
 :root[data-palette="forest"] {
   --pdf-cover-bg: #e6f4e5;

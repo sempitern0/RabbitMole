@@ -36,6 +36,9 @@ const {chromium}=require('playwright');
    }
    assert.equal(await page.locator('.topbar #palette').count(),0);
    assert.equal(await page.locator('.sidebar .sidebar-appearance #palette').count(),1);
+   // A new profile gets the signature theme, but previously saved choices remain untouched.
+   assert.equal(await page.locator('#palette').inputValue(),'rabbitmole');
+   assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'rabbitmole');
    const versionStyle=await page.locator('#app-version').evaluate(el=>({
      text:el.textContent,weight:parseInt(getComputedStyle(el).fontWeight,10),
      radius:parseFloat(getComputedStyle(el).borderTopLeftRadius)
@@ -44,7 +47,7 @@ const {chromium}=require('playwright');
    assert(versionStyle.weight>=700 && versionStyle.radius>=15,'Version badge must be distinct and understated');
    await page.locator('#sidebar-maintenance > summary').click();
    // Every palette retains a dark, legible maintenance panel independently of the workspace theme.
-   for(const palette of ['ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+   for(const palette of ['rabbitmole','ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
     await page.locator('#palette').selectOption(palette);
     const contrast=await page.locator('#offline-health-panel').evaluate(el=>{
       const style=getComputedStyle(el), child=getComputedStyle(el.querySelector('strong'));
@@ -129,7 +132,7 @@ const {chromium}=require('playwright');
    await page.locator('[data-glossary-back]').first().click();
    await page.waitForFunction(id=>document.activeElement?.id===id,returnField);
    // Canonical form controls must have computed styling and room around adjacent fields.
-   for(const palette of ['ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+   for(const palette of ['rabbitmole','ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
      await page.locator('#palette').selectOption(palette);
      const form=await page.locator('#workspace .field input:not([type="file"])').first().evaluate(el=>{
        const s=getComputedStyle(el), wrapper=el.closest('.field');

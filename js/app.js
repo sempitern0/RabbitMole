@@ -55,7 +55,9 @@
   const PALETTE_KEY = "rabbitmole:palette:v1";
   const BACKUP_KEY = "rabbitmole:backup-settings:v1";
   const BACKUP_DB = "rabbitmole-backup-directory";
+  const DEFAULT_PALETTE = "rabbitmole";
   const palettes = [
+    DEFAULT_PALETTE,
     "ocean",
     "forest",
     "indigo",
@@ -458,7 +460,7 @@
     dirty = false,
     saveTimer = null,
     writeQueue = Promise.resolve();
-  let selectedPalette = "ocean",
+  let selectedPalette = DEFAULT_PALETTE,
     deferredInstallPrompt = null;
   function updateStatus(message, warning = false) {
     const node = byId("save-status");
@@ -470,7 +472,7 @@
     return writeQueue;
   }
   function selectPalette(value) {
-    selectedPalette = palettes.includes(value) ? value : "ocean";
+    selectedPalette = palettes.includes(value) ? value : DEFAULT_PALETTE;
     document.documentElement.dataset.palette = selectedPalette;
     byId("palette").value = selectedPalette;
     byId("report").dataset.palette = selectedPalette;
@@ -5383,9 +5385,9 @@
   refreshNetworkStatus();
   byId("local-date").textContent = new Date().toLocaleDateString("es-ES");
   try {
-    selectPalette(localStorage.getItem(PALETTE_KEY) || "ocean");
+    selectPalette(localStorage.getItem(PALETTE_KEY) || DEFAULT_PALETTE);
   } catch (_ignored) {
-    selectPalette("ocean");
+    selectPalette(DEFAULT_PALETTE);
   }
   if (!PUBLIC_DEMO)
     globalThis.AuditSecureTransferUI.bind({

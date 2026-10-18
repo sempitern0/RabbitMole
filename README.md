@@ -277,3 +277,7 @@ The **executive report** summarizes rack/server coverage without exposing IPs, d
 ### When persistent storage is denied
 
 The `navigator.storage.persist()` request is controlled by the browser and cannot be forced by JavaScript. Chromium may silently deny it based on site usage and installation signals; Firefox may request site permission. RabbitMole now calls it directly from the user gesture. A denial does not mean IndexedDB or offline caching failed, nor does it mean data will be deleted immediately. Use the same browser profile and origin, launch from the installed app icon, test offline launch, and keep external protected JSON exports. Estimated quota is not a persistence grant; site-data clearing or private browsing can still remove records.
+
+### Default signature palette
+
+New profiles use **RabbitMole · Brand** (ink navy, restrained jade and neutral reading surfaces) instead of Ocean. All prior palettes remain available, and existing `rabbitmole:palette:v1` preferences are preserved. Selected themes still apply to report covers without compromising white-page archival readability. The palette is based on the application's existing brand tokens rather than an automated pixel extraction from the PNG asset.

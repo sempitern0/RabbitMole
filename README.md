@@ -287,7 +287,7 @@ New profiles use **RabbitMole · Brand** (midnight blue, blue-steel, slate and w
 
 RabbitMole is a **static, offline-first JavaScript PWA** with no runtime CDN dependencies. `js/app.js` owns navigation, mutable session state, events and report orchestration; `js/app-definitions.js`, `js/app-model.js` and `js/app-team.js` expose focused field, schema v3 and team factories. Other modules own inventory, mitigation, print, storage and connectivity.
 
-The glossary retains its original **182 concepts** and stable `AuditGlossary` API, with compact data separated into `js/glossary-terms.js` (terms, synonyms, examples, references) and `js/glossary-guides.js` (troubleshooting and per-platform commands). `js/glossary.js` reconstructs those objects, handles search/contextual help and augments macOS commands. `js/app.js` only renders and navigates. The glossary source files together are approximately **57 KB (~26%) smaller**, not the entire repository. All three must be present and loaded in order before `app.js`, including offline installation.
+The glossary extends its original catalogue to **212 concepts** and stable `AuditGlossary` API, with compact data separated into `js/glossary-terms.js` (terms, synonyms, examples, references) and `js/glossary-guides.js` (troubleshooting and per-platform commands). `js/glossary.js` reconstructs those objects, handles search/contextual help and augments macOS commands. `js/app.js` only renders and navigates. The glossary source files together are approximately **57 KB (~26%) smaller**, not the entire repository. All three must be present and loaded in order before `app.js`, including offline installation.
 
 ### Using the glossary, Discovery and offline PWA
 
@@ -368,3 +368,7 @@ Scheduled folder copies **remain unencrypted JSON**, require a protected directo
 ### Mobile terminal preparation: Android and iOS
 
 In **Device and installation → Terminal and Discovery preparation**, the offline PWA provides two collapsible guides. **Android** uses the official Termux app plus optional Python/Nmap, a passive `doctor` check and an authorized Discovery wizard, with explicit JSON review in Hardware and Networks. **iPhone/iPad** cannot run Termux: a-Shell/iSH are auxiliary terminals, while network captures should originate on an authorized desktop and be imported through Files (or through a separately tested HTTPS LAN bridge). This guide starts no scans or network requests. See the [mobile field guide (ES)](docs/AUDITORIA_MOVIL_ES.md).
+
+### Final glossary coverage: servers, software and licensing
+
+The offline glossary contains **212 concepts**, **96 diagnostic guides**, and **221 references**. The 30 new topics cover Windows Server Core and roles, BMC management, RAID/SMART, shared storage, UPS, hypervisors, capacity and lifecycle, together with SAM/ITAM, entitlements, OEM/retail/volume, CALs, core-based and user licensing, SaaS subscriptions, BYOL, EULAs, open-source obligations and SPDX expressions. 17 new mostly read-only diagnostic guides include evidence and limitations. Server and software inventory fields now link to relevant glossary help. Neither installing an application nor having an activation key proves license compliance; contractual assessment must use vendor/product-specific terms. No commands execute in the PWA.

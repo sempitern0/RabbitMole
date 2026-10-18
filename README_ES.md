@@ -298,7 +298,7 @@ En nuevas instalaciones, RabbitMole utiliza la paleta **RabbitMole · Marca**: a
 
 RabbitMole utiliza una arquitectura **JavaScript estático, sin dependencias remotas en tiempo de ejecución**, preparada para uso offline. `js/app.js` conserva el estado de la sesión, navegación, eventos y composición de informes; `js/app-definitions.js`, `js/app-model.js` y `js/app-team.js` son fábricas con responsabilidades de campos, JSON v3 e identidades. Las implementaciones de inventario, mitigación, impresión, almacenamiento y conectividad ya se distribuyen entre módulos especializados.
 
-El diccionario de **182 conceptos** mantiene su interfaz pública `AuditGlossary`, ahora con datos separados y compactos:
+El diccionario de **212 conceptos** mantiene su interfaz pública `AuditGlossary`, ahora con datos separados y compactos:
 
 | Archivo | Responsabilidad |
 | --- | --- |
@@ -400,3 +400,9 @@ Las copias periódicas en carpeta siguen siendo **JSON sin cifrar**: usa carpeta
 ### Preparación de Termux y alternativas iOS para auditorías móviles
 
 En **Dispositivo e instalación → Preparar terminal y Discovery** encontrarás dos guías plegables y utilizables sin conexión: **Android con Termux** (instalación, Python/Nmap, diagnóstico pasivo, CIDR autorizado, archivo JSON y revisión desde Captura asistida) e **iPhone/iPad** (Termux no existe; a-Shell/iSH son auxiliares y la ruta fiable es Discovery en un PC con traslado del JSON mediante Archivos). No se inician escaneos ni peticiones desde la guía. Consulta el recorrido ampliado en [Guía de auditoría móvil](docs/AUDITORIA_MOVIL_ES.md).
+
+### Ampliación final: servidores, software y licenciamiento
+
+El diccionario offline alcanza **212 conceptos**, **96 guías de diagnóstico** y **221 referencias**. Añade 30 entradas sobre roles y gestión de servidores, Server Core, BMC/iDRAC/iLO, RAID/SMART, SAN/NAS/iSCSI, SAI, hipervisores, capacidad, dependencias, despliegues, soporte y recuperación; y sobre SAM/ITAM, derechos de uso, OEM/retail/volumen, CAL, modelos por núcleo y por usuario, SaaS, BYOL, EULA, software libre y licencias SPDX. Incluye 17 guías prácticas con comprobaciones principalmente de solo lectura, evidencias esperadas y cautelas. No se realizan conexiones ni se ejecutan comandos automáticamente.
+
+La ayuda contextual de **Hardware** incorpora rol, modalidad, almacenamiento y administración del servidor; la de **Software** incorpora licencia, estado, modelo, versión, soporte y actualizaciones. Esta información es orientativa: **una instalación detectada o una clave de activación no prueban conformidad contractual**. Antes de emitir conclusiones verifica condiciones y derechos del producto/edición concreta con el titular.

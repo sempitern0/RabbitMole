@@ -24,7 +24,13 @@
     },
     "assets": {
       "os": "term-9",
-      "criticality": "term-17"
+      "criticality": "term-17",
+      "serverRole": "term-183",
+      "serverDeployment": "term-190",
+      "serverBoot": "term-188",
+      "serverRemoteMgmt": "term-185",
+      "osLicense": "term-197",
+      "osUpdates": "term-196"
     },
     "networks": {
       "cidr": "term-3",
@@ -53,8 +59,13 @@
       "routerAuditEvidence": "term-175"
     },
     "software": {
-      "support": "term-9",
-      "exposure": "term-36"
+      "support": "term-209",
+      "exposure": "term-36",
+      "license": "term-198",
+      "licenseType": "term-197",
+      "licenseStatus": "term-208",
+      "version": "term-195",
+      "updateStatus": "term-196"
     },
     "cves": {
       "id": "term-7",

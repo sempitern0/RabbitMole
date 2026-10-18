@@ -58,3 +58,6 @@
 ## Refactorización incremental de app.js
 
 Las definiciones de campos y grupos son propiedad de `js/app-definitions.js`, el modelo de expediente JSON v3 de `js/app-model.js` y las identidades y normalización del equipo de `js/app-team.js`. Son fábricas explícitas para conservar el ciclo de vida original del controlador. `js/app.js` continúa gestionando estado mutable, enrutado, guardado, renderizado y listeners. No introducir inicialización con efectos laterales en estas fábricas ni importar dependencias externas, y no cambiar los identificadores de esquemas o las claves de almacenamiento. Al mover funciones actualizar los consumidores, los tests de contrato y el precache de la PWA.
+
+
+**Persistencia de almacenamiento:** `navigator.storage.persist()` debe llamarse directamente desde la interacción del usuario, sin `await persisted()` previo. Diferenciar resultado concedido, denegado, desconocido y no compatible; no atribuir las denegaciones a fallos de CacheStorage ni prometer permisos que controla el navegador. Mantener las copias JSON como recomendación explícita y probar en distintos navegadores.

@@ -34,6 +34,8 @@ async function permissionCheck(granted){
  nodes['offline-health-persist'].click();
  for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));
  assert.equal(nodes['offline-storage-status'].dataset.result,granted?'granted':'denied');
+ assert(!nodes['offline-storage-status'].textContent.includes('Caché incompleta'));
+ assert(storage.indexOf('const request=storage.persist()') < storage.indexOf('const granted=await request'), 'Request must be made before any await');
  assert.equal(nodes['offline-health-persist'].disabled,false);
  assert.equal(nodes['offline-health-status'].textContent,'','Do not overwrite offline health with permission status');
  return nodes['offline-storage-status'].textContent;

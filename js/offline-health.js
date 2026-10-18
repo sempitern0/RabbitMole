@@ -18,9 +18,14 @@
      const health=await send(worker,'RABBITMOLE_HEALTH');
      const persistent=await navigator.storage?.persisted?.();
      const estimate=await navigator.storage?.estimate?.();
-     const detail=health.ok?'Recursos offline completos. Comprueba el arranque desde el icono sin conexión.':'Caché incompleta: '+(health.missingCount??'?')+' recursos pendientes.';
-     const space=estimate?.quota?' · Espacio utilizado '+Math.round((estimate.usage||0)/1048576)+' MiB / cuota estimada '+Math.round(estimate.quota/1048576)+' MiB.':'';
-     output.textContent=detail+' · Almacenamiento '+(persistent?'persistente':'sin protección de persistencia confirmada')+space;
+     const detail=health.ok
+       ?'Recursos offline completos. Comprueba el arranque desde el icono sin conexión.'
+       :'Caché incompleta: '+(health.missingCount??'?')+' recursos pendientes.';
+     const protection=persistent===true?'concedida':persistent===false?'no concedida':'no verificable';
+     const space=estimate?.quota
+       ?' · Uso '+Math.round((estimate.usage||0)/1048576)+' / ~'+Math.round(estimate.quota/1048576)+' MiB (cuota orientativa).'
+       :'.';
+     output.textContent=detail+' · Persistencia: '+protection+space;
      setState(health.ok?'ready':'incomplete');
      $('offline-health-repair').disabled=health.ok||!navigator.onLine;
    }catch(error){setState('error');output.textContent='No se ha podido comprobar el modo offline: '+error.message;}
@@ -29,25 +34,40 @@
    const output=$('offline-storage-status'),button=$('offline-health-persist');
    if(!output||!button)return;
    const storage=navigator.storage;
-   if(!storage?.persist){
+   if(globalThis.isSecureContext===false || typeof storage?.persist!=='function'){
      output.dataset.result='unsupported';
-     output.textContent='No disponible: este navegador no permite solicitar persistencia. Exporta periódicamente una copia JSON.';
+     output.textContent='Este entorno no permite solicitar persistencia. Abre la PWA desde su origen HTTPS o localhost y exporta copias JSON.';
      return;
    }
    button.disabled=true;
    output.dataset.result='checking';
-   output.textContent='Solicitando protección de persistencia al navegador…';
+   output.textContent='Solicitando persistencia al navegador…';
    try{
-     // A repeated click should report the existing status, not imply a new permission.
-     const already=await storage.persisted?.()===true;
-     const granted=already || await storage.persist();
-     output.dataset.result=granted?'granted':'denied';
-     output.textContent=granted
-       ?'Persistencia '+(already?'ya activa':'concedida')+'. El navegador intentará conservar los datos locales. No están cifrados: mantén copias JSON externas.'
-       :'Persistencia no concedida. La PWA sigue funcionando offline, pero el navegador puede liberar su almacenamiento. Exporta copias JSON externas.';
+     // IMPORTANT: issue persist() synchronously inside the button's user activation.
+     // Awaiting persisted() first can lose transient activation in some browsers.
+     const request=storage.persist();
+     const granted=await request;
+     let verified=granted;
+     if(typeof storage.persisted==='function'){
+       try{verified=await storage.persisted();}
+       catch(_ignored){verified=granted;}
+     }
+     const active=granted===true && verified!==false;
+     const denied=granted===false && verified!==true;
+     output.dataset.result=active?'granted':denied?'denied':'unknown';
+     output.textContent=active
+       ?'Persistencia concedida por el navegador. Reduce la eliminación automática; no cifra los datos ni evita el borrado manual. Conserva copias JSON.'
+       :denied
+         ?'Persistencia no concedida por el navegador. No es un fallo del modo offline: los datos siguen guardándose, pero pueden eliminarse bajo presión de espacio. Conserva copias JSON.'
+         :'No se ha podido confirmar el estado de persistencia. Comprueba de nuevo y conserva copias JSON.';
+     const health=$('offline-health-status');
+     if(health?.textContent?.includes('Persistencia: ')){
+       health.textContent=health.textContent.replace(/Persistencia: (concedida|no concedida|no verificable)/,
+         'Persistencia: '+(active?'concedida':denied?'no concedida':'no verificable'));
+     }
    }catch(error){
      output.dataset.result='error';
-     output.textContent='No se pudo comprobar la persistencia: '+error.message+'. Conserva una copia JSON externa.';
+     output.textContent='El navegador no pudo procesar la solicitud: '+error.message+'. Conserva copias JSON.';
    }finally{
      button.disabled=false;
    }

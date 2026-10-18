@@ -853,3 +853,22 @@
 #bridge-results[hidden] {display:none!important}
 @media(max-width:650px){#bridge-panel {padding:.75rem}#bridge-panel button{width:100%}}
 @media(forced-colors:active){#bridge-panel{border-color:CanvasText}}
+
+/* Persistent storage is a separate browser decision, not an offline health failure. */
+.sidebar .sidebar-maintenance .offline-storage-help {
+  min-width:0; border:0; margin:.45rem 0 0; padding:0;
+  color:var(--sidebar-panel-muted); font-size:.76rem;
+}
+.sidebar .sidebar-maintenance .offline-storage-help summary {
+  cursor:pointer; color:var(--sidebar-panel-text);
+  font-weight:650; line-height:1.5; min-height:36px;
+  display:list-item; padding:.25rem 0;
+}
+.sidebar .sidebar-maintenance .offline-storage-help p {
+  margin:.4rem 0; color:var(--sidebar-panel-muted);
+  line-height:1.55; overflow-wrap:anywhere;
+}
+.sidebar .sidebar-maintenance .offline-storage-help summary:focus-visible {
+  outline:2px solid var(--sidebar-panel-focus); outline-offset:2px;
+}
+@media print {.offline-storage-help{display:none!important}}

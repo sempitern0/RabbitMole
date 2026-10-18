@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v86-offline-fallback";
+const CACHE_NAME = "rabbitmole-shell-v87-integrity";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -88,32 +88,45 @@ const CORE = [
 ];
 const urlFor = (path) => new URL(path, self.registration.scope).href;
 const isShellCache = (name) => name.startsWith(CACHE_PREFIX);
-async function usableShell(name) {
-  const cache = await caches.open(name);
-  const marker = await cache.match(urlFor(READY_KEY));
-  if (marker) return true;
-  // Older releases have no completion marker: validate the actual HTML dependencies.
-  const page = await cache.match(urlFor("./index.html"));
-  if (!page) return false;
-  const html = await page.text();
-  const assets = [
-    ...html.matchAll(/<script\s+src="([^"]+)"/g),
-    ...html.matchAll(/<link[^>]+href="([^"]+\.css)"/g),
-  ].map((match) => match[1]);
-  if (!assets.length || !(await cache.match(urlFor("./js/app.js")))) return false;
-  for (const path of assets) {
-    if (!path.startsWith("js/") && !path.startsWith("css/")) return false;
-    if (!(await cache.match(urlFor("./" + path)))) return false;
-  }
-  return true;
+// Validate before trusting any shell, including one with a readiness marker.
+const verifiedShells = new Map();
+async function usableShell(name, fresh = false) {
+  if (!fresh && verifiedShells.has(name)) return verifiedShells.get(name);
+  const check = (async () => {
+    const cache = await caches.open(name);
+    const page = await cache.match(urlFor("./index.html"));
+    if (!page) return false;
+    const html = await page.text();
+    const assets = [
+      ...html.matchAll(/<script\s+src="([^"]+)"/g),
+      ...html.matchAll(/<link[^>]+href="([^"]+\.css)"/g),
+    ].map((match) => match[1].replace(/^\.\//, ""));
+    if (!assets.includes("js/app.js") || !assets.some((path) => path.startsWith("css/")))
+      return false;
+    if (name === CACHE_NAME) {
+      if (!(await cache.match(urlFor(READY_KEY)))) return false;
+      const found = await Promise.all(CORE.map((path) => cache.match(urlFor(path))));
+      if (found.some((response) => !response)) return false;
+    }
+    for (const path of assets) {
+      if (!/^(?:js|css)\/[a-zA-Z0-9_./-]+\.(?:js|css)$/.test(path) || path.includes(".."))
+        return false;
+      if (!(await cache.match(urlFor("./" + path)))) return false;
+    }
+    return true;
+  })().catch(() => false);
+  verifiedShells.set(name, check);
+  const valid = await check;
+  if (!valid) verifiedShells.delete(name);
+  return valid;
 }
 async function chooseShell() {
   // CacheStorage is always available in browsers; tolerate minimal test doubles.
   if (typeof caches.keys !== "function") return CACHE_NAME;
   const names = (await caches.keys()).filter(isShellCache);
-  if (names.includes(CACHE_NAME) && await usableShell(CACHE_NAME)) return CACHE_NAME;
+  if (names.includes(CACHE_NAME) && await usableShell(CACHE_NAME, true)) return CACHE_NAME;
   for (const name of names.reverse()) {
-    if (name !== CACHE_NAME && await usableShell(name)) return name;
+    if (name !== CACHE_NAME && await usableShell(name, true)) return name;
   }
   return null;
 }
@@ -121,7 +134,7 @@ async function shellForClient(event) {
   const id = event.clientId || event.resultingClientId;
   if (id && clientCache.has(id)) {
     const name = clientCache.get(id);
-    if ((await caches.keys()).includes(name) && await usableShell(name)) return name;
+    if ((await caches.keys()).includes(name) && await usableShell(name, event.request?.mode === "navigate")) return name;
     clientCache.delete(id);
   }
   const name = await chooseShell();
@@ -138,15 +151,16 @@ async function shellHealth() {
   const keys = CORE.map(urlFor);
   const available = await Promise.all(keys.map((key) => cache.match(key)));
   const missing = CORE.filter((_, index) => !available[index]);
+  const marked = !!(await cache.match(urlFor(READY_KEY)));
   return {
-    ok: missing.length === 0,
+    ok: marked && missing.length === 0,
     version: CACHE_NAME,
     appVersion: VERSION,
     activeCache: await chooseShell(),
-    total: CORE.length,
-    cached: CORE.length - missing.length,
-    missing: missing.slice(0, 8),
-    missingCount: missing.length,
+    total: CORE.length + 1,
+    cached: CORE.length - missing.length + (marked ? 1 : 0),
+    missing: [...missing, ...(!marked ? [READY_KEY] : [])].slice(0, 8),
+    missingCount: missing.length + (marked ? 0 : 1),
   };
 }
 async function repairMissing() {
@@ -170,6 +184,12 @@ async function repairMissing() {
       throw Error("No se pudo recuperar " + path + " del servidor original.");
     await cache.put(url, response);
   }
+  const complete = await Promise.all(CORE.map((path) => cache.match(urlFor(path))));
+  if (complete.some((response) => !response))
+    throw Error("La recuperación ha dejado recursos incompletos.");
+  // Marker is written last so partial repair cannot become eligible.
+  await cache.put(urlFor(READY_KEY), new Response("ready"));
+  verifiedShells.delete(CACHE_NAME);
   const after = await shellHealth();
   return { ...after, repaired: before.missingCount - after.missingCount };
 }
@@ -290,8 +310,11 @@ self.addEventListener("fetch", (event) => {
           const hit = await cache.match(request, { ignoreSearch: true });
           if (hit) return hit;
           // A missing JS/CSS asset must not be silently mixed with another release.
-          if (/\.(?:js|css)$/.test(url.pathname))
+          if (/\.(?:js|css)$/.test(url.pathname)) {
+            verifiedShells.delete(selected);
+            if (event.clientId) clientCache.delete(event.clientId);
             return new Response("Recurso ausente en la versión offline activa.", {status:503});
+          }
         }
       }
       try {

@@ -50,3 +50,6 @@ PWA **offline-first** para expedientes de auditoría de infraestructura y cibers
 
 ## Controles de espacio de trabajo
 El menú lateral se pliega desde `#sidebar-toggle` con `js/ui-layout.js` (preferencia `rabbitmole:ui:sidebar-collapsed:v1`), conservando una barra de iconos accesible en escritorio y plegando contenido en móvil/tablet. El navegador sticky de registros se pliega con `#record-nav-toggle` mediante `js/audit-record-navigation.js` (preferencia `rabbitmole:ui:record-filters-collapsed:v1`); `css/layout-collapse.css` es el último CSS de pantalla y rige animaciones/estados. Respetar `aria-expanded`, `inert`, foco, ausencia de scroll horizontal y `prefers-reduced-motion`; ambas preferencias son locales y no pertenecen al expediente JSON.
+
+## Fase 1: estabilidad
+El service worker local usa `rabbitmole-shell-v87-integrity` y debe cambiar su nombre en cada release local que altere CORE o lógica SW; el builder Cloudflare ya genera el hash de versión. La marca `.rabbitmole-shell-ready` **no demuestra por sí sola** integridad: validar CORE completo (caché actual) y dependencias HTML (fallback heredado). Reparar únicamente una release idéntica, escribir la marca al final y no mezclar versiones. Probar cache eviction, fallback, inicio offline y shell incompleto. Antes de fusionar ejecutar CI y Playwright y documentar explícitamente las pruebas no ejecutadas.

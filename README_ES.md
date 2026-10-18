@@ -344,3 +344,7 @@ En **tabletas (hasta 1000 px)**, la navegación deja de ocupar una columna later
 ### Aprovechar el espacio de pantalla
 
 Usa **Contraer menú** en la cabecera lateral para dejar en escritorio una barra estrecha de iconos o plegar la navegación en tablet y móvil. Los iconos conservan nombre accesible y título; pulsa el mismo control para expandir. En inventarios largos, **Ocultar filtros** pliega el navegador sticky a una cabecera, manteniendo el botón para reabrir la búsqueda y el salto entre registros. Ambos estados se guardan solo en este dispositivo, no afectan a expedientes, PDF o exportaciones y respetan la preferencia de movimiento reducido del sistema.
+
+### Fase 1: integridad y recuperación offline
+
+RabbitMole verifica que el shell actual conserve la marca de instalación y los recursos esenciales; la marca sola no basta. Si pierde archivos puede elegir una caché anterior completa que permanezca en el navegador. El service worker local utiliza una versión de caché propia, mientras que Cloudflare la genera a partir del contenido del bundle. No borres manualmente CacheStorage para intentar recuperar un expediente: los datos de auditoría se almacenan aparte y deben exportarse regularmente en JSON. Valida actualización, arranque sin conexión y recuperación antes de desplegar.

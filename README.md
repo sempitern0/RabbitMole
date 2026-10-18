@@ -319,3 +319,7 @@ At **tablet widths (up to 1000px)** the fixed sidebar becomes a horizontal layou
 ### Collapsible workspace navigation
 
 Use **Collapse menu** in the sidebar header to switch to an icon rail on desktop or hide the navigation body on tablets/phones. Reopen it with the same button. On record inventories use **Hide filters** to collapse the sticky record search/jump bar to a compact header, then expand when needed. Both choices are stored locally per browser, do not change audit records or PDFs, remain keyboard accessible and honor reduced-motion preferences.
+
+### Phase 1: offline integrity and recovery
+
+The active offline shell now requires both the completion marker and its complete core file set; the marker alone is insufficient. A retained older complete cache may be used as fallback. The local service worker has a distinct cache version, while Cloudflare derives a content-based version. Do not clear browser site data to troubleshoot audit files; keep protected JSON exports and verify offline launch, updates and recovery before deployment.

@@ -21,6 +21,7 @@
 | Empaquetado y cabeceras | `deploy/build-pages-demo.py`, `deploy/worker.js`, `deploy/Caddyfile` | `tests/test_build_bundle.py`, `tests/test_cloudflare_worker.cjs` |
 | Interfaz y temas | `index.html`, `css/styles.css`, `css/workspace-ux.css` | `tests/test_accessibility.cjs`, navegador |
 | Recolección externa autorizada | `discovery/`, `collect-local.*` | guías de seguridad y pruebas específicas |
+| Discovery HTTPS LAN | `discovery/service.py`, `js/discovery-bridge.js` | `tests/test_discovery_service.py`, `discovery/README_ES.md` |
 
 ## Invariantes de seguridad y datos
 
@@ -30,7 +31,8 @@
 4. Actualizaciones opt-in: instalar una versión completa de manera atómica y reiniciar solo tras guardado y confirmación. Nunca mezclar JS/CSS de releases distintos en una misma sesión.
 5. Preservar la versión anterior utilizable para recuperación; límites y cuotas del navegador pueden borrar cachés, por lo que la reserva nunca sustituye exportaciones JSON.
 6. Mantener cabeceras y CSP restrictivas, recursos locales, validación de origen, y rutas de Discovery exclusivamente por el helper local.
-7. Accesibilidad: controles con nombre, teclado y foco visibles, estados expresados también en texto, contraste en todos los temas, sin anuncios persistentes de mantenimiento en la UI principal.
+7. El servicio Discovery de LAN exige TLS confiable, origen exacto, token efímero, CIDR acotado, confirmación explícita y firewall; nunca exponerlo a Internet ni persistir tokens.
+8. Accesibilidad: controles con nombre, teclado y foco visibles, estados expresados también en texto, contraste en todos los temas, sin anuncios persistentes de mantenimiento en la UI principal.
 8. Evitar modificar esquemas de datos o políticas de migración de forma incidental. Las herramientas de recopilación no deben ejecutar acciones de infraestructura sin autorización.
 
 ## Procedimiento de cambios

@@ -63,6 +63,7 @@ const CORE = [
   "./js/external-network-analysis.js",
   "./js/pwa-updates.js",
   "./js/pwa-install.js",
+  "./js/discovery-bridge.js",
   "./js/offline-health.js",
   "./js/camera-capture.js",
   "./css/glossary.css",

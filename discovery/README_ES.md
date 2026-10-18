@@ -49,3 +49,14 @@ En el expediente abre **Hardware → Captura asistida**, importa el JSON y confi
 ### Próximas iteraciones
 
 API local autenticada para enviar progreso a la PWA, consulta de SNMPv3 y, solo con autorización/credenciales, SSH o WinRM de solo lectura, conciliación avanzada de identidades y capturas por múltiples segmentos. No se incluyen todavía.
+
+
+## Servicio Discovery desde tablet por HTTPS
+
+Para una tablet con RabbitMole instalada, inicia en un ordenador auditor conectado a la red autorizada un servicio HTTPS efímero:
+
+```bash
+python3 discovery/service.py --bind 192.168.10.20 --host 192.168.10.20 --port 8766 --cert /ruta/cert.pem --key /ruta/key.pem --origin https://origen-exacto-de-tu-pwa
+```
+
+El certificado debe ser confiable en la tablet y contener un SAN válido para la IP indicada. Abre la PWA instalada, entra en **Redes → Captura asistida → Discovery local**, introduce URL HTTPS y token temporal mostrado por el servicio, pulsa Conectar, especifica el CIDR privado autorizado (máximo 256 direcciones), escribe `AUTORIZO` y confirma. La captura se ofrece para Hardware o Redes y se incorpora mediante la **revisión previa existente**, sin sobreescribir datos ni asignar automáticamente hallazgos. El token se mantiene únicamente en memoria. El servicio no inicia escaneos por sí solo, solo realiza identificación de hosts sin puertos o credenciales, y no demuestra VLAN ni aislamiento real. Restringe el puerto en firewall, no lo expongas a Internet y detén el proceso después de la auditoría. Algunas plataformas aplican restricciones adicionales al acceso a la red local desde un origen HTTPS externo.

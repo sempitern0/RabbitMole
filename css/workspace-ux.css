@@ -840,3 +840,16 @@
   }
 }
 @media print { .sidebar .sidebar-appearance { display: none !important; } }
+
+/* Optional Discovery LAN bridge: progressive UI, never replaces the inventory importer. */
+#bridge-panel { display:grid;gap:.7rem;margin-block-start:1rem;padding:1rem;
+  border:1px solid var(--line);border-inline-start:3px solid var(--brand);
+  border-radius:.8rem;background:var(--canvas);color:var(--ink);min-width:0 }
+#bridge-panel h3 {margin:0;color:var(--ink);font-size:1rem}
+#bridge-panel p {margin:0;line-height:1.55;overflow-wrap:anywhere}
+#bridge-panel .fields {grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+#bridge-panel .field input {width:100%;min-height:44px;font-size:1rem;background:var(--paper);color:var(--ink)}
+#bridge-panel button {min-height:44px;justify-self:start}
+#bridge-results[hidden] {display:none!important}
+@media(max-width:650px){#bridge-panel {padding:.75rem}#bridge-panel button{width:100%}}
+@media(forced-colors:active){#bridge-panel{border-color:CanvasText}}

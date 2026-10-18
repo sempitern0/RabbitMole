@@ -41,6 +41,23 @@ class DiscoveryTests(unittest.TestCase):
             self.assertEqual(m.main(['scan','--cidr','192.168.10.0/24','--output','x.json']),2)
             scan.assert_not_called()
 
+    def test_doctor_has_human_output_and_json_opt_in(self):
+        import io
+        from contextlib import redirect_stdout
+        with patch.object(m, 'doctor', return_value={
+            'platform':'Linux','python':'3.12.0','python_ok':True,
+            'tools':{'nmap':None,'ping':'/bin/ping'},
+            'preferred_backend':'native','install_guidance':'Instala Nmap opcional'}):
+            output=io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(m.main(['doctor']),0)
+            self.assertIn('Motor recomendado: native',output.getvalue())
+            self.assertNotIn('"platform"',output.getvalue())
+            output=io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(m.main(['doctor','--json']),0)
+            self.assertEqual(json.loads(output.getvalue())['preferred_backend'],'native')
+
     def test_nmap_no_port_scan(self):
         with patch.object(m.subprocess,'run') as run:
             run.return_value.returncode=0

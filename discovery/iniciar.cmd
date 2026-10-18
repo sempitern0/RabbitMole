@@ -14,4 +14,5 @@ if %errorlevel%==0 (
   )
 )
 echo.
+echo Para utilizar Discovery desde una tablet, consulta discovery/README_ES.md
 pause

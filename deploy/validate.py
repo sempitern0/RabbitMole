@@ -9,6 +9,8 @@ COMMANDS = [
     [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_readme.py', '-v'],
     [sys.executable, 'tests/test_static.py'],
     [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_serve.py', '-v'],
+    [sys.executable, '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_discovery_service.py', '-v'],
+    ['node', 'tests/test_discovery_bridge.cjs'],
     ['node', 'tests/test_pdf_appendices.cjs'],
     ['node', 'tests/test_external_network.cjs'],
     ['node', 'tests/test_router_catalog.cjs'],

@@ -55,3 +55,14 @@ In the installed PWA (or the locally hosted edition), open an audit. Use **Hardw
 ## Not implemented
 
 Authenticated local streaming to the PWA, SNMPv3, SSH/WinRM discovery, multi-segment reconciliation and other privileged extensions are future possibilities, **not** features of the current release.
+
+
+## HTTPS LAN bridge for an installed tablet PWA
+
+Start the ephemeral bridge on an auditor workstation with a tablet-trusted TLS certificate containing a SAN valid for the LAN IP:
+
+```bash
+python3 discovery/service.py --bind 192.168.10.20 --host 192.168.10.20 --cert /path/cert.pem --key /path/key.pem --origin https://exact-pwa-origin
+```
+
+In the installed PWA open Networks → Assisted capture → Local Discovery, enter the HTTPS URL and console token, then specify an authorized private CIDR (up to 256 IPs), type `AUTORIZO` and confirm. Review Hardware or Networks via the existing import preview; no findings, VLAN assignments or isolation claims are inferred. Token remains in memory. Limit firewall access, never expose the service to the Internet, and stop it after use.

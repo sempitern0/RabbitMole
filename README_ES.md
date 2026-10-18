@@ -292,3 +292,45 @@ La concesión de `navigator.storage.persist()` depende del navegador y **no pued
 ### Paleta de marca por defecto
 
 En nuevas instalaciones, RabbitMole utiliza la paleta **RabbitMole · Marca**: azul noche, acero azulado, gris pizarra y marfil cálido para mantener una lectura profesional y diferenciada de «Océano». El selector del menú lateral permite continuar usando todas las paletas anteriores. **La preferencia ya almacenada** en `rabbitmole:palette:v1` no se modifica por una actualización; el nuevo valor solo se utiliza cuando no existe una elección guardada o cuando el valor guardado no está disponible. La portada PDF sigue la paleta seleccionada, manteniendo el cuerpo en papel claro para su lectura e impresión. La paleta se inspira en los tonos de identidad definidos en los estilos actuales y no implica una extracción automática de píxeles del PNG del icono.
+
+
+## Arquitectura actual y optimización del repositorio
+
+RabbitMole utiliza una arquitectura **JavaScript estático, sin dependencias remotas en tiempo de ejecución**, preparada para uso offline. `js/app.js` conserva el estado de la sesión, navegación, eventos y composición de informes; `js/app-definitions.js`, `js/app-model.js` y `js/app-team.js` son fábricas con responsabilidades de campos, JSON v3 e identidades. Las implementaciones de inventario, mitigación, impresión, almacenamiento y conectividad ya se distribuyen entre módulos especializados.
+
+El diccionario de **182 conceptos** mantiene su interfaz pública `AuditGlossary`, ahora con datos separados y compactos:
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `js/glossary-terms.js` | Conceptos, sinónimos, ejemplos, evidencias y referencias; registros compactos |
+| `js/glossary-guides.js` | Diagnósticos, comandos y criterios de interpretación por sistema |
+| `js/glossary.js` | Reconstrucción de objetos públicos, búsqueda, ayuda contextual, protocolos y guías macOS |
+| `css/glossary.css` | Presentación adaptable, guía paso a paso y comandos con contraste |
+| `js/app.js` | Navegación y renderizado de la vista, sin duplicar el catálogo |
+
+Esta distribución conserva las búsquedas y los identificadores de los términos, y reduce en unos **57 KB (~26 %) el código fuente total del glosario**; no equivale a reducir todo el repositorio en ese porcentaje. Se mantienen scripts separados en el service worker, los instaladores y el despliegue web para su arranque offline.
+
+### Uso del diccionario y sus guías
+
+Desde la PWA, entra en **Diccionario técnico**, busca términos o sinónimos y filtra por temática. Selecciona un concepto para consultar definición, verificaciones, evidencia, cautelas, protocolos de auditoría y, cuando existen, alternativas de consola por plataforma. **Copiar** no ejecuta el comando; revisa siempre el alcance, el equipo y el permiso antes de utilizarlo. Los comandos pueden consultar la red y sus resultados requieren interpretación y corroboración. El acceso contextual desde campos del expediente permite volver al asistente.
+
+### Discovery desde un PC o Android
+
+En una estación de auditoría, ejecuta `python discovery/discover.py doctor` para una comprobación legible (usa `doctor --json` para integraciones) y `python discovery/discover.py wizard` para el asistente con confirmación de CIDR. Una tablet Android puede ejecutar Python y herramientas compatibles mediante **Termux** y después importar el JSON generado; en la PWA instalada también existe un bridge HTTPS opcional ejecutado desde un equipo de la LAN. Consulta [la guía Discovery](discovery/README_ES.md): certificado confiable, token temporal, autorización y limitaciones de Nmap/ping en Android. Discovery no identifica automáticamente políticas de segmentación efectivas.
+
+### Mantenimiento, instalación y validación
+
+Para instalar, consulta [INSTALLATION_ES.md](INSTALLATION_ES.md). Al introducir archivos JavaScript o CSS nuevos, los recursos deben figurar en el HTML, el precache del service worker y ambos instaladores. La PWA instalada ofrece comprobación de recursos offline, actualizaciones confirmadas y recuperación desde el shell anterior disponible. La persistencia de almacenamiento se **solicita**, pero depende del navegador; exporta copias JSON periódicamente.
+
+Validación local recomendada:
+
+```bash
+node tests/test_glossary_data.cjs
+node tests/test_glossary.cjs
+node tests/test_glossary_guide.cjs
+npm run check
+npm run test:browser
+npm run deploy:check
+```
+
+Se requiere Node y, para pruebas de navegador, Chromium/Playwright instalado. Una prueba no ejecutada no confirma compatibilidad de dispositivo. Antes de desplegar verifica las comprobaciones de CI, CSP, perfiles público/instalado, instalación y arranque offline.

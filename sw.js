@@ -56,6 +56,8 @@ const CORE = [
   "./js/router-catalog.js",
   "./js/software-catalog.js",
   "./js/os-catalog.js",
+  "./js/glossary-terms.js",
+  "./js/glossary-guides.js",
   "./js/glossary.js",
   "./js/inventory-import.js",
   "./js/input-guidance.js",

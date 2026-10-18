@@ -5,7 +5,8 @@ const vm=require('node:vm');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const ctx={};ctx.globalThis=ctx;
-vm.runInNewContext(fs.readFileSync(path.join(root,'js/glossary.js'),'utf8'),ctx);
+for (const module of ['glossary-terms.js','glossary-guides.js','glossary.js'])
+ vm.runInNewContext(fs.readFileSync(path.join(root,'js',module),'utf8'),ctx);
 const g=ctx.AuditGlossary;
 const app=fs.readFileSync(path.join(root,'js/app.js'),'utf8'),css=fs.readFileSync(path.join(root,'css/glossary.css'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 assert(g.CONTEXT_HELP.fields.networks.cidr==='term-3','CIDR context missing');

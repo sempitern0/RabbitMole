@@ -281,3 +281,31 @@ The `navigator.storage.persist()` request is controlled by the browser and canno
 ### Default signature palette
 
 New profiles use **RabbitMole · Brand** (midnight blue, blue-steel, slate and warm ivory taken from the app icon) instead of Ocean. All prior palettes remain available, and existing `rabbitmole:palette:v1` preferences are preserved. Selected themes still apply to report covers without compromising white-page archival readability. The palette is based on the application's existing brand tokens rather than an automated pixel extraction from the PNG asset.
+
+
+## Current architecture and repository-size optimization
+
+RabbitMole is a **static, offline-first JavaScript PWA** with no runtime CDN dependencies. `js/app.js` owns navigation, mutable session state, events and report orchestration; `js/app-definitions.js`, `js/app-model.js` and `js/app-team.js` expose focused field, schema v3 and team factories. Other modules own inventory, mitigation, print, storage and connectivity.
+
+The glossary retains its original **182 concepts** and stable `AuditGlossary` API, with compact data separated into `js/glossary-terms.js` (terms, synonyms, examples, references) and `js/glossary-guides.js` (troubleshooting and per-platform commands). `js/glossary.js` reconstructs those objects, handles search/contextual help and augments macOS commands. `js/app.js` only renders and navigates. The glossary source files together are approximately **57 KB (~26%) smaller**, not the entire repository. All three must be present and loaded in order before `app.js`, including offline installation.
+
+### Using the glossary, Discovery and offline PWA
+
+Open **Technical glossary** in the PWA, search or filter by category, then review definitions, audit evidence, diagnostic protocols and available platform commands. Copying a command **does not execute it**; confirm written authorization, target and safe interpretation first. Contextual guidance returns you to the originating audit field.
+
+For Discovery, `python discovery/discover.py doctor` displays human-readable dependencies (`doctor --json` for automation); `python discovery/discover.py wizard` requests an explicitly authorized private CIDR. Android can use Termux where platform permissions permit, exporting JSON for assisted review. Optionally pair the installed tablet PWA with the authorized, temporary LAN HTTPS bridge; see [discovery/README.md](discovery/README.md). Neither host discovery nor VLAN identification proves network isolation.
+
+Use [INSTALLATION.md](INSTALLATION.md) for setup. New runtime files must be in the HTML, service worker precache and both shell/PowerShell installers. The offline cache fallback is conditional on the browser retaining a complete prior shell. Persistent storage permission is browser-controlled, so keep protected JSON exports.
+
+### Maintenance and validation
+
+```bash
+node tests/test_glossary_data.cjs
+node tests/test_glossary.cjs
+node tests/test_glossary_guide.cjs
+npm run check
+npm run test:browser
+npm run deploy:check
+```
+
+Chromium/Playwright must be installed for browser tests. Confirm CI, CSP, public/installed profiles, installation and offline launch before deployment.

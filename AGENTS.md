@@ -1,69 +1,45 @@
-# RabbitMole — contrato para agentes
+# RabbitMole · AGENTS.md
 
-> RabbitMole es una PWA offline-first de auditoría de infraestructura y ciberseguridad. No es un escáner de vulnerabilidades ni una herramienta de ejecución remota. La evidencia y los expedientes pertenecen al auditor y se almacenan localmente.
+## Objetivo y límites
+PWA **offline-first** para expedientes de auditoría de infraestructura y ciberseguridad. El expediente JSON v3 y las evidencias pertenecen al auditor. No es un escáner de vulnerabilidades, ni ejecuta los comandos de sus guías. Nunca introducir telemetría, CDNs, ejecución remota implícita ni almacenamiento de expedientes o tokens en CacheStorage.
 
-## Inicio obligatorio: CRISP
-
-**Contexto:** comprobar rama, SHA, cambios existentes y alcance autorizado antes de editar o publicar.
-**Rol:** actuar como ingeniero senior web/PWA, seguridad, accesibilidad y sistemas; priorizar integridad de datos.
-**Inspección:** localizar responsable, consumidores y pruebas antes de crear abstracciones.
-**Estándares:** preservar CSP estricta, perfil web limitado frente a PWA instalada, ausencia de dependencias externas en tiempo de ejecución y progresividad offline.
-**Prueba:** verificar comportamiento y fallos, no solo coincidencias de texto o sintaxis.
-
-## Mapa mínimo de responsabilidad
-
-| Función | Propietario | Dónde mirar |
+## Lectura eficiente (abrir solo lo relacionado)
+| Cambio | Código propietario | Pruebas y documentación |
 | --- | --- | --- |
-| Modelo y expediente JSON v3 | `js/app.js`, `js/audit-storage.js` | `tests/test_json_contract.cjs`, pruebas de guardado |
-| App shell offline, recuperación y actualizaciones | `sw.js`, `js/pwa-updates.js` | `tests/test_pwa_protocol.cjs`, `tests/test_pwa_browser.cjs` |
-| Instalación, persistencia y salud offline | `js/pwa-install.js`, `js/offline-health.js` | `tests/test_mobile_pwa.cjs` |
-| Perfil de despliegue | `js/deployment-profile.js`, `deploy/public-profile.js` | `tests/test_pages_demo.cjs` |
-| Empaquetado y cabeceras | `deploy/build-pages-demo.py`, `deploy/worker.js`, `deploy/Caddyfile` | `tests/test_build_bundle.py`, `tests/test_cloudflare_worker.cjs` |
-| Interfaz y temas | `index.html`, `css/styles.css`, `css/workspace-ux.css` | `tests/test_accessibility.cjs`, navegador |
-| Recolección externa autorizada | `discovery/`, `collect-local.*` | guías de seguridad y pruebas específicas |
-| Discovery HTTPS LAN | `discovery/service.py`, `js/discovery-bridge.js` | `tests/test_discovery_service.py`, `discovery/README_ES.md` |
+| Estado, navegación, eventos, informes | `js/app.js` | `tests/test_navigation.cjs`, `tests/test_report_data.cjs` |
+| Definiciones, esquema y equipo | `js/app-definitions.js`, `js/app-model.js`, `js/app-team.js` | `tests/test_app_modules.cjs`, `tests/test_json_contract.cjs` |
+| Glosario: términos y guías | `js/glossary-terms.js`, `js/glossary-guides.js`, `js/glossary.js` | `tests/test_glossary.cjs`, `tests/test_glossary_guide.cjs`, `tests/test_glossary_data.cjs` |
+| UI, paleta, accesibilidad y PDF | `index.html`, `css/styles.css`, `css/glossary.css`, `css/print.css` | `tests/test_pwa_browser.cjs`, `tests/test_contrast.cjs` |
+| Shell offline y actualizaciones | `sw.js`, `js/pwa-updates.js`, `js/offline-health.js` | `tests/test_pwa_protocol.cjs`, `tests/test_mobile_pwa.cjs` |
+| Importación y almacenamiento local | `js/inventory-import.js`, `js/audit-storage.js` | `tests/test_json_contract.cjs`, pruebas de importación |
+| Discovery local y desde tablet | `discovery/`, `js/discovery-bridge.js`, `serve.py` | `tests/test_discovery_service.py`, `tests/test_discovery_bridge.cjs`, `discovery/README_ES.md` |
+| Instalación, Cloudflare y empaquetado | `rabbitmole.sh`, `rabbitmole.ps1`, `deploy/` | `deploy/validate.py`, `tests/test_build_bundle.py` |
 
-## Invariantes de seguridad y datos
+## Invariantes
+1. Preservar JSON v3, claves IndexedDB/localStorage, flujo guardado/importación y preferencias de paleta. No migrar datos implícitamente.
+2. Mantener el perfil web público limitado, la PWA instalada completa y los modos local/Cloudflare; una instalación no implica autorización de acceso ni persistencia garantizada.
+3. El service worker precarga un shell completo, mantiene fallback utilizable cuando existe y nunca mezcla recursos entre versiones ni borra expedientes. Nuevos recursos JS/CSS requieren alta en **cuatro** lugares: `index.html`, `sw.js`, `rabbitmole.sh`, `rabbitmole.ps1`.
+4. Sin scripts inline, trackers, librerías remotas, CSP debilitada, ejecución de comandos desde la PWA ni salidas de secretos en consola.
+5. `navigator.storage.persist()` se pide directamente desde interacción del usuario; navegador puede denegarla. Recomendar exportación JSON protegida.
+6. Discovery solo con autorización expresa, límites de CIDR privado y HTTPS/origen exacto/token temporal cuando se usa el bridge LAN; no asumir VLAN, aislamiento ni vulnerabilidades.
+7. Las guías son **referencias de solo lectura**, deben distinguir prueba observada de hipótesis y facilitar evidencia, interpretación y alcance autorizado.
+8. Accesibilidad: semántica, teclado, foco, tamaño táctil, contraste de todas las paletas y modo impresión. Valor de paleta predeterminado interno `rabbitmole` (selector «Predeterminado»), basado en azul noche, acero y marfil del icono; no sobrescribir preferencias existentes.
 
-1. No introducir endpoints, telemetría, trackers, CDN ni enviar expedientes/evidencias a servicios externos. Las transferencias explícitas requieren aprobación del usuario.
-2. La instalación PWA no equivale a permiso o autenticación. Conservar separación entre web pública limitada y aplicación instalada completa incluso sin conexión.
-3. No guardar JSON de auditorías, secretos, tokens o datos de clientes en CacheStorage: almacenar únicamente archivos estáticos de aplicación. No borrar IndexedDB ni localStorage al actualizar.
-4. Actualizaciones opt-in: instalar una versión completa de manera atómica y reiniciar solo tras guardado y confirmación. Nunca mezclar JS/CSS de releases distintos en una misma sesión.
-5. Preservar la versión anterior utilizable para recuperación; límites y cuotas del navegador pueden borrar cachés, por lo que la reserva nunca sustituye exportaciones JSON.
-6. Mantener cabeceras y CSP restrictivas, recursos locales, validación de origen, y rutas de Discovery exclusivamente por el helper local.
-7. El servicio Discovery de LAN exige TLS confiable, origen exacto, token efímero, CIDR acotado, confirmación explícita y firewall; nunca exponerlo a Internet ni persistir tokens.
-8. Accesibilidad: controles con nombre, teclado y foco visibles, estados expresados también en texto, contraste en todos los temas, sin anuncios persistentes de mantenimiento en la UI principal.
-8. Evitar modificar esquemas de datos o políticas de migración de forma incidental. Las herramientas de recopilación no deben ejecutar acciones de infraestructura sin autorización.
+## Datos del diccionario: contrato
+- `js/glossary-terms.js`: registros posicionales compactos (una entrada por línea), cuyos campos están documentados en su cabecera; referencias `[etiqueta,URL]`.
+- `js/glossary-guides.js`: `[termId,symptom,verify,interpret,[[platform,command,lookFor],...]]`.
+- `js/glossary.js`: único adaptador que reconstruye la API estable `AuditGlossary`: `TERMS`, `GUIDES`, `PROTOCOLS`, `search`, `byId`, `CONTEXT_HELP`. **No duplicar los datos**, modificar el archivo dueño y conservar IDs.
+- Mantener el orden de carga términos → guías → adaptador → `app.js`. Las guías macOS anexadas por el adaptador siguen siendo parte del contrato público. Ejecutar `node tests/test_glossary_data.cjs` tras editar datos.
+- No minificar a mano código de interfaz ni mover lógica con estado a tablas. No eliminar ficheros de fuentes, iconos o informes por tamaño sin medir uso real y validar instalación/impresión.
 
 ## Procedimiento de cambios
+1. Leer HEAD, PR/ramas, este contrato y el mínimo conjunto de archivos afectados. Verificar quién invoca cada función y qué pruebas protegen su contrato.
+2. Preferir extracciones pequeñas con interfaces explícitas y sin efectos secundarios. Antes de compactar, medir tamaño y verificar igualdad de resultados con casos positivos y negativos.
+3. Ejecutar `npm run check`, `npm run test:browser` y `npm run deploy:check` según disponibilidad; informar exactamente de lo no ejecutado. Para glosario: prueba de datos + búsqueda + empaquetado/offline.
+4. Revisar rutas en instaladores, manifiesto, CSP, precache y distribución Cloudflare después de introducir archivos. Actualizar guías ES/EN.
+5. PR sobre rama, sin fusión ni despliegue automático sin aprobación explícita.
 
-1. Revisar `git status --short`, HEAD, `AGENTS.md` y el contrato existente en el subsistema afectado; identificar una única fuente de verdad.
-2. Leer código, consumidores, tests y los documentos ES/EN relevantes. No depender de snippets parciales o supuestos de ramas antiguas.
-3. Preferir parches pequeños compatibles con ambas distribuciones (local/Cloudflare) y ambos perfiles (web/instalada). Sin frameworks o service workers alternativos.
-4. Cambios PWA: actualizar `sw.js`/lista CORE, empaquetado, instaladores Bash y PowerShell cuando haya nuevos recursos; revisar versionado y fallback.
-5. Añadir pruebas positivas y negativas (offline de inicio, actualización incompleta, caché anterior, red intermitente, datos existentes, perfiles, lectores de pantalla).
-6. Ejecutar `npm run check`, `npm run test:browser` (Playwright Chromium instalado) y `npm run deploy:check` para cambios de release. Informar por separado de pruebas no ejecutadas.
-7. Publicar por PR sobre una rama nueva, no sobre `main`, salvo autorización expresa; nunca dar por aprobado ni fusionar cambios automáticamente.
+## Guías de acceso rápido
+`README_ES.md`/`README.md`: uso y arquitectura; `INSTALLATION_ES.md`: instalación; `discovery/README_ES.md`: escaneos autorizados y modo Android; `SECURITY_ES.md`: restricciones; `docs/FEATURE_REFERENCE_ES.md`: catálogo funcional; `deploy/validate.py`: puerta de validación.
 
-## Guía de lectura rápida
-
-- `README_ES.md`, `README.md`: producto y límites.
-- `INSTALLATION_ES.md`, `deploy/CLOUDFLARE_PAGES_ES.md`: canales y despliegue.
-- `SECURITY_ES.md`, `LEGAL_ES.md`: protección y responsabilidades.
-- `deploy/validate.py`: puerta de pruebas, no duplicar suites.
-- `.github/workflows/ci.yml`: validación de CI; no implica publicación automática.
-
-**Entrega obligatoria:** propiedad elegida → archivos cambiados → pruebas realmente ejecutadas → riesgos y limitaciones → PR y siguiente acción. No afirmar compatibilidad móvil, accesibilidad, recuperación o despliegue sin pruebas pertinentes.
-
-## Refactorización incremental de app.js
-
-Las definiciones de campos y grupos son propiedad de `js/app-definitions.js`, el modelo de expediente JSON v3 de `js/app-model.js` y las identidades y normalización del equipo de `js/app-team.js`. Son fábricas explícitas para conservar el ciclo de vida original del controlador. `js/app.js` continúa gestionando estado mutable, enrutado, guardado, renderizado y listeners. No introducir inicialización con efectos laterales en estas fábricas ni importar dependencias externas, y no cambiar los identificadores de esquemas o las claves de almacenamiento. Al mover funciones actualizar los consumidores, los tests de contrato y el precache de la PWA.
-
-
-**Persistencia de almacenamiento:** `navigator.storage.persist()` debe llamarse directamente desde la interacción del usuario, sin `await persisted()` previo. Diferenciar resultado concedido, denegado, desconocido y no compatible; no atribuir las denegaciones a fallos de CacheStorage ni prometer permisos que controla el navegador. Mantener las copias JSON como recomendación explícita y probar en distintos navegadores.
-
-**Identidad visual:** `rabbitmole` es la paleta predeterminada en nuevas instalaciones; todas las demás siguen disponibles. Mantener sincronizados el selector, `DEFAULT_PALETTE` en `js/app.js`, los tokens de `css/styles.css`, la portada PDF, los colores de instalación en `manifest.webmanifest` y los tests de contraste. Preservar `rabbitmole:palette:v1`; nunca sobrescribir una preferencia explícita al actualizar ni intentar recolorear el logo PNG en tiempo de ejecución.
-
-La composición cromática del icono define la paleta de marca: azul noche `#081425`, acero `#587680` (oscurecido ligeramente para contraste de botones), gris pizarra y marfil cálido. Mantener consistencia entre `--brand`, fondo, reportes/PDF, `meta theme-color` y manifiesto. La selección guardada del usuario permanece intacta.
-
-**Diccionario:** `js/glossary.js` contiene datos, referencias y protocolos autorizados; `js/app.js` representa la interfaz; `css/glossary.css` organiza navegación, tarjetas, encabezados y consola. Mantener iconos SVG con texto accesible, categorías sin scroll horizontal oculto, comandos legibles y procedimientos explícitos que nunca se ejecuten desde la PWA. Toda prueba de red requiere alcance y autorización.
+**Al entregar:** propietarios, cambios, reducción medida, pruebas realmente efectuadas, limitaciones, commit y PR.

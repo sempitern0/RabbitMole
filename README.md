@@ -336,3 +336,7 @@ After successful preflight, upload an **encrypted backup** (recommended), select
 ### Theme-aware navigation icons
 
 The main navigation SVGs and dynamically rendered audit-step glyphs now derive their normal, hover and selected colors from each palette, including the midnight/ivory default. Wizard progress indicators use the palette's main accent, while warning, error and success states retain their semantic colors. This requires no JavaScript theme listeners or additional runtime dependencies.
+
+### On-site audits from a phone
+
+For mobile-only audits of a server and its local network, see the [Spanish field guide](docs/AUDITORIA_MOVIL_ES.md): installation, cold offline launch, sample record/photo/JSON export, server/network checklist, school privacy and optional Android Termux discovery. An offline checklist is also embedded in the PWA installation panel; it needs no JavaScript or online service. A PR does not deploy automatically to Cloudflare.

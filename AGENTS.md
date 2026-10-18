@@ -63,3 +63,7 @@ El service worker local usa `rabbitmole-shell-v88-palette-icons` y debe cambiar 
 ## Iconografía sensible a paleta
 - `css/styles.css` define `--sidebar-active` por paleta; `css/workspace-ux.css` deriva `--sidebar-icon-muted` y `--sidebar-icon-active` para iconos SVG de `#global-navigation` y símbolos dinámicos `.nav-mark` del asistente. **No introducir verdes/turquesas hexadecimales en reglas de iconos**: deben cambiar con `data-palette` sin JavaScript extra.
 - Mantener el contraste de iconos activos sobre `--navy` y no recolorear iconos semánticos de error, éxito o alertas. Revisar navegación expandida y contraída, escritorio/tablet y forced-colors. Ejecutar `node tests/test_palette_icons.cjs` y el recorrido Playwright de todas las paletas.
+
+## Auditoría de campo desde móvil
+- Guía de operación: `docs/AUDITORIA_MOVIL_ES.md`. La tarjeta `#pwa-install-card` de `index.html` contiene la lista accesible `#mobile-field-check` para la instalación real, guardado, fotografía, JSON y arranque offline. Las casillas no se guardan ni prueban autorización; no introducir terceros ni tráfico de red por usarlas.
+- Estilos de lista móvil en `css/workspace-ux.css`, precargados por `sw.js`; subir versión de caché local si cambia el HTML/CSS. No desplegar versiones de rama ni llevar datos de centros escolares a una demo pública por defecto. Probar `tests/test_mobile_pwa.cjs`, empaquetado y cierre/reapertura en móvil real antes de visita.

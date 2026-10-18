@@ -949,3 +949,71 @@
 @media (prefers-reduced-motion: reduce) {
   .sidebar :is(button,select),.topbar .button { scroll-behavior:auto; transition:none; }
 }
+
+
+/* Audit field readiness: self-contained checklist, no additional runtime JS. */
+#pwa-install-card .mobile-field-check {
+  margin-block-start:.8rem;
+  padding:.35rem .85rem .65rem;
+  border:1px solid var(--line);
+  border-radius:.75rem;
+  background:var(--paper);
+  color:var(--ink);
+  min-width:0;
+}
+#pwa-install-card .mobile-field-check>summary {
+  cursor:pointer;
+  padding:.6rem 0;
+  min-height:44px;
+  line-height:1.45;
+  font-size:.92rem;
+  font-weight:750;
+}
+#pwa-install-card .mobile-field-check>summary:focus-visible {
+  outline:3px solid var(--brand);
+  outline-offset:2px;
+  border-radius:.25rem;
+}
+#pwa-install-card .mobile-field-items {
+  padding:0;
+  margin:.65rem 0;
+  display:grid;
+  gap:.5rem;
+  list-style:none;
+}
+#pwa-install-card .mobile-field-items label {
+  display:flex;
+  align-items:flex-start;
+  gap:.7rem;
+  padding:.65rem .75rem;
+  border:1px solid var(--line);
+  border-radius:.65rem;
+  background:var(--canvas);
+  color:var(--ink);
+  line-height:1.55;
+  cursor:pointer;
+  overflow-wrap:anywhere;
+}
+#pwa-install-card .mobile-field-items input[type="checkbox"] {
+  accent-color:var(--brand);
+  width:1.3rem;
+  height:1.3rem;
+  min-width:1.3rem;
+  flex:none;
+  margin:.18rem 0 0;
+}
+#pwa-install-card .mobile-field-items input:focus-visible {
+  outline:3px solid var(--brand);
+  outline-offset:2px;
+}
+#pwa-install-card .mobile-field-help {
+  color:var(--muted);
+  font-size:.87rem;
+  line-height:1.65;
+  margin:.6rem 0;
+}
+@media screen and (max-width:720px) {
+  #pwa-install-card .mobile-field-check {padding:.3rem .6rem .55rem}
+  #pwa-install-card .mobile-field-items label {padding:.65rem}
+}
+@media print {#pwa-install-card .mobile-field-check{display:none!important}}

@@ -368,3 +368,7 @@ El correo abre el cliente con un borrador: los adjuntos se añaden **manualmente
 ### Iconos coherentes con la paleta
 
 Los iconos del menú principal y los símbolos de navegación de las fases de auditoría adoptan automáticamente el acento de cada paleta, también al pasar el ratón y en la sección activa. «Predeterminado» utiliza marfil sobre azul noche; otros temas mantienen su identidad (azul, grafito, verde bosque, violeta, etc.). Las barras de progreso del asistente usan el color principal del tema. Los colores semánticos de éxito, advertencia y error se conservan para evitar ambigüedades.
+
+### Auditoría presencial desde un móvil
+
+Antes de trabajar en un centro académico o empresa, consulta la [guía de campo para móvil](docs/AUDITORIA_MOVIL_ES.md): instalación Android/iPhone, prueba real de arranque offline, comprobación de guardado/fotografía/JSON, itinerario servidor + red, privacidad y Terminal Termux opcional. La tarjeta de instalación incorpora una lista previa plegable y utilizable sin conexión. La PR no publica automáticamente la versión en Cloudflare.

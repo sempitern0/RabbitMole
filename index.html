@@ -37,11 +37,13 @@
     <link rel="stylesheet" href="css/workspace-ux.css" media="screen" />
     <link rel="stylesheet" href="css/form-system.css" media="screen" />
     <link rel="stylesheet" href="css/android-touch.css" media="screen" />
+    <link rel="stylesheet" href="css/layout-collapse.css" media="screen" />
   </head>
   <body>
     <div class="app" id="app">
-      <aside class="sidebar" aria-label="Navegación del expediente">
-        <div class="brand">
+      <aside class="sidebar" id="sidebar" aria-label="Navegación del expediente">
+        <div class="sidebar-header">
+          <div class="brand">
           <div class="brand-mark">
             <img
               src="icons/app.png"
@@ -53,10 +55,23 @@
           <div>
             <strong>RabbitMole</strong><small>AUDIT / SECURITY</small>
           </div>
+          </div>
+          <button id="sidebar-toggle" class="sidebar-toggle" type="button"
+            aria-controls="sidebar-body" aria-expanded="true"
+            aria-label="Contraer menú lateral" title="Contraer menú lateral">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true" focusable="false">
+              <path d="M4 5h16v14H4zM9 5v14m5-11 4 4-4 4"/>
+            </svg>
+            <span class="sidebar-toggle-label" aria-hidden="true">Contraer menú</span>
+          </button>
         </div>
+        <div class="sidebar-body" id="sidebar-body">
+          <div class="sidebar-body-content">
         <div class="side-caption" id="workspace-label">MENÚ PRINCIPAL</div>
         <nav id="global-navigation" aria-label="Menú principal">
-          <button type="button" data-go="records">
+          <button type="button" data-go="records" aria-label="Biblioteca de auditorías" title="Biblioteca de auditorías">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +90,7 @@
               <path d="M8 8h8M8 12h8M8 16h5" /></svg
             ><span>Biblioteca de auditorías</span>
           </button>
-          <button type="button" data-go="backups">
+          <button type="button" data-go="backups" aria-label="Copias y exportaciones" title="Copias y exportaciones">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -93,7 +108,7 @@
               <path d="M4 7h16v13H4zM7 4h10v3M12 11v6m-3-3 3 3 3-3" /></svg
             ><span>Copias y exportaciones</span>
           </button>
-          <button type="button" data-go="settings">
+          <button type="button" data-go="settings" aria-label="Configuración" title="Configuración">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +129,7 @@
               /></svg
             ><span>Configuración</span>
           </button>
-          <button type="button" data-go="connections">
+          <button type="button" data-go="connections" aria-label="Conexiones online" title="Conexiones online">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -132,7 +147,7 @@
               <path d="M10 14 21 3M14 3h7v7M20 14v6H4V4h6" /></svg
             ><span>Conexiones online</span>
           </button>
-          <button type="button" data-go="glossary">
+          <button type="button" data-go="glossary" aria-label="Diccionario técnico" title="Diccionario técnico">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -334,6 +349,8 @@
           </section>
           </div>
         </details>
+          </div>
+        </div>
       </aside>
       <div class="content-wrap">
         <section id="pwa-install-card" class="pwa-install-card" aria-label="Información de instalación" hidden>
@@ -479,6 +496,7 @@
     <script src="js/audit-actions.js" defer></script>
     <script src="js/android-touch.js" defer></script>
     <script src="js/audit-record-navigation.js" defer></script>
+    <script src="js/ui-layout.js" defer></script>
     <script src="js/audit-field-renderer.js" defer></script>
     <script src="js/audit-rack.js" defer></script>
     <script src="js/audit-server-install.js" defer></script>

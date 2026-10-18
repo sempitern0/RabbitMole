@@ -36,6 +36,14 @@ const {chromium}=require('playwright');
    }
    assert.equal(await page.locator('.topbar #palette').count(),0);
    assert.equal(await page.locator('.sidebar .sidebar-appearance #palette').count(),1);
+   const sidebarToggle=page.locator('#sidebar-toggle');
+   await sidebarToggle.click();
+   assert.equal(await sidebarToggle.getAttribute('aria-expanded'),'false');
+   assert.equal(await page.locator('#app').getAttribute('data-sidebar-collapsed'),'true');
+   assert.equal(await page.locator('#global-navigation button[data-go="glossary"]').getAttribute('aria-label'),'Diccionario técnico');
+   await sidebarToggle.click();
+   assert.equal(await sidebarToggle.getAttribute('aria-expanded'),'true');
+
    // A new profile gets the signature theme, but previously saved choices remain untouched.
    assert.equal(await page.locator('#palette').inputValue(),'rabbitmole');
    assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'rabbitmole');
@@ -210,6 +218,11 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#discovery-check').count(),1);
    await page.locator('[data-go="networks"]').last().click();
    await page.setViewportSize({width:390,height:844});
+   await page.locator('#sidebar-toggle').click();
+   assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'true');
+   await page.locator('#sidebar-toggle').click();
+   assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'false');
+
    // Emulate touch input and a phone viewport for layout/keyboard-related regressions.
    const touchMetrics=await page.locator('#wizard-step-select').evaluate(el=>{
      const r=el.getBoundingClientRect(),s=getComputedStyle(el);

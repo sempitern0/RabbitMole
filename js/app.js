@@ -3218,6 +3218,7 @@
   workspace.addEventListener("click", async (e) => {
     const b = e.target.closest("button");
     if (!b) return;
+    if (b.id === "record-nav-toggle") { recordNavigation.toggleCollapse(); return; }
     if (
       PUBLIC_DEMO &&
       ([

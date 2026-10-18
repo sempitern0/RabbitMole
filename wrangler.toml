@@ -8,6 +8,10 @@ directory = "./dist-pages"
 binding = "ASSETS"
 run_worker_first = true
 not_found_handling = "404-page"
+# The PWA precaches BOTH / and /index.html. Cloudflare's default HTML
+# handling redirects /index.html to /, which can destabilize shell install.
+# Keep exact asset URLs; the Worker explicitly serves index.html at /.
+html_handling = "none"
 
 # A plain wrangler deploy cannot accidentally publish a missing/stale bundle.
 [build]

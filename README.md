@@ -340,3 +340,7 @@ The main navigation SVGs and dynamically rendered audit-step glyphs now derive t
 ### On-site audits from a phone
 
 For mobile-only audits of a server and its local network, see the [Spanish field guide](docs/AUDITORIA_MOVIL_ES.md): installation, cold offline launch, sample record/photo/JSON export, server/network checklist, school privacy and optional Android Termux discovery. An offline checklist is also embedded in the PWA installation panel; it needs no JavaScript or online service. A PR does not deploy automatically to Cloudflare.
+
+### Dedicated device setup screen
+
+Installation instructions and the field-readiness checklist are now reached via **Sidebar → Device & installation**, including its phone icon in the compact sidebar. The guide no longer occupies space above normal audits. The static panel retains the install prompt and offline checklist without new dependencies or changes to audit records.

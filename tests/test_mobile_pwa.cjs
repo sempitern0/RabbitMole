@@ -47,12 +47,16 @@ async function permissionCheck(granted){
  const css=fs.readFileSync('css/workspace-ux.css','utf8');
  const sw=fs.readFileSync('sw.js','utf8');
  assert(html.includes('id="mobile-field-check"'),'Installed PWA should expose field checklist');
+ assert(html.includes('data-go="device" aria-label="Dispositivo e instalación"'));
+ assert(html.indexOf('id="pwa-install-card"')>html.indexOf('class="topbar"'));
+ assert(!install.includes('card.hidden=false'));
+ assert(fs.readFileSync('js/app.js','utf8').includes('byId("pwa-install-card").hidden = !devicePage'));
  const section=html.slice(html.indexOf('id="mobile-field-check"'),html.indexOf('</details>',html.indexOf('id="mobile-field-check"')));
  assert.equal((section.match(/<input type="checkbox">/g)||[]).length,7);
  for(const text of ['modo avión','expediente ficticio','JSON','Autorización','Privacidad','Termux'])
   assert(section.includes(text),'Field checklist missing: '+text);
  assert(css.includes('#pwa-install-card .mobile-field-items input:focus-visible'),'Keyboard focus in field checklist');
- assert(sw.includes('rabbitmole-shell-v89-mobile-field'),'Mobile shell change must update cache version');
+ assert(sw.includes('rabbitmole-shell-v90-device-help'),'Mobile shell change must update cache version');
  assert(css.includes('#pwa-install-card.pwa-install-card:not([hidden])'));
  assert(css.includes('@media(forced-colors:active)'));
  assert(css.includes('min-height:44px'));

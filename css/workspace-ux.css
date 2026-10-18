@@ -1017,3 +1017,27 @@
   #pwa-install-card .mobile-field-items label {padding:.65rem}
 }
 @media print {#pwa-install-card .mobile-field-check{display:none!important}}
+
+/* Dedicated device screen, accessed from navigation even with compact sidebar. */
+#pwa-install-card.pwa-install-card:not([hidden]) {
+  display:block;
+  width:min(960px,calc(100% - 2rem));
+  margin:clamp(.8rem,2vw,1.4rem) auto 2rem;
+}
+#pwa-install-card.is-installed {padding:clamp(1rem,2vw,1.35rem)}
+#pwa-install-card.is-installed #pwa-install-heading,
+#pwa-install-card #pwa-install-heading {
+  margin:0 0 .55rem;
+  font-size:clamp(1.3rem,2.7vw,1.8rem);
+  line-height:1.3;
+}
+#pwa-install-card #pwa-install-status {margin:.3rem 0 .8rem}
+#pwa-install-card.is-installed details {margin-top:.6rem}
+#pwa-install-card .mobile-field-check {width:100%}
+#workspace[hidden] {display:none!important}
+@media(max-width:720px) {
+  #pwa-install-card.pwa-install-card:not([hidden]) {
+    width:calc(100% - 1.25rem);
+    margin:.6rem auto 1.25rem;
+  }
+}

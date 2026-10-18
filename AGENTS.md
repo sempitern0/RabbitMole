@@ -67,3 +67,7 @@ El service worker local usa `rabbitmole-shell-v88-palette-icons` y debe cambiar 
 ## Auditoría de campo desde móvil
 - Guía de operación: `docs/AUDITORIA_MOVIL_ES.md`. La tarjeta `#pwa-install-card` de `index.html` contiene la lista accesible `#mobile-field-check` para la instalación real, guardado, fotografía, JSON y arranque offline. Las casillas no se guardan ni prueban autorización; no introducir terceros ni tráfico de red por usarlas.
 - Estilos de lista móvil en `css/workspace-ux.css`, precargados por `sw.js`; subir versión de caché local si cambia el HTML/CSS. No desplegar versiones de rama ni llevar datos de centros escolares a una demo pública por defecto. Probar `tests/test_mobile_pwa.cjs`, empaquetado y cierre/reapertura en móvil real antes de visita.
+
+## Menú de dispositivo e instalación
+- `#pwa-install-card` es una vista separada (`device`) accesible desde el menú principal en modo completo o compacto. `js/app.js` controla `hidden`, visibilidad de `#workspace`, foco y navegación sin exigir expediente abierto; `js/pwa-install.js` únicamente actualiza el estado de instalación y gestiona el prompt, sin abrirla automáticamente.
+- Conservar controles, checklist offline y semántica. Probar abrir, salir, iconos del lateral contraído, móvil Android, teclado y estado de la PWA en `tests/test_mobile_pwa.cjs` y Playwright.

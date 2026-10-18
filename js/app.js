@@ -2378,6 +2378,7 @@
         "settings",
         "connections",
         "glossary",
+        "device",
       ].includes(page) || !currentId;
     byId("navigation").hidden = true;
     byId("audit-context").hidden = true;
@@ -2416,7 +2417,9 @@
         ? "Biblioteca de auditorías"
         : page === "backups"
           ? "Copias de seguridad"
-          : page === "settings"
+          : page === "device"
+            ? "Dispositivo e instalación"
+            : page === "settings"
             ? "Configuración de consultora"
             : page === "connections" || page === "online"
               ? "Conexiones online"
@@ -2432,14 +2435,18 @@
         (state.meta.project || state.meta.client || "Sin título");
     byId("btn-export").disabled = inLibrary;
     byId("btn-pdf").disabled = inLibrary;
-
+    const devicePage = page === "device";
+    byId("pwa-install-card").hidden = !devicePage;
+    byId("workspace").hidden = devicePage;
     byId("workspace").innerHTML =
       (inLibrary ? "" : renderWizardTop()) +
       (page === "dashboard"
         ? renderOverview()
         : page === "records"
           ? renderRecords()
-          : page === "backups"
+          : page === "device"
+            ? ""
+            : page === "backups"
             ? renderBackups()
             : page === "settings"
               ? renderSettings()
@@ -2512,6 +2519,7 @@
         "settings",
         "connections",
         "glossary",
+        "device",
       ].includes(section) &&
       !currentId
     ) {
@@ -2526,6 +2534,7 @@
         "settings",
         "connections",
         "glossary",
+        "device",
       ].includes(section) ||
       section === "intake" ||
       nav.some((n) => n[0] === section)
@@ -2534,7 +2543,7 @@
       render();
       scrollTo(0, 0);
       // SPA navigation must announce the new page to keyboard and screen-reader users.
-      const heading = workspace.querySelector("h1");
+      const heading = section === "device" ? byId("pwa-install-heading") : workspace.querySelector("h1");
       if (heading) {
         heading.tabIndex = -1;
         heading.focus({ preventScroll: true });

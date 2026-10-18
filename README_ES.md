@@ -372,3 +372,7 @@ Los iconos del menú principal y los símbolos de navegación de las fases de au
 ### Auditoría presencial desde un móvil
 
 Antes de trabajar en un centro académico o empresa, consulta la [guía de campo para móvil](docs/AUDITORIA_MOVIL_ES.md): instalación Android/iPhone, prueba real de arranque offline, comprobación de guardado/fotografía/JSON, itinerario servidor + red, privacidad y Terminal Termux opcional. La tarjeta de instalación incorpora una lista previa plegable y utilizable sin conexión. La PR no publica automáticamente la versión en Cloudflare.
+
+### Pantalla separada «Dispositivo e instalación»
+
+La instalación y lista previa a auditorías móviles están disponibles en **Menú lateral → Dispositivo e instalación** (icono de móvil con el lateral contraído). No se muestra encima de las auditorías, pero mantiene la instalación desde Android/iOS, instrucciones offline y el checklist. Regresa a «Biblioteca de auditorías» para trabajar.

@@ -7,7 +7,6 @@
     const card=byId('pwa-install-card'),button=byId('pwa-install-button'),status=byId('pwa-install-status');
     if(!card||!button||!status)return;
     const installed=globalThis.RabbitMoleDeployment?.installed===true;
-    card.hidden=false;
     card.classList.toggle('is-installed',installed);
     button.hidden=installed||!promptEvent;
     const ios=/iPad|iPhone|iPod/.test(navigator.userAgent||'') || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);

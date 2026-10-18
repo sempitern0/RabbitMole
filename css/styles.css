@@ -109,7 +109,7 @@ nav button {
 }
 nav button .nav-mark {
   font-size: 15px;
-  color: #87a6b6;
+  color: var(--sidebar-icon-muted, #b8cbd6);
   min-width: 21px;
 }
 nav button:hover,
@@ -121,7 +121,7 @@ nav button.active {
   box-shadow: inset 3px 0 #34c4a7;
 }
 nav button.active .nav-mark {
-  color: #5bdfc5;
+  color: var(--sidebar-icon-active, var(--sidebar-active));
 }
 .side-bottom {
   margin-top: auto;
@@ -2320,6 +2320,13 @@ button:focus-visible {
   }
 }
 
+/* Navigation accent is independent of status colors and follows each palette. */
+:root[data-palette="midnight"] { --sidebar-active: #9bc5ff; }
+:root[data-palette="obsidian"] { --sidebar-active: #b4c9de; }
+:root[data-palette="pine-dark"] { --sidebar-active: #92dab1; }
+:root[data-palette="amethyst-dark"] { --sidebar-active: #e1c2ff; }
+:root[data-palette="crimson-dark"] { --sidebar-active: #ffb8ce; }
+
 /* Vector navigation icons: fixed geometry and sharp strokes across display densities. */
 #global-navigation button .nav-icon {
   display: block;
@@ -2327,12 +2334,18 @@ button:focus-visible {
   height: 20px;
   min-width: 20px;
   flex: 0 0 20px;
-  color: #a7c8d5;
+  color: var(--sidebar-icon-muted, #b8cbd6);
   stroke: currentColor;
   shape-rendering: geometricPrecision;
 }
-#global-navigation button:is(:hover,.active) .nav-icon { color: #69e1cb; }
-#global-navigation button[aria-current="page"] { background: #21364b; color: #fff; box-shadow: inset 3px 0 var(--sidebar-active,#34c4a7); }
+#global-navigation button:is(:hover,.active,[aria-current="page"]) .nav-icon {
+  color: var(--sidebar-icon-active, var(--sidebar-active));
+}
+#global-navigation button[aria-current="page"] {
+  background: var(--sidebar-panel-raised, var(--navy2));
+  color: var(--sidebar-panel-text, #fff);
+  box-shadow: inset 3px 0 var(--sidebar-active);
+}
 @media (prefers-reduced-motion: reduce) { #global-navigation button .nav-icon { transition: none; } }
 
 /* Sidebar connectivity: status is not equivalent to public Internet access. */

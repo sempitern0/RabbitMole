@@ -73,6 +73,30 @@ const {chromium}=require('playwright');
         bg:style.backgroundColor, fg:child.color, palette:document.documentElement.dataset.palette};
     });
     assert.equal(contrast.palette,palette);
+    // The menu and dynamically built wizard symbols must follow palette accents.
+    const navTheme = await page.evaluate(() => {
+      const root = document.documentElement;
+      const active = getComputedStyle(root).getPropertyValue('--sidebar-active').trim();
+      const sample = document.createElement('span');
+      sample.style.color = 'var(--sidebar-active)';
+      const menu = document.querySelector('#global-navigation button[data-go="records"]');
+      menu.append(sample);
+      const expected = getComputedStyle(sample).color;
+      sample.remove();
+      menu.classList.add('active');
+      const menuIcon = getComputedStyle(menu.querySelector('.nav-icon')).color;
+      menu.classList.remove('active');
+      const wizard = document.createElement('button');
+      wizard.className = 'active';
+      wizard.innerHTML = '<span class="nav-mark">◇</span>';
+      document.querySelector('#navigation').append(wizard);
+      const wizardIcon = getComputedStyle(wizard.querySelector('.nav-mark')).color;
+      wizard.remove();
+      return {active, expected, menuIcon, wizardIcon};
+    });
+    assert.equal(navTheme.menuIcon, navTheme.expected,palette+' main-menu icon ignores palette');
+    assert.equal(navTheme.wizardIcon, navTheme.expected,palette+' wizard glyph ignores palette');
+
     assert(contrast.ratio>=4.5,palette+' maintenance title has insufficient contrast: '+JSON.stringify(contrast));
     const selector=await page.locator('#palette').evaluate(el=>{
       const fg=getComputedStyle(el).color,bg=getComputedStyle(el).backgroundColor;

@@ -405,6 +405,40 @@
 .pdf-appendix-list small{display:block;margin-top:.25rem;color:var(--muted);overflow-wrap:anywhere}
 .pdf-appendix-list .action-row{margin:0}
 
+/* Both fixed SVG menu icons and dynamically rendered wizard glyphs use a
+   single theme-responsive accent. Decorative status colors remain semantic. */
+.sidebar {
+  --sidebar-icon-muted: color-mix(in srgb, var(--sidebar-active) 30%, var(--sidebar-panel-text));
+  --sidebar-icon-active: var(--sidebar-active);
+}
+.sidebar nav button:is(.active,:hover,[aria-current="page"]) {
+  background: var(--sidebar-panel-raised);
+  color: var(--sidebar-panel-text);
+}
+.sidebar #navigation button .nav-mark {
+  color: var(--sidebar-icon-muted);
+}
+.sidebar #navigation button:is(.active,:hover,[aria-current="page"]) .nav-mark {
+  color: var(--sidebar-icon-active);
+}
+.sidebar #navigation button:is(.active,[aria-current="page"]) {
+  box-shadow: inset 3px 0 var(--sidebar-active);
+}
+#workspace :is(.wizard-top,.wizard-progress,.wizard-jump) progress {
+  accent-color: var(--brand);
+}
+#workspace :is(.wizard-top,.wizard-progress,.wizard-jump) progress::-webkit-progress-value {
+  background-color: var(--brand);
+}
+#workspace :is(.wizard-top,.wizard-progress,.wizard-jump) progress::-moz-progress-bar {
+  background-color: var(--brand);
+}
+@media (forced-colors: active) {
+  .sidebar #global-navigation .nav-icon,
+  .sidebar #navigation .nav-mark { color: ButtonText; }
+  .sidebar nav button:is(.active,[aria-current="page"]) :is(.nav-icon,.nav-mark) { color: Highlight; }
+}
+
 /* Sidebar surfaces use sidebar palette tokens, never the light-content --paper or --ink.
    All nine palettes retain a dark navigation area by design. */
 .sidebar {

@@ -364,3 +364,7 @@ RabbitMole verifica que el shell actual conserve la marca de instalación y los 
 El correo abre el cliente con un borrador: los adjuntos se añaden **manualmente**. **Compartir con el sistema** usa la función nativa del navegador cuando existe. Ninguno de esos canales requiere configurar Nextcloud. Google Drive/OneDrive/Microsoft 365 no cuentan todavía con un conector OAuth funcional; no introduzcas tokens ni claves de estos servicios.
 
 **Seguridad y límites:** una copia cifrada protege el contenido antes del envío; un PDF o un JSON legible solo están protegidos durante el transporte HTTPS y quedan legibles en el destino. Entrega las contraseñas por un canal distinto. El botón de prueba no configura CORS ni comprueba que el destino tenga espacio. No se realizan sincronizaciones automáticas ni se almacenan tokens de compartición entre sesiones.
+
+### Iconos coherentes con la paleta
+
+Los iconos del menú principal y los símbolos de navegación de las fases de auditoría adoptan automáticamente el acento de cada paleta, también al pasar el ratón y en la sección activa. «Predeterminado» utiliza marfil sobre azul noche; otros temas mantienen su identidad (azul, grafito, verde bosque, violeta, etc.). Las barras de progreso del asistente usan el color principal del tema. Los colores semánticos de éxito, advertencia y error se conservan para evitar ambigüedades.

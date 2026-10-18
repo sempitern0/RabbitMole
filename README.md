@@ -364,3 +364,7 @@ A photo taken through the built-in **Evidence camera** is saved first, regardles
 **Check file** validates JSON or decrypts .rmenc locally and reports new/conflicting audits without changing stored data. **Restore checked file** reuses existing overwrite confirmations. Test recovery before deleting originals; a lost passphrase cannot be recovered. Restorable JSON contents are capped at 40 MiB.
 
 Scheduled folder copies **remain unencrypted JSON**, require a protected directory and browser permission, and run only while the app is open and visible. A browser download started is not proof of a verified backup.
+
+### Mobile terminal preparation: Android and iOS
+
+In **Device and installation → Terminal and Discovery preparation**, the offline PWA provides two collapsible guides. **Android** uses the official Termux app plus optional Python/Nmap, a passive `doctor` check and an authorized Discovery wizard, with explicit JSON review in Hardware and Networks. **iPhone/iPad** cannot run Termux: a-Shell/iSH are auxiliary terminals, while network captures should originate on an authorized desktop and be imported through Files (or through a separately tested HTTPS LAN bridge). This guide starts no scans or network requests. See the [mobile field guide (ES)](docs/AUDITORIA_MOVIL_ES.md).

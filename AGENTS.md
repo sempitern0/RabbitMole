@@ -82,3 +82,8 @@ Los catálogos breves de `js/audit-inventory-presets.js` se consumen desde `js/a
 
 ## Sugerencias desde una fotografía
 El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextDetector` cuando el navegador los expone; no se incorporan OCR remoto, librerías ni tráfico de red. `js/camera-capture.js` solo marca las fotos realmente obtenidas de cámara; `js/app.js` **primero incorpora la imagen a Evidencias y persiste**, después ofrece propuesta en un diálogo. Cancelar o no detectar información no modifica ni revierte la fotografía. Solo se escriben campos de Hardware `vendor/model/serial/name` vacíos, con confirmación explícita y revisión manual. No ejecutar QR como enlaces, comandos o credenciales. Módulos nuevos precargados en HTML, SW e instaladores; prueba `tests/test_photo_hints.cjs`.
+
+## Preparación móvil opcional (Android/iOS)
+- Propietario: `index.html#mobile-terminal-setup`, con Android `#mobile-terminal-android` e iOS `#mobile-terminal-ios`; estilos en `css/workspace-ux.css`. Se integra en `device` después de `#mobile-field-check`, sin alterar las siete casillas ni guardar preferencias.
+- Android usa Termux externo, sin ejecución desde JavaScript; el comando `doctor` es pasivo. El `wizard` exige alcance privado y confirmación literal `AUTORIZO`. iOS no admite Termux; no prometer que a-Shell/iSH puedan escanear con ICMP/Nmap ni acceder a interfaces.
+- Las instrucciones deben funcionar offline como texto, sin scripts inline ni dependencias CDN; los enlaces externos son solo referencias opcionales. Documentación: `docs/AUDITORIA_MOVIL_ES.md`, `discovery/README_ES.md` y `discovery/README.md`. Al cambiar HTML/CSS, subir CACHE_NAME de `sw.js` y validar en `tests/test_mobile_pwa.cjs` y Playwright.

@@ -55,6 +55,19 @@ async function permissionCheck(granted){
  assert.equal((section.match(/<input type="checkbox">/g)||[]).length,7);
  for(const text of ['modo avión','expediente ficticio','JSON','Autorización','Privacidad','Termux'])
   assert(section.includes(text),'Field checklist missing: '+text);
+ // Optional terminal setup is a separate, offline-only section: preserve the seven checkboxes.
+ const setup=html.slice(html.indexOf('id="mobile-terminal-setup"'),html.indexOf('</section>',html.indexOf('id="mobile-terminal-setup"')));
+ for(const id of ['mobile-terminal-android','mobile-terminal-ios'])assert(setup.includes('id="'+id+'"'),'Platform setup missing: '+id);
+ for(const command of ['termux-setup-storage','pkg install python git nmap','python discovery/discover.py doctor',
+  'python discovery/discover.py wizard','AUTORIZO','help -l','python3 --version'])
+  assert(setup.includes(command),'Missing documented setup: '+command);
+ assert(setup.includes('Termux no existe para iOS/iPadOS.')||setup.includes('Termux no existe para iOS'),
+  'Must not present Termux as an iOS application');
+ assert(setup.includes('github.com/termux/termux-app/releases')&&setup.includes('github.com/holzschu/a-shell'),
+  'Official Android and iOS references missing');
+ assert.equal((setup.match(/<input type="checkbox">/g)||[]).length,0,'Terminal guide must not alter the checklist');
+ assert(!setup.includes('<script')&&!setup.includes('onclick='),'Read-only instructions must not execute scripts');
+ assert(css.includes('.mobile-terminal-setup summary:focus-visible'),'Keyboard-accessible terminal guide');
  assert(css.includes('#pwa-install-card .mobile-field-items input:focus-visible'),'Keyboard focus in field checklist');
  const cacheVersion=Number(sw.match(/const CACHE_NAME\s*=\s*"rabbitmole-shell-v(\d+)-/)?.[1]);
  assert(Number.isInteger(cacheVersion)&&cacheVersion>92,'Mobile shell changes need a bumped cache');

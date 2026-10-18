@@ -26,6 +26,17 @@ const {chromium}=require('playwright');
    await page.locator('#global-navigation [data-go="device"]').click();
    assert.equal(await page.locator('#pwa-install-card').isVisible(),true);
    assert.equal(await page.locator('#workspace').isVisible(),false);
+   // Platform preparation stays in a separate, read-only accordion.
+   await page.locator('#mobile-terminal-setup > summary').click();
+   assert.equal(await page.locator('#mobile-terminal-setup').evaluate(el=>el.open),true);
+   await page.locator('#mobile-terminal-android > summary').click();
+   assert.equal(await page.locator('#mobile-terminal-android').evaluate(el=>el.open),true);
+   assert.match(await page.locator('#mobile-terminal-android').textContent(),/termux-setup-storage/);
+   await page.locator('#mobile-terminal-ios > summary').click();
+   assert.equal(await page.locator('#mobile-terminal-ios').evaluate(el=>el.open),true);
+   assert.match(await page.locator('#mobile-terminal-ios').textContent(),/Termux no existe/);
+   assert.equal(await page.locator('#mobile-field-check input[type="checkbox"]').count(),7);
+   await page.locator('#mobile-terminal-setup > summary').click();
    assert.equal(await page.locator('#global-navigation [data-go="device"]').getAttribute('aria-current'),'page');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
    assert.equal(await page.locator('#pwa-install-card').evaluate(el=>el.classList.contains('is-installed')),installed);

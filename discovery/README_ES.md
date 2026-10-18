@@ -77,3 +77,7 @@ python discovery/discover.py wizard
 ```
 
 Termux es opcional y no ejecuta un shell dentro de la PWA. Python en Android no equivale a una instalación Linux estándar: algunas versiones restringen `ip`, sockets ICMP o Nmap y puede no haber interfaces detectables. Si el wizard no sugiere una red, introduce el CIDR privado autorizado manualmente. Un `ping`/Nmap funcional no está garantizado sin permisos adicionales. Importa el JSON generado desde Hardware/Redes → Captura asistida. El navegador por sí solo no puede hacer ARP o ICMP crudos. Evita desactivar las protecciones de Android o exponer servicios de Termux a redes desconocidas.
+
+### Guía de preparación en Android e iOS
+
+La guía de campo [RabbitMole en móviles](../docs/AUDITORIA_MOVIL_ES.md) describe instalación de Termux (Android), preparación de `python discovery/discover.py doctor`, permisos de archivos, uso autorizado del wizard, transporte seguro del JSON y recuperación offline. **iOS/iPadOS no ejecuta Termux**: a-Shell e iSH son terminales auxiliares, sin garantía de compatibilidad con Nmap/ICMP/Discovery. En iPhone/iPad se recomienda producir el JSON desde un PC autorizado y revisarlo mediante Archivos → Hardware/Redes → Captura asistida, o probar el bridge HTTPS con permisos y certificado confiable.

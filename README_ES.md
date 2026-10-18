@@ -396,3 +396,7 @@ En **Copias y exportaciones** puedes descargar la biblioteca completa como **.rm
 **Comprobar archivo** valida un JSON o descifra localmente un .rmenc y muestra el total de auditorías, nuevas y posibles sustituciones **sin modificar datos**. **Restaurar copia comprobada** utiliza las confirmaciones existentes contra sobrescritura; comprueba su apertura antes de borrar el origen. Perder la frase impide recuperar un backup cifrado. Se limita la exportación restaurable a 40 MiB de JSON.
 
 Las copias periódicas en carpeta siguen siendo **JSON sin cifrar**: usa carpeta protegida, permiso explícito y la aplicación abierta y visible. No se ejecutan al cerrar la PWA. Una descarga iniciada no demuestra que el archivo esté a salvo.
+
+### Preparación de Termux y alternativas iOS para auditorías móviles
+
+En **Dispositivo e instalación → Preparar terminal y Discovery** encontrarás dos guías plegables y utilizables sin conexión: **Android con Termux** (instalación, Python/Nmap, diagnóstico pasivo, CIDR autorizado, archivo JSON y revisión desde Captura asistida) e **iPhone/iPad** (Termux no existe; a-Shell/iSH son auxiliares y la ruta fiable es Discovery en un PC con traslado del JSON mediante Archivos). No se inician escaneos ni peticiones desde la guía. Consulta el recorrido ampliado en [Guía de auditoría móvil](docs/AUDITORIA_MOVIL_ES.md).

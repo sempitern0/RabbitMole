@@ -66,3 +66,9 @@ python3 discovery/service.py --bind 192.168.10.20 --host 192.168.10.20 --cert /p
 ```
 
 In the installed PWA open Networks → Assisted capture → Local Discovery, enter the HTTPS URL and console token, then specify an authorized private CIDR (up to 256 IPs), type `AUTORIZO` and confirm. Review Hardware or Networks via the existing import preview; no findings, VLAN assignments or isolation claims are inferred. Token remains in memory. Limit firewall access, never expose the service to the Internet, and stop it after use.
+
+### Android Termux and iPhone/iPad preparation
+
+Termux is **Android-only**. Install from the official [F-Droid package](https://f-droid.org/packages/com.termux/) or [GitHub releases](https://github.com/termux/termux-app/releases), without mixing plugin signing sources. After `pkg update`, `pkg upgrade`, and `pkg install python git nmap`, run `termux-setup-storage` only if shared Downloads access is needed. Clone the RabbitMole repository, run `python discovery/discover.py doctor` (no traffic), then use `python discovery/discover.py wizard` only with an explicitly authorized private CIDR, a fresh JSON output path, and its `AUTORIZO` prompt. Android may restrict ICMP, Nmap and interface discovery without root: do not bypass platform security. Import and approve the JSON separately in Hardware and Networks → Assisted capture.
+
+There is **no Termux on iOS/iPadOS**. [a-Shell](https://github.com/holzschu/a-shell) and [iSH](https://github.com/ish-app/ish) are optional terminals with different sandbox limits, not supported Discovery scanner platforms. For iPhone/iPad, collect with an authorized desktop, transfer the JSON via an approved channel into Files, and import from the installed PWA. The LAN HTTPS bridge is an optional alternative only after testing TLS trust, CORS and local-network permissions. The full [Spanish mobile field guide](../docs/AUDITORIA_MOVIL_ES.md) includes steps and privacy guidance.

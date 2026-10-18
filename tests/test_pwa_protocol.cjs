@@ -14,7 +14,7 @@ const {loadWorker}=require('./support/sw-contract.js');
  // Cold launch must work when Chromium marks a navigation no-store.
  const nav=loadWorker({
    self:{location:{origin:'https://audit.example'}},
-   caches:{keys:async()=>['rabbitmole-shell-v90-device-help'],
+   caches:{keys:async()=>['rabbitmole-shell-v91-glossary-spacing'],
      open:async()=>({match:async key=>{
        if (typeof key==='string'&&key.endsWith('/index.html'))
          return new Response('<link href="css/styles.css"><script src="js/app.js"></script>');
@@ -39,7 +39,7 @@ const {loadWorker}=require('./support/sw-contract.js');
  assert.equal(probes,1);
 
  // If the new shell is missing, a complete legacy shell should start offline.
- const prior='rabbitmole-shell-v85-report-e2e',current='rabbitmole-shell-v90-device-help';
+ const prior='rabbitmole-shell-v85-report-e2e',current='rabbitmole-shell-v91-glossary-spacing';
  const legacyHTML='<link href="css/styles.css"><script src="js/app.js"></script>';
  const seen=[];
  const legacy=loadWorker({

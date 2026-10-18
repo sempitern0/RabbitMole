@@ -110,3 +110,26 @@ for(const id of ['term-1','term-2','term-25']){
  assert(g.PROTOCOLS[id].every(text=>typeof text==='string'&&text.length>40));
 }
 assert(fs.readFileSync(path.join(root,'index.html'),'utf8').includes('<option value="rabbitmole">Predeterminado</option>'),'Brand palette label');
+
+/* Regression: glossary sections with borders must keep their inner spacing.
+ * A generic 'padding: ... 0' used to wipe example/evidence/caution padding. */
+assert(css.includes('.glossary-section{border-top:1px solid var(--line);padding-block:'),
+ 'Glossary section rhythm must only affect the block axis');
+assert(css.includes('.glossary-quick-body .glossary-section{padding-block:'),
+ 'Contextual help must preserve its horizontal content insets');
+assert(!/\.glossary-section\s*\{\s*padding\s*:/.test(css),
+ 'Do not reset horizontal padding in shared glossary sections');
+assert(!css.includes('.glossary-evidence,.glossary-caution{border-inline-start-color:var(--line);padding-inline-start:0}'),
+ 'Evidence and caution must not touch the border');
+assert(css.includes('.glossary-example{border:1px solid var(--line);background:var(--canvas);padding:'),
+ 'Example text must have an explicit responsive inset');
+assert(css.includes('.glossary-audit-steps {') && css.includes('padding-inline-start: clamp('),
+ 'Audit guide ordered lists need breathing room');
+const ux=fs.readFileSync(path.join(root,'css/workspace-ux.css'),'utf8'),
+ quality=fs.readFileSync(path.join(root,'css/quality.css'),'utf8');
+assert(ux.includes('.intake-command pre { margin:0; padding:.9rem') &&
+ ux.includes('.network-analysis-imports') && ux.includes('padding:.85rem'),
+ 'Command and import panels should preserve their existing padding');
+assert(quality.includes('.quality-issue {') && quality.includes('padding:14px') &&
+ quality.includes('.residual-assessment{') && quality.includes('padding:0 1rem'),
+ 'Other assistant panels must retain internal spacing');

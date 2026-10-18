@@ -168,6 +168,21 @@ const {chromium}=require('playwright');
    await contextualHelp.click();
    await page.locator('#glossary-quick-full').click();
    await page.locator('#glossary-detail .glossary-article').waitFor();
+   // Verify real computed spacing across glossary cards and the contextual drawer.
+   for(const palette of ['rabbitmole','ocean','amethyst-dark']){
+     await page.locator('#palette').selectOption(palette);
+     const sample=await page.locator('#glossary-detail').evaluate(detail=>{
+       const nodes=['.glossary-example','.glossary-definition','.glossary-evidence','.glossary-caution','.glossary-audit-steps'];
+       const examples=[...detail.querySelectorAll('.glossary-section')].filter(el=>el.classList.contains('glossary-example'));
+       return examples.map(el=>{
+         const css=getComputedStyle(el),title=el.querySelector('h3'),outer=el.getBoundingClientRect(),inner=title?.getBoundingClientRect();
+         return {left:parseFloat(css.paddingLeft),right:parseFloat(css.paddingRight),inset:inner?inner.left-outer.left:0};
+       });
+     });
+     if(sample.length)assert(sample.every(x=>x.left>=12&&x.right>=12&&x.inset>=12),
+       palette+' example has missing padding '+JSON.stringify(sample));
+   }
+
    assert.equal(new URL(page.url()).hash.startsWith('#glossary/'),true);
    await page.goBack({waitUntil:'domcontentloaded'});
    await page.waitForFunction(([id,step])=>document.activeElement?.id===id &&

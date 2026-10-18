@@ -376,3 +376,7 @@ Antes de trabajar en un centro académico o empresa, consulta la [guía de campo
 ### Pantalla separada «Dispositivo e instalación»
 
 La instalación y lista previa a auditorías móviles están disponibles en **Menú lateral → Dispositivo e instalación** (icono de móvil con el lateral contraído). No se muestra encima de las auditorías, pero mantiene la instalación desde Android/iOS, instrucciones offline y el checklist. Regresa a «Biblioteca de auditorías» para trabajar.
+
+### Legibilidad y espaciado del diccionario
+
+Las fichas del diccionario (incluidos «Ejemplo», evidencias, advertencias, mini-guías y el panel de ayuda contextual) mantienen márgenes interiores adaptados a la pantalla en todas las paletas. El espaciado vertical de las secciones ya no elimina el padding de sus recuadros. También se han revisado los contenedores de controles, formularios, comandos, análisis de red y aceptación de riesgo para conservar su separación sin añadir elementos de interfaz.

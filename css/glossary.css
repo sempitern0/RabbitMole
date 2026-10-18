@@ -28,7 +28,8 @@
 .glossary-kicker{display:inline-block;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:var(--brand);font-weight:800}
 .glossary-article h2{font-size:clamp(1.4rem,2vw,1.9rem);line-height:1.25;margin:.4rem 0 1rem;color:var(--ink)}
 .glossary-definition{font-size:1.08rem;line-height:1.7;padding-left:1rem;border-left:4px solid var(--brand);margin:1rem 0 1.6rem}
-.glossary-section{border-top:1px solid var(--line);padding:1.1rem 0 .2rem}
+/* Vertical rhythm must never reset the insets of nested bordered sections. */
+.glossary-section{border-top:1px solid var(--line);padding-block:1.15rem .35rem}
 .glossary-section h3{font-size:1rem;margin:0 0 .55rem;color:var(--brand)}
 .glossary-section p{line-height:1.65;margin:0 0 .6rem}
 .glossary-why h3:before{content:"◎ ";font-weight:900}
@@ -130,7 +131,7 @@
 .glossary-quick-body{min-height:0;flex:1 1 auto;overflow-y:auto;padding:1rem 1.2rem 1.6rem;overscroll-behavior:contain;scrollbar-gutter:stable}
 .glossary-quick-body .glossary-article>h2,.glossary-quick-body .glossary-article>.glossary-kicker{display:none}
 .glossary-quick-body .glossary-definition{margin:.25rem 0 .95rem;padding-inline-start:.8rem;font-size:.98rem;line-height:1.65}
-.glossary-quick-body .glossary-section{padding:.85rem 0 .1rem}
+.glossary-quick-body .glossary-section{padding-block:.85rem .1rem}
 .glossary-quick-body .glossary-section h3{font-size:.94rem}
 .glossary-quick-body .glossary-example{margin-top:.7rem}
 .glossary-quick-advanced{margin:1rem 0;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas);overflow:hidden}
@@ -191,7 +192,6 @@
 .glossary-kicker{display:inline-flex;align-items:center;min-height:34px;padding:.3rem .65rem;border:1px solid var(--line);border-radius:999px;background:var(--canvas);color:var(--ink);font-size:.79rem;line-height:1.3;letter-spacing:.015em}
 .glossary-article h2{margin:.2rem 0 1rem;font-size:clamp(1.65rem,2.3vw,2.2rem)}
 .glossary-definition{border-inline-start:4px solid var(--brand);padding:.7rem 1rem;margin:1.1rem 0 1.5rem;background:color-mix(in srgb,var(--brand-tint) 45%,var(--paper));border-radius:0 .65rem .65rem 0;color:var(--ink)}
-.glossary-section{padding:1.15rem 0 .35rem}
 .glossary-section h3{display:flex;align-items:center;gap:.6rem;font-size:1rem;font-weight:800;line-height:1.4;color:var(--ink)}
 .glossary-section h3::before{content:none}
 .glossary-section-icon{display:block;flex:none;width:19px;height:19px;color:var(--brand)}
@@ -214,8 +214,8 @@
 .glossary-command code{color:inherit}
 .glossary-command p.glossary-command-interpret{background:var(--brand-tint);color:var(--ink);font-size:.89rem;line-height:1.6}
 .glossary-console-intro{color:var(--muted)!important}
-.glossary-evidence,.glossary-caution{border-inline-start-color:var(--line);padding-inline-start:0}
-.glossary-example{border:1px solid var(--line);background:var(--canvas)}
+/* Preserve the left inset of evidence, cautions and mini-guides. */
+.glossary-example{border:1px solid var(--line);background:var(--canvas);padding:clamp(.85rem,2vw,1.1rem)}
 .glossary-references a{color:var(--ink);text-underline-offset:.2em}
 @media(max-width:1000px){.glossary-layout{grid-template-columns:minmax(215px,35%) minmax(0,1fr)}.glossary-detail{padding:1.15rem}}
 @media(max-width:760px){

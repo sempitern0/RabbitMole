@@ -71,3 +71,7 @@ El service worker local usa `rabbitmole-shell-v88-palette-icons` y debe cambiar 
 ## Menú de dispositivo e instalación
 - `#pwa-install-card` es una vista separada (`device`) accesible desde el menú principal en modo completo o compacto. `js/app.js` controla `hidden`, visibilidad de `#workspace`, foco y navegación sin exigir expediente abierto; `js/pwa-install.js` únicamente actualiza el estado de instalación y gestiona el prompt, sin abrirla automáticamente.
 - Conservar controles, checklist offline y semántica. Probar abrir, salir, iconos del lateral contraído, móvil Android, teclado y estado de la PWA en `tests/test_mobile_pwa.cjs` y Playwright.
+
+## Contrato de espaciado de UI (glosario y asistente)
+- `css/glossary.css`: `.glossary-section` **solo define `padding-block`**; jamás usar `padding: ... 0` ni `padding-inline-start:0` compartidos, ya que invalidan el inset de `.glossary-example`, `.glossary-evidence`, `.glossary-caution` y `.glossary-audit-steps`. El panel contextual `.glossary-quick-body` debe respetar el mismo contrato.
+- Los paneles del resto del asistente (tarjetas, inventario, captura asistida, análisis de red, diagnóstico, aceptación de riesgo y mitigación) mantienen contenedores con padding propio o wrapper con contenido acolchado. Evitar resets globales; comprobar padding computado y ausencia de overflow en 390/768/1280 px, paletas base y oscuras. Test estático: `tests/test_glossary_guide.cjs`; test de navegador: `tests/test_pwa_browser.cjs`.

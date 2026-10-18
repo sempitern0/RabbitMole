@@ -344,3 +344,7 @@ For mobile-only audits of a server and its local network, see the [Spanish field
 ### Dedicated device setup screen
 
 Installation instructions and the field-readiness checklist are now reached via **Sidebar → Device & installation**, including its phone icon in the compact sidebar. The guide no longer occupies space above normal audits. The static panel retains the install prompt and offline checklist without new dependencies or changes to audit records.
+
+### Glossary and assistant spacing
+
+Glossary examples, evidence, cautions, step-by-step guidance and the contextual glossary drawer retain responsive internal insets independently of each section's vertical rhythm. Shared section CSS no longer resets horizontal padding. The audit's card, form, command, network-analysis and risk-acceptance panels were also reviewed for unintended padding overrides; no new runtime dependencies are introduced.

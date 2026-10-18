@@ -286,3 +286,7 @@ muestra los resultados coincidentes y lleva el foco al registro elegido.
 limpia la búsqueda para que puedas rellenarlo inmediatamente. Los filtros son solo
 de pantalla: no eliminan datos ni limitan los informes o exportaciones. La búsqueda
 y la navegación también funcionan en expedientes confirmados.
+
+### Diccionario ampliado: servidores, software y licencias
+
+El catálogo alcanza 212 conceptos y 96 guías. Nuevas categorías: **Servidores**, **Almacenamiento**, **Operación de software** y **Licencias**. Las fichas incluyen definición, revisión propuesta, finalidad, ejemplo, evidencia, advertencia, pasos de auditoría y referencias; cuando procede, comandos de lectura que no se ejecutan desde la PWA. La ayuda contextual ofrece entradas específicas para serverRole, serverDeployment, serverBoot, serverRemoteMgmt, osLicense/osUpdates y campos de licencia, soporte y actualizaciones de Software. SAM y CAL/BYOL/SPDX son orientación documental y no declaraciones jurídicas automáticas.

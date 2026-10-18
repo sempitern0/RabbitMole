@@ -21,7 +21,23 @@ const {chromium}=require('playwright');
    page.setDefaultTimeout(12000);
    page.on('pageerror',e=>errors.push(e.message));page.on('request',req=>{if(!req.url().startsWith(origin)&&!req.url().startsWith('data:'))external.push(req.url());});
    await page.goto(origin);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
-   await page.waitForSelector('#pwa-install-card:not([hidden])');
+   await page.waitForFunction(()=>document.getElementById('pwa-install-status')?.textContent?.length>0);
+   assert.equal(await page.locator('#pwa-install-card').isVisible(),false);
+   await page.locator('#global-navigation [data-go="device"]').click();
+   assert.equal(await page.locator('#pwa-install-card').isVisible(),true);
+   assert.equal(await page.locator('#workspace').isVisible(),false);
+   // Platform preparation stays in a separate, read-only accordion.
+   await page.locator('#mobile-terminal-setup > summary').click();
+   assert.equal(await page.locator('#mobile-terminal-setup').evaluate(el=>el.open),true);
+   await page.locator('#mobile-terminal-android > summary').click();
+   assert.equal(await page.locator('#mobile-terminal-android').evaluate(el=>el.open),true);
+   assert.match(await page.locator('#mobile-terminal-android').textContent(),/termux-setup-storage/);
+   await page.locator('#mobile-terminal-ios > summary').click();
+   assert.equal(await page.locator('#mobile-terminal-ios').evaluate(el=>el.open),true);
+   assert.match(await page.locator('#mobile-terminal-ios').textContent(),/Termux no existe/);
+   assert.equal(await page.locator('#mobile-field-check input[type="checkbox"]').count(),7);
+   await page.locator('#mobile-terminal-setup > summary').click();
+   assert.equal(await page.locator('#global-navigation [data-go="device"]').getAttribute('aria-current'),'page');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
    assert.equal(await page.locator('#pwa-install-card').evaluate(el=>el.classList.contains('is-installed')),installed);
    if(installed)assert.equal(await page.locator('#pwa-install-status').textContent(),'Aplicación instalada · Funciones locales disponibles sin conexión.');
@@ -34,9 +50,34 @@ const {chromium}=require('playwright');
     await page.locator('#pwa-install-button').click();
     await page.waitForFunction(()=>document.getElementById('pwa-install-status').textContent.includes('desde su icono'));
    }
+   await page.locator('#global-navigation [data-go="records"]').click();
+   assert.equal(await page.locator('#pwa-install-card').isVisible(),false);
+   assert.equal(await page.locator('#workspace').isVisible(),true);
+   assert.equal(await page.locator('.topbar #palette').count(),0);
+   assert.equal(await page.locator('.sidebar .sidebar-appearance #palette').count(),1);
+   const sidebarToggle=page.locator('#sidebar-toggle');
+   await sidebarToggle.click();
+   assert.equal(await sidebarToggle.getAttribute('aria-expanded'),'false');
+   await page.locator('#global-navigation [data-go="device"]').click();
+   assert.equal(await page.locator('#pwa-install-card').isVisible(),true);
+   await page.locator('#global-navigation [data-go="records"]').click();
+   assert.equal(await page.locator('#app').getAttribute('data-sidebar-collapsed'),'true');
+   assert.equal(await page.locator('#global-navigation button[data-go="glossary"]').getAttribute('aria-label'),'Diccionario técnico');
+   await sidebarToggle.click();
+   assert.equal(await sidebarToggle.getAttribute('aria-expanded'),'true');
+
+   // A new profile gets the signature theme, but previously saved choices remain untouched.
+   assert.equal(await page.locator('#palette').inputValue(),'rabbitmole');
+   assert.equal(await page.evaluate(()=>document.documentElement.dataset.palette),'rabbitmole');
+   const versionStyle=await page.locator('#app-version').evaluate(el=>({
+     text:el.textContent,weight:parseInt(getComputedStyle(el).fontWeight,10),
+     radius:parseFloat(getComputedStyle(el).borderTopLeftRadius)
+   }));
+   assert.match(versionStyle.text,/Versión 1\\.0\\.0/);
+   assert(versionStyle.weight>=700 && versionStyle.radius>=15,'Version badge must be distinct and understated');
    await page.locator('#sidebar-maintenance > summary').click();
    // Every palette retains a dark, legible maintenance panel independently of the workspace theme.
-   for(const palette of ['ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+   for(const palette of ['rabbitmole','ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
     await page.locator('#palette').selectOption(palette);
     const contrast=await page.locator('#offline-health-panel').evaluate(el=>{
       const style=getComputedStyle(el), child=getComputedStyle(el.querySelector('strong'));
@@ -54,9 +95,42 @@ const {chromium}=require('playwright');
         bg:style.backgroundColor, fg:child.color, palette:document.documentElement.dataset.palette};
     });
     assert.equal(contrast.palette,palette);
+    // The menu and dynamically built wizard symbols must follow palette accents.
+    const navTheme = await page.evaluate(() => {
+      const root = document.documentElement;
+      const active = getComputedStyle(root).getPropertyValue('--sidebar-active').trim();
+      const sample = document.createElement('span');
+      sample.style.color = 'var(--sidebar-active)';
+      const menu = document.querySelector('#global-navigation button[data-go="records"]');
+      menu.append(sample);
+      const expected = getComputedStyle(sample).color;
+      sample.remove();
+      menu.classList.add('active');
+      const menuIcon = getComputedStyle(menu.querySelector('.nav-icon')).color;
+      menu.classList.remove('active');
+      const wizard = document.createElement('button');
+      wizard.className = 'active';
+      wizard.innerHTML = '<span class="nav-mark">◇</span>';
+      document.querySelector('#navigation').append(wizard);
+      const wizardIcon = getComputedStyle(wizard.querySelector('.nav-mark')).color;
+      wizard.remove();
+      return {active, expected, menuIcon, wizardIcon};
+    });
+    assert.equal(navTheme.menuIcon, navTheme.expected,palette+' main-menu icon ignores palette');
+    assert.equal(navTheme.wizardIcon, navTheme.expected,palette+' wizard glyph ignores palette');
+
     assert(contrast.ratio>=4.5,palette+' maintenance title has insufficient contrast: '+JSON.stringify(contrast));
+    const selector=await page.locator('#palette').evaluate(el=>{
+      const fg=getComputedStyle(el).color,bg=getComputedStyle(el).backgroundColor;
+      const label=document.querySelector('label[for="palette"]');
+      return {insideSidebar:!!el.closest('.sidebar'),height:el.getBoundingClientRect().height,
+        label:label?.textContent.trim(),foreground:fg,background:bg};
+    });
+    assert(selector.insideSidebar && selector.height>=44 && selector.label.includes('Paleta de colores'),
+      palette+' sidebar palette selector is not accessible');
    }
    await page.locator('#palette').selectOption('ocean');
+   assert.equal(await page.evaluate(()=>localStorage.getItem('rabbitmole:palette:explicit:v1')),'ocean');
    // Storage permission has independent feedback; health checks must not overwrite it.
    await page.evaluate(()=>{Object.defineProperty(navigator,'storage',{configurable:true,value:{
      persist:async()=>false,persisted:async()=>false,estimate:async()=>({quota:1000000,usage:1000})
@@ -105,6 +179,21 @@ const {chromium}=require('playwright');
    await contextualHelp.click();
    await page.locator('#glossary-quick-full').click();
    await page.locator('#glossary-detail .glossary-article').waitFor();
+   // Verify real computed spacing across glossary cards and the contextual drawer.
+   for(const palette of ['rabbitmole','ocean','amethyst-dark']){
+     await page.locator('#palette').selectOption(palette);
+     const sample=await page.locator('#glossary-detail').evaluate(detail=>{
+       const nodes=['.glossary-example','.glossary-definition','.glossary-evidence','.glossary-caution','.glossary-audit-steps'];
+       const examples=[...detail.querySelectorAll('.glossary-section')].filter(el=>el.classList.contains('glossary-example'));
+       return examples.map(el=>{
+         const css=getComputedStyle(el),title=el.querySelector('h3'),outer=el.getBoundingClientRect(),inner=title?.getBoundingClientRect();
+         return {left:parseFloat(css.paddingLeft),right:parseFloat(css.paddingRight),inset:inner?inner.left-outer.left:0};
+       });
+     });
+     if(sample.length)assert(sample.every(x=>x.left>=12&&x.right>=12&&x.inset>=12),
+       palette+' example has missing padding '+JSON.stringify(sample));
+   }
+
    assert.equal(new URL(page.url()).hash.startsWith('#glossary/'),true);
    await page.goBack({waitUntil:'domcontentloaded'});
    await page.waitForFunction(([id,step])=>document.activeElement?.id===id &&
@@ -113,7 +202,7 @@ const {chromium}=require('playwright');
    await page.locator('[data-glossary-back]').first().click();
    await page.waitForFunction(id=>document.activeElement?.id===id,returnField);
    // Canonical form controls must have computed styling and room around adjacent fields.
-   for(const palette of ['ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+   for(const palette of ['rabbitmole','ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
      await page.locator('#palette').selectOption(palette);
      const form=await page.locator('#workspace .field input:not([type="file"])').first().evaluate(el=>{
        const s=getComputedStyle(el), wrapper=el.closest('.field');
@@ -129,7 +218,12 @@ const {chromium}=require('playwright');
    const sticky=await page.locator('.record-navigator').evaluate(el=>({position:getComputedStyle(el).position,border:parseFloat(getComputedStyle(el).borderLeftWidth),background:getComputedStyle(el).backgroundColor}));
    assert.equal(sticky.position,'sticky');
    assert(sticky.border>=4,'The audit filter bar needs a visible separator');
+   await page.locator('#record-nav-toggle').click();
+   assert.equal(await page.locator('#record-nav-toggle').getAttribute('aria-expanded'),'false');
    await page.locator('#wizard-step-select').selectOption('networks');
+   assert.equal(await page.locator('#record-nav-toggle').getAttribute('aria-expanded'),'false');
+   await page.locator('#record-nav-toggle').click();
+   assert.equal(await page.locator('#record-nav-toggle').getAttribute('aria-expanded'),'true');
    const acrylicHeaders=['SSID','#','Dirección MAC','RSSI','SNR','Canal','Banda','Ancho','802.11','WEP','WPA','WPA2','WPA3','WPS','Fabricante'];
    const acrylicRow={SSID:'Demo','#':'1','Dirección MAC':'02:00:00:00:00:01',RSSI:'-55',Canal:'6',Banda:'2.4GHz',Ancho:'20','802.11':'n',WPA2:'PSK-CCMP'};
    const acrylicCsv=['sep=;',acrylicHeaders.join(';'),acrylicHeaders.map(k=>acrylicRow[k]||'').join(';')].join('\n');
@@ -190,6 +284,17 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#discovery-check').count(),1);
    await page.locator('[data-go="networks"]').last().click();
    await page.setViewportSize({width:390,height:844});
+   await page.locator('#sidebar-toggle').click();
+   assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'true');
+   await page.reload();
+   assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'true');
+   await page.locator('#sidebar-toggle').click();
+   assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'false');
+   await page.locator('#sidebar-toggle').click();
+   assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'true');
+   await page.locator('#sidebar-toggle').click();
+   assert.equal(await page.locator('#sidebar-body').getAttribute('aria-hidden'),'false');
+
    // Emulate touch input and a phone viewport for layout/keyboard-related regressions.
    const touchMetrics=await page.locator('#wizard-step-select').evaluate(el=>{
      const r=el.getBoundingClientRect(),s=getComputedStyle(el);
@@ -199,7 +304,9 @@ const {chromium}=require('playwright');
    assert(touchMetrics.width>100&&touchMetrics.height>=40,'Step picker must remain reachable on phones');
    assert.equal(touchMetrics.overflow,false,'The audit workspace must not overflow horizontally');
 
+   await page.locator('#global-navigation [data-go="device"]').click();
    assert.equal(await page.locator('#pwa-install-card').evaluate(el=>getComputedStyle(el).borderLeftWidth!=='0px'),true);
+   await page.locator('#global-navigation [data-go="records"]').click();
    await page.locator('#wizard-step-select').selectOption('networks');
    assert.equal(await page.locator('.record-navigator').evaluate(el=>getComputedStyle(el).position),'static','Mobile filters must not cover editable records');
    await page.setViewportSize({width:1280,height:900});
@@ -244,6 +351,22 @@ const {chromium}=require('playwright');
    });
    assert(uploadLayout.button>=100&&uploadLayout.fileWidth>=160,'File and camera actions need independent space: '+JSON.stringify(uploadLayout));
    await page.locator('#wizard-step-select').selectOption('assets');await page.locator('[data-add="assets"]').first().click();
+   // Touch-friendly native pickers must retain custom technical values.
+   const ram=page.locator('#f-assets-0-ram');
+   assert.equal(await ram.locator('option[value="16 GiB"]').count(),1);
+   await ram.selectOption('16 GiB');
+   assert.equal(await ram.inputValue(),'16 GiB');
+   await ram.selectOption('__custom__');
+   const customRam=ram.closest('.field').locator('[data-custom]');
+   await customRam.fill('24 GiB verificados');
+   assert.equal(await customRam.isVisible(),true);
+   await page.locator('#wizard-step-select').selectOption('networks');
+   const networkStandard=page.locator('#f-networks-0-wifiStandard');
+   assert.equal(await networkStandard.locator('option[value="802.11ax / Wi-Fi 6"]').count(),1);
+   await page.locator('#wizard-step-select').selectOption('assets');
+   assert.equal(await page.locator('#f-assets-0-ram').inputValue(),'__custom__');
+   assert.equal(await page.locator('#f-assets-0-ram').closest('.field').locator('[data-custom]').inputValue(),'24 GiB verificados');
+
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
    await page.waitForTimeout(600);
    await context.setOffline(true);await page.reload();

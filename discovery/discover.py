@@ -167,7 +167,8 @@ def save_document(output, document):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='RabbitMole: descubrimiento remoto acotado, sin agentes y de solo lectura.')
     commands = parser.add_subparsers(dest='command', required=True)
-    commands.add_parser('doctor', help='Comprueba dependencias y muestra instalación sugerida, sin red.')
+    check = commands.add_parser('doctor', help='Diagnóstico legible de herramientas, sin escanear.')
+    check.add_argument('--json', action='store_true', help='Formato JSON para automatizaciones.')
     commands.add_parser('wizard', help='Asistente interactivo de descubrimiento sin servicios locales.')
     scan = commands.add_parser('scan', help='Descubre hosts de una red autorizada y exporta JSON.')
     scan.add_argument('--cidr', required=True, help='Subred IPv4 RFC1918 autorizada, por ejemplo 192.168.10.0/24')
@@ -177,7 +178,18 @@ def main(argv=None):
     scan.add_argument('--workers', type=int, default=16, help='Concurrencia del ping nativo (1 a 32).')
     args = parser.parse_args(argv)
     if args.command == 'doctor':
-        print(json.dumps(doctor(), indent=2, ensure_ascii=False))
+        info = doctor()
+        if args.json:
+            print(json.dumps(info, indent=2, ensure_ascii=False))
+        else:
+            print('\\nRabbitMole · Diagnóstico de Discovery')
+            print('Equipo: ' + info['platform'] + ' · Python ' + info['python'])
+            print('Python compatible: ' + ('SÍ' if info['python_ok'] else 'NO (requiere 3.9+)'))
+            print('Nmap: ' + (info['tools']['nmap'] or 'No instalado (opcional)'))
+            print('Ping: ' + (info['tools']['ping'] or 'No disponible'))
+            print('Motor recomendado: ' + (info['preferred_backend'] or 'Ninguno'))
+            print('Acción sugerida: ' + info['install_guidance'])
+            print('No se ha realizado ningún reconocimiento.\\n')
         return 0
     if args.command == 'wizard':
         from wizard import run_wizard
@@ -198,8 +210,13 @@ def main(argv=None):
             raise RuntimeError(f'No está instalado {backend == "nmap" and "Nmap" or "ping"}. Ejecuta doctor para ver alternativas.')
         hosts = scan_nmap(network, path) if backend == 'nmap' else scan_native(network, path, args.workers)
         destination = save_document(output, discovery_document(network, backend, hosts))
-        print(json.dumps({'file': str(destination), 'backend': backend, 'hosts_detected': len(hosts), 'networks': 1,
-                          'warning': 'Los equipos sin respuesta no se consideran ausentes. Revisar antes de incorporar.'}, ensure_ascii=False))
+        print('\\nRabbitMole · Captura completada')
+        print('Red autorizada: ' + str(network))
+        print('Motor: ' + backend)
+        print('Equipos con respuesta: ' + str(len(hosts)))
+        print('Archivo: ' + str(destination))
+        print('Importa el JSON en Hardware y Redes → Captura asistida; revisa las filas.')
+        print('IMPORTANTE: los equipos sin respuesta no se consideran ausentes.\\n')
         return 0
     except (OSError, ValueError, RuntimeError) as exc:
         print('ERROR: ' + str(exc), file=sys.stderr)

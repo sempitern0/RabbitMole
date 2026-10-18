@@ -49,3 +49,35 @@ En el expediente abre **Hardware → Captura asistida**, importa el JSON y confi
 ### Próximas iteraciones
 
 API local autenticada para enviar progreso a la PWA, consulta de SNMPv3 y, solo con autorización/credenciales, SSH o WinRM de solo lectura, conciliación avanzada de identidades y capturas por múltiples segmentos. No se incluyen todavía.
+
+
+## Servicio Discovery desde tablet por HTTPS
+
+Para una tablet con RabbitMole instalada, inicia en un ordenador auditor conectado a la red autorizada un servicio HTTPS efímero:
+
+```bash
+python3 discovery/service.py --bind 192.168.10.20 --host 192.168.10.20 --port 8766 --cert /ruta/cert.pem --key /ruta/key.pem --origin https://origen-exacto-de-tu-pwa
+```
+
+El certificado debe ser confiable en la tablet y contener un SAN válido para la IP indicada. Abre la PWA instalada, entra en **Redes → Captura asistida → Discovery local**, introduce URL HTTPS y token temporal mostrado por el servicio, pulsa Conectar, especifica el CIDR privado autorizado (máximo 256 direcciones), escribe `AUTORIZO` y confirma. La captura se ofrece para Hardware o Redes y se incorpora mediante la **revisión previa existente**, sin sobreescribir datos ni asignar automáticamente hallazgos. El token se mantiene únicamente en memoria. El servicio no inicia escaneos por sí solo, solo realiza identificación de hosts sin puertos o credenciales, y no demuestra VLAN ni aislamiento real. Restringe el puerto en firewall, no lo expongas a Internet y detén el proceso después de la auditoría. Algunas plataformas aplican restricciones adicionales al acceso a la red local desde un origen HTTPS externo.
+
+
+### Consola en Android (Termux)
+
+En la propia tablet o móvil Android, instala Termux desde F-Droid o la página oficial de GitHub. Abre Termux y ejecuta:
+
+```sh
+pkg update
+pkg install python git nmap
+# Descarga primero la rama de esta PR (hasta que se fusione):
+git clone --branch feature/pwa-version-offline-fallback-20261018 --single-branch https://github.com/sempitern0/RabbitMole.git
+cd RabbitMole
+python discovery/discover.py doctor
+python discovery/discover.py wizard
+```
+
+Termux es opcional y no ejecuta un shell dentro de la PWA. Python en Android no equivale a una instalación Linux estándar: algunas versiones restringen `ip`, sockets ICMP o Nmap y puede no haber interfaces detectables. Si el wizard no sugiere una red, introduce el CIDR privado autorizado manualmente. Un `ping`/Nmap funcional no está garantizado sin permisos adicionales. Importa el JSON generado desde Hardware/Redes → Captura asistida. El navegador por sí solo no puede hacer ARP o ICMP crudos. Evita desactivar las protecciones de Android o exponer servicios de Termux a redes desconocidas.
+
+### Guía de preparación en Android e iOS
+
+La guía de campo [RabbitMole en móviles](../docs/AUDITORIA_MOVIL_ES.md) describe instalación de Termux (Android), preparación de `python discovery/discover.py doctor`, permisos de archivos, uso autorizado del wizard, transporte seguro del JSON y recuperación offline. **iOS/iPadOS no ejecuta Termux**: a-Shell e iSH son terminales auxiliares, sin garantía de compatibilidad con Nmap/ICMP/Discovery. En iPhone/iPad se recomienda producir el JSON desde un PC autorizado y revisarlo mediante Archivos → Hardware/Redes → Captura asistida, o probar el bridge HTTPS con permisos y certificado confiable.

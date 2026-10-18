@@ -30,3 +30,5 @@ if shutil.which("node"):
     for script in scripts + ["sw.js"]:
         subprocess.run(["node", "--check", str(root / script)], check=True)
 print("STATIC PASS: single v3 JSON, script dependencies, offline resources and JS syntax")
+
+assert "js/app-version.js" in scripts and 'id="app-version"' in html

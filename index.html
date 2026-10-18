@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-palette="rabbitmole">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>RabbitMole · Auditoría offline</title>
-    <meta name="theme-color" content="#102a3b" />
+    <meta name="theme-color" content="#081425" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -37,11 +37,14 @@
     <link rel="stylesheet" href="css/workspace-ux.css" media="screen" />
     <link rel="stylesheet" href="css/form-system.css" media="screen" />
     <link rel="stylesheet" href="css/android-touch.css" media="screen" />
+    <link rel="stylesheet" href="css/layout-collapse.css" media="screen" />
+    <link rel="stylesheet" href="css/photo-hints.css" media="screen" />
   </head>
   <body>
     <div class="app" id="app">
-      <aside class="sidebar" aria-label="Navegación del expediente">
-        <div class="brand">
+      <aside class="sidebar" id="sidebar" aria-label="Navegación del expediente">
+        <div class="sidebar-header">
+          <div class="brand">
           <div class="brand-mark">
             <img
               src="icons/app.png"
@@ -53,10 +56,23 @@
           <div>
             <strong>RabbitMole</strong><small>AUDIT / SECURITY</small>
           </div>
+          </div>
+          <button id="sidebar-toggle" class="sidebar-toggle" type="button"
+            aria-controls="sidebar-body" aria-expanded="true"
+            aria-label="Contraer menú lateral" title="Contraer menú lateral">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true" focusable="false">
+              <path d="M4 5h16v14H4zM9 5v14m5-11 4 4-4 4"/>
+            </svg>
+            <span class="sidebar-toggle-label" aria-hidden="true">Contraer menú</span>
+          </button>
         </div>
+        <div class="sidebar-body" id="sidebar-body">
+          <div class="sidebar-body-content">
         <div class="side-caption" id="workspace-label">MENÚ PRINCIPAL</div>
         <nav id="global-navigation" aria-label="Menú principal">
-          <button type="button" data-go="records">
+          <button type="button" data-go="records" aria-label="Biblioteca de auditorías" title="Biblioteca de auditorías">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +91,7 @@
               <path d="M8 8h8M8 12h8M8 16h5" /></svg
             ><span>Biblioteca de auditorías</span>
           </button>
-          <button type="button" data-go="backups">
+          <button type="button" data-go="backups" aria-label="Copias y exportaciones" title="Copias y exportaciones">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -93,7 +109,7 @@
               <path d="M4 7h16v13H4zM7 4h10v3M12 11v6m-3-3 3 3 3-3" /></svg
             ><span>Copias y exportaciones</span>
           </button>
-          <button type="button" data-go="settings">
+          <button type="button" data-go="settings" aria-label="Configuración" title="Configuración">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +130,7 @@
               /></svg
             ><span>Configuración</span>
           </button>
-          <button type="button" data-go="connections">
+          <button type="button" data-go="connections" aria-label="Conexiones online" title="Conexiones online">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -132,7 +148,7 @@
               <path d="M10 14 21 3M14 3h7v7M20 14v6H4V4h6" /></svg
             ><span>Conexiones online</span>
           </button>
-          <button type="button" data-go="glossary">
+          <button type="button" data-go="glossary" aria-label="Diccionario técnico" title="Diccionario técnico">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -151,6 +167,13 @@
               <path d="M12 11v5M12 7.5h.01" /></svg
             ><span>Diccionario técnico</span>
           </button>
+          <button type="button" data-go="device" aria-label="Dispositivo e instalación" title="Dispositivo e instalación">
+            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"
+              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true" focusable="false">
+              <rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4M10 5h4M10 13l2 2 3-3"/>
+            </svg><span>Dispositivo e instalación</span>
+          </button>
         </nav>
         <div class="audit-context" id="audit-context" hidden>
           <span class="context-kicker">EXPEDIENTE ACTUAL</span
@@ -161,6 +184,29 @@
           </button>
         </div>
         <nav id="navigation" aria-label="Secciones del expediente"></nav>
+        <div class="sidebar-appearance">
+          <label class="sidebar-appearance-label" for="palette">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+              stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M7.5 13h.01M9 8h.01M14.5 7.5h.01M17 12h.01" />
+            </svg>
+            Paleta de colores
+          </label>
+          <select id="palette">
+            <option value="rabbitmole" selected>Predeterminado</option>
+            <option value="ocean">Océano</option>
+            <option value="forest">Bosque</option>
+            <option value="indigo">Índigo</option>
+            <option value="graphite">Grafito</option>
+            <option value="midnight">Medianoche (oscuro)</option>
+            <option value="obsidian">Obsidiana (oscuro)</option>
+            <option value="pine-dark">Pino (oscuro)</option>
+            <option value="amethyst-dark">Amatista (oscuro)</option>
+            <option value="crimson-dark">Granate (oscuro)</option>
+          </select>
+        </div>
         <div
           class="side-bottom network-panel"
           id="network-panel"
@@ -296,7 +342,12 @@
             <div class="offline-health-copy">
               <div class="offline-health-title"><svg class="actionbar-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3 4 6v6c0 5 3.5 8.3 8 9 4.5-.7 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg><strong>Protección del trabajo offline</strong></div>
               <p id="offline-health-status" role="status" aria-live="polite">Pendiente de comprobación</p>
-              <p id="offline-storage-status" class="offline-storage-status" role="status" aria-live="polite" aria-atomic="true">Pulsa «Proteger almacenamiento» para solicitar persistencia. No cifra los datos.</p>
+              <p id="offline-storage-status" class="offline-storage-status" role="status" aria-live="polite" aria-atomic="true">Solicita persistencia cuando vayas a guardar expedientes importantes. No cifra los datos.</p>
+              <details class="offline-storage-help">
+                <summary>¿Por qué puede denegarse?</summary>
+                <p>El navegador decide si concede persistencia; la PWA no puede forzarla. En Chrome y otros navegadores Chromium, la instalación y el uso habitual pueden ayudar, pero no garantizan el permiso. Firefox puede solicitar confirmación o aplicar permisos del sitio.</p>
+                <p>La denegación no significa que el modo offline haya fallado. Conserva copias JSON protegidas fuera del navegador: incluso con persistencia, el usuario puede borrar los datos.</p>
+              </details>
             </div>
             <div class="action-row">
               <button class="button quiet small" id="offline-health-check" type="button">Comprobar</button>
@@ -306,23 +357,10 @@
           </section>
           </div>
         </details>
+          </div>
+        </div>
       </aside>
       <div class="content-wrap">
-        <section id="pwa-install-card" class="pwa-install-card" aria-label="Información de instalación" hidden>
-          <h2 id="pwa-install-heading">RabbitMole en tu dispositivo</h2>
-          <p id="pwa-install-status" role="status" aria-live="polite"></p>
-          <button type="button" class="button accent" id="pwa-install-button" hidden>Instalar RabbitMole</button>
-          <details><summary>Instalación y funcionamiento sin conexión</summary>
-            <ol class="pwa-steps">
-              <li><span class="pwa-step-icon" aria-hidden="true">▣</span><span><strong>Chrome, Edge o Brave:</strong> utiliza «Instalar RabbitMole» en el menú del navegador y <em>abre desde su icono</em>.</span></li>
-              <li><span class="pwa-step-icon" aria-hidden="true">◧</span><span><strong>iPhone y iPad:</strong> desde Safari pulsa <strong>Compartir → Añadir a pantalla de inicio</strong> y habilita «Abrir como app web» cuando aparezca.</span></li>
-              <li><span class="pwa-step-icon" aria-hidden="true">✓</span><span><strong>Antes de desconectarte:</strong> abre la PWA y pulsa <strong>Comprobar</strong> en «Protección del trabajo offline». Espera a que la caché esté completa.</span></li>
-              <li><span class="pwa-step-icon" aria-hidden="true">✈</span><span><strong>Prueba en modo avión:</strong> cierra todas las ventanas, desconecta Internet y <em>vuelve a abrir desde el icono</em>. Conserva copias JSON cifradas o protegidas fuera del navegador.</span></li>
-            </ol>
-            <p>La instalación depende del navegador y del sistema. Si no admite PWA, puedes usar la web limitada o un navegador compatible. La instalación no otorga permisos del sistema ni sustituye la autorización de los servicios externos.</p>
-          </details>
-        </section>
-
         <header class="topbar" aria-label="Barra de herramientas">
           <div class="topbar-context">
             <span class="topbar-context-icon" aria-hidden="true"><svg class="actionbar-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
@@ -337,19 +375,7 @@
           <div class="actions" aria-label="Acciones de trabajo y archivos">
             <div class="actionbar-group actionbar-group--tools" role="group" aria-label="Herramientas y navegación">
               <span class="actionbar-group-label" aria-hidden="true">Herramientas</span>
-              <label class="theme-select" for="palette">Paleta
-                <select id="palette" aria-label="Paleta de color">
-                  <option value="ocean">Océano</option>
-                  <option value="forest">Bosque</option>
-                  <option value="indigo">Índigo</option>
-                  <option value="graphite">Grafito</option>
-                  <option value="midnight">Medianoche (oscuro)</option>
-                  <option value="obsidian">Obsidiana (oscuro)</option>
-                  <option value="pine-dark">Pino (oscuro)</option>
-                  <option value="amethyst-dark">Amatista (oscuro)</option>
-                  <option value="crimson-dark">Granate (oscuro)</option>
-                </select>
-              </label>
+              
               <button type="button" id="open-library" class="button quiet actionbar-button"><svg class="actionbar-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span>Mis auditorías</span></button>
               <span id="pdf-theme" hidden></span>
 
@@ -364,10 +390,72 @@
           </div>
 
         </header>
+        <section id="pwa-install-card" class="pwa-install-card" aria-label="Dispositivo e instalación" hidden>
+          <h2 id="pwa-install-heading">RabbitMole en tu dispositivo</h2>
+          <p id="pwa-install-status" role="status" aria-live="polite"></p>
+          <button type="button" class="button accent" id="pwa-install-button" hidden>Instalar RabbitMole</button>
+          <details><summary>Instalación y funcionamiento sin conexión</summary>
+            <ol class="pwa-steps">
+              <li><span class="pwa-step-icon" aria-hidden="true">▣</span><span><strong>Chrome, Edge o Brave:</strong> utiliza «Instalar RabbitMole» en el menú del navegador y <em>abre desde su icono</em>.</span></li>
+              <li><span class="pwa-step-icon" aria-hidden="true">◧</span><span><strong>iPhone y iPad:</strong> desde Safari pulsa <strong>Compartir → Añadir a pantalla de inicio</strong> y habilita «Abrir como app web» cuando aparezca.</span></li>
+              <li><span class="pwa-step-icon" aria-hidden="true">✓</span><span><strong>Antes de desconectarte:</strong> abre la PWA y pulsa <strong>Comprobar</strong> en «Protección del trabajo offline». Espera a que la caché esté completa.</span></li>
+              <li><span class="pwa-step-icon" aria-hidden="true">✈</span><span><strong>Prueba en modo avión:</strong> cierra todas las ventanas, desconecta Internet y <em>vuelve a abrir desde el icono</em>. Conserva copias JSON cifradas o protegidas fuera del navegador.</span></li>
+            </ol>
+            <p>La instalación depende del navegador y del sistema. Si no admite PWA, puedes usar la web limitada o un navegador compatible. La instalación no otorga permisos del sistema ni sustituye la autorización de los servicios externos.</p>
+          </details>
+          <details class="mobile-field-check" id="mobile-field-check">
+            <summary>Lista previa para auditar desde el móvil</summary>
+            <p class="mobile-field-help">Servidor y red · comprueba esto <strong>hoy</strong> con un expediente ficticio. Las casillas no se guardan ni autorizan operaciones.</p>
+            <ul class="mobile-field-items">
+              <li><label><input type="checkbox"><span>La PWA está <strong>instalada y abierta desde su icono</strong>, no desde una pestaña.</span></label></li>
+              <li><label><input type="checkbox"><span><strong>Offline comprobado:</strong> caché completa, app cerrada y vuelta a abrir en modo avión.</span></label></li>
+              <li><label><input type="checkbox"><span><strong>Datos de prueba:</strong> crear un expediente ficticio, guardar un registro, adjuntar una foto y volver a abrirlo.</span></label></li>
+              <li><label><input type="checkbox"><span><strong>Exportación comprobada:</strong> descargar JSON, localizarlo en el gestor de archivos y comprobar su importación sin sustituir datos reales.</span></label></li>
+              <li><label><input type="checkbox"><span><strong>Autorización y alcance:</strong> responsable, sistemas, red, ventanas, pruebas permitidas, prohibiciones y forma de contacto.</span></label></li>
+              <li><label><input type="checkbox"><span><strong>Medios disponibles:</strong> batería, cargador, espacio libre, acceso Wi-Fi de auditoría y, si procede, cuenta técnica de solo lectura.</span></label></li>
+              <li><label><input type="checkbox"><span><strong>Privacidad:</strong> evitar fotografiar personas, alumnos, credenciales o información no autorizada. Copia JSON protegida fuera de la PWA.</span></label></li>
+            </ul>
+            <p class="mobile-field-help"><strong>Discovery no funciona dentro del navegador.</strong> En Android, Termux puede ejecutar comandos o un reconocimiento acotado si el dispositivo lo permite. Sin terminal, documenta IP, host, interfaz, DNS, gateway, VLAN y evidencias manualmente.</p>
+          </details>
+          <details class="mobile-terminal-setup" id="mobile-terminal-setup">
+            <summary>Preparar terminal y Discovery: Android / iPhone / iPad</summary>
+            <p class="mobile-field-help">La terminal es <strong>opcional</strong>. RabbitMole no ejecuta comandos del sistema, y la preparación de este apartado no realiza reconocimiento de red ni envía datos. Úsala solo con el alcance y los permisos autorizados.</p>
+            <details id="mobile-terminal-android">
+              <summary>Android · instalar y preparar Termux</summary>
+              <ol>
+                <li>Instala <a href="https://f-droid.org/packages/com.termux/">Termux desde F-Droid</a> o desde las <a href="https://github.com/termux/termux-app/releases">versiones oficiales en GitHub</a>. Mantén todas las extensiones de Termux en la misma fuente de firma. No es una aplicación para iOS.</li>
+                <li>Abre Termux <strong>con conexión</strong> y prepara Python y Git. Nmap es opcional. Solo concede acceso a los archivos compartidos si vas a transferir el JSON mediante Descargas.</li>
+              </ol>
+              <pre><code>pkg update
+pkg upgrade
+pkg install python git nmap
+termux-setup-storage
+git clone --depth 1 https://github.com/sempitern0/RabbitMole.git
+cd RabbitMole
+python discovery/discover.py doctor</code></pre>
+              <p class="mobile-field-help">El repositorio sin indicar rama utiliza <code>main</code> (versión publicada del código, que puede diferir de esta PR). Si necesitas probar esta PR antes del merge, clona con <code>--branch feature/pwa-version-offline-fallback-20261018</code>.</p>
+              <p>Tras recibir autorización expresa para una subred IPv4 privada, puedes ejecutar el asistente:</p>
+              <pre><code>python discovery/discover.py wizard</code></pre>
+              <p>Introduce el CIDR aprobado, elige un motor disponible y guarda un archivo <code>.json</code> nuevo, por ejemplo en <code>~/storage/downloads/</code>; el asistente requiere escribir <code>AUTORIZO</code> antes de descubrir hosts. Abre RabbitMole → <strong>Hardware → Captura asistida</strong>; revisa e incorpora las filas. Repite con el mismo archivo en <strong>Redes → Captura asistida</strong>.</p>
+              <p class="mobile-field-help">Android puede bloquear Nmap, ICMP o la detección de interfaces sin root. No eludas las restricciones del dispositivo. Las capturas en Descargas son potencialmente sensibles: muévelas a almacenamiento protegido y aplica la política de retención autorizada. Si no funciona, registra observaciones manualmente.</p>
+            </details>
+            <details id="mobile-terminal-ios">
+              <summary>iPhone / iPad · alternativa sin Termux</summary>
+              <p><strong>Termux no existe para iOS/iPadOS.</strong> Para tareas locales auxiliares puedes utilizar <a href="https://github.com/holzschu/a-shell">a-Shell</a> (terminal y Python) o <a href="https://github.com/ish-app/ish">iSH</a> (entorno Linux emulado), instaladas desde sus canales oficiales. No equivalen a Termux ni garantizan que Discovery pueda acceder a la red del dispositivo.</p>
+              <p>En a-Shell, comprueba las utilidades disponibles sin realizar reconocimiento:</p>
+              <pre><code>help -l
+python3 --version</code></pre>
+              <p>Para descubrir hosts, utiliza <strong>Discovery en un PC autorizado</strong> y transfiere su JSON mediante un canal aprobado a la app Archivos del iPhone/iPad. Después, importa el archivo desde <strong>Hardware → Captura asistida</strong> y <strong>Redes → Captura asistida</strong>. También existe un puente HTTPS LAN opcional si el navegador, el certificado y las políticas locales lo permiten.</p>
+              <p class="mobile-field-help">En iOS, las apps están aisladas entre sí: utiliza Archivos o el selector del sistema. Si una app solicita permiso de red local, revísalo en Ajustes → Privacidad y seguridad → Red local. No presupongas soporte de sockets, Nmap, ICMP o escaneo de redes desde una terminal iOS.</p>
+            </details>
+            <p class="mobile-field-help"><strong>Prueba final:</strong> con datos ficticios, verifica que la terminal puede producir o recibir el JSON, que RabbitMole permite revisarlo sin sobrescritura automática y que el expediente sigue abriendo sin conexión. Las funciones de Discovery no convierten respuestas de hosts en vulnerabilidades o VLAN comprobadas.</p>
+          </details>
+        </section>
         <main id="workspace" tabindex="-1"></main>
         <footer class="app-footer">
           RabbitMole · Los resultados deben ser revisados por el auditor ·
           <span id="local-date"></span>
+          <span class="app-version" id="app-version" aria-label="Versión de RabbitMole">Versión 1.0.0</span>
         </footer>
       </div>
     </div>
@@ -393,6 +481,32 @@
         <div class="action-row">
           <button type="button" class="button accent" id="camera-capture-take">Tomar fotografía</button>
           <button type="button" class="button quiet" id="camera-capture-cancel">Cancelar</button>
+        </div>
+      </div>
+    </dialog>
+    <dialog id="photo-hint-dialog" class="photo-hint-dialog" aria-labelledby="photo-hint-title">
+      <div class="camera-capture-content">
+        <h2 id="photo-hint-title">Información detectada en la fotografía</h2>
+        <p>La foto ya está guardada. Comprueba cualquier código o etiqueta antes de aplicarlo: el reconocimiento puede equivocarse y no verifica el dispositivo.</p>
+        <label for="photo-hint-target">Activo al que añadir los datos</label>
+        <select id="photo-hint-target"></select>
+        <div id="photo-hint-fields" class="photo-hint-fields"></div>
+        <div id="photo-hint-raw-row">
+          <label for="photo-hint-raw">Código detectado (sin clasificar)</label>
+          <input id="photo-hint-raw" type="text" maxlength="120">
+          <label for="photo-hint-raw-field">Interpretar como</label>
+          <select id="photo-hint-raw-field">
+            <option value="">Elegir un campo…</option>
+            <option value="serial">Número de serie</option>
+            <option value="model">Modelo</option>
+            <option value="vendor">Fabricante</option>
+            <option value="name">Nombre / hostname</option>
+          </select>
+        </div>
+        <p id="photo-hint-status" role="status" aria-live="polite"></p>
+        <div class="action-row">
+          <button id="photo-hint-confirm" type="button" class="button accent">Confirmar datos</button>
+          <button id="photo-hint-cancel" type="button" class="button quiet">Omitir · conservar fotografía</button>
         </div>
       </div>
     </dialog>
@@ -426,11 +540,14 @@
     </dialog>
     <article id="report" aria-label="Informe final de auditoría"></article>
     <script src="js/deployment-profile.js" defer></script>
+    <script src="js/app-version.js" defer></script>
     <script src="js/exporters.js" defer></script>
     <script src="js/hardware-catalog.js" defer></script>
     <script src="js/router-catalog.js" defer></script>
     <script src="js/software-catalog.js" defer></script>
     <script src="js/os-catalog.js" defer></script>
+    <script src="js/glossary-terms.js" defer></script>
+    <script src="js/glossary-guides.js" defer></script>
     <script src="js/glossary.js" defer></script>
     <script src="js/audit-relations.js" defer></script>
     <script src="js/audit-evidence-images.js" defer></script>
@@ -446,18 +563,22 @@
     <script src="js/inventory-import.js" defer></script>
     <script src="js/input-guidance.js" defer></script>
     <script src="js/secure-transfer.js" defer></script>
+    <script src="js/backup-workflow.js" defer></script>
     <script src="js/secure-transfer-ui.js" defer></script>
     <script src="js/document-control.js" defer></script>
     <script src="js/pdf-appendices.js" defer></script>
     <script src="js/external-network-analysis.js" defer></script>
     <script src="js/pwa-updates.js" defer></script>
     <script src="js/pwa-install.js" defer></script>
+    <script src="js/discovery-bridge.js" defer></script>
     <script src="js/camera-capture.js" defer></script>
+    <script src="js/photo-code-hints.js" defer></script>
     <script src="js/offline-health.js" defer></script>
     <script src="js/audit-workflow-views.js" defer></script>
     <script src="js/audit-actions.js" defer></script>
     <script src="js/android-touch.js" defer></script>
     <script src="js/audit-record-navigation.js" defer></script>
+    <script src="js/ui-layout.js" defer></script>
     <script src="js/audit-field-renderer.js" defer></script>
     <script src="js/audit-rack.js" defer></script>
     <script src="js/audit-server-install.js" defer></script>
@@ -465,6 +586,10 @@
     <script src="js/audit-inventory-presets.js" defer></script>
     <script src="js/audit-report-data.js" defer></script>
     <script src="js/audit-report-infrastructure.js" defer></script>
+    <script src="js/app-definitions.js" defer></script>
+    <script src="js/app-team.js" defer></script>
+    <script src="js/app-model.js" defer></script>
+    <script src="js/palette-preferences.js" defer></script>
     <script src="js/app.js" defer></script>
   </body>
 </html>

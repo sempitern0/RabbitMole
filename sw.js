@@ -1,7 +1,11 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v85-report-e2e";
+const CACHE_NAME = "rabbitmole-shell-v97-server-software-licenses";
 const CACHE_PREFIX = "rabbitmole-shell-";
+const VERSION = "1.0.0";
+const READY_KEY = "./.rabbitmole-shell-ready";
+const clientCache = new Map();
+
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
 );
@@ -10,7 +14,12 @@ const CORE = [
   "./index.html",
   "./css/styles.css",
   "./js/app.js",
+  "./js/palette-preferences.js",
+  "./js/app-definitions.js",
+  "./js/app-team.js",
+  "./js/app-model.js",
   "./js/deployment-profile.js",
+  "./js/app-version.js",
   "./js/audit-storage.js",
   "./js/audit-import-plan.js",
   "./css/normalize.css",
@@ -30,6 +39,7 @@ const CORE = [
   "./js/audit-workflow-views.js",
   "./js/audit-actions.js",
   "./js/audit-record-navigation.js",
+  "./js/ui-layout.js",
   "./js/audit-field-renderer.js",
   "./js/audit-rack.js",
   "./js/audit-server-install.js",
@@ -39,6 +49,8 @@ const CORE = [
   "./js/audit-inventory-presets.js",
   "./js/android-touch.js",
   "./css/android-touch.css",
+  "./css/layout-collapse.css",
+  "./css/photo-hints.css",
   "./css/comparison.css",
   "./js/audit-comparison.js",
   "./js/control-templates.js",
@@ -48,18 +60,23 @@ const CORE = [
   "./js/router-catalog.js",
   "./js/software-catalog.js",
   "./js/os-catalog.js",
+  "./js/glossary-terms.js",
+  "./js/glossary-guides.js",
   "./js/glossary.js",
   "./js/inventory-import.js",
   "./js/input-guidance.js",
   "./js/secure-transfer.js",
+  "./js/backup-workflow.js",
   "./js/secure-transfer-ui.js",
   "./js/document-control.js",
   "./js/pdf-appendices.js",
   "./js/external-network-analysis.js",
   "./js/pwa-updates.js",
   "./js/pwa-install.js",
+  "./js/discovery-bridge.js",
   "./js/offline-health.js",
   "./js/camera-capture.js",
+  "./js/photo-code-hints.js",
   "./css/glossary.css",
   "./css/atkinson.css",
   "./css/workspace-ux.css",
@@ -73,6 +90,60 @@ const CORE = [
   "./icons/icon-512.png",
 ];
 const urlFor = (path) => new URL(path, self.registration.scope).href;
+const isShellCache = (name) => name.startsWith(CACHE_PREFIX);
+// Validate before trusting any shell, including one with a readiness marker.
+const verifiedShells = new Map();
+async function usableShell(name, fresh = false) {
+  if (!fresh && verifiedShells.has(name)) return verifiedShells.get(name);
+  const check = (async () => {
+    const cache = await caches.open(name);
+    const page = await cache.match(urlFor("./index.html"));
+    if (!page) return false;
+    const html = await page.text();
+    const assets = [
+      ...html.matchAll(/<script\s+src="([^"]+)"/g),
+      ...html.matchAll(/<link[^>]+href="([^"]+\.css)"/g),
+    ].map((match) => match[1].replace(/^\.\//, ""));
+    if (!assets.includes("js/app.js") || !assets.some((path) => path.startsWith("css/")))
+      return false;
+    if (name === CACHE_NAME) {
+      if (!(await cache.match(urlFor(READY_KEY)))) return false;
+      const found = await Promise.all(CORE.map((path) => cache.match(urlFor(path))));
+      if (found.some((response) => !response)) return false;
+    }
+    for (const path of assets) {
+      if (!/^(?:js|css)\/[a-zA-Z0-9_./-]+\.(?:js|css)$/.test(path) || path.includes(".."))
+        return false;
+      if (!(await cache.match(urlFor("./" + path)))) return false;
+    }
+    return true;
+  })().catch(() => false);
+  verifiedShells.set(name, check);
+  const valid = await check;
+  if (!valid) verifiedShells.delete(name);
+  return valid;
+}
+async function chooseShell() {
+  // CacheStorage is always available in browsers; tolerate minimal test doubles.
+  if (typeof caches.keys !== "function") return CACHE_NAME;
+  const names = (await caches.keys()).filter(isShellCache);
+  if (names.includes(CACHE_NAME) && await usableShell(CACHE_NAME, true)) return CACHE_NAME;
+  for (const name of names.reverse()) {
+    if (name !== CACHE_NAME && await usableShell(name, true)) return name;
+  }
+  return null;
+}
+async function shellForClient(event) {
+  const id = event.clientId || event.resultingClientId;
+  if (id && clientCache.has(id)) {
+    const name = clientCache.get(id);
+    if ((await caches.keys()).includes(name) && await usableShell(name, event.request?.mode === "navigate")) return name;
+    clientCache.delete(id);
+  }
+  const name = await chooseShell();
+  if (id && name) clientCache.set(id, name);
+  return name;
+}
 const reply = (event, payload) => {
   try {
     event.ports?.[0]?.postMessage(payload);
@@ -83,13 +154,16 @@ async function shellHealth() {
   const keys = CORE.map(urlFor);
   const available = await Promise.all(keys.map((key) => cache.match(key)));
   const missing = CORE.filter((_, index) => !available[index]);
+  const marked = !!(await cache.match(urlFor(READY_KEY)));
   return {
-    ok: missing.length === 0,
+    ok: marked && missing.length === 0,
     version: CACHE_NAME,
-    total: CORE.length,
-    cached: CORE.length - missing.length,
-    missing: missing.slice(0, 8),
-    missingCount: missing.length,
+    appVersion: VERSION,
+    activeCache: await chooseShell(),
+    total: CORE.length + 1,
+    cached: CORE.length - missing.length + (marked ? 1 : 0),
+    missing: [...missing, ...(!marked ? [READY_KEY] : [])].slice(0, 8),
+    missingCount: missing.length + (marked ? 0 : 1),
   };
 }
 async function repairMissing() {
@@ -113,6 +187,12 @@ async function repairMissing() {
       throw Error("No se pudo recuperar " + path + " del servidor original.");
     await cache.put(url, response);
   }
+  const complete = await Promise.all(CORE.map((path) => cache.match(urlFor(path))));
+  if (complete.some((response) => !response))
+    throw Error("La recuperación ha dejado recursos incompletos.");
+  // Marker is written last so partial repair cannot become eligible.
+  await cache.put(urlFor(READY_KEY), new Response("ready"));
+  verifiedShells.delete(CACHE_NAME);
   const after = await shellHealth();
   return { ...after, repaired: before.missingCount - after.missingCount };
 }
@@ -168,6 +248,7 @@ self.addEventListener("install", (event) => {
               }),
           ),
         );
+        await cache.put(urlFor(READY_KEY), new Response("ready"));
         const readiness = await shellHealth();
         if (!readiness.ok) throw Error("La versión offline está incompleta.");
         await Promise.all(
@@ -192,11 +273,14 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // Keep one previous shell as a recovery reserve; cap historical storage use.
-      const keys = (await caches.keys()).filter(
-        (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME,
-      );
-      await Promise.all(keys.slice(0, -1).map((key) => caches.delete(key)));
+      // Preserve the newest usable predecessor and any cache still owned by a live client.
+      const names = (await caches.keys()).filter(isShellCache);
+      const previous = [];
+      for (const name of names) {
+        if (name !== CACHE_NAME && await usableShell(name)) previous.push(name);
+      }
+      const keep = new Set([CACHE_NAME, previous.at(-1), ...clientCache.values()]);
+      await Promise.all(names.filter((name) => !keep.has(name)).map((name) => caches.delete(name)));
       await self.clients.claim();
     })(),
   );
@@ -219,15 +303,22 @@ self.addEventListener("fetch", (event) => {
   }
   event.respondWith(
     (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      const hit = await cache.match(request);
-      if (hit) return hit;
-      // Handles ?query navigation and PWA launches when Python/HTTPS server is unavailable.
-      if (request.mode === "navigate") {
-        const shell =
-          (await cache.match(urlFor("./index.html"))) ||
-          (await cache.match(urlFor("./")));
-        if (shell) return shell;
+      const selected = await shellForClient(event);
+      if (selected) {
+        const cache = await caches.open(selected);
+        if (request.mode === "navigate") {
+          const shell = await cache.match(urlFor("./index.html"));
+          if (shell) return shell;
+        } else {
+          const hit = await cache.match(request, { ignoreSearch: true });
+          if (hit) return hit;
+          // A missing JS/CSS asset must not be silently mixed with another release.
+          if (/\.(?:js|css)$/.test(url.pathname)) {
+            verifiedShells.delete(selected);
+            if (event.clientId) clientCache.delete(event.clientId);
+            return new Response("Recurso ausente en la versión offline activa.", {status:503});
+          }
+        }
       }
       try {
         const response = await fetch(request);
@@ -237,7 +328,7 @@ self.addEventListener("fetch", (event) => {
           url.pathname.endsWith(".woff2") &&
           url.pathname.includes("/fonts/")
         ) {
-          event.waitUntil(cache.put(request, response.clone()));
+          if (selected) event.waitUntil(caches.open(selected).then((cache) => cache.put(request, response.clone())));
         }
         return response;
       } catch (_error) {

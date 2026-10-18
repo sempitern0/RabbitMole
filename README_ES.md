@@ -277,3 +277,132 @@ Control de calidad revisa ahora la coherencia de los datos **documentados** de r
 ### Informe ejecutivo, técnico y pruebas de impresión
 
 El **ejecutivo** incluye una síntesis de cobertura física y servidores, sin direcciones IP, versiones de sistemas ni inventario detallado; las decisiones siguen fundamentadas en los hallazgos documentados, nunca en supuestas conformidades. El **técnico** añade ubicación documental en racks, posiciones U, sistemas y funciones de servidores y referencias a evidencias frontal/posterior, además del inventario, los controles y la trazabilidad existentes. Los PDF externos se enumeran por nombre y SHA-256: se entregan aparte, no se fusionan. La impresión conserva la página de firmas y controla títulos, tablas y fotografías al paginar. El conjunto E2E de Chromium verifica los dos perfiles y genera PDF A4 en el entorno CI; `PDF_ACCEPTANCE_DIR` permite guardar las muestras para revisión visual. La impresión real de iOS/Android no se considera validada por esta emulación.
+
+### Versión visible y recuperación offline
+
+El pie de la aplicación muestra la versión del producto (`package.json`: `1.0.0`) de forma discreta y legible en todos los temas. El identificador técnico del shell activo aparece al situar el puntero sobre la versión; no requiere consultar un servidor ni expone datos de la auditoría.
+
+El service worker precarga todos los recursos esenciales antes de aceptar una actualización. Si no puede completarse, se conserva el release instalado. Si la caché más reciente deja de ser utilizable, se selecciona una caché anterior completa cuando el navegador todavía la conserva, sin mezclar archivos estáticos entre versiones. Antes de trabajar sin conexión, utiliza «Mantenimiento y modo offline → Comprobar» y verifica un arranque desde el icono. Los navegadores pueden eliminar cachés por espacio; exporta periódicamente el expediente JSON.
+
+
+### Persistencia del almacenamiento: por qué puede no concederse
+
+La concesión de `navigator.storage.persist()` depende del navegador y **no puede forzarse desde JavaScript**. Chromium puede rechazarla automáticamente por heurísticas de instalación y uso; Firefox puede mostrar un permiso del sitio. La solicitud se ejecuta directamente desde el botón para conservar la activación del usuario. Una respuesta negativa no significa que IndexedDB o la caché offline estén averiados, ni que el navegador vaya a borrarlos de inmediato. Verifica `Comprobar`, inicia la PWA desde su icono, utiliza el mismo origen y perfil de navegador y conserva copias JSON protegidas fuera de la aplicación. La cuota indicada es estimativa y no constituye un permiso de persistencia. Borrar los datos del sitio, utilizar navegación privada o limpiar el almacenamiento puede eliminar expedientes incluso con persistencia concedida.
+
+### Paleta de marca por defecto
+
+En nuevas instalaciones, RabbitMole utiliza la paleta **RabbitMole · Marca**: azul noche, acero azulado, gris pizarra y marfil cálido para mantener una lectura profesional y diferenciada de «Océano». El selector del menú lateral permite continuar usando todas las paletas anteriores. **La preferencia ya almacenada** en `rabbitmole:palette:v1` no se modifica por una actualización; el nuevo valor solo se utiliza cuando no existe una elección guardada o cuando el valor guardado no está disponible. La portada PDF sigue la paleta seleccionada, manteniendo el cuerpo en papel claro para su lectura e impresión. La paleta se inspira en los tonos de identidad definidos en los estilos actuales y no implica una extracción automática de píxeles del PNG del icono.
+
+
+## Arquitectura actual y optimización del repositorio
+
+RabbitMole utiliza una arquitectura **JavaScript estático, sin dependencias remotas en tiempo de ejecución**, preparada para uso offline. `js/app.js` conserva el estado de la sesión, navegación, eventos y composición de informes; `js/app-definitions.js`, `js/app-model.js` y `js/app-team.js` son fábricas con responsabilidades de campos, JSON v3 e identidades. Las implementaciones de inventario, mitigación, impresión, almacenamiento y conectividad ya se distribuyen entre módulos especializados.
+
+El diccionario de **212 conceptos** mantiene su interfaz pública `AuditGlossary`, ahora con datos separados y compactos:
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `js/glossary-terms.js` | Conceptos, sinónimos, ejemplos, evidencias y referencias; registros compactos |
+| `js/glossary-guides.js` | Diagnósticos, comandos y criterios de interpretación por sistema |
+| `js/glossary.js` | Reconstrucción de objetos públicos, búsqueda, ayuda contextual, protocolos y guías macOS |
+| `css/glossary.css` | Presentación adaptable, guía paso a paso y comandos con contraste |
+| `js/app.js` | Navegación y renderizado de la vista, sin duplicar el catálogo |
+
+Esta distribución conserva las búsquedas y los identificadores de los términos, y reduce en unos **57 KB (~26 %) el código fuente total del glosario**; no equivale a reducir todo el repositorio en ese porcentaje. Se mantienen scripts separados en el service worker, los instaladores y el despliegue web para su arranque offline.
+
+### Uso del diccionario y sus guías
+
+Desde la PWA, entra en **Diccionario técnico**, busca términos o sinónimos y filtra por temática. Selecciona un concepto para consultar definición, verificaciones, evidencia, cautelas, protocolos de auditoría y, cuando existen, alternativas de consola por plataforma. **Copiar** no ejecuta el comando; revisa siempre el alcance, el equipo y el permiso antes de utilizarlo. Los comandos pueden consultar la red y sus resultados requieren interpretación y corroboración. El acceso contextual desde campos del expediente permite volver al asistente.
+
+### Discovery desde un PC o Android
+
+En una estación de auditoría, ejecuta `python discovery/discover.py doctor` para una comprobación legible (usa `doctor --json` para integraciones) y `python discovery/discover.py wizard` para el asistente con confirmación de CIDR. Una tablet Android puede ejecutar Python y herramientas compatibles mediante **Termux** y después importar el JSON generado; en la PWA instalada también existe un bridge HTTPS opcional ejecutado desde un equipo de la LAN. Consulta [la guía Discovery](discovery/README_ES.md): certificado confiable, token temporal, autorización y limitaciones de Nmap/ping en Android. Discovery no identifica automáticamente políticas de segmentación efectivas.
+
+### Mantenimiento, instalación y validación
+
+Para instalar, consulta [INSTALLATION_ES.md](INSTALLATION_ES.md). Al introducir archivos JavaScript o CSS nuevos, los recursos deben figurar en el HTML, el precache del service worker y ambos instaladores. La PWA instalada ofrece comprobación de recursos offline, actualizaciones confirmadas y recuperación desde el shell anterior disponible. La persistencia de almacenamiento se **solicita**, pero depende del navegador; exporta copias JSON periódicamente.
+
+Validación local recomendada:
+
+```bash
+node tests/test_glossary_data.cjs
+node tests/test_glossary.cjs
+node tests/test_glossary_guide.cjs
+npm run check
+npm run test:browser
+npm run deploy:check
+```
+
+Se requiere Node y, para pruebas de navegador, Chromium/Playwright instalado. Una prueba no ejecutada no confirma compatibilidad de dispositivo. Antes de desplegar verifica las comprobaciones de CI, CSP, perfiles público/instalado, instalación y arranque offline.
+
+### Ajustes responsive y actualización de la paleta anterior
+
+«Predeterminado» es la paleta RabbitMole inspirada en el icono. Una edición antigua almacenaba «Océano» automáticamente incluso sin selección del usuario: la primera apertura después de esta actualización lo migra una sola vez a «Predeterminado». Si eliges «Océano» de nuevo, se registra como elección explícita y se mantiene en siguientes aperturas; otras paletas guardadas permanecen intactas. El navegador no permite reconstruir con certeza si un valor antiguo de «Océano» era explícito, de modo que esta migración de compatibilidad es intencionada. No borres datos del sitio ni expedientes para cambiar de tema.
+
+En **tabletas (hasta 1000 px)**, la navegación deja de ocupar una columna lateral fija, el selector de paleta se adapta al panel superior y las tablas de red se desplazan dentro de su propia sección. En **móviles (hasta 720 px)**, el menú global se organiza en cuadrícula, la navegación de auditoría se desplaza horizontalmente, los formularios pasan a una columna y los botones tienen objetivos táctiles suficientes. El modo Android conserva sus ajustes específicos cuando hay puntero táctil. Estos cambios afectan a la pantalla, no al PDF impreso. Antes de auditar en campo comprueba accesibilidad, arranque offline y la vista de formularios a 390 y 768 px.
+
+### Aprovechar el espacio de pantalla
+
+Usa **Contraer menú** en la cabecera lateral para dejar en escritorio una barra estrecha de iconos o plegar la navegación en tablet y móvil. Los iconos conservan nombre accesible y título; pulsa el mismo control para expandir. En inventarios largos, **Ocultar filtros** pliega el navegador sticky a una cabecera, manteniendo el botón para reabrir la búsqueda y el salto entre registros. Ambos estados se guardan solo en este dispositivo, no afectan a expedientes, PDF o exportaciones y respetan la preferencia de movimiento reducido del sistema.
+
+### Fase 1: integridad y recuperación offline
+
+RabbitMole verifica que el shell actual conserve la marca de instalación y los recursos esenciales; la marca sola no basta. Si pierde archivos puede elegir una caché anterior completa que permanezca en el navegador. El service worker local utiliza una versión de caché propia, mientras que Cloudflare la genera a partir del contenido del bundle. No borres manualmente CacheStorage para intentar recuperar un expediente: los datos de auditoría se almacenan aparte y deben exportarse regularmente en JSON. Valida actualización, arranque sin conexión y recuperación antes de desplegar.
+
+
+## Guía práctica: Conexiones online (Nextcloud, correo y compartir)
+
+**Conexiones online es opcional.** No sincroniza expedientes ni funciona como almacenamiento remoto automático. En la **PWA instalada** abre una auditoría y entra en **Conexiones online**. En la vista web pública permanecen desactivadas las credenciales y las transferencias.
+
+### Nextcloud en cuatro pasos
+
+1. En Nextcloud, crea una **contraseña de aplicación revocable** para el auditor y una carpeta destinada a sus entregas. Copia la URL WebDAV HTTPS de esa carpeta, por ejemplo `https://nube.example/remote.php/dav/files/usuario/Auditorias/`. Evita parámetros o credenciales en la URL. El certificado debe ser confiable y el servidor permitir CORS para el origen exacto de la PWA, incluidas las cabeceras de autorización y el método `PROPFIND`.
+2. En RabbitMole selecciona **Nextcloud**, introduce URL, usuario, contraseña de aplicación y frase de paso local (mínimo 12 caracteres). Pulsa **Guardar perfil cifrado**. La configuración queda cifrada mediante AES-256-GCM/PBKDF2 en el dispositivo; la frase no se conserva y se necesitará para **Desbloquear perfil** en futuras sesiones.
+3. Pulsa **Comprobar conexión (sin subir)**. Se hace una petición `PROPFIND Depth: 0` al directorio configurado. HTTP 207 o 200 confirma acceso de lectura a la carpeta, **no** permiso de escritura ni éxito de una futura transferencia. Un error 401 apunta a credenciales; 403 a permisos; 404 a ruta incorrecta; un error de red puede deberse a certificado, VPN, DNS o CORS. No se envía ningún expediente durante la comprobación.
+4. Elige la operación: **Subir copia cifrada** (recomendado para respaldo) cifra el expediente localmente; **Subir PDF** requiere seleccionar y revisar un PDF ya generado; opcionalmente crea un enlace de lectura con contraseña y caducidad de 1–7 días. Todas las subidas requieren confirmación manual. El JSON legible queda bajo **Opciones avanzadas**, usa nombres únicos y no sobrescribe archivos ya existentes. La subida no garantiza por sí misma que el archivo sea una copia restaurable: verifica las entregas en Nextcloud.
+
+El correo abre el cliente con un borrador: los adjuntos se añaden **manualmente**. **Compartir con el sistema** usa la función nativa del navegador cuando existe. Ninguno de esos canales requiere configurar Nextcloud. Google Drive/OneDrive/Microsoft 365 no cuentan todavía con un conector OAuth funcional; no introduzcas tokens ni claves de estos servicios.
+
+**Seguridad y límites:** una copia cifrada protege el contenido antes del envío; un PDF o un JSON legible solo están protegidos durante el transporte HTTPS y quedan legibles en el destino. Entrega las contraseñas por un canal distinto. El botón de prueba no configura CORS ni comprueba que el destino tenga espacio. No se realizan sincronizaciones automáticas ni se almacenan tokens de compartición entre sesiones.
+
+### Iconos coherentes con la paleta
+
+Los iconos del menú principal y los símbolos de navegación de las fases de auditoría adoptan automáticamente el acento de cada paleta, también al pasar el ratón y en la sección activa. «Predeterminado» utiliza marfil sobre azul noche; otros temas mantienen su identidad (azul, grafito, verde bosque, violeta, etc.). Las barras de progreso del asistente usan el color principal del tema. Los colores semánticos de éxito, advertencia y error se conservan para evitar ambigüedades.
+
+### Auditoría presencial desde un móvil
+
+Antes de trabajar en un centro académico o empresa, consulta la [guía de campo para móvil](docs/AUDITORIA_MOVIL_ES.md): instalación Android/iPhone, prueba real de arranque offline, comprobación de guardado/fotografía/JSON, itinerario servidor + red, privacidad y Terminal Termux opcional. La tarjeta de instalación incorpora una lista previa plegable y utilizable sin conexión. La PR no publica automáticamente la versión en Cloudflare.
+
+### Pantalla separada «Dispositivo e instalación»
+
+La instalación y lista previa a auditorías móviles están disponibles en **Menú lateral → Dispositivo e instalación** (icono de móvil con el lateral contraído). No se muestra encima de las auditorías, pero mantiene la instalación desde Android/iOS, instrucciones offline y el checklist. Regresa a «Biblioteca de auditorías» para trabajar.
+
+### Legibilidad y espaciado del diccionario
+
+Las fichas del diccionario (incluidos «Ejemplo», evidencias, advertencias, mini-guías y el panel de ayuda contextual) mantienen márgenes interiores adaptados a la pantalla en todas las paletas. El espaciado vertical de las secciones ya no elimina el padding de sus recuadros. También se han revisado los contenedores de controles, formularios, comandos, análisis de red y aceptación de riesgo para conservar su separación sin añadir elementos de interfaz.
+
+### Selectores ágiles en móvil y tablet
+
+Para reducir escritura, Inventario ofrece listas nativas para CPU, RAM, almacenamiento, ubicación y antivirus/EDR; Redes, para canal y estándar Wi-Fi; Controles, para el marco de referencia; CVE y Evidencias, para la fuente de información. La opción **«Otro / escribir…»** acepta cualquier valor documentado, también valores procedentes de importaciones anteriores. Se sugieren primero valores ya utilizados en el expediente, pero nunca se rellenan comprobaciones automáticamente. IP, CIDR, gateway, hostname, número de serie, versiones y observaciones siguen admitiendo texto libre. No cambia el formato JSON v3 ni las exportaciones.
+
+
+### Foto con sugerencias opcionales de identificación
+Al tomar una fotografía desde **Evidencias**, la imagen se guarda primero. Si Chrome/Android dispone de la API nativa de lectura de códigos (`BarcodeDetector`) o reconocimiento local de texto (`TextDetector`, poco extendida) y se extrae una etiqueta identificable, RabbitMole puede mostrar una pequeña propuesta editable con número de serie, modelo, fabricante o hostname. El auditor elige un activo existente o crear uno nuevo y debe pulsar **Confirmar datos**. Un código aislado se muestra sin clasificar y requiere elegir campo manualmente. **Omitir** conserva la fotografía sin añadir datos; nunca se sobrescriben campos completos y el reconocimiento no acredita la identificación. No hay OCR en nube, rastreos, peticiones ni dependencia nueva; si el navegador no dispone de detector, sigue funcionando la captura normal. Fotografías adjuntas por cualquier otra vía conservan el flujo habitual.
+
+### Copias y restauración de biblioteca
+
+En **Copias y exportaciones** puedes descargar la biblioteca completa como **.rmenc cifrado** (AES-256-GCM local, frase entre 16 y 512 caracteres) o JSON legible para un volumen ya protegido. El cifrado no transmite expedientes, no guarda la frase y no incluye originales externos ni credenciales.
+
+**Comprobar archivo** valida un JSON o descifra localmente un .rmenc y muestra el total de auditorías, nuevas y posibles sustituciones **sin modificar datos**. **Restaurar copia comprobada** utiliza las confirmaciones existentes contra sobrescritura; comprueba su apertura antes de borrar el origen. Perder la frase impide recuperar un backup cifrado. Se limita la exportación restaurable a 40 MiB de JSON.
+
+Las copias periódicas en carpeta siguen siendo **JSON sin cifrar**: usa carpeta protegida, permiso explícito y la aplicación abierta y visible. No se ejecutan al cerrar la PWA. Una descarga iniciada no demuestra que el archivo esté a salvo.
+
+### Preparación de Termux y alternativas iOS para auditorías móviles
+
+En **Dispositivo e instalación → Preparar terminal y Discovery** encontrarás dos guías plegables y utilizables sin conexión: **Android con Termux** (instalación, Python/Nmap, diagnóstico pasivo, CIDR autorizado, archivo JSON y revisión desde Captura asistida) e **iPhone/iPad** (Termux no existe; a-Shell/iSH son auxiliares y la ruta fiable es Discovery en un PC con traslado del JSON mediante Archivos). No se inician escaneos ni peticiones desde la guía. Consulta el recorrido ampliado en [Guía de auditoría móvil](docs/AUDITORIA_MOVIL_ES.md).
+
+### Ampliación final: servidores, software y licenciamiento
+
+El diccionario offline alcanza **212 conceptos**, **96 guías de diagnóstico** y **221 referencias**. Añade 30 entradas sobre roles y gestión de servidores, Server Core, BMC/iDRAC/iLO, RAID/SMART, SAN/NAS/iSCSI, SAI, hipervisores, capacidad, dependencias, despliegues, soporte y recuperación; y sobre SAM/ITAM, derechos de uso, OEM/retail/volumen, CAL, modelos por núcleo y por usuario, SaaS, BYOL, EULA, software libre y licencias SPDX. Incluye 17 guías prácticas con comprobaciones principalmente de solo lectura, evidencias esperadas y cautelas. No se realizan conexiones ni se ejecutan comandos automáticamente.
+
+La ayuda contextual de **Hardware** incorpora rol, modalidad, almacenamiento y administración del servidor; la de **Software** incorpora licencia, estado, modelo, versión, soporte y actualizaciones. Esta información es orientativa: **una instalación detectada o una clave de activación no prueban conformidad contractual**. Antes de emitir conclusiones verifica condiciones y derechos del producto/edición concreta con el titular.

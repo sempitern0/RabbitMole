@@ -109,7 +109,7 @@ nav button {
 }
 nav button .nav-mark {
   font-size: 15px;
-  color: #87a6b6;
+  color: var(--sidebar-icon-muted, #b8cbd6);
   min-width: 21px;
 }
 nav button:hover,
@@ -121,7 +121,7 @@ nav button.active {
   box-shadow: inset 3px 0 #34c4a7;
 }
 nav button.active .nav-mark {
-  color: #5bdfc5;
+  color: var(--sidebar-icon-active, var(--sidebar-active));
 }
 .side-bottom {
   margin-top: auto;
@@ -524,9 +524,27 @@ main {
   border-top: 1px solid var(--line);
   padding: 18px clamp(18px, 3vw, 48px);
   text-align: right;
-  color: #95a2b0;
+  color: var(--muted);
   font-size: 11px;
 }
+.app-version {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: .65rem;
+  padding: .18rem .66rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 42%, var(--line));
+  border-radius: 999px;
+  box-shadow: inset 2px 0 var(--brand);
+  background: color-mix(in srgb, var(--brand) 8%, var(--paper));
+  color: var(--ink);
+  font-size: .76rem;
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media print { .app-version { display: none; } }
 .empty {
   padding: 35px 20px;
   text-align: center;
@@ -839,6 +857,26 @@ main {
   --hero-c: #146a68;
   --sidebar-active: #34c4a7;
 }
+/* RabbitMole signature palette: midnight blue, slate and warm ivory from the icon.
+   Brand blue-steel is subtly darkened for legible white text on primary buttons. */
+:root[data-palette="rabbitmole"] {
+  --navy: #081425;
+  --navy2: #14273d;
+  --ink: #1b2c39;
+  --muted: #61707c;
+  --line: #d7dee3;
+  --paper: #fcf8f1;
+  --canvas: #eef2f4;
+  --brand: #587680;
+  --brand-hover: #4d6972;
+  --brand-tint: #e7ecef;
+  --teal: #587680;
+  --light-teal: #e7ecef;
+  --hero-a: #081425;
+  --hero-b: #17304a;
+  --hero-c: #5f7d87;
+  --sidebar-active: #eadcc5;
+}
 :root[data-palette="forest"] {
   --navy: #17281f;
   --navy2: #284532;
@@ -1034,12 +1072,6 @@ nav button.active {
   }
 }
 @media (max-width: 720px) {
-  .theme-select {
-    font-size: 0;
-  }
-  .theme-select select {
-    font-size: 13px;
-  }
   .actions {
     gap: 7px;
   }
@@ -1068,6 +1100,13 @@ nav button.active {
   --report-tint: #ebf3f5;
   --report-muted: #557285;
   --report-cover: #132d3f;
+}
+:root[data-palette="rabbitmole"] {
+  --report-accent: #587680;
+  --report-heading: #223345;
+  --report-tint: #edf1f2;
+  --report-muted: #6a7278;
+  --report-cover: #0c1a2a;
 }
 :root[data-palette="forest"] {
   --report-accent: #287e59;
@@ -1706,6 +1745,15 @@ textarea {
   --pdf-cover-ink: #153747;
   --pdf-cover-sub: #285a64;
 }
+:root[data-palette="rabbitmole"] {
+  --pdf-cover-bg: #0c1a2a;
+  --pdf-cover-ink: #f3e6d2;
+  --pdf-cover-sub: #a5bcc5;
+}
+/* Light report-accent on dark branded cover for WCAG AA. */
+:root[data-palette="rabbitmole"] .report-cover .sup {
+  color: #b7cbd0;
+}
 :root[data-palette="forest"] {
   --pdf-cover-bg: #e6f4e5;
   --pdf-cover-ink: #1a4632;
@@ -2272,6 +2320,13 @@ button:focus-visible {
   }
 }
 
+/* Navigation accent is independent of status colors and follows each palette. */
+:root[data-palette="midnight"] { --sidebar-active: #9bc5ff; }
+:root[data-palette="obsidian"] { --sidebar-active: #b4c9de; }
+:root[data-palette="pine-dark"] { --sidebar-active: #92dab1; }
+:root[data-palette="amethyst-dark"] { --sidebar-active: #e1c2ff; }
+:root[data-palette="crimson-dark"] { --sidebar-active: #ffb8ce; }
+
 /* Vector navigation icons: fixed geometry and sharp strokes across display densities. */
 #global-navigation button .nav-icon {
   display: block;
@@ -2279,12 +2334,18 @@ button:focus-visible {
   height: 20px;
   min-width: 20px;
   flex: 0 0 20px;
-  color: #a7c8d5;
+  color: var(--sidebar-icon-muted, #b8cbd6);
   stroke: currentColor;
   shape-rendering: geometricPrecision;
 }
-#global-navigation button:is(:hover,.active) .nav-icon { color: #69e1cb; }
-#global-navigation button[aria-current="page"] { background: #21364b; color: #fff; box-shadow: inset 3px 0 var(--sidebar-active,#34c4a7); }
+#global-navigation button:is(:hover,.active,[aria-current="page"]) .nav-icon {
+  color: var(--sidebar-icon-active, var(--sidebar-active));
+}
+#global-navigation button[aria-current="page"] {
+  background: var(--sidebar-panel-raised, var(--navy2));
+  color: var(--sidebar-panel-text, #fff);
+  box-shadow: inset 3px 0 var(--sidebar-active);
+}
 @media (prefers-reduced-motion: reduce) { #global-navigation button .nav-icon { transition: none; } }
 
 /* Sidebar connectivity: status is not equivalent to public Internet access. */
@@ -2361,3 +2422,17 @@ button:focus-visible {
 .field-assist{display:grid;gap:.35rem;margin-top:.55rem;padding:.6rem;border:1px solid var(--line);border-radius:8px}.field-assist label{font-size:.85rem}.field-assist small{color:var(--muted)}
 
 .identifier-readonly{background:var(--paper);opacity:.85;cursor:default;border-style:dashed}.identifier-hint{font-size:.76rem;color:var(--muted);display:block;margin-top:.3rem}
+
+/* Connections: task-oriented status, safe advanced actions and responsive forms. */
+.connection-intro{display:grid;gap:.25rem;margin:1rem 0;padding:.9rem 1rem;border:1px solid var(--line);border-inline-start:3px solid var(--brand);border-radius:10px;background:var(--canvas);color:var(--ink);line-height:1.55}
+.connection-intro strong{font-size:.95rem}
+.connection-methods{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.connection-methods label{min-width:0;align-items:flex-start;line-height:1.5;background:var(--paper);color:var(--ink)}
+.connection-methods input{flex:none;margin-top:.2rem}
+.connection-check{padding:.7rem .8rem;border:1px solid var(--line);border-radius:10px;background:var(--canvas);color:var(--ink);line-height:1.55}
+.connection-advanced{border:1px solid var(--line);border-radius:10px;padding:.8rem 1rem;background:var(--paper);color:var(--ink)}
+.connection-advanced summary{cursor:pointer;min-height:44px;display:list-item;padding:.4rem 0;font-weight:700;line-height:1.5}
+.connection-advanced summary:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+#connection-nextcloud-transfer[hidden]{display:none!important}
+#connection-nextcloud .field input{min-height:44px}
+@media(max-width:720px){.connection-methods{grid-template-columns:minmax(0,1fr)}#connection-nextcloud .action-row button{flex:1 1 100%;min-height:44px}}

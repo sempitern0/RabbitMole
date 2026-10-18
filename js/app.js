@@ -8,6 +8,8 @@
   const PROFILE_KIND = "rabbitmole-consultancy";
   const storage = globalThis.AuditStorage;
   const importPlan = globalThis.AuditImportPlan;
+  const backupWorkflow = globalThis.RabbitMoleBackupWorkflow;
+  const backupCrypto = globalThis.AuditSecureTransfer;
   const relations = globalThis.AuditRelations;
   const evidenceImages = globalThis.AuditEvidenceImages;
   const pdfAppendices = globalThis.RabbitMolePdfAppendices;
@@ -30,6 +32,8 @@
   const comparison = globalThis.AuditComparison;
   if (!storage)
     throw Error("No se ha cargado el módulo de almacenamiento offline.");
+  if (!backupWorkflow || !backupCrypto)
+    throw Error("Falta el módulo de copias de seguridad offline.");
   if (!relations)
     throw Error("No se ha cargado el módulo de relaciones de auditoría.");
   if (!templates)
@@ -52,10 +56,12 @@
     "rabbitmole:encrypted-nextcloud:v1";
   const ACTIVE_KEY = "rabbitmole:active:v3";
   const FALLBACK_KEY = "rabbitmole:records:v3";
-  const PALETTE_KEY = "rabbitmole:palette:v1";
+  const palettePreferences = globalThis.RabbitMolePalettePreferences;
   const BACKUP_KEY = "rabbitmole:backup-settings:v1";
   const BACKUP_DB = "rabbitmole-backup-directory";
+  const DEFAULT_PALETTE = "rabbitmole";
   const palettes = [
+    DEFAULT_PALETTE,
     "ocean",
     "forest",
     "indigo",
@@ -88,945 +94,17 @@
   if(!inventoryPresets)throw Error("No se ha cargado el módulo de opciones de inventario.");
   const presets=inventoryPresets.create(osCatalog);
   const LIMIT_ROWS = 500;
-  const nav = [
-    ["dashboard", "▦", "Resumen del expediente"],
-    ["engagement", "◈", "Cliente y alcance"],
-    ["assets", "▤", "Hardware"],
-    ["networks", "◇", "Redes"],
-    ["software", "▧", "Software"],
-    ["cves", "◉", "Vulnerabilidades CVE"],
-    ["controls", "✓", "Controles"],
-    ["findings", "⚑", "Hallazgos"],
-    ["evidence", "▣", "Evidencias"],
-    ["legal", "§", "Cláusulas y privacidad"],
-    ["quality", "☑", "Revisión de calidad"],
-    ["followup", "↺", "Seguimiento"],
-    ["delivery", "▥", "Informe final"],
-  ];
-  const metaFields = [
-    ["client", "Organización / cliente"],
-    ["project", "Nombre del proyecto"],
-    [
-      "clientIdType",
-      "Documento fiscal del cliente",
-      "select",
-      [
-        "No indicado",
-        "NIF entidad / CIF",
-        "DNI / NIF persona física",
-        "NIE",
-        "NIF intracomunitario / otro",
-      ],
-    ],
-    ["clientTaxId", "Número de identificación fiscal"],
-    ["clientEmail", "Correo electrónico del cliente"],
-    ["clientPhone", "Teléfono del cliente"],
-    ["clientAddress", "Domicilio fiscal / sede"],
-    ["clientPostal", "Código postal (España)"],
-    ["reportId", "Identificador del informe"],
-    ["revision", "Versión del informe"],
-    ["contact", "Contacto del cliente"],
-    [
-      "contactIdType",
-      "Documento identificativo del contacto",
-      "select",
-      ["No indicado", "DNI / NIF persona física", "NIE", "Otro documento"],
-    ],
-    ["contactId", "DNI / NIE del contacto (opcional)"],
-    ["start", "Inicio de la auditoría", "date"],
-    ["startTime", "Hora de inicio (local)", "time"],
-    ["end", "Fin de la auditoría", "date"],
-    ["endTime", "Hora de fin (local)", "time"],
-    [
-      "classification",
-      "Clasificación",
-      "select",
-      ["Confidencial", "Uso interno", "Público"],
-    ],
-    [
-      "type",
-      "Modalidad",
-      "select",
-      [
-        "Auditoría de sistemas",
-        "Auditoría de infraestructura",
-        "Revisión de ciberseguridad",
-        "Pentesting autorizado",
-        "Mixta",
-      ],
-    ],
-    ["objectives", "Objetivos y contexto", "textarea"],
-    ["scope", "Alcance autorizado (activos, redes y sedes)", "textarea"],
-    ["exclusions", "Exclusiones y pruebas prohibidas", "textarea"],
-    ["rules", "Reglas de compromiso y autorizaciones", "textarea"],
-    ["methodology", "Metodología y referencias", "textarea"],
-    ["limitations", "Limitaciones y cobertura real", "textarea"],
-  ];
-  const finalFields = [
-    ["executive", "Resumen ejecutivo", "textarea"],
-    ["strengths", "Puntos fuertes", "textarea"],
-    ["weaknesses", "Principales debilidades", "textarea"],
-    ["assessment", "Valoración general del riesgo", "textarea"],
-    ["roadmap", "Plan de mejora priorizado", "textarea"],
-    ["cleanup", "Limpieza y acciones posteriores a las pruebas", "textarea"],
-    ["nextSteps", "Próximos pasos y reevaluación", "textarea"],
-    ["disclaimer", "Consideraciones de responsabilidad", "textarea"],
-    ["signoff", "Firma / responsable del informe"],
-  ];
-  const legalFields = [
-    [
-      "confidentiality",
-      "Confidencialidad y destinatarios autorizados",
-      "textarea",
-    ],
-    ["authorization", "Autorización y reglas de compromiso", "textarea"],
-    [
-      "scopeNotice",
-      "Naturaleza temporal, pruebas no ejecutadas y limitaciones",
-      "textarea",
-    ],
-    ["dataProtection", "Protección de datos personales y custodia", "textarea"],
-    [
-      "retention",
-      "Conservación, devolución y eliminación de evidencias",
-      "textarea",
-    ],
-    [
-      "thirdParties",
-      "Transferencia a terceros y canales de entrega",
-      "textarea",
-    ],
-    ["responsibility", "Responsabilidades, validación y firma", "textarea"],
-  ];
-  const legalDefaults = () => ({
-    confidentiality:
-      "Documento de uso confidencial destinado exclusivamente al cliente y a las personas que este autorice expresamente. Se prohíbe su difusión no autorizada; las copias deben protegerse conforme a su clasificación.",
-    authorization:
-      "La evaluación se ha realizado únicamente sobre los activos y las pruebas autorizados por el cliente. Las condiciones, ventanas de ejecución, exclusiones y autorizaciones se recogerán en el acuerdo o documento de alcance firmado. Este informe no sustituye dicho acuerdo.",
-    scopeNotice:
-      "Los resultados reflejan una observación limitada al periodo, la muestra, los métodos y las evidencias descritos. La ausencia de hallazgos no implica ausencia de vulnerabilidades ni garantiza la seguridad futura de la infraestructura. Los controles no revisados se identifican como tales.",
-    dataProtection:
-      "Cuando las actividades impliquen tratamiento de datos personales, las partes determinarán sus roles y las bases de legitimación conforme al RGPD y la LOPDGDD. Si procede un encargo de tratamiento, se formalizará el correspondiente acuerdo conforme al artículo 28 del RGPD. Se aplicarán medidas adecuadas de confidencialidad, minimización y seguridad.",
-    retention:
-      "Las evidencias, notas y copias se conservarán únicamente durante el plazo acordado por las partes y el exigible legalmente, con acceso restringido. Al finalizar la prestación se aplicarán las instrucciones pactadas de devolución, eliminación segura o conservación obligatoria, dejando constancia cuando corresponda.",
-    thirdParties:
-      "La entrega de este informe y de sus evidencias a proveedores, plataformas cloud, repositorios o terceros requiere autorización previa del cliente y revisión de las garantías jurídicas y técnicas aplicables. Se priorizarán medios cifrados y destinatarios verificados.",
-    responsibility:
-      "Las recomendaciones deben ser priorizadas y validadas por los responsables designados antes de su aplicación en producción. El auditor describe el alcance y los resultados efectivamente contrastados; la asignación contractual de responsabilidades no queda modificada por este modelo de texto.",
+  const {nav, metaFields, finalFields, legalFields, legalDefaults, groups, baselineFields, baselineFieldSet, severity} = globalThis.RabbitMoleAppDefinitions.create({
+    presets, hardwareVendors, softwareVendors, hardwareModels, rackAudit,
+    serverInstall, networkDevices, osCatalog
   });
-  const groups = {
-    assets: {
-      title: "Inventario de hardware",
-      intro:
-        "Hosts, servidores, dispositivos de red, periféricos e infraestructura física.",
-      fields: [
-        ["id", "Identificador del activo"],
-        ["name", "Activo / hostname"],
-        ["type", "Categoría / rol", "picker", presets.hardware],
-        ["vendor", "Fabricante", "picker", hardwareVendors],
-        ["model", "Modelo", "picker", hardwareModels],
-        ["serial", "Número de serie"],
-        ["ip", "IP / identificador"],
-        ["os", "Sistema operativo / firmware", "picker", presets.operating],
-        ["cpu", "Procesador", "picker", presets.cpu],
-        ["ram", "Memoria RAM", "picker", presets.ram],
-        ["storage", "Tipo de almacenamiento", "picker", presets.storage],
-        ["site", "Ubicación / sede", "picker", presets.site],
-        ["owner", "Responsable", "picker", presets.owner],
-        [
-          "criticality",
-          "Criticidad",
-          "select",
-          ["Sin valorar", "Crítica", "Alta", "Media", "Baja"],
-        ],
-        [
-          "state",
-          "Estado / ciclo de vida",
-          "select",
-          ["Por revisar", "En servicio", "Obsoleto", "Fuera de servicio"],
-        ],
-        ["notes", "Observaciones", "textarea"],
-        ...rackAudit.FIELDS,
-        ...rackAudit.PHOTO_FIELDS,
-        ...rackAudit.PLACEMENT_FIELDS,
-        ...serverInstall.FIELDS,
-        [
-          "osLicense",
-          "Licencia del sistema operativo",
-          "select",
-          [
-            "",
-            "Verificada",
-            "Pendiente de verificar",
-            "Incidencia",
-            "No aplica",
-          ],
-        ],
-        [
-          "osUpdates",
-          "Actualizaciones del SO",
-          "select",
-          [
-            "",
-            "Activadas",
-            "Gestión centralizada",
-            "Desactivadas",
-            "No verificadas",
-            "No aplica",
-          ],
-        ],
-        ["avProduct", "Protección antivirus / EDR"],
-        [
-          "avRealtime",
-          "Protección en tiempo real",
-          "select",
-          ["", "Activada", "Desactivada", "No verificada", "No aplica"],
-        ],
-        [
-          "avUpdated",
-          "Firmas / motor de protección",
-          "select",
-          [
-            "",
-            "Actualizados",
-            "Pendientes de actualizar",
-            "No verificados",
-            "No aplica",
-          ],
-        ],
-        ["cpuSpeed", "Frecuencia CPU comprobada (GHz)"],
-        ["ramMax", "RAM máxima admitida (GB)"],
-        ["ramSlots", "Ranuras RAM: totales / ocupadas"],
-        ["diskCapacity", "Capacidad de almacenamiento (GB)"],
-        [
-          "diskType",
-          "Tecnología de disco",
-          "select",
-          ["", "HDD", "SSD SATA", "SSD M.2 NVMe", "eMMC", "Mixto", "Otro"],
-        ],
-        [
-          "gpuType",
-          "GPU",
-          "select",
-          [
-            "",
-            "Integrada / memoria compartida",
-            "Dedicada",
-            "Híbrida",
-            "No verificada",
-            "No aplica",
-          ],
-        ],
-        ["gpuMemory", "Memoria dedicada GPU (GB)"],
-        [
-          "ethernetPort",
-          "Conectividad cableada",
-          "select",
-          [
-            "",
-            "RJ45",
-            "Otro conector Ethernet",
-            "Sin interfaz cableada",
-            "No verificada",
-          ],
-        ],
-        [
-          "cableCategory",
-          "Categoría de cable observada",
-          "select",
-          [
-            "",
-            "CAT5",
-            "CAT5e",
-            "CAT6",
-            "CAT6a",
-            "CAT7",
-            "CAT8",
-            "No identificada",
-            "No aplica",
-          ],
-        ],
-        ["ethernetSpeed", "Velocidad de enlace observada (Mbps)"],
-        [
-          "wifiAdapter",
-          "Interfaz Wi-Fi",
-          "select",
-          ["", "Presente", "No presente", "No verificada"],
-        ],
-        ["wifiSignal", "Señal Wi-Fi medida (dBm)"],
-        [
-          "processReview",
-          "Procesos o servicios observados (sin secretos)",
-          "textarea",
-        ],
-        [
-          "localAccounts",
-          "Usuarios locales revisados (resumen saneado)",
-          "textarea",
-        ],
-        [
-          "adminAccounts",
-          "Cuentas y grupos privilegiados (sin contraseñas)",
-          "textarea",
-        ],
-      ],
-    },
-    networks: {
-      title: "Infraestructura de red",
-      intro: "Segmentos, VLAN, equipamiento, servicios y exposición de red.",
-      fields: [
-        ["name", "Segmento / equipo"],
-        ["cidr", "Subred CIDR"],
-        ["vlan", "VLAN"],
-        ["gateway", "Gateway"],
-        ["dns", "DNS / DHCP"],
-        ["purpose", "Función / servicios", "picker", presets.function],
-        ["firewall", "Firewall / controles"],
-        [
-          "exposure",
-          "Accesibilidad y segmentación",
-          "picker",
-          presets.exposure,
-        ],
-        ["notes", "Observaciones", "textarea"],
-        ["ssid", "SSID / nombre de red inalámbrica (si procede)"],
-        [
-          "wifiSecurity",
-          "Seguridad Wi-Fi observada",
-          "select",
-          [
-            "",
-            "WPA2-Personal",
-            "WPA2-Enterprise",
-            "WPA3-Personal",
-            "WPA3-Enterprise",
-            "WPA2/WPA3 mixto",
-            "WEP / heredada",
-            "Abierta",
-            "Otra",
-            "No verificada",
-            "No aplica",
-          ],
-        ],
-        ["wifiSignal", "Intensidad Wi-Fi observada (dBm)"],
-        ["wifiChannel", "Canal Wi-Fi observado"],
-        ["wifiStandard", "Estándar Wi-Fi (802.11 b/g/n/ac/ax/be)"],
-        [
-          "wifiBand",
-          "Banda Wi-Fi",
-          "select",
-          [
-            "",
-            "2,4 GHz",
-            "5 GHz",
-            "6 GHz",
-            "Múltiples bandas",
-            "No verificada",
-            "No aplica",
-          ],
-        ],
-        ["contractedRate", "Velocidad contratada (Mbps; si corresponde)"],
-        ["measuredRate", "Velocidad medida (Mbps; método en observaciones)"],
-        ["networkDeviceType","Tipo de equipo de red","select",["","Router","ONT","Firewall"]],
-        ["routerVendor","Fabricante del router / ONT / firewall","picker",[]],
-        ["routerModel","Modelo del router / ONT / firewall","picker",[]],
-        ["routerDevice","Versión de firmware / identificación adicional observada"],
-        ["routerCredentials","Credenciales administrativas de fábrica","select",["","No verificado","Cambio de fábrica acreditado","Credenciales predeterminadas vigentes","No aplica"]],
-        ["routerAccounts","Cuentas y privilegios","select",["","No verificado","Cuentas diferenciadas y privilegios mínimos","Cuenta compartida o privilegios excesivos","No aplica"]],
-        ["routerMfa","MFA administrativo (si está disponible)","select",["","No verificado","Habilitado","Disponible, deshabilitado","No disponible / excepción documentada","No aplica"]],
-        ["routerMgmt","Protocolos de administración","select",["","No verificado","HTTPS/SSH seguro","HTTP/Telnet/servicio inseguro","No aplica"]],
-        ["routerRemote","Administración desde Internet/WAN","select",["","No verificado","Deshabilitada","Restringida y autorizada","Expuesta sin restricción","No aplica"]],
-        ["routerFirmware","Parches, firmware y soporte","select",["","No verificado","Actualizado y soportado","Parche pendiente","Fuera de soporte","No aplica"]],
-        ["routerServices","UPnP, WPS y servicios auxiliares","select",["","No verificado","Deshabilitados o justificados","Sin justificar","No aplica"]],
-        ["routerPerimeter","Firewall, NAT e IPv6","select",["","No verificado","Reglas revisadas y justificadas","Reglas o exposición excesiva","No aplica"]],
-        ["routerDns","DNS/DHCP y redirecciones","select",["","No verificado","Configuración comprobada","Configuración no autorizada o dudosa","No aplica"]],
-        ["routerBackups","Copia de configuración y recuperación","select",["","No verificado","Copia protegida y recuperación probada","Sin copia o prueba","No aplica"]],
-        ["routerAuditEvidence","Evidencias, fecha y limitaciones (sin contraseñas)","textarea"],
-      ],
-    },
-    software: {
-      title: "Inventario de software y servicios",
-      intro:
-        "Aplicaciones instaladas, licencias, versiones, criticidad y mantenimiento.",
-      fields: [
-        [
-          "name",
-          "Software / servicio",
-          "picker",
-          [
-            "Microsoft 365",
-            "Microsoft Office",
-            "Microsoft SQL Server",
-            "PostgreSQL",
-            "MySQL",
-            "MariaDB",
-            "Oracle Database",
-            "Apache HTTP Server",
-            "Nginx",
-            "IIS",
-            "Docker Engine",
-            "Kubernetes",
-            "Proxmox VE",
-            "VMware vCenter",
-            "Zabbix",
-            "Wazuh",
-            "Grafana",
-            "Prometheus",
-            "Elastic / OpenSearch",
-            "Suricata",
-            "pfSense",
-            "Fortinet FortiOS",
-            "Veeam Backup & Replication",
-            "Acronis Cyber Protect",
-            "Active Directory DS",
-            "Samba AD",
-            "Microsoft Entra ID",
-            "Microsoft Defender for Endpoint",
-            "CrowdStrike Falcon",
-            "Sophos Endpoint",
-            "Google Workspace",
-            "Nextcloud",
-            "GitLab",
-            "Jenkins",
-            "GitHub Actions",
-            "OpenVPN",
-            "WireGuard",
-          ],
-        ],
-        ["version", "Versión"],
-        ["vendor", "Fabricante / editor", "picker", softwareVendors],
-        ["asset", "Activo asociado", "picker", []],
-        ["license", "Licencia", "picker", presets.license],
-        ["support", "Soporte / EOL", "picker", presets.support],
-        ["exposure", "Exposición / función", "picker", presets.exposure],
-        ["notes", "Observaciones", "textarea"],
-        [
-          "licenseType",
-          "Modelo de distribución / licencia",
-          "select",
-          [
-            "",
-            "Propietaria",
-            "Software libre / código abierto",
-            "Freeware",
-            "Shareware / evaluación",
-            "Suscripción",
-            "Otro",
-            "Sin verificar",
-          ],
-        ],
-        [
-          "licenseStatus",
-          "Estado de cumplimiento de licencia",
-          "select",
-          [
-            "",
-            "Verificada",
-            "Pendiente de verificar",
-            "Incidencia",
-            "No aplica",
-          ],
-        ],
-        ["installedAt", "Fecha de instalación verificada", "date"],
-        [
-          "updateStatus",
-          "Estado de actualización",
-          "select",
-          [
-            "",
-            "Actualizado",
-            "Pendiente de actualizar",
-            "No verificado",
-            "No aplica",
-          ],
-        ],
-        ["updatedAt", "Última actualización observada", "date"],
-      ],
-    },
-    cves: {
-      title: "Catálogo de vulnerabilidades CVE",
-      intro:
-        "Asocia CVE verificados con activos y hallazgos. El expediente funciona offline; las consultas externas son opcionales y explícitas.",
-      fields: [
-        ["id", "Identificador CVE (CVE-AAAA-NNNN)"],
-        ["title", "Descripción breve"],
-        ["asset", "Activo afectado", "picker", []],
-        [
-          "status",
-          "Estado de verificación",
-          "select",
-          [
-            "Sin verificar",
-            "Pendiente de contrastar",
-            "Confirmada",
-            "Descartada",
-            "No aplicable",
-          ],
-        ],
-        [
-          "severity",
-          "Severidad evaluada",
-          "select",
-          ["Sin evaluar", "Crítica", "Alta", "Media", "Baja", "Informativa"],
-        ],
-        ["cvss", "CVSS oficial / referencia (si se conoce)"],
-        ["published", "Fecha de publicación", "date"],
-        ["source", "Fuente consultada"],
-        ["consulted", "Última consulta", "date"],
-        ["references", "Referencias / avisos", "textarea"],
-        ["notes", "Notas, impacto y mitigación", "textarea"],
-      ],
-    },
-    controls: {
-      title: "Controles de seguridad",
-      intro:
-        "Registrar solo verificaciones realizadas. «No verificado» no equivale a «Conforme».",
-      fields: [
-        ["id", "Identificador"],
-        [
-          "category",
-          "Área",
-          "select",
-          [
-            "Inventario",
-            "Identidad",
-            "Red",
-            "Sistemas",
-            "Parcheado",
-            "Backups",
-            "Monitorización",
-            "Continuidad",
-            "Protección de datos",
-            "Otro",
-          ],
-        ],
-        ["name", "Control / criterio"],
-        ["asset", "Activo o alcance", "picker", []],
-        [
-          "status",
-          "Resultado",
-          "select",
-          [
-            "Pendiente",
-            "Conforme",
-            "No conforme",
-            "No aplica",
-            "No verificado",
-          ],
-        ],
-        ["method", "Método de verificación", "textarea"],
-        ["reference", "Marco / referencia"],
-        ["evidenceIds", "ID(s) de evidencia"],
-        ["notes", "Observaciones", "textarea"],
-      ],
-    },
-    findings: {
-      title: "Problemas detectados y recomendaciones",
-      intro:
-        "Describe lo observado, el riesgo que podría suponer y cómo solucionarlo. El nivel de riesgo lo determina el auditor.",
-      fields: [
-        ["id", "Código del hallazgo"],
-        ["title", "Título"],
-        [
-          "severity",
-          "Severidad",
-          "select",
-          ["Sin evaluar", "Crítica", "Alta", "Media", "Baja", "Informativa"],
-        ],
-        [
-          "status",
-          "Seguimiento",
-          "select",
-          ["Abierto", "En curso", "Mitigado", "Riesgo aceptado", "Cerrado"],
-        ],
-        ["asset", "Activos / alcance afectados", "picker", []],
-        ["cvss", "CVSS (si corresponde)"],
-        [
-          "likelihood",
-          "Probabilidad",
-          "select",
-          ["No evaluada", "Muy alta", "Alta", "Media", "Baja", "Muy baja"],
-        ],
-        [
-          "impact",
-          "Impacto",
-          "select",
-          ["No evaluado", "Muy alto", "Alto", "Medio", "Bajo", "Muy bajo"],
-        ],
-        ["description", "Descripción / situación observada", "textarea"],
-        ["risk", "Consecuencia y escenario de riesgo", "textarea"],
-        ["method", "Método o herramientas utilizadas", "textarea"],
-        ["evidenceIds", "ID(s) de evidencia"],
-        ["references", "CVE / CIS / NIST / referencias", "textarea"],
-        ["recommendation", "Remediación propuesta", "textarea"],
-        ["verification", "Cómo comprobar que se ha solucionado", "textarea"],
-        ["owner", "Responsable", "picker", presets.owner],
-        ["deadline", "Fecha objetivo", "date"],
-        ["residual", "Riesgo residual / notas", "textarea"],
-        ["executiveTitle", "Título para dirección"],
-        ["executiveObservation", "Qué se ha observado (dirección)", "textarea"],
-        ["executiveImpact", "Impacto para la organización", "textarea"],
-        ["executiveAction", "Acción esperada del cliente", "textarea"],
-        [
-          "executiveRequest",
-          "Información o evidencia que debe aportar el cliente",
-          "textarea",
-        ],
-        ["executiveClosure", "Criterio de cierre para dirección", "textarea"],
-        [
-          "executiveImages",
-          "Imágenes en el ejecutivo",
-          "select",
-          ["Automática (1)", "Seleccionadas (máximo 2)", "No mostrar"],
-        ],
-        [
-          "executiveEvidenceIds",
-          "ID de evidencia principal y segunda opcional (en orden)",
-        ],
-        ["executiveCaption", "Pie de imagen para dirección"],
-      ],
-    },
-    evidence: {
-      title: "Evidencias y capturas",
-      intro:
-        "Añade fotos o capturas de lo observado. Se guardan en el expediente y pueden aparecer en el PDF. Conserva los originales aparte.",
-      fields: [
-        ["id", "ID de evidencia"],
-        ["title", "Título / descripción breve"],
-        ["asset", "Activo / hallazgo relacionado", "picker", []],
-        ["captured", "Fecha de captura", "date"],
-        ["source", "Fuente / comando / ruta segura"],
-        ["sha256", "SHA-256 del original (opcional)"],
-        ["notes", "Detalle, custodia y observaciones", "textarea"],
-      ],
-    },
-  };
-  // Optional baseline measurements; never infer compliance from an empty or imported field.
-  const baselineFields = Object.freeze({
-    assets: [
-      "osLicense",
-      "osUpdates",
-      "avProduct",
-      "avRealtime",
-      "avUpdated",
-      "cpuSpeed",
-      "ramMax",
-      "ramSlots",
-      "diskCapacity",
-      "diskType",
-      "gpuType",
-      "gpuMemory",
-      "ethernetPort",
-      "cableCategory",
-      "ethernetSpeed",
-      "wifiAdapter",
-      "wifiSignal",
-      "processReview",
-      "localAccounts",
-      "adminAccounts",
-      ...rackAudit.FIELD_NAMES,
-      ...rackAudit.PHOTO_FIELDS.map(([name])=>name),
-      ...rackAudit.PLACEMENT_FIELDS.map(([name])=>name),
-      ...serverInstall.NAMES,
-    ],
-    networks: [
-      "ssid",
-      "wifiSecurity",
-      "wifiSignal",
-      "wifiChannel",
-      "wifiStandard",
-      "wifiBand",
-      "contractedRate",
-      "measuredRate",
-      "routerVendor",
-      "routerModel",
-      "routerDevice",
-      "routerCredentials",
-      "routerAccounts",
-      "routerMfa",
-      "routerMgmt",
-      "routerRemote",
-      "routerFirmware",
-      "routerServices",
-      "routerPerimeter",
-      "routerDns",
-      "networkDeviceType",
-      "routerBackups",
-      "routerAuditEvidence",
-    ],
-    software: [
-      "licenseType",
-      "licenseStatus",
-      "installedAt",
-      "updateStatus",
-      "updatedAt",
-    ],
+  const {fresh, str, html, uid, plain, para, level, slug, validate} = globalThis.RabbitMoleAppModel.create({
+    VERSION, legalDefaults, metaFields, finalFields, legalFields, pdfAppendices,
+    externalNetwork, docControl, safeLogo,
+    normalizeAuditTeam: (...args) => normalizeAuditTeam(...args),
+    comparison, groups, LIMIT_ROWS, templates, retest, mitigation, relations, evidenceImages
   });
-  const baselineFieldSet = Object.fromEntries(
-    Object.entries(baselineFields).map(([key, fields]) => [
-      key,
-      new Set(fields),
-    ]),
-  );
-  const severity = ["Crítica", "Alta", "Media", "Baja", "Informativa"];
-  const fresh = () => ({
-    schemaVersion: VERSION,
-    documentControl: null,
-    meta: {
-      classification: "Confidencial",
-      type: "Auditoría de infraestructura",
-      revision: "1.0",
-      logo: "",
-      auditTeam: [],
-    },
-    final: {
-      disclaimer:
-        "La evaluación refleja los sistemas y las evidencias examinados durante el período indicado. Las comprobaciones no ejecutadas y las exclusiones se detallan en el alcance.",
-    },
-    legal: legalDefaults(),
-    assets: [],
-    networks: [],
-    software: [],
-    cves: [],
-    controls: [],
-    findings: [],
-    evidence: [],
-    pdfAppendices: [],
-    externalNetworkAnalysis: null,
-    followupBaseline: null,
-  });
-  const str = (v) => (typeof v === "string" ? v.slice(0, 20000) : "");
-  const html = (v) =>
-    String(v ?? "").replace(
-      /[&<>"']/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[c],
-    );
-  const uid = () =>
-    globalThis.crypto && crypto.randomUUID
-      ? crypto.randomUUID()
-      : "id-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-  const plain = (v) => html(v || "No documentado");
-  const para = (v) => `<span class="report-text">${plain(v)}</span>`;
-  const level = (v) =>
-    ({
-      Crítica: "critical",
-      Alta: "high",
-      Media: "medium",
-      Baja: "low",
-      Informativa: "info",
-    })[v] || "info";
-  const slug = (v) =>
-    (v || "cliente")
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9_-]/gi, "-")
-      .slice(0, 38);
-  function validate(raw) {
-    if (
-      !raw ||
-      Array.isArray(raw) ||
-      typeof raw !== "object" ||
-      raw.schemaVersion !== VERSION
-    )
-      throw Error("Versión de expediente incompatible (esperada: 3).");
-    const out = fresh();
-    for (const [block, fields] of [
-      ["meta", metaFields],
-      ["final", finalFields],
-      ["legal", legalFields],
-    ]) {
-      if (
-        !raw[block] ||
-        Array.isArray(raw[block]) ||
-        typeof raw[block] !== "object"
-      )
-        throw Error("Bloque incorrecto: " + block);
-      for (const [name] of fields)
-        out[block][name] =
-          typeof raw[block][name] === "string"
-            ? str(raw[block][name])
-            : out[block][name];
-    }
-    out.pdfAppendices = pdfAppendices.normalize(raw.pdfAppendices);
-    out.externalNetworkAnalysis = externalNetwork.normalize(raw.externalNetworkAnalysis);
-    out.documentControl = docControl.normalize(raw.documentControl);
-    out.meta.logo = safeLogo(raw.meta.logo);
-    out.meta.auditTeam = normalizeAuditTeam(raw.meta.auditTeam);
-    out.followupBaseline = comparison.normalizeBaseline(raw.followupBaseline);
-    for (const [block, definition] of Object.entries(groups)) {
-      if (!Array.isArray(raw[block]) || raw[block].length > LIMIT_ROWS)
-        throw Error("Datos no válidos en " + block);
-      out[block] = raw[block].map((item) => {
-        if (!item || typeof item !== "object" || Array.isArray(item))
-          throw Error("Registro no válido en " + block);
-        const record = { _key: str(item._key) || uid() };
-        for (const [name] of definition.fields) record[name] = str(item[name]);
-        if (block === "controls") {
-          record.templateKey =
-            templates.safeKey(str(item.templateKey).split("/")[0]) &&
-            /^[A-Z0-9-]{2,64}$/.test(str(item.templateKey).split("/")[1] || "")
-              ? str(item.templateKey).slice(0, 130)
-              : "";
-          record.templateVersion = str(item.templateVersion).slice(0, 12);
-          record.expectedEvidence = str(item.expectedEvidence).slice(0, 4000);
-          record.recommendation = str(item.recommendation).slice(0, 4000);
-        }
-        if (block === "findings") {
-          record.originControlKey = str(item.originControlKey).slice(0, 100);
-          record.retests = retest.normalize(item.retests);
-          record.mitigationActions = mitigation.normalize(item.mitigationActions);
-          record.residualAssessments = mitigation.normalizeResidual(item.residualAssessments);
-        }
-        if (block === "evidence") {
-          const pic =
-            typeof item.image === "string" && item.image.length < 1400000
-              ? item.image
-              : "";
-          record.image =
-            /^data:image\/jpeg;base64,[a-z0-9+/=]+$/i.test(pic) &&
-            pic.length < 1400000
-              ? pic
-              : "";
-          record.links = relations.normalizeLinks(item.links);
-          record.attachments = evidenceImages.normalize(item.attachments);
-          record.fileName = str(item.fileName).slice(0, 180);
-          record.fileBytes =
-            Number.isSafeInteger(item.fileBytes) && item.fileBytes >= 0
-              ? item.fileBytes
-              : null;
-          record.fileSha256 = /^[a-f0-9]{64}$/i.test(item.fileSha256 || "")
-            ? item.fileSha256.toLowerCase()
-            : "";
-        }
-        return record;
-      });
-    }
-    if (
-      evidenceImages.totalSize(out.evidence) > evidenceImages.MAX_AUDIT_IMAGES
-    )
-      throw Error(
-        "Las imágenes del expediente superan el límite de 28 MiB. Divide la captura en varios expedientes.",
-      );
-    return out;
-  }
-  const TEAM_MAX = 60;
-  const TEAM_ROLES = [
-    "Auditor/a de sistemas",
-    "Auditor/a de redes",
-    "Auditor/a de ciberseguridad",
-    "Responsable de auditoría",
-    "Especialista forense",
-    "Consultor/a técnico/a",
-    "Otro",
-  ];
-  const MEMBER_DOCUMENT_TYPES = ["DNI", "NIE", "Pasaporte / otro"];
-  // Preserve only bounded raster data URLs. Private keys and certificate files are forbidden.
-  const safeSignature = (value) =>
-    typeof value === "string" &&
-    value.length <= 340000 &&
-    /^data:image\/jpeg;base64,[a-z0-9+/=]+$/i.test(value)
-      ? value
-      : "";
-  // Store immutable attribution snapshots in each audit. Global member updates must
-  // not silently rewrite the author list of already issued reports.
-  function normalizeMember(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-    const id = str(raw.id).slice(0, 90),
-      name = str(raw.name).trim().slice(0, 160);
-    if (!id || !name) return null;
-    const idType = MEMBER_DOCUMENT_TYPES.includes(raw.idType)
-      ? raw.idType
-      : "DNI";
-    const proof = raw.signatureProof;
-    const signatureProof =
-      proof &&
-      typeof proof === "object" &&
-      !Array.isArray(proof) &&
-      /\.(pdf|p7s|p7m|asice)$/i.test(str(proof.name).slice(0, 180)) &&
-      /^[a-f0-9]{64}$/i.test(str(proof.sha256))
-        ? {
-            name: str(proof.name).slice(0, 180),
-            sha256: str(proof.sha256).toLowerCase(),
-          }
-        : null;
-    return {
-      id,
-      name,
-      role: str(raw.role).slice(0, 120),
-      idType,
-      documentId: normalizeId(raw.documentId).slice(0, 32),
-      email: str(raw.email).slice(0, 254),
-      phone: str(raw.phone).slice(0, 40),
-      signature: safeSignature(raw.signature),
-      signatureProof,
-    };
-  }
-  function normalizeAuditTeam(raw) {
-    if (!Array.isArray(raw)) return [];
-    const seen = new Set();
-    return raw
-      .slice(0, TEAM_MAX)
-      .map(normalizeMember)
-      .filter((member) => {
-        if (!member || seen.has(member.id)) return false;
-        seen.add(member.id);
-        return true;
-      });
-  }
-  function auditorNames(meta) {
-    return meta.auditTeam?.length
-      ? meta.auditTeam.map((x) => x.name).join(", ")
-      : str(meta.auditor).trim();
-  }
-  const DEFAULT_SETTINGS = () => ({
-    company: "",
-    taxType: "NIF entidad / CIF",
-    taxId: "",
-    email: "",
-    phone: "",
-    address: "",
-    postal: "",
-    prefix: "AUD",
-    logo: "",
-    members: [],
-  });
-  function normalizeSettings(raw) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw))
-      throw Error("Configuración no válida");
-    const settings = DEFAULT_SETTINGS();
-    for (const key of [
-      "company",
-      "taxType",
-      "taxId",
-      "email",
-      "phone",
-      "address",
-      "postal",
-      "prefix",
-    ])
-      if (typeof raw[key] === "string") settings[key] = str(raw[key]);
-    if (!/^[A-Z0-9-]{2,12}$/.test(settings.prefix)) settings.prefix = "AUD";
-    settings.logo = safeLogo(raw.logo);
-    settings.members = normalizeAuditTeam(raw.members);
-    return settings;
-  }
-  function loadSettings() {
-    try {
-      return normalizeSettings(
-        JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"),
-      );
-    } catch {
-      return DEFAULT_SETTINGS();
-    }
-  }
-  const loadSettingsFromImport = normalizeSettings;
+  const {TEAM_MAX, TEAM_ROLES, MEMBER_DOCUMENT_TYPES, safeSignature, normalizeMember, normalizeAuditTeam, auditorNames, DEFAULT_SETTINGS, normalizeSettings, loadSettings, loadSettingsFromImport, normalizeId, DNI_LETTERS, validDni, validNie, validEntityNif, validateIdentity, memberIdentityIssue} = globalThis.RabbitMoleAppTeam.create({str, safeLogo, SETTINGS_KEY});
   let settings = loadSettings();
   function saveSettings() {
     try {
@@ -1037,74 +115,7 @@
       return false;
     }
   }
-  function normalizeId(v) {
-    return str(v)
-      .trim()
-      .toUpperCase()
-      .replace(/[.\s-]/g, "");
-  }
-  const DNI_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE";
-  function validDni(value) {
-    return (
-      /^\d{8}[A-Z]$/.test(value) &&
-      DNI_LETTERS[Number(value.slice(0, 8)) % 23] === value[8]
-    );
-  }
-  function validNie(value) {
-    return (
-      /^[XYZ]\d{7}[A-Z]$/.test(value) &&
-      validDni("XYZ".indexOf(value[0]) + value.slice(1))
-    );
-  }
-  function validEntityNif(value) {
-    if (!/^[ABCDEFGHJKLMNPQRSUVW]\d{7}[0-9A-J]$/.test(value)) return false;
-    const digits = value.slice(1, 8);
-    const even = [1, 3, 5].reduce((acc, i) => acc + Number(digits[i]), 0);
-    const odd = [0, 2, 4, 6].reduce((acc, i) => {
-      const twice = Number(digits[i]) * 2;
-      return acc + Math.floor(twice / 10) + (twice % 10);
-    }, 0);
-    const check = (10 - ((even + odd) % 10)) % 10;
-    const digit = String(check),
-      letter = "JABCDEFGHI"[check];
-    const control = value[8];
-    if ("ABEH".includes(value[0])) return control === digit;
-    if ("NPQRSW".includes(value[0])) return control === letter;
-    return control === digit || control === letter;
-  }
-  function validateIdentity(type, value) {
-    const v = normalizeId(value);
-    if (!v || type === "No indicado") return "";
-    if (type === "DNI / NIF persona física" && !validDni(v))
-      return "DNI/NIF no válido: comprueba 8 dígitos y letra de control.";
-    if (type === "NIE" && !validNie(v))
-      return "NIE no válido: comprueba X/Y/Z, 7 cifras y letra de control.";
-    if (type === "NIF entidad / CIF" && !validEntityNif(v))
-      return "NIF de entidad no válido: comprueba la letra y el dígito/letra de control.";
-    if (
-      type === "NIF intracomunitario / otro" &&
-      !/^[A-Z]{2}[A-Z0-9]{4,14}$/.test(v)
-    )
-      return "Comprueba país de dos letras y número fiscal; la verificación VIES no se realiza offline.";
-    if (type === "Otro documento" && v.length < 4)
-      return "El documento parece demasiado corto.";
-    return "";
-  }
-  // Validation checks syntax/control digits only; identity must still be verified by the auditor.
-  function memberIdentityIssue(member) {
-    const type = member.idType || "DNI",
-      number = normalizeId(member.documentId);
-    if (!number)
-      return "El identificador personal es obligatorio para asignar al profesional.";
-    if (type === "DNI")
-      return validateIdentity("DNI / NIF persona física", number);
-    if (type === "NIE") return validateIdentity("NIE", number);
-    if (type === "Pasaporte / otro")
-      return /^[A-Z0-9]{4,32}$/.test(number)
-        ? ""
-        : "El documento debe contener de 4 a 32 letras o números.";
-    return "Selecciona el tipo de identificación personal.";
-  }
+  // Identity helpers live in app-team.js; the existing UI handlers remain here.
   function showMemberValidation(member) {
     if (!member) return;
     const input = [
@@ -1249,6 +260,7 @@
     };
   } catch (_ignored) {}
   let autoBackupInProgress = false;
+  let verifiedBackupFile = null;
   const storeBackupPrefs = () => {
     try {
       localStorage.setItem(BACKUP_KEY, JSON.stringify(backupPrefs));
@@ -1453,7 +465,7 @@
     dirty = false,
     saveTimer = null,
     writeQueue = Promise.resolve();
-  let selectedPalette = "ocean",
+  let selectedPalette = DEFAULT_PALETTE,
     deferredInstallPrompt = null;
   function updateStatus(message, warning = false) {
     const node = byId("save-status");
@@ -1464,16 +476,14 @@
     writeQueue = writeQueue.catch(() => {}).then(action);
     return writeQueue;
   }
-  function selectPalette(value) {
-    selectedPalette = palettes.includes(value) ? value : "ocean";
+  function selectPalette(value, userSelected = false) {
+    selectedPalette = palettes.includes(value) ? value : DEFAULT_PALETTE;
     document.documentElement.dataset.palette = selectedPalette;
     byId("palette").value = selectedPalette;
     byId("report").dataset.palette = selectedPalette;
     byId("pdf-theme").textContent =
       byId("palette").selectedOptions[0]?.textContent || selectedPalette;
-    try {
-      localStorage.setItem(PALETTE_KEY, selectedPalette);
-    } catch (_ignored) {}
+    if (userSelected) palettePreferences.remember(localStorage, selectedPalette);
   }
   const newRecord = (audit = fresh()) => ({
     id: uid(),
@@ -1767,6 +777,25 @@
       )
       .join("");
   }
+
+  const glossaryIconPaths=Object.freeze({"back":"<path d=\"m14 7-5 5 5 5\"/><path d=\"M9 12h11\"/>","check":"<path d=\"M4 12l5 5L20 6\"/>","investigate":"<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5\"/>","terminal":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"m7 9 3 3-3 3m5 0h5\"/>","meaning":"<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5m0-9h.01\"/>","evidence":"<path d=\"M8 3h8l4 4v14H4V3h4\"/><path d=\"M8 12h8M8 16h6\"/>","caution":"<path d=\"m12 3 10 18H2L12 3Z\"/><path d=\"M12 9v5m0 3h.01\"/>","workflow":"<rect x=\"4\" y=\"4\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"13\" y=\"13\" width=\"7\" height=\"7\" rx=\"1\"/><path d=\"M7.5 11v6h5.5\"/>","link":"<path d=\"M10 13a5 5 0 0 0 7 .3l3-3a5 5 0 0 0-7-7l-1.7 1.7\"/><path d=\"M14 11a5 5 0 0 0-7-.3l-3 3a5 5 0 0 0 7 7l1.7-1.7\"/>"});
+  function glossaryIcon(name){
+    return '<svg class="glossary-section-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(glossaryIconPaths[name]||glossaryIconPaths.meaning)+'</svg>';
+  }
+  function glossaryHeading(title,icon){
+    return '<h3>'+glossaryIcon(icon)+'<span>'+title+'</span></h3>';
+  }
+  function renderGlossaryProtocol(t,guide){
+    if(!guide)return "";
+    const steps=glossary?.PROTOCOLS?.[t.id]||[
+      'Confirma propietario, sistemas afectados, ventana y autorización expresa para el alcance del análisis.',
+      guide.verify,
+      'Revisa el comando compatible con el sistema, sus privilegios y los destinos antes de utilizarlo.',
+      guide.interpret+' Corrobora cualquier indicio con una segunda fuente o configuración.',
+      'Documenta hora, origen, evidencia y limitaciones; elimina secretos y datos personales innecesarios.'
+    ];
+    return '<section class="glossary-section glossary-protocol">'+glossaryHeading('Procedimiento de verificación','workflow')+'<p class="glossary-protocol-intro">Orientación para una auditoría autorizada; la PWA no ejecuta comandos.</p><ol>'+steps.map(v=>'<li>'+html(v)+'</li>').join('')+'</ol></section>';
+  }
   function renderGlossary() {
     const terms = glossaryResults();
     if (!terms.some((t) => t.id === glossarySelected))
@@ -1782,7 +811,7 @@
         </div>
         <div class="glossary-categories" role="group" aria-label="Filtrar por temática">${cats.map((cat) => `<button type="button" class="glossary-category ${cat === glossaryCategory ? "is-active" : ""}" data-glossary-category="${html(cat)}" aria-pressed="${cat === glossaryCategory}">${html(cat)}</button>`).join("")}</div>
         <div class="glossary-layout">
-          <div class="glossary-index-panel"><h2>Índice de conceptos</h2><div id="glossary-index" class="glossary-index" role="group" aria-label="Conceptos disponibles">${renderGlossaryIndex(terms)}</div></div>
+          <div class="glossary-index-panel"><h2>${glossaryIcon('evidence')}<span>Índice de conceptos</span></h2><div id="glossary-index" class="glossary-index" role="group" aria-label="Conceptos disponibles">${renderGlossaryIndex(terms)}</div></div>
           <div id="glossary-detail" class="glossary-detail" aria-live="polite">${renderGlossaryDetail(selected)}</div>
         </div>
       </section>`;
@@ -1850,11 +879,11 @@
   function renderGlossaryGuide(t) {
     const guide = glossary?.GUIDES?.[t.id];
     if (!guide) return "";
-    return `<section class="glossary-section glossary-troubleshoot"><h3>Diagnóstico y troubleshooting</h3>
+    return `<section class="glossary-section glossary-troubleshoot">${glossaryHeading('Diagnóstico y troubleshooting','investigate')}
       <dl class="glossary-diagnostic"><dt>Patrón o síntoma</dt><dd>${html(guide.symptom)}</dd><dt>Cómo investigarlo</dt><dd>${html(guide.verify)}</dd><dt>Interpretación</dt><dd>${html(guide.interpret)}</dd></dl></section>
-      <section class="glossary-section glossary-console"><h3>Alternativas por consola</h3>
+      <section class="glossary-section glossary-console">${glossaryHeading('Comandos por plataforma','terminal')}
         <p class="glossary-console-intro">Comandos de referencia; solo lectura salvo conexiones explícitamente indicadas. Sustituye rutas y destinos, verifica permisos y alcance. La aplicación no ejecuta nada.</p>
-        ${guide.commands.map((item, i) => `<div class="glossary-command"><div class="glossary-command-head"><span class="glossary-command-platform">${glossaryPlatformIcon(item.platform)}${html(item.platform)}</span><button type="button" class="glossary-copy" data-glossary-copy="${i}" data-glossary-id="${html(t.id)}" aria-label="Copiar comando ${html(item.platform)}">Copiar</button></div><pre><code>${html(item.command)}</code></pre><p><strong>Qué observar:</strong> ${html(item.lookFor)}</p></div>`).join("")}
+        ${guide.commands.map((item, i) => `<div class="glossary-command"><div class="glossary-command-head"><span class="glossary-command-platform">${glossaryPlatformIcon(item.platform)}${html(item.platform)}</span><button type="button" class="glossary-copy" data-glossary-copy="${i}" data-glossary-id="${html(t.id)}" aria-label="Copiar comando ${html(item.platform)}">Copiar</button></div><pre aria-label="Comando para ${html(item.platform)}"><code>${html(item.command)}</code></pre><p class="glossary-command-interpret"><strong>Qué observar:</strong> ${html(item.lookFor)}</p></div>`).join("")}
       </section>`;
   }
   function renderGlossaryHelp(t) {
@@ -1875,18 +904,23 @@
   function renderGlossaryDetail(t, contextual = false) {
     if (!t)
       return '<div class="glossary-empty">Selecciona un concepto del índice.</div>';
-    return `<article class="glossary-article">${!contextual && (glossaryReturn || currentId) ? '<button type="button" class="glossary-inline-back" data-glossary-back="true">← Volver al asistente</button>' : ""}<span class="glossary-kicker">${html(t.category)}</span><h2>${html(t.title)}</h2>${glossaryTermPlatforms(t)}${t.fullName ? `<p class="glossary-fullname"><strong>Denominación completa:</strong> ${html(t.fullName)}</p>` : ""}<div class="glossary-definition">${glossaryEmphasis(t.description)}</div>
-      ${t.why ? `<section class="glossary-section glossary-why"><h3>Por qué importa</h3><p>${glossaryEmphasis(t.why)}</p></section>` : ""}
-      <section class="glossary-section glossary-check"><h3>Qué comprobar en la auditoría</h3><p>${glossaryEmphasis(t.check)}</p></section>
-      ${Array.isArray(t.steps) && t.steps.length ? `<section class="glossary-section glossary-audit-steps"><h3>Mini guía paso a paso</h3><ol>${t.steps.map(step => `<li>${html(step)}</li>`).join("")}</ol></section>` : ""}
-      ${t.evidence ? `<section class="glossary-section glossary-evidence"><h3>Qué evidencia solicitar</h3><p>${html(t.evidence)}</p></section>` : ""}
-      ${t.caution ? `<section class="glossary-section glossary-caution"><h3>Evita esta confusión</h3><p>${html(t.caution)}</p></section>` : ""}
+    return `<article class="glossary-article">
+      <div class="glossary-detail-top">${!contextual && (glossaryReturn || currentId) ? '<button type="button" class="glossary-inline-back" data-glossary-back="true">'+glossaryIcon('back')+'<span>Volver al asistente</span></button>' : ""}<span class="glossary-kicker">${html(t.category)}</span></div>
+      <h2>${html(t.title)}</h2>${glossaryTermPlatforms(t)}
+      ${t.fullName ? `<p class="glossary-fullname"><strong>Denominación completa:</strong> ${html(t.fullName)}</p>` : ""}
+      <div class="glossary-definition">${glossaryEmphasis(t.description)}</div>
+      ${t.why ? `<section class="glossary-section glossary-why">${glossaryHeading('Por qué importa','meaning')}<p>${glossaryEmphasis(t.why)}</p></section>` : ""}
+      <section class="glossary-section glossary-check">${glossaryHeading('Qué comprobar en la auditoría','check')}<p>${glossaryEmphasis(t.check)}</p></section>
+      ${Array.isArray(t.steps)&&t.steps.length ? `<section class="glossary-section glossary-audit-steps">${glossaryHeading('Mini guía paso a paso','workflow')}<ol>${t.steps.map(step=>`<li>${html(step)}</li>`).join("")}</ol></section>` : ""}
+      ${t.evidence ? `<section class="glossary-section glossary-evidence">${glossaryHeading('Qué evidencia solicitar','evidence')}<p>${html(t.evidence)}</p></section>` : ""}
+      ${t.caution ? `<section class="glossary-section glossary-caution">${glossaryHeading('Evita esta confusión','caution')}<p>${html(t.caution)}</p></section>` : ""}
+      ${renderGlossaryProtocol(t,glossary?.GUIDES?.[t.id])}
       ${renderGlossaryGuide(t)}
       ${renderGlossaryHelp(t)}
-      ${t.example ? `<section class="glossary-section glossary-example"><h3>Ejemplo</h3><p>${html(t.example)}</p></section>` : ""}
-      ${t.references?.length ? `<section class="glossary-section glossary-references"><h3>Referencias y recursos oficiales</h3><ul>${t.references.map((ref) => `<li><a href="${html(ref.url)}" target="_blank" rel="noopener noreferrer external">${html(ref.label)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ul><p class="glossary-external-note">Estos recursos requieren conexión y se abren fuera de la aplicación.</p></section>` : ""}
+      ${t.example ? `<section class="glossary-section glossary-example">${glossaryHeading('Ejemplo','meaning')}<p>${html(t.example)}</p></section>` : ""}
+      ${t.references?.length ? `<section class="glossary-section glossary-references">${glossaryHeading('Referencias oficiales','link')}<ul>${t.references.map(ref=>`<li><a href="${html(ref.url)}" target="_blank" rel="noopener noreferrer external">${html(ref.label)} <span aria-hidden="true">↗</span></a></li>`).join("")}</ul><p class="glossary-external-note">Se requiere conexión para abrir los recursos externos.</p></section>` : ""}
       ${t.aliases?.length ? `<p class="glossary-aliases"><strong>También se busca como:</strong> ${html(t.aliases.join(", "))}</p>` : ""}
-      <p class="glossary-disclaimer">Referencia orientativa. Documenta la prueba realizada y contrasta los criterios con el contexto del cliente.</p></article>`;
+      <p class="glossary-disclaimer">Referencia orientativa. Documenta la prueba y contrasta los criterios con el contexto del cliente.</p></article>`;
   }
 
   // The quick view never navigates or rerenders an audit field.
@@ -1916,7 +950,7 @@
     byId("glossary-quick-title").textContent = term.title;
     body.innerHTML = renderGlossaryDetail(term, true);
     const article = body.querySelector(".glossary-article");
-    const advanced = [".glossary-audit-steps",".glossary-troubleshoot",".glossary-console",
+    const advanced = [".glossary-audit-steps",".glossary-protocol",".glossary-troubleshoot",".glossary-console",
       ".glossary-help-resource",".glossary-references"].map(selector=>article?.querySelector(selector)).filter(Boolean);
     if (article && advanced.length) {
       const details = document.createElement("details"), summary = document.createElement("summary");
@@ -2029,30 +1063,39 @@
   }
   function renderBackups() {
     const pending = changedSinceLastBackup();
-    const readable = (iso) =>
-      iso ? new Date(iso).toLocaleString("es-ES") : "Todavía no";
+    const readable = iso => iso && Number.isFinite(Date.parse(iso)) ? new Date(iso).toLocaleString("es-ES") : "Todavía no";
     const tables = globalThis.AuditTabular?.sections(state) || [];
-    return `<span class="eyebrow">BIBLIOTECA / COPIAS Y ENTREGA</span><h1 class="page-title">Copias de seguridad y exportación</h1>
-      <p class="lead">Los expedientes se guardan en <strong>${html(repository.mode)}</strong> dentro de este navegador. La carpeta de instalación contiene la aplicación, <strong>no</strong> los datos de los clientes.</p>
-      <div class="grid-two">
-        <section class="card"><h2>Copia completa · JSON</h2><p class="subtle">Único formato compatible con la restauración de todas las auditorías, incluidos textos, cláusulas y fotografías.</p>
-          <p><strong>${records.length}</strong> auditorías en este perfil · Última descarga iniciada: <strong>${html(readable(backupPrefs.lastExportAt))}</strong></p>
-          <div class="action-row"><button type="button" class="button accent" data-backup-all="true">Descargar backup completo (.json)</button><button type="button" class="button quiet" id="backup-restore">Importar / restaurar JSON</button></div>
-          <p class="subtle">La descarga no prueba que el archivo se haya guardado correctamente. Verifica el archivo en la carpeta de destino antes de borrar datos del navegador.</p></section>
-        <section class="card"><h2>Copias en carpeta local</h2><p class="subtle">${canChooseFolder() ? "Disponible en este navegador." : "No disponible en este navegador. Puedes seguir descargando JSON manualmente."}</p>
-          <p>Destino: <strong>${html(backupPrefs.folderName || "Sin carpeta asociada")}</strong> · Última copia escrita: <strong>${html(readable(backupPrefs.lastFolderAt))}</strong></p>
-          <p><strong>${pending ? "Hay cambios pendientes de respaldar" : "Sin cambios detectados desde la última copia guardada"}</strong></p>
-          ${backupPrefs.lastError ? `<p class="backup-error" role="alert">${html(backupPrefs.lastError)}</p>` : ""}
-          <div class="action-row"><button type="button" class="button quiet" id="backup-select-folder" ${canChooseFolder() ? "" : "disabled"}>Seleccionar carpeta</button><button type="button" class="button accent" id="backup-write-now" ${backupPrefs.folderName ? "" : "disabled"}>Guardar ahora</button><button type="button" class="button quiet" id="backup-forget" ${backupPrefs.folderName ? "" : "disabled"}>Desvincular</button></div>
-          <label class="backup-opt"><input id="backup-auto" type="checkbox" ${backupPrefs.automatic ? "checked" : ""} ${backupPrefs.folderName ? "" : "disabled"}> Realizar copias cada 30 minutos con cambios, mientras la aplicación esté abierta</label>
-          <p class="subtle">Los permisos pueden caducar. No funciona cuando el navegador está cerrado y no sustituye un backup cifrado externo.</p></section>
-      </div>
-      <section class="card"><h2>Entregables editables · Excel / CSV</h2><p class="subtle">Úsalos para compartir inventarios y planes de actuación; <strong>no se pueden restaurar</strong> como auditorías. Las imágenes y cláusulas extensas permanecen en el JSON y en el PDF.</p>
-        <div class="backup-exports"><div><label for="export-csv-section">Sección para CSV</label><select id="export-csv-section" aria-label="Seleccionar datos CSV">${tables.map((x) => `<option value="${html(x.name)}" ${x.name === "Hallazgos" ? "selected" : ""}>${html(x.name)} (${x.rows.length})</option>`).join("")}</select></div>
-          <button type="button" class="button quiet" id="backup-export-csv" ${currentId ? "" : "disabled"}>Exportar CSV</button>
-          <button type="button" class="button accent" id="backup-export-xlsx" ${currentId ? "" : "disabled"}>Exportar Excel (.xlsx)</button></div>
-        <p class="subtle">El XLSX incluye varias hojas con filtros; el CSV usa UTF-8 y separador de punto y coma para Excel en español. Comprueba los datos confidenciales antes de compartir.</p></section>
-      <div class="notice warn">Algunos expedientes contienen datos personales, vulnerabilidades o evidencias sensibles. Guarda los backups en un volumen cifrado y controla quién puede acceder a ellos.</div>`;
+    return [
+      '<span class="eyebrow">BIBLIOTECA / COPIAS Y ENTREGA</span><h1 class="page-title">Copias de seguridad y exportación</h1>',
+      '<p class="lead">Los expedientes se guardan en <strong>'+html(repository.mode)+'</strong> de este navegador. La carpeta donde instalaste RabbitMole no contiene los datos de los clientes.</p>',
+      '<div class="grid-two">',
+      '<section class="card backup-panel"><h2>1. Crear copia completa</h2>',
+      '<p><strong>'+records.length+'</strong> auditorías en este perfil. Incluye sus evidencias y fotos integradas, no los originales externos ni las credenciales del navegador.</p>',
+      '<div class="backup-field"><label for="backup-create-secret">Frase de cifrado (16–512 caracteres)</label><input type="password" id="backup-create-secret" autocomplete="new-password" minlength="16" maxlength="512" placeholder="Consérvala fuera de la aplicación">',
+      '<label for="backup-create-confirm">Repetir frase</label><input type="password" id="backup-create-confirm" autocomplete="new-password" minlength="16" maxlength="512" placeholder="Repite exactamente la misma frase"></div>',
+      '<div class="action-row backup-actions"><button type="button" class="button accent" id="backup-download-encrypted">Descargar copia cifrada (.rmenc)</button><button type="button" class="button quiet" data-backup-all="true">Descargar JSON legible</button></div>',
+      '<p class="subtle">Cifrado AES-256-GCM local. No se envían datos. Si pierdes la frase, no podrás descifrar la copia. El JSON legible debe guardarse en una unidad protegida.</p>',
+      '<p class="subtle">Última descarga iniciada: '+html(readable(backupPrefs.lastExportAt))+' · '+Number(backupPrefs.lastExportCount||0)+' auditorías. <strong>Comprueba el fichero en destino:</strong> iniciar una descarga no garantiza su conservación.</p></section>',
+      '<section class="card backup-panel"><h2>2. Comprobar y restaurar</h2>',
+      '<p class="subtle">Verifica un archivo .json o .rmenc sin modificar los expedientes. Después decide expresamente si quieres importar y sustituir coincidencias.</p>',
+      '<div class="backup-field"><label for="backup-restore-file">Elegir archivo de copia</label><input id="backup-restore-file" type="file" accept=".json,.rmenc,application/json">',
+      '<label for="backup-restore-secret">Frase para descifrar (solo .rmenc)</label><input id="backup-restore-secret" type="password" autocomplete="off" minlength="16" maxlength="512" placeholder="Nunca se guarda"></div>',
+      '<div class="action-row backup-actions"><button type="button" class="button quiet" id="backup-verify-file">Comprobar archivo</button><button type="button" class="button accent" id="backup-apply-restore" disabled>Restaurar copia comprobada</button></div>',
+      '<p id="backup-restore-status" class="backup-result" role="status" aria-live="polite" aria-atomic="true">Selecciona una copia y pulsa «Comprobar archivo».</p>',
+      '<p class="subtle">El archivo se valida en este dispositivo. La restauración usa las mismas confirmaciones de conflictos que la importación habitual.</p></section></div>',
+      '<section class="card backup-panel"><h2>3. Copias en carpeta local · JSON sin cifrar</h2>',
+      '<p class="subtle">'+(canChooseFolder()?'Este navegador admite elegir carpetas.':'Este navegador no admite acceso a carpetas; las descargas manuales siguen disponibles.')+'</p>',
+      '<p>Destino: <strong>'+html(backupPrefs.folderName||'Ninguno')+'</strong> · Última escritura: <strong>'+html(readable(backupPrefs.lastFolderAt))+'</strong></p>',
+      '<p><strong>'+(!backupPrefs.folderName?'Selecciona una carpeta para comenzar':pending?'Cambios pendientes de copiar':'Sin cambios detectados desde la última copia')+'</strong></p>',
+      backupPrefs.lastError?'<p class="backup-error" role="alert">'+html(backupPrefs.lastError)+'</p>':'',
+      '<div class="action-row backup-actions"><button type="button" class="button quiet" id="backup-select-folder" '+(canChooseFolder()?'':'disabled')+'>Elegir carpeta</button><button type="button" class="button accent" id="backup-write-now" '+(backupPrefs.folderName?'':'disabled')+'>Guardar JSON ahora</button><button type="button" class="button quiet" id="backup-forget" '+(backupPrefs.folderName?'':'disabled')+'>Desvincular</button></div>',
+      '<label class="backup-opt"><input id="backup-auto" type="checkbox" '+(backupPrefs.automatic?'checked':'')+' '+(backupPrefs.folderName?'':'disabled')+'> Copiar si hay cambios, cada 30 min, solo con RabbitMole abierto y visible</label>',
+      '<p class="subtle"><strong>Las copias automáticas NO se cifran.</strong> Elige una carpeta protegida. Si se cierran las ventanas o expira el permiso, no se producirán nuevas copias.</p></section>',
+      '<section class="card"><h2>Excel y CSV · entregables, no backups</h2><p class="subtle">Úsalos para entregar inventarios; no permiten restaurar la biblioteca.</p>',
+      '<div class="backup-exports"><div><label for="export-csv-section">Sección CSV</label><select id="export-csv-section" aria-label="Seleccionar datos CSV">'+tables.map(x=>'<option value="'+html(x.name)+'" '+(x.name==='Hallazgos'?'selected':'')+'>'+html(x.name)+' ('+x.rows.length+')</option>').join('')+'</select></div>',
+      '<button type="button" class="button quiet" id="backup-export-csv" '+(currentId?'':'disabled')+'>Exportar CSV</button><button type="button" class="button quiet" id="backup-export-xlsx" '+(currentId?'':'disabled')+'>Exportar Excel (.xlsx)</button></div></section>',
+      '<div class="notice warn">Conserva las copias fuera del navegador y comprueba una restauración de prueba antes de borrar el origen. Pueden contener evidencias sensibles y datos personales.</div>'
+    ].join("");
   }
   function recordsMarkup(items) {
     return items.length
@@ -2758,6 +1801,7 @@
   const utf8 = new TextEncoder(),
     decoder = new TextDecoder();
   let unlockedConnection = null,
+    connectionVerified = false,
     connectionChannel = "nextcloud";
   function bytesB64(bytes) {
     return btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(""));
@@ -2844,20 +1888,20 @@
     if (PUBLIC_DEMO)
       return '<section class="card"><h1>Conexiones desactivadas</h1><p>La versión web no permite credenciales ni transferencias. Tus expedientes son locales.</p></section>';
     const exists = Boolean(localStorage.getItem(CONNECTION_KEY));
+    const verified = Boolean(unlockedConnection && connectionVerified);
     return `<span class="eyebrow">CONECTORES / OPCIONAL</span><h1 class="page-title">Conexiones y entrega</h1>
-      <p class="lead">La auditoría funciona offline. Las transferencias son opcionales y requieren confirmación explícita. Distingue exportación JSON sin cifrar, backup cifrado y entrega de PDF.</p>
-      <section class="card"><h2>1 · Elige un canal</h2><div class="connection-methods"><label><input type="radio" name="channel" value="nextcloud" ${connectionChannel === "nextcloud" ? "checked" : ""}> Nextcloud / WebDAV (subir JSON cifrando la conexión TLS)</label><label><input type="radio" name="channel" value="email" ${connectionChannel === "email" ? "checked" : ""}> Email (abre tu cliente de correo)</label><label><input type="radio" name="channel" value="share" ${connectionChannel === "share" ? "checked" : ""}> Compartir con el sistema</label></div></section>
+      <p class="lead">Elige cómo entregar el informe. Ningún archivo se transfiere automáticamente. Recomendamos copia cifrada para respaldos y PDF revisado para destinatarios.</p><div class="connection-intro" role="note"><strong>Antes de empezar</strong><span>1. Abre una auditoría · 2. Elige canal · 3. Comprueba el destino · 4. Confirma cada envío.</span></div>
+      <section class="card"><h2>1 · Elige un canal</h2><div class="connection-methods"><label><input type="radio" name="channel" value="nextcloud" ${connectionChannel === "nextcloud" ? "checked" : ""}> Nextcloud · copia cifrada o PDF</label><label><input type="radio" name="channel" value="email" ${connectionChannel === "email" ? "checked" : ""}> Email (abre tu cliente de correo)</label><label><input type="radio" name="channel" value="share" ${connectionChannel === "share" ? "checked" : ""}> Compartir con el sistema</label></div></section>
       <section class="card" id="connection-nextcloud" ${connectionChannel === "nextcloud" ? "" : "hidden"}><h2>2 · Configura Nextcloud</h2><p class="subtle">Usa una contraseña de aplicación revocable, no la contraseña principal. El perfil queda cifrado localmente mediante AES-GCM y una frase de paso que no almacenamos. El navegador debe permitir CORS en el servidor WebDAV.</p>
       <div class="fields"><div class="field full"><label for="dav-url">URL WebDAV HTTPS</label><input id="dav-url" type="url" autocomplete="off" placeholder="https://nube.example/remote.php/dav/files/usuario/"></div>
       <div class="field"><label for="dav-user">Usuario</label><input id="dav-user" autocomplete="off"></div><div class="field"><label for="dav-secret">Contraseña de aplicación</label><input id="dav-secret" type="password" autocomplete="new-password"></div>
       <div class="field full"><label for="dav-passphrase">Frase de paso local (12 caracteres mínimo)</label><input id="dav-passphrase" type="password" autocomplete="new-password"></div></div>
-      <div class="action-row"><button class="button accent" id="dav-save">Guardar conexión cifrada</button><button class="button quiet" id="dav-unlock" ${exists ? "" : "disabled"}>Desbloquear conexión</button><button class="button danger" id="dav-forget" ${exists ? "" : "disabled"}>Borrar conexión</button></div>
-      <p class="subtle" id="dav-status" role="status">${unlockedConnection ? "Conexión desbloqueada en esta sesión." : exists ? "Hay un perfil cifrado. Introduce la frase de paso para desbloquearlo." : "Todavía no hay una conexión guardada."}</p></section>
-      <section class="card" id="connection-upload" ${connectionChannel === "nextcloud" ? "" : "hidden"}><h2>3 · Entrega bajo consentimiento</h2><p class="subtle">Subida JSON original SIN CIFRAR, solo mediante HTTPS. Para backups remotos, prefiere la nueva opción «Subir copia cifrada» de abajo. Puede contener información confidencial y evidencias incrustadas. No se sincroniza automáticamente.</p>
-      <div class="action-row"><button class="button accent" id="dav-upload" ${unlockedConnection && currentId ? "" : "disabled"}>Subir expediente JSON</button><button class="button quiet" id="open-email" ${currentId ? "" : "disabled"}>Preparar correo</button><button class="button quiet" id="native-share-json" ${currentId ? "" : "disabled"}>Compartir JSON</button></div><p class="subtle" id="dav-upload-status" role="status"></p></section>
+      <div class="action-row"><button class="button accent" id="dav-save">Guardar perfil cifrado</button><button class="button quiet" id="dav-unlock" ${exists ? "" : "disabled"}>Desbloquear perfil</button><button class="button quiet" id="dav-test" ${unlockedConnection ? "" : "disabled"}>Comprobar conexión (sin subir)</button><button class="button danger" id="dav-forget" ${exists ? "" : "disabled"}>Olvidar perfil</button></div>
+      <p class="subtle" id="dav-status" role="status">${unlockedConnection ? "Conexión desbloqueada en esta sesión." : exists ? "Hay un perfil cifrado. Introduce la frase de paso para desbloquearlo." : "Todavía no hay una conexión guardada."}</p><p class="connection-check" id="dav-test-status" role="status" aria-live="polite">${verified ? "Comprobación WebDAV satisfactoria en esta sesión. No confirma permisos de escritura." : "Pendiente de comprobar. Ninguna operación remota se ha iniciado."}</p></section>
+      <section class="card" id="connection-upload" ${connectionChannel === "nextcloud" ? "" : "hidden"}><details class="connection-advanced"><summary>Opciones avanzadas · JSON original sin cifrar</summary><p class="subtle">No recomendado para respaldos: la conexión usa TLS, pero el servidor recibe el JSON legible. El nombre es único y nunca se sobrescribe un archivo existente.</p><div class="action-row"><button class="button quiet" id="dav-upload" ${verified && currentId ? "" : "disabled"}>Subir JSON legible (avanzado)</button></div><p id="dav-upload-status" role="status"></p></details></section>
       <section class="card" id="connection-email" ${connectionChannel === "email" ? "" : "hidden"}><h2>2 · Envío por correo</h2><p class="subtle">Abre un correo con asunto y texto preparados. Los navegadores no pueden adjuntar automáticamente un PDF a un enlace mailto. Genera y revisa el PDF, adjúntalo en tu cliente y verifica destinatarios antes de enviar.</p><button type="button" class="button accent" id="open-email" ${currentId ? "" : "disabled"}>Redactar correo</button></section>
       <section class="card" id="connection-share" ${connectionChannel === "share" ? "" : "hidden"}><h2>2 · Compartir mediante el dispositivo</h2><p class="subtle">Utiliza Web Share API si el dispositivo la ofrece; elige manualmente la aplicación de destino. También puedes exportar JSON y compartir el PDF ya generado desde el gestor de archivos.</p><button type="button" class="button accent" id="native-share-json" ${currentId ? "" : "disabled"}>Compartir expediente JSON</button></section>
-      ${globalThis.AuditSecureTransferUI.view(Boolean(currentId), Boolean(unlockedConnection))}<section class="card"><h2>Otros proveedores</h2><p class="subtle">Drive, OneDrive y Microsoft 365 requieren OAuth mediante PKCE, registro de aplicación y políticas CORS. No guardes <em>client secrets</em> de OAuth en una aplicación JavaScript distribuida: no pueden mantenerse secretos en un cliente público. Se añadirán integraciones específicas cuando tengan un flujo seguro verificado.</p></section>`;
+      <div id="connection-nextcloud-transfer" ${connectionChannel === "nextcloud" ? "" : "hidden"}>${globalThis.AuditSecureTransferUI.view(Boolean(currentId), verified)}</div><section class="card"><h2>Otros proveedores</h2><p class="subtle">Drive, OneDrive y Microsoft 365 requieren OAuth mediante PKCE, registro de aplicación y políticas CORS. No guardes <em>client secrets</em> de OAuth en una aplicación JavaScript distribuida: no pueden mantenerse secretos en un cliente público. Se añadirán integraciones específicas cuando tengan un flujo seguro verificado.</p></section>`;
   }
   function renderConnections() {
     return connectionSettingsMarkup();
@@ -2865,14 +1909,10 @@
   async function uploadDav() {
     if (PUBLIC_DEMO)
       throw Error("WebDAV no está disponible en la versión web.");
-    if (!currentId || !unlockedConnection)
-      throw Error("Abre un expediente y desbloquea la conexión primero.");
-    const filename =
-      "auditoria-" +
-      slug(state.meta.client) +
-      "-" +
-      slug(state.meta.reportId || "informe") +
-      ".json";
+    if (!currentId || !unlockedConnection || !connectionVerified)
+      throw Error("Abre un expediente y verifica la conexión primero.");
+    if (!connectionVerified) throw Error("Comprueba primero la conexión WebDAV.");
+    const filename = globalThis.AuditSecureTransfer.safeFilename("backup").replace(/\\.rmenc$/, ".json");
     const body = JSON.stringify(state, null, 2);
     if (
       !confirm(
@@ -2880,8 +1920,7 @@
       )
     )
       return;
-    const target = new URL(encodeURIComponent(filename), unlockedConnection.url)
-      .href;
+    const target = globalThis.AuditSecureTransfer.target(unlockedConnection, filename);
     const authorization =
       "Basic " +
       btoa(
@@ -2899,15 +1938,14 @@
       headers: {
         Authorization: authorization,
         "Content-Type": "application/json;charset=utf-8",
+        "If-None-Match": "*",
       },
       body,
       redirect: "error",
       referrerPolicy: "no-referrer",
     });
-    if (!reply.ok)
-      throw Error(
-        "WebDAV devolvió HTTP " + reply.status + ". Revisa permisos y CORS.",
-      );
+    if (reply.status === 412) throw Error("El archivo ya existe: no se sobrescribe.");
+    if (!reply.ok) throw Error("WebDAV devolvió HTTP " + reply.status + ". Revisa permisos y CORS.");
     byId("dav-upload-status").textContent =
       "Expediente enviado por HTTPS. Conserva igualmente una copia offline.";
   }
@@ -3354,6 +2392,7 @@
         "settings",
         "connections",
         "glossary",
+        "device",
       ].includes(page) || !currentId;
     byId("navigation").hidden = true;
     byId("audit-context").hidden = true;
@@ -3392,7 +2431,9 @@
         ? "Biblioteca de auditorías"
         : page === "backups"
           ? "Copias de seguridad"
-          : page === "settings"
+          : page === "device"
+            ? "Dispositivo e instalación"
+            : page === "settings"
             ? "Configuración de consultora"
             : page === "connections" || page === "online"
               ? "Conexiones online"
@@ -3408,14 +2449,18 @@
         (state.meta.project || state.meta.client || "Sin título");
     byId("btn-export").disabled = inLibrary;
     byId("btn-pdf").disabled = inLibrary;
-
+    const devicePage = page === "device";
+    byId("pwa-install-card").hidden = !devicePage;
+    byId("workspace").hidden = devicePage;
     byId("workspace").innerHTML =
       (inLibrary ? "" : renderWizardTop()) +
       (page === "dashboard"
         ? renderOverview()
         : page === "records"
           ? renderRecords()
-          : page === "backups"
+          : page === "device"
+            ? ""
+            : page === "backups"
             ? renderBackups()
             : page === "settings"
               ? renderSettings()
@@ -3488,6 +2533,7 @@
         "settings",
         "connections",
         "glossary",
+        "device",
       ].includes(section) &&
       !currentId
     ) {
@@ -3502,6 +2548,7 @@
         "settings",
         "connections",
         "glossary",
+        "device",
       ].includes(section) ||
       section === "intake" ||
       nav.some((n) => n[0] === section)
@@ -3510,7 +2557,7 @@
       render();
       scrollTo(0, 0);
       // SPA navigation must announce the new page to keyboard and screen-reader users.
-      const heading = workspace.querySelector("h1");
+      const heading = section === "device" ? byId("pwa-install-heading") : workspace.querySelector("h1");
       if (heading) {
         heading.tabIndex = -1;
         heading.focus({ preventScroll: true });
@@ -3707,6 +2754,39 @@
       updateValidation(t);
     }
   });
+  // Progressive enhancement only: the evidence was persisted before this is called.
+  async function suggestDetailsFromPhoto(input, auditId) {
+    try {
+        // Photo storage never depends on recognition; detection is optional.
+        const photographed=globalThis.RabbitMoleCameraCapture?.consume(input);
+        if(photographed && currentId===auditId && state.documentControl?.status!=="confirmed"){
+          const hint=await globalThis.RabbitMolePhotoHints?.scan(photographed);
+          if(hint && currentId===auditId){
+            const targets=state.assets.map(asset=>({key:asset._key,label:(asset.id||"Activo")+" · "+(asset.name||asset.model||"Sin nombre")}));
+            const suggestion=await globalThis.RabbitMolePhotoHints.prompt(hint,targets);
+            if(suggestion && currentId===auditId && state.documentControl?.status!=="confirmed"){
+              const target=suggestion.target==="__new__"?null:state.assets.find(a=>a._key===suggestion.target);
+              if(!target && state.assets.length>=LIMIT_ROWS)alert("No se puede crear otro activo: límite alcanzado. La foto permanece guardada.");
+              else {
+                const asset=target||{_key:uid(),id:relations.nextCode(state.assets,"assets")};
+                let changed=0;
+                for(const [key,value] of Object.entries(suggestion.fields)){
+                  if(!["vendor","model","serial","name"].includes(key))continue;
+                  if(str(asset[key]).trim())continue; // Never overwrite audited facts.
+                  asset[key]=value;changed++;
+                }
+                if(changed){
+                  if(!target)state.assets.unshift(asset);
+                  persist();render();
+                  alert("Datos propuestos añadidos a "+(asset.id||"activo")+". Revisa fabricante, modelo y serie. La fotografía sigue en Evidencias.");
+                }else alert("El activo ya tenía esos campos completos. No se ha sobrescrito ningún dato; la fotografía permanece guardada.");
+              }
+            }
+          }
+        }    } catch (error) {
+      console.warn("No se pudieron analizar los datos de la foto; la evidencia ya está guardada.", error);
+    }
+  }
   workspace.addEventListener("change", async (e) => {
     if (e.target.id === "record-jump") {
       const entry = [
@@ -3856,7 +2936,17 @@
       persist();
       return;
     }
+    if (t.id === "backup-restore-file") {
+      verifiedBackupFile = null;
+      if (byId("backup-apply-restore")) byId("backup-apply-restore").disabled = true;
+      if (byId("backup-restore-status")) byId("backup-restore-status").textContent =
+        "Archivo seleccionado; compruébalo antes de restaurar.";
+      return;
+    }
     if (t.id === "backup-auto") {
+      if (t.checked && !confirm("Las copias periódicas serán JSON SIN CIFRAR. ¿Has elegido una carpeta protegida y deseas activarlas?")) {
+        t.checked = false; return;
+      }
       if (!backupPrefs.folderName) {
         t.checked = false;
         alert("Primero selecciona una carpeta para las copias periódicas.");
@@ -3871,9 +2961,9 @@
     if (t.name === "channel") {
       if (PUBLIC_DEMO) return;
       connectionChannel = t.value;
-      for (const key of ["nextcloud", "upload", "email", "share"])
+      for (const key of ["nextcloud", "upload", "email", "share", "nextcloud-transfer"])
         byId("connection-" + key).hidden =
-          key === "upload" || key === "nextcloud"
+          ["upload","nextcloud","nextcloud-transfer"].includes(key)
             ? connectionChannel !== "nextcloud"
             : connectionChannel !== key;
       return;
@@ -4028,6 +3118,7 @@
         persist();
         render();
         focusAddedRecord(finding._key);
+        await suggestDetailsFromPhoto(t, id);
       } catch (error) {
         alert("No se pudieron adjuntar las imágenes: " + error.message);
         t.value = "";
@@ -4055,6 +3146,8 @@
         evidenceImages.add(record, prepared);
         persist();
         render();
+        // Recognition errors must never be reported as a failed photo attachment.
+        await suggestDetailsFromPhoto(t, id);
       } catch (error) {
         alert("No se pudieron incorporar las imágenes: " + error.message);
         t.value = "";
@@ -4189,6 +3282,7 @@
   workspace.addEventListener("click", async (e) => {
     const b = e.target.closest("button");
     if (!b) return;
+    if (b.id === "record-nav-toggle") { recordNavigation.toggleCollapse(); return; }
     if (
       PUBLIC_DEMO &&
       ([
@@ -4629,6 +3723,7 @@
         const envelope = await encryptProfile(profile, pass);
         localStorage.setItem(CONNECTION_KEY, JSON.stringify(envelope));
         unlockedConnection = profile;
+        connectionVerified = false;
         render();
         alert(
           "Conexión guardada cifrada. Necesitarás la frase de paso para desbloquearla de nuevo.",
@@ -4645,6 +3740,7 @@
         );
         const pass = byId("dav-passphrase").value;
         unlockedConnection = await decryptProfile(envelope, pass);
+        connectionVerified = false;
         validateWebdavProfile(
           unlockedConnection.url,
           unlockedConnection.user,
@@ -4654,6 +3750,7 @@
         alert("Conexión desbloqueada para esta sesión.");
       } catch (error) {
         unlockedConnection = null;
+        connectionVerified = false;
         alert("No se pudo desbloquear: contraseña incorrecta o perfil dañado.");
       }
       return;
@@ -4664,8 +3761,27 @@
       ) {
         localStorage.removeItem(CONNECTION_KEY);
         unlockedConnection = null;
+        connectionVerified = false;
         render();
       }
+      return;
+    }
+    if (b.id === "dav-test") {
+      const status = byId("dav-test-status");
+      b.disabled = true;
+      if (status) status.textContent = "Consultando WebDAV mediante PROPFIND de solo lectura…";
+      try {
+        connectionVerified = false;
+        if (!unlockedConnection) throw Error("Guarda o desbloquea el perfil.");
+        const result = await globalThis.AuditSecureTransfer.testConnection(unlockedConnection);
+        connectionVerified = true;
+        render();
+        const output = byId("dav-test-status");
+        if (output) output.textContent = "Conexión HTTPS verificada con " + result.origin + ". Carpeta accesible; escritura no comprobada.";
+      } catch(error) {
+        connectionVerified = false;
+        if (status) status.textContent = "No se pudo comprobar: " + error.message;
+      } finally { if (b.isConnected) b.disabled = false; }
       return;
     }
     if (b.id === "dav-upload") {
@@ -4690,8 +3806,37 @@
       await forgetBackupFolder();
       return;
     }
-    if (b.id === "backup-restore") {
-      byId("input-import").click();
+    if (b.id === "backup-download-encrypted") { await backupAll({encrypted:true}); return; }
+    if (b.id === "backup-verify-file" || b.id === "backup-apply-restore") {
+      const file=byId("backup-restore-file")?.files?.[0];
+      const notice=byId("backup-restore-status");
+      if(!file){if(notice)notice.textContent="Selecciona una copia.";return;}
+      if(b.id==="backup-apply-restore" && verifiedBackupFile!==file){
+        if(notice)notice.textContent="Vuelve a comprobar la copia antes de restaurarla.";return;
+      }
+      b.disabled=true;
+      try{
+        if(file.size>backupWorkflow.MAX_ENCRYPTED)throw Error("Archivo superior a 65 MiB.");
+        const result=await backupWorkflow.inspect(await file.text(),{
+          passphrase:byId("backup-restore-secret")?.value||"",
+          security:backupCrypto,validateAudit:validate
+        });
+        const plan=importPlan.plan(records,result.audits);
+        if(b.id==="backup-verify-file"){
+          verifiedBackupFile=file;
+          byId("backup-apply-restore").disabled=!result.count;
+          if(notice)notice.textContent="Archivo válido: "+result.count+" auditorías · "+
+            plan.added.length+" nuevas · "+plan.replaced.length+" coincidencias · "+
+            (result.encrypted?"cifrada. ":"JSON legible. ")+"No se ha importado nada.";
+        }else{
+          // The original importer revalidates and asks before replacing existing audits.
+          await importJson(new File([result.plaintext],"copia-verificada.json",{type:"application/json"}));
+        }
+      }catch(error){
+        verifiedBackupFile=null;
+        if(byId("backup-apply-restore"))byId("backup-apply-restore").disabled=true;
+        if(notice)notice.textContent="Sin cambios en las auditorías: "+String(error.message||error);
+      }finally{if(b.isConnected)b.disabled=false;}
       return;
     }
     if (b.id === "backup-export-xlsx") {
@@ -5260,23 +4405,30 @@
       "&body=" +
       encodeURIComponent(body.slice(0, 700));
   }
-  async function backupAll() {
+  async function backupAll({encrypted=false}={}) {
     try {
+      if(encrypted){
+        const secret=byId("backup-create-secret")?.value||"";
+        if(secret.length<16||secret.length>512)throw Error("La frase debe tener entre 16 y 512 caracteres.");
+        if(secret!==byId("backup-create-confirm")?.value)throw Error("Las frases no coinciden.");
+      }
       await flush();
-      download(
-        "rabbitmole-backup-" +
-          new Date().toISOString().slice(0, 10) +
-          ".json",
-        JSON.stringify(backupPayload(), null, 2),
-        "application/json;charset=utf-8",
-      );
-      backupPrefs.lastExportAt = new Date().toISOString();
-      backupPrefs.lastExportCount = records.length;
+      const raw=backupWorkflow.assertRestorable(JSON.stringify(backupPayload()));
+      if(encrypted){
+        const cipher=await backupCrypto.encryptBackup(JSON.parse(raw),byId("backup-create-secret").value);
+        download("rabbitmole-biblioteca-"+new Date().toISOString().slice(0,10)+".rmenc",
+          cipher,"application/json;charset=utf-8");
+        byId("backup-create-secret").value="";
+        byId("backup-create-confirm").value="";
+      }else{
+        download("rabbitmole-backup-"+new Date().toISOString().slice(0,10)+".json",
+          raw,"application/json;charset=utf-8");
+      }
+      backupPrefs.lastExportAt=new Date().toISOString();
+      backupPrefs.lastExportCount=records.length;
       storeBackupPrefs();
-      if (page === "backups") render();
-    } catch (error) {
-      alert("No se pudo exportar el backup: " + error.message);
-    }
+      if(page==="backups")render();
+    }catch(error){alert("No se pudo crear la copia: "+error.message);}
   }
   let exportFeedbackTimer = null;
   function showExportFeedback(message, isError = false) {
@@ -6349,7 +5501,7 @@
       .forEach((button) => (button.hidden = true));
   }
   byId("palette").addEventListener("change", (event) =>
-    selectPalette(event.target.value),
+    selectPalette(event.target.value, true),
   );
   byId("open-library").addEventListener("click", async () => {
     try {
@@ -6377,14 +5529,10 @@
   });
   refreshNetworkStatus();
   byId("local-date").textContent = new Date().toLocaleDateString("es-ES");
-  try {
-    selectPalette(localStorage.getItem(PALETTE_KEY) || "ocean");
-  } catch (_ignored) {
-    selectPalette("ocean");
-  }
+  selectPalette(palettePreferences.initial(localStorage, palettes, DEFAULT_PALETTE));
   if (!PUBLIC_DEMO)
     globalThis.AuditSecureTransferUI.bind({
-      getProfile: () => unlockedConnection,
+      getProfile: () => connectionVerified ? unlockedConnection : null,
       getAudit: () => (currentId ? state : null),
       download,
       flush,

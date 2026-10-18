@@ -5,7 +5,8 @@ const vm=require('node:vm');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const ctx={};ctx.globalThis=ctx;
-vm.runInNewContext(fs.readFileSync(path.join(root,'js/glossary.js'),'utf8'),ctx);
+for (const module of ['glossary-terms.js','glossary-guides.js','glossary.js'])
+ vm.runInNewContext(fs.readFileSync(path.join(root,'js',module),'utf8'),ctx);
 const g=ctx.AuditGlossary;
 const app=fs.readFileSync(path.join(root,'js/app.js'),'utf8'),css=fs.readFileSync(path.join(root,'css/glossary.css'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 assert(g.CONTEXT_HELP.fields.networks.cidr==='term-3','CIDR context missing');
@@ -100,3 +101,35 @@ assert(app.includes('glossary-audit-steps'),'Step by step WiFi help UI missing')
 
 for(const id of Array.from({length:8},(_,i)=>'term-'+(175+i))){assert(g.byId(id)?.category==='Redes · routers');assert(g.GUIDES[id]?.commands.length>=2)}
 for(const field of ["routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"])assert(g.CONTEXT_HELP.fields.networks[field],'Missing router field help '+field);
+
+assert(app.includes('glossary-detail-top')&&app.includes('glossaryIcon')&&app.includes('renderGlossaryProtocol'),'Detail navigation, icons and protocol rendering required');
+assert(css.includes('.glossary-categories{display:flex;flex-wrap:wrap;overflow:visible'),'Category filters should wrap rather than clip');
+assert(css.includes('.glossary-command pre{background:var(--navy)'),'Readable terminal command surface');
+for(const id of ['term-1','term-2','term-25']){
+ assert(g.PROTOCOLS[id]?.length>=4,'Missing scoped protocol: '+id);
+ assert(g.PROTOCOLS[id].every(text=>typeof text==='string'&&text.length>40));
+}
+assert(fs.readFileSync(path.join(root,'index.html'),'utf8').includes('<option value="rabbitmole">Predeterminado</option>'),'Brand palette label');
+
+/* Regression: glossary sections with borders must keep their inner spacing.
+ * A generic 'padding: ... 0' used to wipe example/evidence/caution padding. */
+assert(css.includes('.glossary-section{border-top:1px solid var(--line);padding-block:'),
+ 'Glossary section rhythm must only affect the block axis');
+assert(css.includes('.glossary-quick-body .glossary-section{padding-block:'),
+ 'Contextual help must preserve its horizontal content insets');
+assert(!/\.glossary-section\s*\{\s*padding\s*:/.test(css),
+ 'Do not reset horizontal padding in shared glossary sections');
+assert(!css.includes('.glossary-evidence,.glossary-caution{border-inline-start-color:var(--line);padding-inline-start:0}'),
+ 'Evidence and caution must not touch the border');
+assert(css.includes('.glossary-example{border:1px solid var(--line);background:var(--canvas);padding:'),
+ 'Example text must have an explicit responsive inset');
+assert(css.includes('.glossary-audit-steps {') && css.includes('padding-inline-start: clamp('),
+ 'Audit guide ordered lists need breathing room');
+const ux=fs.readFileSync(path.join(root,'css/workspace-ux.css'),'utf8'),
+ quality=fs.readFileSync(path.join(root,'css/quality.css'),'utf8');
+assert(ux.includes('.intake-command pre { margin:0; padding:.9rem') &&
+ ux.includes('.network-analysis-imports') && ux.includes('padding:.85rem'),
+ 'Command and import panels should preserve their existing padding');
+assert(quality.includes('.quality-issue {') && quality.includes('padding:14px') &&
+ quality.includes('.residual-assessment{') && quality.includes('padding:0 1rem'),
+ 'Other assistant panels must retain internal spacing');

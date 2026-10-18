@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
 const env={};env.globalThis=env;
-for(const asset of ['os-catalog.js','glossary.js'])vm.runInNewContext(fs.readFileSync(path.join(root,'js',asset),'utf8'),env);
+for(const asset of ['os-catalog.js','glossary-terms.js','glossary-guides.js','glossary.js'])vm.runInNewContext(fs.readFileSync(path.join(root,'js',asset),'utf8'),env);
 assert(env.AuditOSCatalog.ALL.length>=150);
 assert(env.AuditOSCatalog.search('win').length>0);
 assert(env.AuditOSCatalog.search('win').every(x=>x.toLowerCase().includes('win')));
@@ -16,7 +16,7 @@ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 const bash=fs.readFileSync(path.join(root,'rabbitmole.sh'),'utf8');
 const ps=fs.readFileSync(path.join(root,'rabbitmole.ps1'),'utf8');
-for(const asset of ['js/os-catalog.js','js/glossary.js','css/glossary.css']){
+for(const asset of ['js/os-catalog.js','js/glossary-terms.js','js/glossary-guides.js','js/glossary.js','css/glossary.css']){
  assert(html.includes(asset));assert(sw.includes('./'+asset));
  assert(bash.includes(asset));assert(ps.includes(asset));
 }

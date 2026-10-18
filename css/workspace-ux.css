@@ -341,11 +341,6 @@
   gap:.48rem; min-height:44px; margin:0; white-space:nowrap;
 }
 .topbar .actionbar-icon { width:1.1rem; height:1.1rem; flex:none; }
-.topbar .theme-select { gap:.45rem; color:var(--muted); white-space:nowrap; }
-.topbar .theme-select select {
-  background:var(--paper); color:var(--ink); border-color:var(--line);
-  min-height:44px; max-width:11rem;
-}
 .topbar .actionbar-group :is(.pwa-update-status):not(:empty) {
   flex:1 1 100%; max-width:none; padding:.25rem 0 0;
 }
@@ -383,7 +378,6 @@
   .topbar-context { align-items:flex-start; flex-wrap:wrap; }
   .topbar .save-status { flex-basis:100%; width:fit-content; }
   .topbar .actionbar-group { padding-inline:0; }
-  .topbar .theme-select { font-size:.8rem; }
   .topbar .actionbar-group .button { flex:1 1 auto; }
   .topbar .offline-health .action-row { width:100%; }
   .topbar .offline-health .action-row > button { flex:1 1 auto; }
@@ -410,6 +404,40 @@
 .pdf-appendix-list li span:first-child{min-width:0;overflow-wrap:anywhere;flex:1 1 14rem}
 .pdf-appendix-list small{display:block;margin-top:.25rem;color:var(--muted);overflow-wrap:anywhere}
 .pdf-appendix-list .action-row{margin:0}
+
+/* Both fixed SVG menu icons and dynamically rendered wizard glyphs use a
+   single theme-responsive accent. Decorative status colors remain semantic. */
+.sidebar {
+  --sidebar-icon-muted: color-mix(in srgb, var(--sidebar-active) 30%, var(--sidebar-panel-text));
+  --sidebar-icon-active: var(--sidebar-active);
+}
+.sidebar nav button:is(.active,:hover,[aria-current="page"]) {
+  background: var(--sidebar-panel-raised);
+  color: var(--sidebar-panel-text);
+}
+.sidebar #navigation button .nav-mark {
+  color: var(--sidebar-icon-muted);
+}
+.sidebar #navigation button:is(.active,:hover,[aria-current="page"]) .nav-mark {
+  color: var(--sidebar-icon-active);
+}
+.sidebar #navigation button:is(.active,[aria-current="page"]) {
+  box-shadow: inset 3px 0 var(--sidebar-active);
+}
+#workspace :is(.wizard-top,.wizard-progress,.wizard-jump) progress {
+  accent-color: var(--brand);
+}
+#workspace :is(.wizard-top,.wizard-progress,.wizard-jump) progress::-webkit-progress-value {
+  background-color: var(--brand);
+}
+#workspace :is(.wizard-top,.wizard-progress,.wizard-jump) progress::-moz-progress-bar {
+  background-color: var(--brand);
+}
+@media (forced-colors: active) {
+  .sidebar #global-navigation .nav-icon,
+  .sidebar #navigation .nav-mark { color: ButtonText; }
+  .sidebar nav button:is(.active,[aria-current="page"]) :is(.nav-icon,.nav-mark) { color: Highlight; }
+}
 
 /* Sidebar surfaces use sidebar palette tokens, never the light-content --paper or --ink.
    All nine palettes retain a dark navigation area by design. */
@@ -755,3 +783,289 @@
 #workspace .rack-placement{margin-block:1rem}
 @media(max-width:700px){#workspace .rack-units li{grid-template-columns:2.7rem minmax(0,1fr);font-size:.92rem}}
 @media(forced-colors:active){#workspace .rack-units li{border:1px solid CanvasText}}
+
+/* Palette control is a sidebar utility, not part of the audit toolbar.
+   Sidebar colors stay dark in all nine palettes regardless of workbench theme. */
+.sidebar .sidebar-appearance {
+  display: grid;
+  gap: .48rem;
+  flex-shrink: 0;
+  min-width: 0;
+  margin: .55rem .1rem .1rem;
+  padding: .65rem .7rem .75rem;
+  border: 1px solid var(--sidebar-panel-border);
+  border-radius: .8rem;
+  background: var(--sidebar-panel-bg);
+  color: var(--sidebar-panel-text);
+}
+.sidebar .sidebar-appearance-label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  color: var(--sidebar-panel-text);
+  font-size: .81rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+.sidebar .sidebar-appearance-label svg {
+  color: var(--sidebar-panel-focus);
+  flex: none;
+}
+.sidebar .sidebar-appearance #palette {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding: .5rem .6rem;
+  border: 1px solid var(--sidebar-panel-muted);
+  border-radius: .6rem;
+  background: var(--sidebar-panel-raised);
+  color: var(--sidebar-panel-text);
+  color-scheme: dark;
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.sidebar .sidebar-appearance #palette:hover {
+  border-color: var(--sidebar-panel-focus);
+}
+.sidebar .sidebar-appearance #palette:focus-visible {
+  outline: 3px solid var(--sidebar-panel-focus);
+  outline-offset: 2px;
+}
+@media (max-width: 1000px) {
+  .sidebar .sidebar-appearance {
+    flex: 1 1 14rem;
+    max-width: 21rem;
+    margin: 0;
+  }
+}
+@media (max-width: 720px) {
+  .sidebar .sidebar-appearance {
+    flex-basis: 100%;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  .sidebar .sidebar-appearance-label { flex: 0 0 auto; }
+  .sidebar .sidebar-appearance #palette { flex: 1 1 auto; width: auto; }
+}
+@media (max-width: 360px) {
+  .sidebar .sidebar-appearance { flex-wrap: wrap; }
+  .sidebar .sidebar-appearance #palette { flex-basis: 100%; }
+}
+@media (forced-colors: active) {
+  .sidebar .sidebar-appearance { border-color: CanvasText; }
+  .sidebar .sidebar-appearance #palette {
+    color-scheme: normal;
+    border-color: ButtonText;
+    background: Field;
+    color: FieldText;
+  }
+  .sidebar .sidebar-appearance #palette:focus-visible {
+    outline-color: Highlight;
+  }
+}
+@media print { .sidebar .sidebar-appearance { display: none !important; } }
+
+/* Optional Discovery LAN bridge: progressive UI, never replaces the inventory importer. */
+#bridge-panel { display:grid;gap:.7rem;margin-block-start:1rem;padding:1rem;
+  border:1px solid var(--line);border-inline-start:3px solid var(--brand);
+  border-radius:.8rem;background:var(--canvas);color:var(--ink);min-width:0 }
+#bridge-panel h3 {margin:0;color:var(--ink);font-size:1rem}
+#bridge-panel p {margin:0;line-height:1.55;overflow-wrap:anywhere}
+#bridge-panel .fields {grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+#bridge-panel .field input {width:100%;min-height:44px;font-size:1rem;background:var(--paper);color:var(--ink)}
+#bridge-panel button {min-height:44px;justify-self:start}
+#bridge-results[hidden] {display:none!important}
+@media(max-width:650px){#bridge-panel {padding:.75rem}#bridge-panel button{width:100%}}
+@media(forced-colors:active){#bridge-panel{border-color:CanvasText}}
+
+/* Persistent storage is a separate browser decision, not an offline health failure. */
+.sidebar .sidebar-maintenance .offline-storage-help {
+  min-width:0; border:0; margin:.45rem 0 0; padding:0;
+  color:var(--sidebar-panel-muted); font-size:.76rem;
+}
+.sidebar .sidebar-maintenance .offline-storage-help summary {
+  cursor:pointer; color:var(--sidebar-panel-text);
+  font-weight:650; line-height:1.5; min-height:36px;
+  display:list-item; padding:.25rem 0;
+}
+.sidebar .sidebar-maintenance .offline-storage-help p {
+  margin:.4rem 0; color:var(--sidebar-panel-muted);
+  line-height:1.55; overflow-wrap:anywhere;
+}
+.sidebar .sidebar-maintenance .offline-storage-help summary:focus-visible {
+  outline:2px solid var(--sidebar-panel-focus); outline-offset:2px;
+}
+@media print {.offline-storage-help{display:none!important}}
+
+
+/* Unified tablet / mobile workbench rules.
+   Keep wide datasets scrollable inside their own panel, never the whole page. */
+@media screen and (max-width: 1000px) {
+  .app { display:block; min-width:0; }
+  .sidebar { position:relative; inset:auto; width:100%; height:auto; }
+  .content-wrap { width:100%; min-width:0; }
+  .sidebar #navigation { flex:1 1 100%; min-width:0; max-height:14rem; overflow:auto; scrollbar-width:thin; }
+  .sidebar .sidebar-appearance { min-width:min(100%,15rem); }
+  .topbar, .topbar .actions, #workspace { min-width:0; }
+  #workspace :is(.card,.entry,.fields,.field,.report-workflow,.record-navigator,.glossary-shell) { min-width:0; max-width:100%; }
+  #workspace :is(.network-analysis-table-wrap,.intake-command pre,.glossary-command pre) { max-width:100%; overflow-x:auto; }
+  #workspace :is(.network-analysis-metrics,.report-delivery-grid) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media screen and (max-width: 720px) {
+  :root { font-size:16px; }
+  .sidebar { padding: .85rem; gap:.7rem; align-items:stretch; }
+  .sidebar .brand { min-width:0; }
+  #global-navigation { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; gap:.45rem; flex-basis:100%; overflow:visible; }
+  #global-navigation button { min-width:0; width:100%; min-height:44px; justify-content:flex-start; white-space:normal; text-align:start; padding:.6rem; }
+  #global-navigation button span { overflow-wrap:anywhere; }
+  .sidebar #navigation { display:flex; width:100%; flex:1 1 100%; overflow-x:auto; overflow-y:hidden; white-space:nowrap; max-height:none; gap:.35rem; }
+  .sidebar #navigation button { flex:0 0 auto; white-space:nowrap; min-height:44px; }
+  .sidebar .sidebar-appearance { flex:1 1 100%; max-width:none; width:100%; margin:0; }
+  .topbar { margin:.5rem .7rem; padding:.8rem; }
+  .topbar .actions { width:100%; }
+  .topbar .actionbar-group { min-width:0; }
+  .topbar .actionbar-group .button { min-width:0; white-space:normal; }
+  .topbar .breadcrumb { white-space:normal; overflow-wrap:anywhere; }
+  #workspace { max-width:100%; }
+  #workspace :is(.fields,.grid-two,.report-delivery-grid,.network-analysis-metrics) { grid-template-columns:minmax(0,1fr); }
+  #workspace :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) { max-width:100%; }
+  #workspace .record-navigator { position:static; }
+  #workspace :is(.action-row,.wizard-buttons) { flex-wrap:wrap; }
+  #workspace .action-row > :is(button,.button) { min-height:44px; min-width:0; }
+  #workspace :is(.report-expandable,.intake-shell,.glossary-detail) { min-width:0; }
+  #workspace .glossary-categories { flex-wrap:wrap; }
+  .app-footer { text-align:start; line-height:1.65; overflow-wrap:anywhere; }
+}
+@media screen and (max-width: 400px) {
+  #global-navigation { grid-template-columns:minmax(0,1fr); }
+  .sidebar .sidebar-appearance { flex-wrap:wrap; }
+  .sidebar .sidebar-appearance #palette { flex:1 1 100%; }
+  .topbar .actionbar-group .button { flex:1 1 100%; justify-content:center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar :is(button,select),.topbar .button { scroll-behavior:auto; transition:none; }
+}
+
+
+/* Audit field readiness: self-contained checklist, no additional runtime JS. */
+#pwa-install-card .mobile-field-check {
+  margin-block-start:.8rem;
+  padding:.35rem .85rem .65rem;
+  border:1px solid var(--line);
+  border-radius:.75rem;
+  background:var(--paper);
+  color:var(--ink);
+  min-width:0;
+}
+#pwa-install-card .mobile-field-check>summary {
+  cursor:pointer;
+  padding:.6rem 0;
+  min-height:44px;
+  line-height:1.45;
+  font-size:.92rem;
+  font-weight:750;
+}
+#pwa-install-card .mobile-field-check>summary:focus-visible {
+  outline:3px solid var(--brand);
+  outline-offset:2px;
+  border-radius:.25rem;
+}
+#pwa-install-card .mobile-field-items {
+  padding:0;
+  margin:.65rem 0;
+  display:grid;
+  gap:.5rem;
+  list-style:none;
+}
+#pwa-install-card .mobile-field-items label {
+  display:flex;
+  align-items:flex-start;
+  gap:.7rem;
+  padding:.65rem .75rem;
+  border:1px solid var(--line);
+  border-radius:.65rem;
+  background:var(--canvas);
+  color:var(--ink);
+  line-height:1.55;
+  cursor:pointer;
+  overflow-wrap:anywhere;
+}
+#pwa-install-card .mobile-field-items input[type="checkbox"] {
+  accent-color:var(--brand);
+  width:1.3rem;
+  height:1.3rem;
+  min-width:1.3rem;
+  flex:none;
+  margin:.18rem 0 0;
+}
+#pwa-install-card .mobile-field-items input:focus-visible {
+  outline:3px solid var(--brand);
+  outline-offset:2px;
+}
+#pwa-install-card .mobile-field-help {
+  color:var(--muted);
+  font-size:.87rem;
+  line-height:1.65;
+  margin:.6rem 0;
+}
+@media screen and (max-width:720px) {
+  #pwa-install-card .mobile-field-check {padding:.3rem .6rem .55rem}
+  #pwa-install-card .mobile-field-items label {padding:.65rem}
+}
+@media print {#pwa-install-card .mobile-field-check{display:none!important}}
+
+/* Dedicated device screen, accessed from navigation even with compact sidebar. */
+#pwa-install-card.pwa-install-card:not([hidden]) {
+  display:block;
+  width:min(960px,calc(100% - 2rem));
+  margin:clamp(.8rem,2vw,1.4rem) auto 2rem;
+}
+#pwa-install-card.is-installed {padding:clamp(1rem,2vw,1.35rem)}
+#pwa-install-card.is-installed #pwa-install-heading,
+#pwa-install-card #pwa-install-heading {
+  margin:0 0 .55rem;
+  font-size:clamp(1.3rem,2.7vw,1.8rem);
+  line-height:1.3;
+}
+#pwa-install-card #pwa-install-status {margin:.3rem 0 .8rem}
+#pwa-install-card.is-installed details {margin-top:.6rem}
+#pwa-install-card .mobile-field-check {width:100%}
+#workspace[hidden] {display:none!important}
+@media(max-width:720px) {
+  #pwa-install-card.pwa-install-card:not([hidden]) {
+    width:calc(100% - 1.25rem);
+    margin:.6rem auto 1.25rem;
+  }
+}
+
+/* Library backup steps reuse workspace theme tokens and stay touch-accessible. */
+.backup-panel{display:grid;align-content:start;gap:.7rem;min-width:0}
+.backup-panel>h2,.backup-panel>p{margin:0}
+.backup-field{display:grid;gap:.5rem;min-width:0}
+.backup-field label{font-weight:700;color:var(--ink)}
+.backup-field input{min-width:0;max-width:100%;width:100%}
+.backup-actions{display:flex;gap:.65rem;flex-wrap:wrap}
+.backup-actions .button{min-height:44px;white-space:normal}
+.backup-result{padding:.8rem;border:1px solid var(--line);border-radius:.6rem;background:var(--canvas);line-height:1.5;overflow-wrap:anywhere}
+.backup-panel .backup-opt{display:flex;gap:.6rem;align-items:flex-start;line-height:1.5}
+.backup-panel .backup-opt input{flex:none;margin-top:.2rem}
+@media(max-width:720px){.backup-actions>.button{flex:1 1 100%}}
+@media print{.backup-field,.backup-actions,.backup-panel .backup-opt{display:none!important}}
+
+/* Optional on-device terminal setup: readable offline, nested and keyboard accessible. */
+#pwa-install-card .mobile-terminal-setup{margin-top:.85rem;min-width:0;padding:.4rem .7rem .7rem;border:1px solid var(--line);border-radius:.8rem}
+#pwa-install-card .mobile-terminal-setup>summary{cursor:pointer;font-weight:750;line-height:1.5;padding:.6rem .15rem;min-height:44px}
+#pwa-install-card .mobile-terminal-setup>details{margin:.7rem 0;padding:.45rem .75rem;border:1px solid var(--line);border-radius:.65rem;min-width:0}
+#pwa-install-card .mobile-terminal-setup>details>summary{font-weight:700;cursor:pointer;min-height:44px;padding:.6rem .1rem;line-height:1.5}
+#pwa-install-card .mobile-terminal-setup p,#pwa-install-card .mobile-terminal-setup li{line-height:1.65;overflow-wrap:anywhere}
+#pwa-install-card .mobile-terminal-setup ol{margin:.5rem 0;padding-inline-start:1.4rem}
+#pwa-install-card .mobile-terminal-setup pre{padding:.8rem;background:var(--canvas);border:1px solid var(--line);border-radius:.6rem;overflow-x:auto;max-width:100%;font-size:.85rem;white-space:pre}
+#pwa-install-card .mobile-terminal-setup code{overflow-wrap:normal}
+#pwa-install-card .mobile-terminal-setup a{text-underline-offset:.18em}
+#pwa-install-card .mobile-terminal-setup summary:focus-visible,#pwa-install-card .mobile-terminal-setup a:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+@media(max-width:720px){#pwa-install-card .mobile-terminal-setup{padding:.3rem .5rem}#pwa-install-card .mobile-terminal-setup>details{padding:.35rem .5rem}}
+@media print{#pwa-install-card .mobile-terminal-setup{display:none!important}}

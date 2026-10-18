@@ -2,6 +2,8 @@
 'use strict';
 (() => {
   let stream = null, destination = null;
+  const capturedFiles = new WeakMap();
+  const consume = input => {const file=capturedFiles.get(input);capturedFiles.delete(input);return file || null;};
   const $ = id => document.getElementById(id);
   function stop() {
     stream?.getTracks().forEach(track => track.stop());
@@ -18,6 +20,12 @@
   async function openCamera(target) {
     if (!target || !target.isConnected || !target.matches('input[type="file"]')) return;
     if (!navigator.mediaDevices?.getUserMedia) {
+      // The browser's own camera/file chooser still participates in suggestions.
+      // Clear the marker if the user cancels or selects nothing.
+      target.addEventListener('change', () => {
+        const file=target.files?.[0];
+        if(file?.type.startsWith('image/'))capturedFiles.set(target,file);
+      },{once:true});
       target.click();
       return;
     }
@@ -72,11 +80,13 @@
         transfer.items.add(file);
         const input=destination;
         input.files=transfer.files;
+        capturedFiles.set(input,file);
         close();
         input.dispatchEvent(new Event('change',{bubbles:true}));
       },'image/jpeg',0.85);
     });
   }
+  globalThis.RabbitMoleCameraCapture = Object.freeze({consume});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
 })();

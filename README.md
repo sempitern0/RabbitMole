@@ -272,3 +272,103 @@ Quality review now adds **non-blocking** warnings for documented but inconsisten
 ### Executive and technical reporting acceptance
 
 The **executive report** summarizes rack/server coverage without exposing IPs, detailed OS versions or physical inventory identifiers. The **technical report** contains documentary rack U placements, server OS/role and front/rear evidence references alongside the existing full inventory, findings, mitigation, signatures and evidence list. External PDF attachments are listed by name/hash, never merged silently. Print pagination keeps headings with content and image captions with images. Chromium E2E generates both A4 PDFs; use `PDF_ACCEPTANCE_DIR` to save them for human visual review. Mobile native printing still requires device testing.
+
+
+### When persistent storage is denied
+
+The `navigator.storage.persist()` request is controlled by the browser and cannot be forced by JavaScript. Chromium may silently deny it based on site usage and installation signals; Firefox may request site permission. RabbitMole now calls it directly from the user gesture. A denial does not mean IndexedDB or offline caching failed, nor does it mean data will be deleted immediately. Use the same browser profile and origin, launch from the installed app icon, test offline launch, and keep external protected JSON exports. Estimated quota is not a persistence grant; site-data clearing or private browsing can still remove records.
+
+### Default signature palette
+
+New profiles use **RabbitMole · Brand** (midnight blue, blue-steel, slate and warm ivory taken from the app icon) instead of Ocean. All prior palettes remain available, and existing `rabbitmole:palette:v1` preferences are preserved. Selected themes still apply to report covers without compromising white-page archival readability. The palette is based on the application's existing brand tokens rather than an automated pixel extraction from the PNG asset.
+
+
+## Current architecture and repository-size optimization
+
+RabbitMole is a **static, offline-first JavaScript PWA** with no runtime CDN dependencies. `js/app.js` owns navigation, mutable session state, events and report orchestration; `js/app-definitions.js`, `js/app-model.js` and `js/app-team.js` expose focused field, schema v3 and team factories. Other modules own inventory, mitigation, print, storage and connectivity.
+
+The glossary extends its original catalogue to **212 concepts** and stable `AuditGlossary` API, with compact data separated into `js/glossary-terms.js` (terms, synonyms, examples, references) and `js/glossary-guides.js` (troubleshooting and per-platform commands). `js/glossary.js` reconstructs those objects, handles search/contextual help and augments macOS commands. `js/app.js` only renders and navigates. The glossary source files together are approximately **57 KB (~26%) smaller**, not the entire repository. All three must be present and loaded in order before `app.js`, including offline installation.
+
+### Using the glossary, Discovery and offline PWA
+
+Open **Technical glossary** in the PWA, search or filter by category, then review definitions, audit evidence, diagnostic protocols and available platform commands. Copying a command **does not execute it**; confirm written authorization, target and safe interpretation first. Contextual guidance returns you to the originating audit field.
+
+For Discovery, `python discovery/discover.py doctor` displays human-readable dependencies (`doctor --json` for automation); `python discovery/discover.py wizard` requests an explicitly authorized private CIDR. Android can use Termux where platform permissions permit, exporting JSON for assisted review. Optionally pair the installed tablet PWA with the authorized, temporary LAN HTTPS bridge; see [discovery/README.md](discovery/README.md). Neither host discovery nor VLAN identification proves network isolation.
+
+Use [INSTALLATION.md](INSTALLATION.md) for setup. New runtime files must be in the HTML, service worker precache and both shell/PowerShell installers. The offline cache fallback is conditional on the browser retaining a complete prior shell. Persistent storage permission is browser-controlled, so keep protected JSON exports.
+
+### Maintenance and validation
+
+```bash
+node tests/test_glossary_data.cjs
+node tests/test_glossary.cjs
+node tests/test_glossary_guide.cjs
+npm run check
+npm run test:browser
+npm run deploy:check
+```
+
+Chromium/Playwright must be installed for browser tests. Confirm CI, CSP, public/installed profiles, installation and offline launch before deployment.
+
+### Responsive tablet/phone layout and legacy palette migration
+
+The default RabbitMole palette matches its midnight-blue, blue-steel and warm-ivory icon. Earlier releases automatically stored `ocean` even without user selection: on the first updated launch this legacy value moves to `rabbitmole` once. A subsequently selected Ocean theme is recorded as an explicit preference; other saved themes stay unchanged. Historical Ocean intent cannot be reconstructed reliably. No site-data reset is required.
+
+At **tablet widths (up to 1000px)** the fixed sidebar becomes a horizontal layout; on **phones (up to 720px)** the global menu uses responsive grid navigation and audit section tabs remain horizontally scrollable. Form controls and actions reflow, and overflow stays within its own tables/command panels rather than moving the entire viewport. Android-specific touch sizing remains in `css/android-touch.css`. Printed PDFs are unaffected. Check actual tablet/phone layout and offline launch before field use.
+
+### Collapsible workspace navigation
+
+Use **Collapse menu** in the sidebar header to switch to an icon rail on desktop or hide the navigation body on tablets/phones. Reopen it with the same button. On record inventories use **Hide filters** to collapse the sticky record search/jump bar to a compact header, then expand when needed. Both choices are stored locally per browser, do not change audit records or PDFs, remain keyboard accessible and honor reduced-motion preferences.
+
+### Phase 1: offline integrity and recovery
+
+The active offline shell now requires both the completion marker and its complete core file set; the marker alone is insufficient. A retained older complete cache may be used as fallback. The local service worker has a distinct cache version, while Cloudflare derives a content-based version. Do not clear browser site data to troubleshoot audit files; keep protected JSON exports and verify offline launch, updates and recovery before deployment.
+
+
+## Online connections — Nextcloud and alternative delivery methods
+
+Online connections are **optional**, available in the installed PWA, and never synchronize audits automatically. Open an audit, select **Online connections** and choose a delivery channel. Email opens a draft (you must attach the exported PDF yourself); device sharing uses the browser's native share API when supported.
+
+For **Nextcloud**, create a revocable app password and an audit folder. Enter its trusted HTTPS WebDAV URL (`https://cloud.example/remote.php/dav/files/user/Audits/`), username, app password and a local passphrase. Save the encrypted profile (AES-256-GCM/PBKDF2); unlock it with the same passphrase on subsequent sessions. Use **Test connection (no upload)** to send a read-only `PROPFIND Depth: 0` request. HTTP 200/207 confirms directory read access, not upload permissions. Status 401 indicates credentials, 403 authorization, 404 path, and network errors may involve certificate, DNS, VPN or CORS. The server must allow the installed PWA's origin, Authorization headers, and PROPFIND. No audit data is sent in this check.
+
+After successful preflight, upload an **encrypted backup** (recommended), select and review a PDF before upload, or create a password-protected, short-lived read-only Nextcloud share (1–7 days). Each transfer asks for confirmation. Plain JSON upload is an explicitly advanced operation using unique filenames and overwrite prevention. PDF and plain JSON remain readable on the destination; TLS only protects transport. Keep your passwords separate and verify the uploaded objects on Nextcloud. Drive/OneDrive/M365 OAuth integrations are not yet supported; do not paste their client secrets into the PWA.
+
+### Theme-aware navigation icons
+
+The main navigation SVGs and dynamically rendered audit-step glyphs now derive their normal, hover and selected colors from each palette, including the midnight/ivory default. Wizard progress indicators use the palette's main accent, while warning, error and success states retain their semantic colors. This requires no JavaScript theme listeners or additional runtime dependencies.
+
+### On-site audits from a phone
+
+For mobile-only audits of a server and its local network, see the [Spanish field guide](docs/AUDITORIA_MOVIL_ES.md): installation, cold offline launch, sample record/photo/JSON export, server/network checklist, school privacy and optional Android Termux discovery. An offline checklist is also embedded in the PWA installation panel; it needs no JavaScript or online service. A PR does not deploy automatically to Cloudflare.
+
+### Dedicated device setup screen
+
+Installation instructions and the field-readiness checklist are now reached via **Sidebar → Device & installation**, including its phone icon in the compact sidebar. The guide no longer occupies space above normal audits. The static panel retains the install prompt and offline checklist without new dependencies or changes to audit records.
+
+### Glossary and assistant spacing
+
+Glossary examples, evidence, cautions, step-by-step guidance and the contextual glossary drawer retain responsive internal insets independently of each section's vertical rhythm. Shared section CSS no longer resets horizontal padding. The audit's card, form, command, network-analysis and risk-acceptance panels were also reviewed for unintended padding overrides; no new runtime dependencies are introduced.
+
+### Faster mobile and tablet data entry
+
+Native selectors with **Other / type…** now cover common hardware CPU/RAM/storage/location/endpoint protection choices, Wi-Fi standard/channel, control framework and CVE/evidence source. Values already entered in the audit appear as suggestions and legacy custom values remain editable; nothing is marked verified automatically. IPs, identifiers, versions and narrative evidence remain free-text. JSON v3 is unchanged.
+
+
+### Optional device identification from a photo
+A photo taken through the built-in **Evidence camera** is saved first, regardless of recognition. Where available, native `BarcodeDetector` (and optional `TextDetector`) may propose editable model, manufacturer, serial number or hostname. An unlabelled code requires manual field classification. The auditor explicitly chooses an existing/new asset and confirms; **Skip** never discards the photo and existing non-empty fields are never overwritten. No cloud OCR, network traffic or extra runtime library is required; unsupported browsers silently keep the ordinary photo workflow.
+
+### Full-library backup and recovery
+
+**Backups and exports** can download the complete library as a locally AES-256-GCM encrypted **.rmenc** file (16–512 character passphrase), or as readable JSON for protected storage. Neither credentials nor separate original evidence files are included, and no secret is persisted or uploaded.
+
+**Check file** validates JSON or decrypts .rmenc locally and reports new/conflicting audits without changing stored data. **Restore checked file** reuses existing overwrite confirmations. Test recovery before deleting originals; a lost passphrase cannot be recovered. Restorable JSON contents are capped at 40 MiB.
+
+Scheduled folder copies **remain unencrypted JSON**, require a protected directory and browser permission, and run only while the app is open and visible. A browser download started is not proof of a verified backup.
+
+### Mobile terminal preparation: Android and iOS
+
+In **Device and installation → Terminal and Discovery preparation**, the offline PWA provides two collapsible guides. **Android** uses the official Termux app plus optional Python/Nmap, a passive `doctor` check and an authorized Discovery wizard, with explicit JSON review in Hardware and Networks. **iPhone/iPad** cannot run Termux: a-Shell/iSH are auxiliary terminals, while network captures should originate on an authorized desktop and be imported through Files (or through a separately tested HTTPS LAN bridge). This guide starts no scans or network requests. See the [mobile field guide (ES)](docs/AUDITORIA_MOVIL_ES.md).
+
+### Final glossary coverage: servers, software and licensing
+
+The offline glossary contains **212 concepts**, **96 diagnostic guides**, and **221 references**. The 30 new topics cover Windows Server Core and roles, BMC management, RAID/SMART, shared storage, UPS, hypervisors, capacity and lifecycle, together with SAM/ITAM, entitlements, OEM/retail/volume, CALs, core-based and user licensing, SaaS subscriptions, BYOL, EULAs, open-source obligations and SPDX expressions. 17 new mostly read-only diagnostic guides include evidence and limitations. Server and software inventory fields now link to relevant glossary help. Neither installing an application nor having an activation key proves license compliance; contractual assessment must use vendor/product-specific terms. No commands execute in the PWA.

@@ -13,6 +13,7 @@ COMMANDS = [
     ['node', 'tests/test_discovery_bridge.cjs'],
     ['node', 'tests/test_app_modules.cjs'],
     ['node', 'tests/test_mobile_choices.cjs'],
+    ['node', 'tests/test_photo_hints.cjs'],
     ['node', 'tests/test_palette_preferences.cjs'],
     ['node', 'tests/test_palette_icons.cjs'],
     ['node', 'tests/test_ui_collapse.cjs'],

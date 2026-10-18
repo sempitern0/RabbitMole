@@ -38,6 +38,7 @@
     <link rel="stylesheet" href="css/form-system.css" media="screen" />
     <link rel="stylesheet" href="css/android-touch.css" media="screen" />
     <link rel="stylesheet" href="css/layout-collapse.css" media="screen" />
+    <link rel="stylesheet" href="css/photo-hints.css" media="screen" />
   </head>
   <body>
     <div class="app" id="app">
@@ -450,6 +451,32 @@
         </div>
       </div>
     </dialog>
+    <dialog id="photo-hint-dialog" class="photo-hint-dialog" aria-labelledby="photo-hint-title">
+      <div class="camera-capture-content">
+        <h2 id="photo-hint-title">Información detectada en la fotografía</h2>
+        <p>La foto ya está guardada. Comprueba cualquier código o etiqueta antes de aplicarlo: el reconocimiento puede equivocarse y no verifica el dispositivo.</p>
+        <label for="photo-hint-target">Activo al que añadir los datos</label>
+        <select id="photo-hint-target"></select>
+        <div id="photo-hint-fields" class="photo-hint-fields"></div>
+        <div id="photo-hint-raw-row">
+          <label for="photo-hint-raw">Código detectado (sin clasificar)</label>
+          <input id="photo-hint-raw" type="text" maxlength="120">
+          <label for="photo-hint-raw-field">Interpretar como</label>
+          <select id="photo-hint-raw-field">
+            <option value="">Elegir un campo…</option>
+            <option value="serial">Número de serie</option>
+            <option value="model">Modelo</option>
+            <option value="vendor">Fabricante</option>
+            <option value="name">Nombre / hostname</option>
+          </select>
+        </div>
+        <p id="photo-hint-status" role="status" aria-live="polite"></p>
+        <div class="action-row">
+          <button id="photo-hint-confirm" type="button" class="button accent">Confirmar datos</button>
+          <button id="photo-hint-cancel" type="button" class="button quiet">Omitir · conservar fotografía</button>
+        </div>
+      </div>
+    </dialog>
     <dialog
       id="audit-import-dialog"
       class="audit-import-dialog"
@@ -511,6 +538,7 @@
     <script src="js/pwa-install.js" defer></script>
     <script src="js/discovery-bridge.js" defer></script>
     <script src="js/camera-capture.js" defer></script>
+    <script src="js/photo-code-hints.js" defer></script>
     <script src="js/offline-health.js" defer></script>
     <script src="js/audit-workflow-views.js" defer></script>
     <script src="js/audit-actions.js" defer></script>

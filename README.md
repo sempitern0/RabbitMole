@@ -352,3 +352,7 @@ Glossary examples, evidence, cautions, step-by-step guidance and the contextual 
 ### Faster mobile and tablet data entry
 
 Native selectors with **Other / type…** now cover common hardware CPU/RAM/storage/location/endpoint protection choices, Wi-Fi standard/channel, control framework and CVE/evidence source. Values already entered in the audit appear as suggestions and legacy custom values remain editable; nothing is marked verified automatically. IPs, identifiers, versions and narrative evidence remain free-text. JSON v3 is unchanged.
+
+
+### Optional device identification from a photo
+A photo taken through the built-in **Evidence camera** is saved first, regardless of recognition. Where available, native `BarcodeDetector` (and optional `TextDetector`) may propose editable model, manufacturer, serial number or hostname. An unlabelled code requires manual field classification. The auditor explicitly chooses an existing/new asset and confirms; **Skip** never discards the photo and existing non-empty fields are never overwritten. No cloud OCR, network traffic or extra runtime library is required; unsupported browsers silently keep the ordinary photo workflow.

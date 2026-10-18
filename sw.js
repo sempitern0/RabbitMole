@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v92-touch-pickers";
+const CACHE_NAME = "rabbitmole-shell-v93-photo-hints";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -50,6 +50,7 @@ const CORE = [
   "./js/android-touch.js",
   "./css/android-touch.css",
   "./css/layout-collapse.css",
+  "./css/photo-hints.css",
   "./css/comparison.css",
   "./js/audit-comparison.js",
   "./js/control-templates.js",
@@ -74,6 +75,7 @@ const CORE = [
   "./js/discovery-bridge.js",
   "./js/offline-health.js",
   "./js/camera-capture.js",
+  "./js/photo-code-hints.js",
   "./css/glossary.css",
   "./css/atkinson.css",
   "./css/workspace-ux.css",

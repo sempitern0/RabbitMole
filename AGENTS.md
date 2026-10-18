@@ -78,3 +78,7 @@ El service worker local usa `rabbitmole-shell-v88-palette-icons` y debe cambiar 
 
 ## Agilidad móvil: campos con listas editables
 Los catálogos breves de `js/audit-inventory-presets.js` se consumen desde `js/app-definitions.js`; `js/audit-field-renderer.js` utiliza `<select data-preset>` nativo con «Otro / escribir…» y entrada de valor personalizado, mientras que OS/software siguen con búsqueda. `js/field-assist.js` propone valores ya usados dentro del expediente, sin telemetría ni inferencias. Jamás introducir por defecto un valor que aparente una verificación, ni cerrar campos de identificadores, rutas, IP, series y narrativas. Mantener JSON v3 (cadenas), eventos `data-custom`, foco y compatibilidad de importación. Validar `tests/test_mobile_choices.cjs` y navegador Android.
+
+
+## Sugerencias desde una fotografía
+El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextDetector` cuando el navegador los expone; no se incorporan OCR remoto, librerías ni tráfico de red. `js/camera-capture.js` solo marca las fotos realmente obtenidas de cámara; `js/app.js` **primero incorpora la imagen a Evidencias y persiste**, después ofrece propuesta en un diálogo. Cancelar o no detectar información no modifica ni revierte la fotografía. Solo se escriben campos de Hardware `vendor/model/serial/name` vacíos, con confirmación explícita y revisión manual. No ejecutar QR como enlaces, comandos o credenciales. Módulos nuevos precargados en HTML, SW e instaladores; prueba `tests/test_photo_hints.cjs`.

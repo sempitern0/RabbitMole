@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..');
-const ctx={URL,URLSearchParams,TextEncoder,TextDecoder,Uint8Array,Blob,crypto:require('node:crypto').webcrypto,btoa,atob};
+const ctx={URL,URLSearchParams,TextEncoder,TextDecoder,Uint8Array,Blob,AbortSignal,crypto:require('node:crypto').webcrypto,btoa,atob};
 ctx.globalThis=ctx;
 vm.runInNewContext(fs.readFileSync(path.join(root,'js/secure-transfer.js'),'utf8'),ctx);
 const sec=ctx.AuditSecureTransfer;

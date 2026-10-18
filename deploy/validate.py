@@ -39,6 +39,7 @@ COMMANDS = [
     ['node', 'tests/test_pages_demo.cjs'],
     ['node', 'tests/test_cloudflare_worker.cjs'],
     ['node', 'tests/test_secure_transfer.cjs'],
+    ['node', 'tests/test_backup_workflow.cjs'],
     ['node', 'tests/test_pwa_updates.cjs'],
     ['node', 'tests/test_pwa_protocol.cjs'],
     ['node', 'tests/test_mobile_pwa.cjs'],

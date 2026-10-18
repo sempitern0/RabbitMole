@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v94-premerge";
+const CACHE_NAME = "rabbitmole-shell-v95-backups";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -66,6 +66,7 @@ const CORE = [
   "./js/inventory-import.js",
   "./js/input-guidance.js",
   "./js/secure-transfer.js",
+  "./js/backup-workflow.js",
   "./js/secure-transfer-ui.js",
   "./js/document-control.js",
   "./js/pdf-appendices.js",

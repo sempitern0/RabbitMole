@@ -8,6 +8,8 @@
   const PROFILE_KIND = "rabbitmole-consultancy";
   const storage = globalThis.AuditStorage;
   const importPlan = globalThis.AuditImportPlan;
+  const backupWorkflow = globalThis.RabbitMoleBackupWorkflow;
+  const backupCrypto = globalThis.AuditSecureTransfer;
   const relations = globalThis.AuditRelations;
   const evidenceImages = globalThis.AuditEvidenceImages;
   const pdfAppendices = globalThis.RabbitMolePdfAppendices;
@@ -30,6 +32,8 @@
   const comparison = globalThis.AuditComparison;
   if (!storage)
     throw Error("No se ha cargado el módulo de almacenamiento offline.");
+  if (!backupWorkflow || !backupCrypto)
+    throw Error("Falta el módulo de copias de seguridad offline.");
   if (!relations)
     throw Error("No se ha cargado el módulo de relaciones de auditoría.");
   if (!templates)
@@ -256,6 +260,7 @@
     };
   } catch (_ignored) {}
   let autoBackupInProgress = false;
+  let verifiedBackupFile = null;
   const storeBackupPrefs = () => {
     try {
       localStorage.setItem(BACKUP_KEY, JSON.stringify(backupPrefs));
@@ -1058,30 +1063,39 @@
   }
   function renderBackups() {
     const pending = changedSinceLastBackup();
-    const readable = (iso) =>
-      iso ? new Date(iso).toLocaleString("es-ES") : "Todavía no";
+    const readable = iso => iso && Number.isFinite(Date.parse(iso)) ? new Date(iso).toLocaleString("es-ES") : "Todavía no";
     const tables = globalThis.AuditTabular?.sections(state) || [];
-    return `<span class="eyebrow">BIBLIOTECA / COPIAS Y ENTREGA</span><h1 class="page-title">Copias de seguridad y exportación</h1>
-      <p class="lead">Los expedientes se guardan en <strong>${html(repository.mode)}</strong> dentro de este navegador. La carpeta de instalación contiene la aplicación, <strong>no</strong> los datos de los clientes.</p>
-      <div class="grid-two">
-        <section class="card"><h2>Copia completa · JSON</h2><p class="subtle">Único formato compatible con la restauración de todas las auditorías, incluidos textos, cláusulas y fotografías.</p>
-          <p><strong>${records.length}</strong> auditorías en este perfil · Última descarga iniciada: <strong>${html(readable(backupPrefs.lastExportAt))}</strong></p>
-          <div class="action-row"><button type="button" class="button accent" data-backup-all="true">Descargar backup completo (.json)</button><button type="button" class="button quiet" id="backup-restore">Importar / restaurar JSON</button></div>
-          <p class="subtle">La descarga no prueba que el archivo se haya guardado correctamente. Verifica el archivo en la carpeta de destino antes de borrar datos del navegador.</p></section>
-        <section class="card"><h2>Copias en carpeta local</h2><p class="subtle">${canChooseFolder() ? "Disponible en este navegador." : "No disponible en este navegador. Puedes seguir descargando JSON manualmente."}</p>
-          <p>Destino: <strong>${html(backupPrefs.folderName || "Sin carpeta asociada")}</strong> · Última copia escrita: <strong>${html(readable(backupPrefs.lastFolderAt))}</strong></p>
-          <p><strong>${pending ? "Hay cambios pendientes de respaldar" : "Sin cambios detectados desde la última copia guardada"}</strong></p>
-          ${backupPrefs.lastError ? `<p class="backup-error" role="alert">${html(backupPrefs.lastError)}</p>` : ""}
-          <div class="action-row"><button type="button" class="button quiet" id="backup-select-folder" ${canChooseFolder() ? "" : "disabled"}>Seleccionar carpeta</button><button type="button" class="button accent" id="backup-write-now" ${backupPrefs.folderName ? "" : "disabled"}>Guardar ahora</button><button type="button" class="button quiet" id="backup-forget" ${backupPrefs.folderName ? "" : "disabled"}>Desvincular</button></div>
-          <label class="backup-opt"><input id="backup-auto" type="checkbox" ${backupPrefs.automatic ? "checked" : ""} ${backupPrefs.folderName ? "" : "disabled"}> Realizar copias cada 30 minutos con cambios, mientras la aplicación esté abierta</label>
-          <p class="subtle">Los permisos pueden caducar. No funciona cuando el navegador está cerrado y no sustituye un backup cifrado externo.</p></section>
-      </div>
-      <section class="card"><h2>Entregables editables · Excel / CSV</h2><p class="subtle">Úsalos para compartir inventarios y planes de actuación; <strong>no se pueden restaurar</strong> como auditorías. Las imágenes y cláusulas extensas permanecen en el JSON y en el PDF.</p>
-        <div class="backup-exports"><div><label for="export-csv-section">Sección para CSV</label><select id="export-csv-section" aria-label="Seleccionar datos CSV">${tables.map((x) => `<option value="${html(x.name)}" ${x.name === "Hallazgos" ? "selected" : ""}>${html(x.name)} (${x.rows.length})</option>`).join("")}</select></div>
-          <button type="button" class="button quiet" id="backup-export-csv" ${currentId ? "" : "disabled"}>Exportar CSV</button>
-          <button type="button" class="button accent" id="backup-export-xlsx" ${currentId ? "" : "disabled"}>Exportar Excel (.xlsx)</button></div>
-        <p class="subtle">El XLSX incluye varias hojas con filtros; el CSV usa UTF-8 y separador de punto y coma para Excel en español. Comprueba los datos confidenciales antes de compartir.</p></section>
-      <div class="notice warn">Algunos expedientes contienen datos personales, vulnerabilidades o evidencias sensibles. Guarda los backups en un volumen cifrado y controla quién puede acceder a ellos.</div>`;
+    return [
+      '<span class="eyebrow">BIBLIOTECA / COPIAS Y ENTREGA</span><h1 class="page-title">Copias de seguridad y exportación</h1>',
+      '<p class="lead">Los expedientes se guardan en <strong>'+html(repository.mode)+'</strong> de este navegador. La carpeta donde instalaste RabbitMole no contiene los datos de los clientes.</p>',
+      '<div class="grid-two">',
+      '<section class="card backup-panel"><h2>1. Crear copia completa</h2>',
+      '<p><strong>'+records.length+'</strong> auditorías en este perfil. Incluye sus evidencias y fotos integradas, no los originales externos ni las credenciales del navegador.</p>',
+      '<div class="backup-field"><label for="backup-create-secret">Frase de cifrado (16–512 caracteres)</label><input type="password" id="backup-create-secret" autocomplete="new-password" minlength="16" maxlength="512" placeholder="Consérvala fuera de la aplicación">',
+      '<label for="backup-create-confirm">Repetir frase</label><input type="password" id="backup-create-confirm" autocomplete="new-password" minlength="16" maxlength="512" placeholder="Repite exactamente la misma frase"></div>',
+      '<div class="action-row backup-actions"><button type="button" class="button accent" id="backup-download-encrypted">Descargar copia cifrada (.rmenc)</button><button type="button" class="button quiet" data-backup-all="true">Descargar JSON legible</button></div>',
+      '<p class="subtle">Cifrado AES-256-GCM local. No se envían datos. Si pierdes la frase, no podrás descifrar la copia. El JSON legible debe guardarse en una unidad protegida.</p>',
+      '<p class="subtle">Última descarga iniciada: '+html(readable(backupPrefs.lastExportAt))+' · '+Number(backupPrefs.lastExportCount||0)+' auditorías. <strong>Comprueba el fichero en destino:</strong> iniciar una descarga no garantiza su conservación.</p></section>',
+      '<section class="card backup-panel"><h2>2. Comprobar y restaurar</h2>',
+      '<p class="subtle">Verifica un archivo .json o .rmenc sin modificar los expedientes. Después decide expresamente si quieres importar y sustituir coincidencias.</p>',
+      '<div class="backup-field"><label for="backup-restore-file">Elegir archivo de copia</label><input id="backup-restore-file" type="file" accept=".json,.rmenc,application/json">',
+      '<label for="backup-restore-secret">Frase para descifrar (solo .rmenc)</label><input id="backup-restore-secret" type="password" autocomplete="off" minlength="16" maxlength="512" placeholder="Nunca se guarda"></div>',
+      '<div class="action-row backup-actions"><button type="button" class="button quiet" id="backup-verify-file">Comprobar archivo</button><button type="button" class="button accent" id="backup-apply-restore" disabled>Restaurar copia comprobada</button></div>',
+      '<p id="backup-restore-status" class="backup-result" role="status" aria-live="polite" aria-atomic="true">Selecciona una copia y pulsa «Comprobar archivo».</p>',
+      '<p class="subtle">El archivo se valida en este dispositivo. La restauración usa las mismas confirmaciones de conflictos que la importación habitual.</p></section></div>',
+      '<section class="card backup-panel"><h2>3. Copias en carpeta local · JSON sin cifrar</h2>',
+      '<p class="subtle">'+(canChooseFolder()?'Este navegador admite elegir carpetas.':'Este navegador no admite acceso a carpetas; las descargas manuales siguen disponibles.')+'</p>',
+      '<p>Destino: <strong>'+html(backupPrefs.folderName||'Ninguno')+'</strong> · Última escritura: <strong>'+html(readable(backupPrefs.lastFolderAt))+'</strong></p>',
+      '<p><strong>'+(!backupPrefs.folderName?'Selecciona una carpeta para comenzar':pending?'Cambios pendientes de copiar':'Sin cambios detectados desde la última copia')+'</strong></p>',
+      backupPrefs.lastError?'<p class="backup-error" role="alert">'+html(backupPrefs.lastError)+'</p>':'',
+      '<div class="action-row backup-actions"><button type="button" class="button quiet" id="backup-select-folder" '+(canChooseFolder()?'':'disabled')+'>Elegir carpeta</button><button type="button" class="button accent" id="backup-write-now" '+(backupPrefs.folderName?'':'disabled')+'>Guardar JSON ahora</button><button type="button" class="button quiet" id="backup-forget" '+(backupPrefs.folderName?'':'disabled')+'>Desvincular</button></div>',
+      '<label class="backup-opt"><input id="backup-auto" type="checkbox" '+(backupPrefs.automatic?'checked':'')+' '+(backupPrefs.folderName?'':'disabled')+'> Copiar si hay cambios, cada 30 min, solo con RabbitMole abierto y visible</label>',
+      '<p class="subtle"><strong>Las copias automáticas NO se cifran.</strong> Elige una carpeta protegida. Si se cierran las ventanas o expira el permiso, no se producirán nuevas copias.</p></section>',
+      '<section class="card"><h2>Excel y CSV · entregables, no backups</h2><p class="subtle">Úsalos para entregar inventarios; no permiten restaurar la biblioteca.</p>',
+      '<div class="backup-exports"><div><label for="export-csv-section">Sección CSV</label><select id="export-csv-section" aria-label="Seleccionar datos CSV">'+tables.map(x=>'<option value="'+html(x.name)+'" '+(x.name==='Hallazgos'?'selected':'')+'>'+html(x.name)+' ('+x.rows.length+')</option>').join('')+'</select></div>',
+      '<button type="button" class="button quiet" id="backup-export-csv" '+(currentId?'':'disabled')+'>Exportar CSV</button><button type="button" class="button quiet" id="backup-export-xlsx" '+(currentId?'':'disabled')+'>Exportar Excel (.xlsx)</button></div></section>',
+      '<div class="notice warn">Conserva las copias fuera del navegador y comprueba una restauración de prueba antes de borrar el origen. Pueden contener evidencias sensibles y datos personales.</div>'
+    ].join("");
   }
   function recordsMarkup(items) {
     return items.length
@@ -2922,7 +2936,17 @@
       persist();
       return;
     }
+    if (t.id === "backup-restore-file") {
+      verifiedBackupFile = null;
+      if (byId("backup-apply-restore")) byId("backup-apply-restore").disabled = true;
+      if (byId("backup-restore-status")) byId("backup-restore-status").textContent =
+        "Archivo seleccionado; compruébalo antes de restaurar.";
+      return;
+    }
     if (t.id === "backup-auto") {
+      if (t.checked && !confirm("Las copias periódicas serán JSON SIN CIFRAR. ¿Has elegido una carpeta protegida y deseas activarlas?")) {
+        t.checked = false; return;
+      }
       if (!backupPrefs.folderName) {
         t.checked = false;
         alert("Primero selecciona una carpeta para las copias periódicas.");
@@ -3782,8 +3806,37 @@
       await forgetBackupFolder();
       return;
     }
-    if (b.id === "backup-restore") {
-      byId("input-import").click();
+    if (b.id === "backup-download-encrypted") { await backupAll({encrypted:true}); return; }
+    if (b.id === "backup-verify-file" || b.id === "backup-apply-restore") {
+      const file=byId("backup-restore-file")?.files?.[0];
+      const notice=byId("backup-restore-status");
+      if(!file){if(notice)notice.textContent="Selecciona una copia.";return;}
+      if(b.id==="backup-apply-restore" && verifiedBackupFile!==file){
+        if(notice)notice.textContent="Vuelve a comprobar la copia antes de restaurarla.";return;
+      }
+      b.disabled=true;
+      try{
+        if(file.size>backupWorkflow.MAX_ENCRYPTED)throw Error("Archivo superior a 65 MiB.");
+        const result=await backupWorkflow.inspect(await file.text(),{
+          passphrase:byId("backup-restore-secret")?.value||"",
+          security:backupCrypto,validateAudit:validate
+        });
+        const plan=importPlan.plan(records,result.audits);
+        if(b.id==="backup-verify-file"){
+          verifiedBackupFile=file;
+          byId("backup-apply-restore").disabled=!result.count;
+          if(notice)notice.textContent="Archivo válido: "+result.count+" auditorías · "+
+            plan.added.length+" nuevas · "+plan.replaced.length+" coincidencias · "+
+            (result.encrypted?"cifrada. ":"JSON legible. ")+"No se ha importado nada.";
+        }else{
+          // The original importer revalidates and asks before replacing existing audits.
+          await importJson(new File([result.plaintext],"copia-verificada.json",{type:"application/json"}));
+        }
+      }catch(error){
+        verifiedBackupFile=null;
+        if(byId("backup-apply-restore"))byId("backup-apply-restore").disabled=true;
+        if(notice)notice.textContent="Sin cambios en las auditorías: "+String(error.message||error);
+      }finally{if(b.isConnected)b.disabled=false;}
       return;
     }
     if (b.id === "backup-export-xlsx") {
@@ -4352,23 +4405,30 @@
       "&body=" +
       encodeURIComponent(body.slice(0, 700));
   }
-  async function backupAll() {
+  async function backupAll({encrypted=false}={}) {
     try {
+      if(encrypted){
+        const secret=byId("backup-create-secret")?.value||"";
+        if(secret.length<16||secret.length>512)throw Error("La frase debe tener entre 16 y 512 caracteres.");
+        if(secret!==byId("backup-create-confirm")?.value)throw Error("Las frases no coinciden.");
+      }
       await flush();
-      download(
-        "rabbitmole-backup-" +
-          new Date().toISOString().slice(0, 10) +
-          ".json",
-        JSON.stringify(backupPayload(), null, 2),
-        "application/json;charset=utf-8",
-      );
-      backupPrefs.lastExportAt = new Date().toISOString();
-      backupPrefs.lastExportCount = records.length;
+      const raw=backupWorkflow.assertRestorable(JSON.stringify(backupPayload()));
+      if(encrypted){
+        const cipher=await backupCrypto.encryptBackup(JSON.parse(raw),byId("backup-create-secret").value);
+        download("rabbitmole-biblioteca-"+new Date().toISOString().slice(0,10)+".rmenc",
+          cipher,"application/json;charset=utf-8");
+        byId("backup-create-secret").value="";
+        byId("backup-create-confirm").value="";
+      }else{
+        download("rabbitmole-backup-"+new Date().toISOString().slice(0,10)+".json",
+          raw,"application/json;charset=utf-8");
+      }
+      backupPrefs.lastExportAt=new Date().toISOString();
+      backupPrefs.lastExportCount=records.length;
       storeBackupPrefs();
-      if (page === "backups") render();
-    } catch (error) {
-      alert("No se pudo exportar el backup: " + error.message);
-    }
+      if(page==="backups")render();
+    }catch(error){alert("No se pudo crear la copia: "+error.message);}
   }
   let exportFeedbackTimer = null;
   function showExportFeedback(message, isError = false) {

@@ -356,3 +356,11 @@ Native selectors with **Other / type…** now cover common hardware CPU/RAM/stor
 
 ### Optional device identification from a photo
 A photo taken through the built-in **Evidence camera** is saved first, regardless of recognition. Where available, native `BarcodeDetector` (and optional `TextDetector`) may propose editable model, manufacturer, serial number or hostname. An unlabelled code requires manual field classification. The auditor explicitly chooses an existing/new asset and confirms; **Skip** never discards the photo and existing non-empty fields are never overwritten. No cloud OCR, network traffic or extra runtime library is required; unsupported browsers silently keep the ordinary photo workflow.
+
+### Full-library backup and recovery
+
+**Backups and exports** can download the complete library as a locally AES-256-GCM encrypted **.rmenc** file (16–512 character passphrase), or as readable JSON for protected storage. Neither credentials nor separate original evidence files are included, and no secret is persisted or uploaded.
+
+**Check file** validates JSON or decrypts .rmenc locally and reports new/conflicting audits without changing stored data. **Restore checked file** reuses existing overwrite confirmations. Test recovery before deleting originals; a lost passphrase cannot be recovered. Restorable JSON contents are capped at 40 MiB.
+
+Scheduled folder copies **remain unencrypted JSON**, require a protected directory and browser permission, and run only while the app is open and visible. A browser download started is not proof of a verified backup.

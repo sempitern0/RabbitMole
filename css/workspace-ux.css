@@ -1041,3 +1041,17 @@
     margin:.6rem auto 1.25rem;
   }
 }
+
+/* Library backup steps reuse workspace theme tokens and stay touch-accessible. */
+.backup-panel{display:grid;align-content:start;gap:.7rem;min-width:0}
+.backup-panel>h2,.backup-panel>p{margin:0}
+.backup-field{display:grid;gap:.5rem;min-width:0}
+.backup-field label{font-weight:700;color:var(--ink)}
+.backup-field input{min-width:0;max-width:100%;width:100%}
+.backup-actions{display:flex;gap:.65rem;flex-wrap:wrap}
+.backup-actions .button{min-height:44px;white-space:normal}
+.backup-result{padding:.8rem;border:1px solid var(--line);border-radius:.6rem;background:var(--canvas);line-height:1.5;overflow-wrap:anywhere}
+.backup-panel .backup-opt{display:flex;gap:.6rem;align-items:flex-start;line-height:1.5}
+.backup-panel .backup-opt input{flex:none;margin-top:.2rem}
+@media(max-width:720px){.backup-actions>.button{flex:1 1 100%}}
+@media print{.backup-field,.backup-actions,.backup-panel .backup-opt{display:none!important}}

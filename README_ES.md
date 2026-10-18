@@ -388,3 +388,11 @@ Para reducir escritura, Inventario ofrece listas nativas para CPU, RAM, almacena
 
 ### Foto con sugerencias opcionales de identificación
 Al tomar una fotografía desde **Evidencias**, la imagen se guarda primero. Si Chrome/Android dispone de la API nativa de lectura de códigos (`BarcodeDetector`) o reconocimiento local de texto (`TextDetector`, poco extendida) y se extrae una etiqueta identificable, RabbitMole puede mostrar una pequeña propuesta editable con número de serie, modelo, fabricante o hostname. El auditor elige un activo existente o crear uno nuevo y debe pulsar **Confirmar datos**. Un código aislado se muestra sin clasificar y requiere elegir campo manualmente. **Omitir** conserva la fotografía sin añadir datos; nunca se sobrescriben campos completos y el reconocimiento no acredita la identificación. No hay OCR en nube, rastreos, peticiones ni dependencia nueva; si el navegador no dispone de detector, sigue funcionando la captura normal. Fotografías adjuntas por cualquier otra vía conservan el flujo habitual.
+
+### Copias y restauración de biblioteca
+
+En **Copias y exportaciones** puedes descargar la biblioteca completa como **.rmenc cifrado** (AES-256-GCM local, frase entre 16 y 512 caracteres) o JSON legible para un volumen ya protegido. El cifrado no transmite expedientes, no guarda la frase y no incluye originales externos ni credenciales.
+
+**Comprobar archivo** valida un JSON o descifra localmente un .rmenc y muestra el total de auditorías, nuevas y posibles sustituciones **sin modificar datos**. **Restaurar copia comprobada** utiliza las confirmaciones existentes contra sobrescritura; comprueba su apertura antes de borrar el origen. Perder la frase impide recuperar un backup cifrado. Se limita la exportación restaurable a 40 MiB de JSON.
+
+Las copias periódicas en carpeta siguen siendo **JSON sin cifrar**: usa carpeta protegida, permiso explícito y la aplicación abierta y visible. No se ejecutan al cerrar la PWA. Una descarga iniciada no demuestra que el archivo esté a salvo.

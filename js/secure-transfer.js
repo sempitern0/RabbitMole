@@ -26,7 +26,9 @@
   }
   async function encryptBackup(data,passphrase){
     validatePassphrase(passphrase);
-    const c=crypt(),raw=encoder.encode(JSON.stringify(data));
+    const c=crypt();
+    if(!c)throw Error('El cifrado requiere Web Crypto (HTTPS o localhost).');
+    const raw=encoder.encode(JSON.stringify(data));
     if(raw.byteLength>MAX_FILE)throw Error('El expediente excede el límite de 45 MiB.');
     const salt=c.getRandomValues(new Uint8Array(16)),iv=c.getRandomValues(new Uint8Array(12));
     const aad=encoder.encode(KIND);

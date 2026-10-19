@@ -148,9 +148,9 @@
    const panel=document.createElement("section");panel.id="bridge-panel";
    panel.className="bridge-panel";panel.setAttribute("aria-label","Discovery LAN guiado");
    panel.innerHTML=`<h3>Discovery guiado · PWA y equipo auditor</h3>
-     <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Necesitas un PC autorizado con Python/Nmap o generar un JSON en Android con Termux.</p>
+     <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Descarga el Companion en Windows: abre una ventana local, inicia el puente y permite copiar el token sin escribir comandos. También puedes generar JSON en Android con Termux.</p>
      <details class="bridge-setup" open><summary><strong>1. Preparar el equipo auditor</strong></summary>
-       <p><a class="button quiet" href="./discovery-kit.zip" download="rabbitmole-discovery-kit.zip">Descargar kit Discovery sin clonar el repositorio (.zip)</a></p><p>Descomprime el kit, abre PowerShell desde su carpeta raíz (contiene <code>discovery/</code>) y sigue el método correspondiente.</p><p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
+       <p><a class="button quiet" href="./discovery-kit.zip" download="rabbitmole-discovery-kit.zip">Descargar kit Discovery sin clonar el repositorio (.zip)</a></p><p>Descomprime el kit y en Windows abre <code>discovery/iniciar.cmd</code> con doble clic. En el Companion pulsa «Iniciar puente» y «Copiar token temporal», y después pégalo aquí. El kit incluye setup.ps1 y setup.sh para preparar dependencias. No inicia escaneos por sí solo.</p><p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
        <div class="intake-command"><div class="intake-command-head"><strong>Opción A · mismo PC, sin certificados</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
          <pre><code id="bridge-command-pc"></code></pre></div>
        <button type="button" id="bridge-use-local" class="button quiet">Usar servidor de este PC (127.0.0.1)</button>
@@ -159,7 +159,7 @@
          <div class="intake-command"><div class="intake-command-head"><strong>Servicio HTTPS en la LAN</strong><button type="button" class="button quiet small" id="bridge-copy-lan">Copiar comando</button></div>
            <pre><code id="bridge-command-lan"></code></pre></div>
        </details>
-       <p class="subtle">Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall y detén el proceso con Ctrl+C. La PWA no puede iniciar una consola automáticamente.</p>
+       <p class="subtle">Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall y detén el proceso con Ctrl+C. El Companion se cierra y detiene el puente desde su ventana. La PWA no puede ejecutarlo automáticamente.</p>
        <details><summary>Android / Termux · opción sin servidor intermedio</summary>
          <p>La PWA no puede abrir la consola de Termux ni tiene un directorio de scripts local. Ejecuta Discovery desde Termux y después importa el JSON con «Subir archivo».</p>
          <div class="intake-command"><div class="intake-command-head"><strong>Preparación de Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre><code id="bridge-command-android">pkg update

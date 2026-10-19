@@ -26,6 +26,8 @@ assert.match(diagnostic(new Error('Failed to fetch')),/certificado HTTPS/);
 assert.match(diagnostic(new Error('Token de sesión incorrecto o ausente.')),/Cloudflare/);
 assert.equal(validate('https://192.168.1.20:8766'),'https://192.168.1.20:8766');
 assert.equal(validate('http://127.0.0.1:8766'),'http://127.0.0.1:8766');
+assert(source.includes('discovery/iniciar.cmd'),'Companion launch instructions absent');
+assert(source.includes('Copiar token temporal'),'Companion token copy guidance absent');
 assert(source.includes('--loopback-http'),'Same-device mode must avoid TLS setup');
 assert(source.includes('bridge-command-lan'),'Keep HTTPS LAN mode distinct');
 for(const url of ['http://192.168.1.20:8766','https://8.8.8.8:8766',

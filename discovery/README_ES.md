@@ -101,3 +101,12 @@ py -3 discovery\\service.py --loopback-http --origin https://rabbitmole.danieldi
 El servidor escucha **exclusivamente en 127.0.0.1:8766**, imprime un token efímero en la consola y no es accesible desde otros dispositivos. En la PWA instalada en ese mismo PC entra en **Redes → Captura asistida → Discovery local**, elige «Usar servidor de este PC», introduce el token y comprueba la conexión. Algunos navegadores piden permiso para acceso a redes locales y ciertos entornos corporativos podrían bloquearlo. Si no funciona, exporta un JSON con `py -3 discovery\\discover.py wizard` e impórtalo manualmente. No desactives protecciones de CORS ni de seguridad para hacerlo funcionar.
 
 Si la PWA corre en **Android, iOS o una tablet** y Discovery en el PC, `127.0.0.1` apunta al dispositivo móvil, no al PC: debes emplear el modo **HTTPS LAN** con certificado confiable o transferir el JSON. El modo `--loopback-http` rechaza bind/host LAN y los parámetros de certificado. Nunca expongas HTTP a la Wi-Fi de un cliente.
+
+
+## Companion Windows por doble clic (kit PWA)
+
+Descarga «Discovery kit» desde la PWA y extrae el ZIP. Abre `discovery/iniciar.cmd`: aparece la ventana **RabbitMole Companion** (Python 3.9+ con Tkinter). Revisa el origen HTTPS exacto de tu PWA, pulsa **Iniciar puente**, luego **Copiar token temporal**; en la PWA selecciona `http://127.0.0.1:8766`, pega el token y pulsa **Comprobar conexión**. El servicio escucha únicamente en loopback y se detiene al cerrar la ventana. **Nunca inicia reconocimiento sin confirmar un CIDR autorizado en la PWA.**
+
+El botón **Capturar inventario de este Windows** utiliza `collect-local.ps1` incluido en el ZIP, solicita una ruta de salida JSON nueva y no sobrescribe archivos. Importa esa captura desde la PWA y revisa cada elemento. La captura local no obtiene información de equipos remotos; las licencias y el estado de Defender requieren validaciones adicionales específicas y no se afirman automáticamente.
+
+El Companion inicial no es un EXE autocontenido: requiere Python y Tkinter. Si faltan, usa `discovery/setup.ps1` (opcional `-InstallTools`) o el asistente de consola. El modo tablet sigue siendo HTTPS con certificado confiable, o transferencia de JSON. El token se mantiene en memoria y el botón copiar utiliza el portapapeles del propio Windows: evita dejar secretos en equipos compartidos.

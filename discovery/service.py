@@ -202,6 +202,22 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self.server.scan_lock.release()
 
 
+def local_server(origin, port=8766):
+    """Create a loopback-only server owned by Companion (never starts a scan)."""
+    class Server(ThreadingHTTPServer):
+        address_family = socket.AF_INET
+        daemon_threads = True
+        request_queue_size = 8
+    server = Server(("127.0.0.1", port), BridgeHandler)
+    server.allowed_origin = valid_origin(origin)
+    server.expected_host = "127.0.0.1:" + str(server.server_port)
+    server.access_token = secrets.token_urlsafe(32)
+    server.scan_lock = threading.Lock()
+    server.pairing_enabled = True
+    server.pairing = pairing.Pairing()
+    return server
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Servicio Discovery de la estación auditora: HTTPS en LAN o HTTP exclusivamente loopback.")

@@ -392,3 +392,7 @@ On phone/tablet layouts (up to 1000px), selecting an audit or main section from 
 ### Multiple Wi-Fi and VLAN segments
 
 **Networks** now offers **Add Wi-Fi** (one logical SSID per record) and **Add segment/VLAN** with optional site, VLAN, CIDR and Wi-Fi security. A local-only summary links matching site/VLAN labels for presentation, **not as proof of isolation**. Segmentation must be explicitly documented from authorized evidence. Router checks and external BSSID/CSV radio observations remain separate and optional. Legacy schema-v3 records remain compatible; the technical report includes both network rows and their summary, without probing or automatic findings.
+
+### Preserve router/ONT/firewall inventory details
+
+The Router/Gateway Security section now asks for device type before vendor and model. Subsequent device-type or vendor changes preserve already recorded strings, including custom vendors and models that are no longer in the filtered catalogue. Unmatched values appear in the editable “Other” field rather than being silently erased. Existing JSON-v3 inventory, backups and reports remain compatible. Records previously saved without these values must be corrected from an earlier verified backup or primary evidence, not guessed.

@@ -35,6 +35,17 @@ assert.equal(initial.assets.length,0);
 const roundtrip=JSON.parse(JSON.stringify(model.validate(initial)));
 assert.equal(roundtrip.schemaVersion,3);
 assert.equal(roundtrip.assets.length,0);
+// Router fields are ordinary persisted schema-v3 strings, even for custom
+// vendor/model values that do not exist in the local suggestions catalogue.
+const detailed={...initial,networks:[{
+ _key:'router-e2e',name:'Wi-Fi pruebas',networkDeviceType:'ONT',
+ routerVendor:'Fabricante externo',routerModel:'Modelo industrial X',
+ routerDevice:'v2.4.0',routerFirmware:'Parche pendiente',
+ routerBackups:'Sin copia o prueba',routerMgmt:'HTTPS/SSH seguro'
+}]};
+const restored=model.validate(JSON.parse(JSON.stringify(detailed)));
+for(const key of ['networkDeviceType','routerVendor','routerModel','routerDevice','routerFirmware','routerBackups','routerMgmt'])
+ assert.equal(restored.networks[0][key],detailed.networks[0][key],'Lost router detail on backup import: '+key);
 assert.throws(()=>model.validate({...initial,schemaVersion:2}),/Versión de expediente incompatible/);
 assert.throws(()=>model.validate({...initial,networks:{}}),/Datos no válidos/);
 for(const file of ['js/app.js','js/app-definitions.js','js/app-team.js','js/app-model.js'])new Function(read(file));

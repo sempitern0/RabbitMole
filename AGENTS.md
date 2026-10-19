@@ -114,3 +114,8 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 - One Wi-Fi logical SSID or segment per `networks` record. Optional fields `networkKind`, `site`, and `segmentationState` preserve JSON v3 and the existing importer. Do not equate BSSID/AP observations to distinct SSIDs.
 - `js/network-overview.js` groups declared site+VLAN only and is deliberately read-only: it cannot infer network isolation, VLAN routing rules, DHCP correctness or vulnerabilities. No automated scan/finding. `renderNetworkOverview` displays the mapping in the assistant and technical report.
 - Keep installer and SW resource parity and run `tests/test_network_overview.cjs`, `tests/test_app_modules.cjs`, browser audit workflow, `npm run check` before merge. Confirmed documents must reject adding rows.
+
+## Router security data-loss regression
+- Never clear `networks.routerVendor` or `networks.routerModel` as a side effect of changing `networkDeviceType` or `routerVendor`. Models may be custom and valid even if absent from the new catalogue; preserve and show as `Otro / escribir` for explicit revision.
+- Render `networkDeviceType` first in `router-security-review`; do not display it a second time in the extended group. The `app-model.js` JSON v3 validator must roundtrip router details and reportRows(networks) should render every populated field.
+- Regression: `tests/test_router_catalog.cjs`, `tests/test_app_modules.cjs`, `tests/test_pwa_browser.cjs` including offline reload after changing type/vendor. Do not infer missing values from external sources.

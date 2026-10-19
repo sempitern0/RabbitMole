@@ -276,7 +276,9 @@ const {chromium}=require('playwright');
    assert(await routerModel.locator('option[value="RB5009UG+S+IN"]').count(),'Router model should follow vendor');
    await routerModel.selectOption('RB5009UG+S+IN');
    await routerVendor.selectOption('TP-Link (Omada)');
-   assert.equal(await routerModel.inputValue(),'','Changing vendor must clear incompatible model');
+   assert.equal(await routerModel.inputValue(),'__custom__',
+     'Switching vendor must retain previously captured model as a custom entry');
+   assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'RB5009UG+S+IN');
    assert.equal(await routerModel.locator('option[value="RB5009UG+S+IN"]').count(),0);
    await routerModel.selectOption('ER605');
    assert.equal(await routerReview.locator('[data-field="routerModel"][data-preset]').inputValue(),'ER605');
@@ -285,6 +287,23 @@ const {chromium}=require('playwright');
    await routerModel.selectOption('__custom__');
    await routerReview.locator('[data-field="routerModel"][data-custom]').fill('Modelo no catalogado');
    assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
+   // A real field report was losing routerVendor/routerModel when the network
+   // device type was entered after those values. Type changes must be safe.
+   const routerType=routerReview.locator('[data-field="networkDeviceType"]');
+   await routerType.selectOption('ONT');
+   assert.equal(await routerVendor.inputValue(),'__custom__');
+   assert.equal(await routerReview.locator('[data-field="routerVendor"][data-custom]').inputValue(),'Fabricante de laboratorio');
+   assert.equal(await routerModel.inputValue(),'__custom__');
+   assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
+   await routerType.selectOption('Firewall');
+   assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
+   // Switching away and back must retain both values even when custom.
+   await page.locator('#wizard-step-top').selectOption('assets');
+   await page.locator('#wizard-step-top').selectOption('networks');
+   await page.locator('.router-security-review').first().locator('summary').click();
+   assert.equal(await page.locator('#f-networks-0-networkDeviceType').inputValue(),'Firewall');
+   assert.equal(await page.locator('[data-field="routerVendor"][data-custom]').first().inputValue(),'Fabricante de laboratorio');
+   assert.equal(await page.locator('[data-field="routerModel"][data-custom]').first().inputValue(),'Modelo no catalogado');
    const helpIcon=routerReview.locator('.glossary-help').first();
    assert.equal(await helpIcon.locator('svg.glossary-help-icon').count(),1);
    assert.equal(await helpIcon.evaluate(el=>getComputedStyle(el).width),'40px');
@@ -448,6 +467,13 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'assets','Reopening resumes the last audit step');
    await page.locator('#wizard-step-select').selectOption('assets');
    assert.equal(await page.locator('[data-block="assets"][data-field="name"]').first().inputValue(),'Equipo offline de prueba');
+   // Verify persistence through the actual offline storage roundtrip.
+   await page.locator('#wizard-step-select').selectOption('networks');
+   await page.locator('.router-security-review').first().locator('summary').click();
+   assert.equal(await page.locator('#f-networks-0-networkDeviceType').inputValue(),'Firewall');
+   assert.equal(await page.locator('[data-field="routerVendor"][data-custom]').first().inputValue(),'Fabricante de laboratorio');
+   assert.equal(await page.locator('[data-field="routerModel"][data-custom]').first().inputValue(),'Modelo no catalogado');
+   await page.locator('#wizard-step-select').selectOption('assets');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
    await page.locator('#global-navigation [data-go="records"]').click();
    const firstAudit=await page.locator('[data-open]').first().getAttribute('data-open');

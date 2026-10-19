@@ -1475,19 +1475,19 @@
   }
 
   // Optional router checklist is documentary: never capture passwords or probe credentials.
-  const ROUTER_AUDIT_FIELDS = Object.freeze(["routerVendor","routerModel","routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"]);
+  const ROUTER_AUDIT_FIELDS = Object.freeze(["networkDeviceType","routerVendor","routerModel","routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"]);
   const ROUTER_AUDIT_SET = new Set(ROUTER_AUDIT_FIELDS);
   function renderRouterAudit(record,index,definitions) {
     const routerFields=definitions.filter(([name])=>ROUTER_AUDIT_SET.has(name));
     const documented=routerFields.filter(([name])=>str(record[name]).trim()).length;
     return `<details class="inventory-baseline router-security-review">
       <summary><span><strong>Seguridad del router / gateway</strong>
-      <small>Credenciales de fábrica, administración, firmware, exposición y recuperación · solo revisión autorizada</small></span>
+      <small>Tipo, fabricante, modelo, administración, firmware y recuperación · solo revisión autorizada</small></span>
       <span class="inventory-baseline-count">${documented} / ${routerFields.length} datos documentados</span></summary>
       <div class="inventory-baseline-content">
         <p><strong>Credenciales de fábrica:</strong> solicita al responsable el registro de instalación, la política de cambio y una evidencia saneada del estado de cuentas.
         No pruebes usuarios o contraseñas predeterminados ni introduzcas secretos en el expediente. Si procede validar acceso, debe hacerlo un administrador autorizado.</p>
-        <p class="subtle">«No verificado» significa que no hay evidencia suficiente. Ningún estado supone conformidad automática: registra controles y hallazgos cuando corresponda.</p>
+        <p class="subtle">Elige primero el tipo de equipo. Si después cambias el tipo o fabricante, se conservan fabricante y modelo previamente anotados para evitar pérdidas accidentales: revisa que la combinación sea correcta y ajusta los valores si es necesario. «No verificado» significa que no hay evidencia suficiente.</p>
         <div class="fields">${routerFields.map(def=>renderField(record,"networks",def,index)).join("")}</div>
         <div class="action-row"><button type="button" class="button quiet" data-router-controls="true">Abrir plantillas de controles de routers →</button></div>
       </div></details>`;
@@ -2789,14 +2789,10 @@
     if (obj) {
       const previous = obj[t.dataset.field];
       obj[t.dataset.field] = t.value;
-      if (t.dataset.block === "networks" && ["routerVendor","networkDeviceType"].includes(t.dataset.field) &&
+      if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
           t.dataset.custom !== undefined && previous !== t.value) {
-        obj.routerModel = "";
-        if(t.dataset.field==="networkDeviceType"){
-          obj.routerVendor="";
-          const sibling=workspace.querySelector(`#f-networks-${t.dataset.index}-routerVendor`)?.closest(".field");
-          if(sibling)sibling.outerHTML=renderField(obj,"networks",groups.networks.fields.find(([name])=>name==="routerVendor"),Number(t.dataset.index));
-        }
+        // Changing a custom vendor updates suggestions but must not delete an
+        // already captured model (including non-catalogue models).
         refreshRouterModel(obj, Number(t.dataset.index));
       }
       if (
@@ -3275,10 +3271,12 @@
       const custom = t.closest(".field").querySelector("[data-custom]");
       const isOther = t.value === "__custom__";
       custom.hidden = !isOther;
+      if (isOther && !custom.value && previous) custom.value = previous;
       obj[t.dataset.field] = isOther ? custom.value : t.value;
       if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
-          previous !== (t.dataset.field === "networkDeviceType" ? obj.networkDeviceType : obj.routerVendor)) {
-        obj.routerModel = "";
+          previous !== obj.routerVendor) {
+        // Keep the previous model even if it is no longer in the new vendor
+        // catalogue. The renderer makes it editable as "Otro / escribir".
         refreshRouterModel(obj, Number(t.dataset.index));
       }
       if(t.dataset.block==="assets"&&t.dataset.field==="type"&&previous!==obj.type){
@@ -3308,8 +3306,8 @@
     }
     obj[t.dataset.field] = t.value;
     if(t.dataset.block==="networks" && t.dataset.field==="networkDeviceType"){
-      obj.routerVendor="";
-      obj.routerModel="";
+      // Type selection can happen after recording device details. Never
+      // clear vendor/model implicitly; show unmatched values as custom.
       const index=Number(t.dataset.index);
       for(const name of ["routerVendor","routerModel"]){
         const sibling=workspace.querySelector(`#f-networks-${index}-${name}`)?.closest(".field");

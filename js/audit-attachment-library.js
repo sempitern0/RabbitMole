@@ -63,12 +63,12 @@
     :x.stored==="external"?"SHA-256 declarado por referencia externa: "+html(x.hash||"No disponible")
     :"El CSV original no se conserva para descarga; solo sus resultados procesados.";
    const actions=x.type==="documents"
-    ?'<button type="button" class="button quiet small" data-pdf-appendix-verify="'+html(x.ref)+'">Verificar</button>'+
-     '<button type="button" class="button quiet small" data-pdf-appendix-download="'+html(x.ref)+'">Descargar</button>'
+    ?'<button type="button" class="button quiet small" data-library-pdf-verify="'+html(x.ref)+'">Verificar</button>'+
+     '<button type="button" class="button quiet small" data-library-pdf-download="'+html(x.ref)+'">Descargar</button>'
     :x.type==="images"&&x.ref
       ?'<button type="button" class="button quiet small" data-library-evidence-key="'+html(x.ref)+'">Ver evidencia</button>'
       :x.type==="csv"
-        ?'<button type="button" class="button quiet small" data-go="networks">Ver importación</button>':"";
+        ?'<button type="button" class="button quiet small" data-library-go="networks">Ver importación</button>':"";
    return '<article class="attachment-library-card"><div class="attachment-library-preview">'+preview+
     '</div><div class="attachment-library-details"><small>'+names[x.type]+'</small><h3>'+html(x.name)+'</h3>'+
     '<p>'+html(x.owner)+'</p><p class="subtle">'+html(x.source)+'</p>'+
@@ -78,23 +78,51 @@
     '<div class="action-row">'+actions+'</div></div></article>';
   }).join("");
  }
- function render(a,type,search,helpers){
-  const all=collect(a),n=counts(all),matches=filter(all,type,search);
-  const groups=[["all","Todos"],["images","Imágenes"],["documents","Documentos PDF"],
+ function renderAudits(records,selectedId,type,search,helpers){
+  const sorted=(Array.isArray(records)?records:[])
+    .filter(record=>record&&typeof record.id==="string"&&record.audit)
+    .sort((a,b)=>String(b.updatedAt||"").localeCompare(String(a.updatedAt||"")));
+  const kinds=[["all","Todos"],["images","Imágenes"],["documents","Documentos PDF"],
     ["csv","CSV importados"],["other","Otras referencias"]];
-  return '<span class="eyebrow">EXPEDIENTE / CONSULTA</span><h1 class="page-title">Biblioteca de archivos</h1>'+
-    '<p class="lead">Archivos de esta auditoría, reunidos sin duplicar datos ni añadirlos al informe final.</p>'+
-    '<section class="card attachment-library"><p class="subtle">'+n.all+' referencias: '+n.images+' imágenes, '+
-    n.documents+' PDF, '+n.csv+' CSV y '+n.other+' otros.</p>'+
-    '<div class="attachment-library-controls"><div class="field"><label for="attachment-search">Buscar nombre, ID o huella</label>'+
-    '<input id="attachment-search" type="search" autocomplete="off" value="'+helpers.html(search)+'"></div>'+
-    '<div class="field"><label for="attachment-filter">Filtrar por tipo</label><select id="attachment-filter">'+
-    groups.map(([id,label])=>'<option value="'+id+'" '+(id===type?'selected':'')+'>'+label+' ('+n[id]+')</option>').join("")+
-    '</select></div></div><p id="attachment-visible-count" role="status" aria-live="polite">'+matches.length+' archivos visibles</p>'+
-    '<div class="attachment-library-results" id="attachment-results">'+cards(matches,helpers)+'</div>'+
-    '<p class="subtle">Solo los PDF almacenados son descargables y verificables aquí. Las fotografías son JPEG optimizados; los originales CSV y firmas externas no están almacenados.</p>'+
-    '<div class="action-row"><button class="button quiet" type="button" data-go="evidence">Evidencias</button>'+
-    '<button class="button quiet" type="button" data-go="delivery">Anexos PDF</button></div></section>';
+  const items=sorted.map(record=>{
+    const meta=record.audit.meta||{},all=collect(record.audit),n=counts(all);
+    const active=record.id===selectedId;
+    const title=helpers.html(meta.project||meta.client||"Auditoría sin título");
+    const header='<button type="button" class="attachment-audit-toggle" data-library-select-audit="'+
+      helpers.html(record.id)+'" aria-expanded="'+active+'">'+
+      '<span class="attachment-audit-heading"><strong>'+title+'</strong><small>'+
+      helpers.html(meta.reportId||"Sin referencia")+' · '+
+      helpers.html(meta.client||"Cliente no indicado")+'</small></span>'+
+      '<span class="attachment-audit-count">'+n.all+' archivos · '+
+      (active?"Ocultar ▲":"Ver archivos ▼")+'</span></button>';
+    if(!active)return '<article class="attachment-audit-group">'+header+'</article>';
+    const visible=filter(all,type,search);
+    const expanded='<section class="attachment-audit-files" aria-label="Archivos de la auditoría seleccionada">'+
+      '<h2>2. Archivos de '+helpers.html(meta.reportId||"la auditoría")+'</h2>'+
+      '<p class="subtle">'+n.images+' imágenes · '+n.documents+' PDF · '+
+      n.csv+' CSV · '+n.other+' otras referencias</p>'+
+      '<div class="attachment-library-controls"><div class="field"><label for="attachment-search">Buscar nombre, ID o huella</label>'+
+      '<input id="attachment-search" type="search" autocomplete="off" value="'+helpers.html(search)+'"></div>'+
+      '<div class="field"><label for="attachment-filter">Filtrar por tipo</label><select id="attachment-filter">'+
+      kinds.map(([key,label])=>'<option value="'+key+'" '+(key===type?'selected':'')+'>'+
+        label+' ('+n[key]+')</option>').join("")+'</select></div></div>'+
+      '<p id="attachment-visible-count" role="status" aria-live="polite">'+visible.length+' archivos visibles</p>'+
+      '<div id="attachment-results" class="attachment-library-results">'+cards(visible,helpers)+'</div>'+
+      '<p class="subtle">Los PDF vigentes se verifican antes de descargar. Las imágenes están optimizadas; los CSV originales no se conservan.</p>'+
+      '<div class="action-row"><button class="button quiet" type="button" data-library-go="evidence">Abrir evidencias</button>'+
+      '<button class="button quiet" type="button" data-library-go="delivery">Abrir anexos PDF</button></div></section>';
+    return '<article class="attachment-audit-group is-selected">'+header+expanded+'</article>';
+  }).join("");
+  return '<span class="eyebrow">BIBLIOTECA / ARCHIVOS LOCALES</span>'+
+    '<h1 class="page-title">Biblioteca de archivos</h1>'+
+    '<p class="lead">Selecciona primero una auditoría y despliega sus archivos. La consulta no cambia la auditoría activa ni añade contenido al informe final.</p>'+
+    '<section class="card attachment-library" aria-label="Biblioteca global de archivos">'+
+    '<h2>1. Selecciona una auditoría</h2><p class="subtle">'+sorted.length+
+      ' auditorías guardadas en este navegador.</p>'+
+    (items||'<div class="attachment-library-empty"><strong>No hay auditorías guardadas.</strong>'+
+      '<p>Crea o importa una auditoría para consultar sus archivos.</p>'+
+      '<button type="button" class="button quiet" data-go="records">Ir a Auditorías</button></div>')+
+    '</section>';
  }
- globalThis.RabbitMoleAttachmentLibrary=Object.freeze({collect,filter,counts,cards,render});
+ globalThis.RabbitMoleAttachmentLibrary=Object.freeze({collect,filter,counts,cards,renderAudits});
 })();

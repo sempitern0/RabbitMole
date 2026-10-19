@@ -133,3 +133,8 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 ## Visible per-audit file library navigation
 - `#navigation` is intentionally always hidden by the current wizard layout and `#navigation[hidden]{display:none!important}`. Never append essential route actions to it. The File library belongs to the visible `#global-navigation` (id `audit-file-library-link`), visible only when `currentId` exists. `#global-navigation ...[hidden]` needs explicit CSS because nav buttons use `display:flex`.
 - Playwright must test actual `isVisible()` before creating an audit and after opening one, not just presence in DOM. Also test mobile collapsed sidebar. Keep file library separate from wizard progress and PDF output.
+
+## Global file library and audit selection
+- Main navigation uses `Auditorías` (records) and always displays `Biblioteca de archivos`, even without an active audit. `attachments` is an allowed top-level route without `currentId` and is treated as a library page; never insert the route into the wizard `nav` list.
+- `js/audit-attachment-library.js` renders stored audit records first; only the audit chosen by `attachmentAuditId` expands and displays filters, with no mutation or duplication of bytes. For the in-memory active audit, pass `state` instead of potentially stale repository snapshot. Browser selection does not modify `currentId`.
+- All file actions must bind to the selected audit. PDF verify/download checks the selected PDF against SHA-256. Navigation to an evidence/CSV section explicitly switches audit only after flushing pending changes. Keep image previews protected and the report content unchanged. Test empty library, two audits, selected filters, offline and confirmed records.

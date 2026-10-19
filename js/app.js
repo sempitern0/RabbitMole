@@ -464,7 +464,7 @@
   let state = fresh(),
     currentId = "",
     page = "records",
-    attachmentType = "all", attachmentSearch = "",
+    attachmentType = "all", attachmentSearch = "", attachmentAuditId = "",
     records = [],
     storageError = false,
     dirty = false,
@@ -499,7 +499,7 @@
     audit,
   });
   function setActive(record) {
-    attachmentType="all"; attachmentSearch="";
+    attachmentType="all"; attachmentSearch="";attachmentAuditId="";
     currentId = record.id;
     state = validate(record.audit);
     try {
@@ -2463,14 +2463,13 @@
         "connections",
         "glossary",
         "device",
+        "attachments",
       ].includes(page) || !currentId;
     byId("navigation").hidden = true;
     byId("audit-context").hidden = true;
     byId("workspace-label").textContent = "MENÚ PRINCIPAL";
-    // The step navigation (#navigation) is intentionally hidden in this layout;
-    // expose the per-audit file library through the visible main navigation.
-    // Only display it when an actual audit is open.
-    byId("audit-file-library-link").hidden = !currentId;
+    // The file library is global; first choose a local audit to view its files.
+    // The hidden wizard-step navigation is intentionally separate.
     // Keep the global menu in sync with the current view, including the glossary.
     for (const button of byId("global-navigation").querySelectorAll(
       "[data-go]",
@@ -2502,7 +2501,7 @@
       .join("");
     byId("current-section").textContent =
       page === "records"
-        ? "Biblioteca de auditorías"
+        ? "Auditorías"
         : page === "backups"
           ? "Copias de seguridad"
           : page === "device"
@@ -2545,7 +2544,11 @@
                 : page === "glossary"
                   ? renderGlossary()
                   : page === "attachments"
-                    ? attachmentLibrary.render(state,attachmentType,attachmentSearch,{html,validImage:evidenceImages.validImage})
+                    ? attachmentLibrary.renderAudits(
+                        records.map(row=>row.id===currentId?{...row,audit:state}:row),
+                        attachmentAuditId,attachmentType,attachmentSearch,
+                        {html,validImage:evidenceImages.validImage}
+                      )
                   : page === "intake"
                     ? renderIntake()
                     : page === "engagement"
@@ -2568,7 +2571,9 @@
     refreshRecordNavigator();
     if(page==="attachments"){
       const refresh=()=>{
-        const shown=attachmentLibrary.filter(attachmentLibrary.collect(state),attachmentType,attachmentSearch);
+        const audit=attachmentAuditId===currentId?state:
+          records.find(row=>row.id===attachmentAuditId)?.audit;
+        const shown=attachmentLibrary.filter(attachmentLibrary.collect(audit),attachmentType,attachmentSearch);
         byId("attachment-results").innerHTML=attachmentLibrary.cards(shown,{html,validImage:evidenceImages.validImage});
         byId("attachment-visible-count").textContent=shown.length+" archivos visibles";
       };
@@ -2627,6 +2632,7 @@
         "connections",
         "glossary",
         "device",
+        "attachments",
       ].includes(section) &&
       !currentId
     ) {
@@ -2642,10 +2648,14 @@
         "connections",
         "glossary",
         "device",
+        "attachments",
       ].includes(section) ||
-      section === "intake" || section === "attachments" ||
+      section === "intake" ||
       nav.some((n) => n[0] === section)
     ) {
+      if(section==="attachments" && page!=="attachments"){
+        attachmentAuditId="";attachmentType="all";attachmentSearch="";
+      }
       page = section;
       rememberAuditStep(currentId, section);
       if (wizardStepChange && window.matchMedia("(max-width: 1000px)").matches &&
@@ -3417,6 +3427,51 @@
       byId("record-search")?.focus();
       return;
     }
+    if(page==="attachments" && b.dataset.librarySelectAudit!==undefined){
+      const id=b.dataset.librarySelectAudit;
+      if(!records.some(row=>row.id===id))return;
+      attachmentAuditId=attachmentAuditId===id?"":id;
+      attachmentType="all";attachmentSearch="";
+      render();
+      const button=[...workspace.querySelectorAll("[data-library-select-audit]")]
+        .find(el=>el.dataset.librarySelectAudit===id);
+      button?.focus({preventScroll:true});
+      button?.scrollIntoView({block:"nearest",behavior:"auto"});
+      return;
+    }
+    if(page==="attachments" && (b.dataset.libraryPdfVerify!==undefined ||
+      b.dataset.libraryPdfDownload!==undefined)){
+      const audit=attachmentAuditId===currentId?state:
+        records.find(row=>row.id===attachmentAuditId)?.audit;
+      const id=b.dataset.libraryPdfVerify??b.dataset.libraryPdfDownload;
+      const item=audit?.pdfAppendices?.find(pdf=>pdf.id===id);
+      if(!item)return;
+      try{
+        const checked=await pdfAppendices.verify(item);
+        if(b.dataset.libraryPdfDownload!==undefined)downloadBlob(item.name,pdfAppendices.asBlob(item));
+        else alert("Integridad comprobada: "+checked.id+" · v"+checked.version+
+          " · SHA-256 "+checked.sha256+". No acredita autoría ni custodia.");
+      }catch(error){alert("No se pudo verificar el PDF: "+error.message)}
+      return;
+    }
+    if(page==="attachments" && (b.dataset.libraryEvidenceKey!==undefined ||
+      b.dataset.libraryGo!==undefined)){
+      const section=b.dataset.libraryGo||(b.dataset.libraryEvidenceKey!==undefined?"evidence":"");
+      const record=records.find(row=>row.id===attachmentAuditId);
+      if(!record || !["evidence","networks","delivery"].includes(section))return;
+      if(record.id!==currentId){
+        try{await flush();setActive(record);}
+        catch(error){alert("No se pudo abrir la auditoría: "+error.message);return;}
+      }
+      move(section);
+      if(b.dataset.libraryEvidenceKey!==undefined){
+        const key=b.dataset.libraryEvidenceKey;
+        const target=[...workspace.querySelectorAll(".entry[data-entry-key]")]
+          .find(row=>row.dataset.entryKey===key);
+        target?.scrollIntoView({block:"start",behavior:"auto"});
+      }
+      return;
+    }
     if (
       state.documentControl?.status === "confirmed" &&
       ![
@@ -3426,6 +3481,7 @@
         "online",
         "settings",
         "glossary",
+        "attachments",
       ].includes(page)
     ) {
       const safe = [
@@ -3456,14 +3512,6 @@
         );
         return;
       }
-    }
-    if(b.dataset.libraryEvidenceKey!==undefined){
-      const key=b.dataset.libraryEvidenceKey;
-      move("evidence");
-      const row=[...workspace.querySelectorAll(".entry[data-entry-key]")]
-        .find(el=>el.dataset.entryKey===key);
-      row?.scrollIntoView({block:"start",behavior:"auto"});
-      return;
     }
     if (b.id === "sync-auditor-signatures") {
       try {

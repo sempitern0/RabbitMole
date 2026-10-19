@@ -408,3 +408,7 @@ PDF annexes are SHA-256 checked against their actual stored bytes before downloa
 ### Audit file library (screen only)
 
 Every open audit has an optional **File library** sidebar route, separate from the wizard and report generation. Search and filter existing Evidence photos, PDF appendices, parsed Wi-Fi CSV imports and external signature-file references without storing duplicate payloads or changing schema v3. Confirmed audit file browsing is read-only. PDF content is verifiable/downloadable; photographs are optimized JPEGs, whereas raw CSV and external signed files were never kept for download. The previously required appendix integrity inventory remains a separate report feature; the new library does not appear as a PDF chapter.
+
+### Audit-first file library and shortened navigation
+
+The primary navigation now labels the audit list **Auditorías**. The global file library first lists all locally stored audits by project, client and report reference. Choosing an audit expands only its files and type/search filters; choosing it again collapses the list. Browsing never changes the active audit or stored data. PDF verification/download use the selected audit's document, even if another audit is open. Explicit “Open evidence/measurements” actions switch audits only when requested. The library remains outside the report and operates offline.

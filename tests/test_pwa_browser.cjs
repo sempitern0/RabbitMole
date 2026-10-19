@@ -173,21 +173,28 @@ const {chromium}=require('playwright');
    assert.equal(keyboardFocus.interactive,true,'Tab must reach an interactive element');
    assert.equal(keyboardFocus.visible,true,'Keyboard focus must remain visible');
    assert.notEqual(keyboardFocus.outline,'none','Keyboard focus indicator must remain visible');
-   assert.equal(await page.locator('#audit-file-library-link').isVisible(),false,
-     'File library should remain hidden before an audit is created');
-   await page.locator('[data-new]').first().click();
-   // Opening an audit makes its file library reachable from the visible menu,
-   // not the hidden #navigation wizard container.
+   assert.equal(await page.locator('#global-navigation [data-go="records"]').getAttribute('aria-label'),'Auditorías');
    assert.equal(await page.locator('#audit-file-library-link').isVisible(),true,
-     'File library link must be visible with an active audit');
+     'Global file library must be accessible even before opening an audit');
    await page.locator('#audit-file-library-link').click();
    assert.equal(await page.locator('#workspace h1').textContent(),'Biblioteca de archivos');
-   assert.equal(await page.locator('#workspace #attachment-filter').isVisible(),true);
+   assert.match(await page.locator('#workspace').textContent(),/No hay auditorías guardadas/);
+   assert.equal(await page.locator('#attachment-filter').count(),0);
+   await page.locator('#global-navigation [data-go="records"]').click();
+   await page.locator('[data-new]').first().click();
+   await page.locator('#audit-file-library-link').click();
+   assert.equal(await page.locator('[data-library-select-audit]').count(),1);
+   assert.equal(await page.locator('#attachment-filter').count(),0,
+     'First choose an audit before showing its files');
+   await page.locator('[data-library-select-audit]').first().click();
+   assert.equal(await page.locator('#attachment-filter').isVisible(),true);
+   assert.equal(await page.locator('[data-library-select-audit]').first().getAttribute('aria-expanded'),'true');
    await page.locator('#attachment-filter').selectOption('images');
    await page.locator('#attachment-search').fill('sin-coincidencias');
    assert.match(await page.locator('#attachment-visible-count').textContent(),/0 archivos/);
+   await page.locator('[data-library-select-audit]').first().click();
+   assert.equal(await page.locator('#attachment-filter').count(),0,'Collapsing should hide the file list');
    await page.locator('#global-navigation [data-go="records"]').click();
-   assert.equal(await page.locator('#audit-file-library-link').isVisible(),true);
    await page.locator('[data-open]').first().click();
    // Quick help preserves the live input node, its value, the current step and URL.
    const contextualHelp=page.locator('[data-glossary-term][data-glossary-field]').first();
@@ -504,6 +511,13 @@ const {chromium}=require('playwright');
    await page.locator('[data-new]').first().click();
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'engagement','A new audit starts at client and scope');
    await page.locator('#wizard-step-top').selectOption('networks');
+   await page.locator('#audit-file-library-link').click();
+   assert.equal(await page.locator('[data-library-select-audit]').count(),2,
+     'Every saved audit should be independently selectable in the file library');
+   const otherId=(await page.locator('[data-library-select-audit]').all()).length;
+   assert.equal(otherId,2);
+   await page.locator('[data-library-select-audit]').last().click();
+   assert.equal(await page.locator('[data-library-select-audit][aria-expanded="true"]').count(),1);
    await page.locator('#global-navigation [data-go="records"]').click();
    await page.locator('[data-open="'+firstAudit+'"]').click();
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'assets','Resume is isolated by audit');

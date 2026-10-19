@@ -1,35 +1,48 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const ctx={};ctx.globalThis=ctx;vm.runInNewContext(fs.readFileSync('js/audit-attachment-library.js','utf8'),ctx);
-const lib=ctx.RabbitMoleAttachmentLibrary,img='data:image/jpeg;base64,'+'QUJD'.repeat(12);
-const audit={pdfAppendices:[{id:'p1',name:'informe.pdf',version:2,size:120}],
- evidence:[{_key:'e1',id:'EV-1',image:img,fileName:'foto.jpg',
- attachments:[{image:img,fileName:'foto2.jpg'}]}],
- externalNetworkAnalysis:{imports:[{id:'c1',filename:'scan.csv',kind:'aps'}]},
- meta:{auditTeam:[{id:'u1',name:'Auditor',signatureProof:{name:'firma.p7s'}}]}};
-const before=JSON.stringify(audit),entries=lib.collect(audit),count=lib.counts(entries);
-assert.equal(count.all,5);assert.equal(count.images,2);assert.equal(count.documents,1);
-assert.equal(count.csv,1);assert.equal(count.other,1);
-assert.equal(lib.filter(entries,'images','foto').length,2);
-assert.equal(lib.filter(entries,'csv','SCAN').length,1);
-assert.equal(JSON.stringify(audit),before,'No mutation of audit data');
-assert.equal(lib.collect({externalNetworkAnalysis:{files:['old.csv']}})[0].stored,'parsed');
-const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-assert(lib.render(audit,'all','',{html:esc,validImage:()=>true}).includes('foto2.jpg'));
-for(const file of ['index.html','sw.js','rabbitmole.sh','rabbitmole.ps1'])
- assert(fs.readFileSync(file,'utf8').includes('js/audit-attachment-library.js'));
-const app=fs.readFileSync('js/app.js','utf8');
-assert(app.includes('section === "attachments"'));
-assert(app.includes('byId("audit-file-library-link").hidden = !currentId'),
- 'Link should appear only when the user has an active audit');
-assert(!app.includes('<button type="button" data-go="attachments" class='),
- 'Do not append file library to the intentionally hidden wizard nav');
-const index=fs.readFileSync('index.html','utf8');
-assert(index.includes('id="audit-file-library-link"') &&
- index.includes('data-go="attachments"'));
-assert(fs.readFileSync('css/workspace-ux.css','utf8').includes(
- '#global-navigation #audit-file-library-link[hidden]{display:none!important}'));
-assert(app.includes('attachmentLibrary.render(state,attachmentType,attachmentSearch'));
-assert(app.includes('"attachment-search","attachment-filter"'));
-assert(!app.includes('chapters.push([14, "Biblioteca de archivos"'));
-console.log('PASS audit attachment catalog, filters, no mutation and offline references');
+const env={};env.globalThis=env;
+vm.runInNewContext(fs.readFileSync('js/audit-attachment-library.js','utf8'),env);
+const lib=env.RabbitMoleAttachmentLibrary;
+const image='data:image/jpeg;base64,'+'QUJD'.repeat(12);
+const records=[
+ {id:'a1',updatedAt:'2026-10-18T00:00:00Z',audit:{meta:{project:'Centro Norte',reportId:'AUD-001',client:'Cliente 1'},
+  pdfAppendices:[{id:'p1',name:'reporte-norte.pdf',version:2,sha256:'a'.repeat(64),size:200}],
+  evidence:[{_key:'e1',id:'EV-001',image,fileName:'foto-norte.jpg'}],
+  externalNetworkAnalysis:{imports:[{id:'c1',filename:'norte.csv',kind:'aps'}]}}},
+ {id:'a2',updatedAt:'2026-10-19T00:00:00Z',audit:{meta:{project:'Centro Sur',reportId:'AUD-002',client:'Cliente 2'},
+  pdfAppendices:[{id:'p2',name:'reporte-sur.pdf',version:1,sha256:'b'.repeat(64),size:300}],
+  evidence:[],externalNetworkAnalysis:{imports:[]}}}
+];
+const before=JSON.stringify(records);
+const html=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const helpers={html,validImage:()=>true};
+const start=lib.renderAudits(records,'','all','',helpers);
+assert(start.includes('Centro Norte')&&start.includes('Centro Sur'));
+assert(!start.includes('id="attachment-filter"'),'No files before choosing an audit');
+assert(!start.includes('reporte-norte.pdf')&&!start.includes('reporte-sur.pdf'));
+const north=lib.renderAudits(records,'a1','all','',helpers);
+assert(north.includes('reporte-norte.pdf')&&!north.includes('reporte-sur.pdf'));
+assert(north.includes('data-library-pdf-download="p1"'));
+assert(north.includes('data-library-select-audit="a1" aria-expanded="true"'));
+const south=lib.renderAudits(records,'a2','documents','reporte',helpers);
+assert(south.includes('reporte-sur.pdf')&&!south.includes('reporte-norte.pdf'));
+assert(south.includes('data-library-pdf-verify="p2"'));
+assert.equal(lib.filter(lib.collect(records[0].audit),'images','foto').length,1);
+assert.equal(lib.counts(lib.collect(records[0].audit)).all,3);
+assert.equal(JSON.stringify(records),before,'No audit mutations');
+const empty=lib.renderAudits([],'','all','',helpers);
+assert(empty.includes('No hay auditorías guardadas'));
+const escaped=lib.renderAudits([{id:'bad',audit:{meta:{project:'<script>alert(1)</script>'}}}], 'bad','all','',helpers);
+assert(!escaped.includes('<script>'),'Sanitize names in audit selector');
+const index=fs.readFileSync('index.html','utf8'),app=fs.readFileSync('js/app.js','utf8');
+assert(index.includes('aria-label="Auditorías" title="Auditorías"'));
+assert(!index.includes('id="audit-file-library-link" type="button" data-go="attachments" hidden'));
+assert(app.includes('attachmentLibrary.renderAudits('));
+assert(app.includes('records.map(row=>row.id===currentId?{...row,audit:state}:row)'));
+assert(app.includes('section==="attachments" && page!=="attachments"'));
+assert(!app.includes('byId("audit-file-library-link").hidden = !currentId'));
+assert(app.includes('records.find(row=>row.id===attachmentAuditId)?.audit'));
+assert(app.includes('pdfAppendices.verify(item)'));
+for(const f of ['index.html','sw.js','rabbitmole.sh','rabbitmole.ps1'])
+ assert(fs.readFileSync(f,'utf8').includes('js/audit-attachment-library.js'));
+console.log('PASS audit selection before files, per-audit isolation, search, legacy, stable source actions, offline packaging');

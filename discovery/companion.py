@@ -2,6 +2,7 @@
 """Portable Windows Companion: only local listening, consent-controlled pairing."""
 import pathlib
 import queue
+import secrets
 import shutil
 import subprocess
 import sys
@@ -77,7 +78,7 @@ class Companion:
         if not self.server or not self.pending_id:
             return
         if self.server.pairing.decide(self.pending_id,allow,
-                                      self.server.access_token if allow else ""):
+                                      secrets.token_urlsafe(32) if allow else ""):
             self.session.set("Conexión autorizada durante esta sesión." if allow else "Conexión denegada.")
         self.pending_id=None
         self.approve_button.config(state="disabled")

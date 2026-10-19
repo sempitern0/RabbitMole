@@ -26,7 +26,7 @@ class BuildTest(unittest.TestCase):
                 return json.loads((root/'dist-pages/release.json').read_text())['version']
             first=build()
             with zipfile.ZipFile(root/'dist-pages/discovery-kit.zip') as kit:
-                for entry in ('discovery/companion.py', 'discovery/iniciar.cmd',
+                for entry in ('discovery/companion.py', 'discovery/pairing.py', 'discovery/iniciar.cmd',
                               'discovery/setup.ps1', 'discovery/setup.sh', 'collect-local.ps1'):
                     self.assertIn(entry, kit.namelist())
                 self.assertIn(b'companion.py', kit.read('discovery/iniciar.cmd'))

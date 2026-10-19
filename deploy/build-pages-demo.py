@@ -81,6 +81,14 @@ def main():
         info = zipfile.ZipInfo("INSTRUCCIONES.txt", (2024, 1, 1, 0, 0, 0))
         info.compress_type = zipfile.ZIP_DEFLATED
         archive.writestr(info, b"Termux: pkg install python nmap unzip; unzip rabbitmole-termux.zip -d rabbitmole-discovery; cd rabbitmole-discovery; python discover.py doctor; python discover.py wizard\n")
+    (DIST / "discovery-ios-guide.txt").write_text(
+        "RabbitMole Discovery en iPhone/iPad\\n"
+        "1. Instala la PWA con Safari (Compartir > Anadir a pantalla de inicio).\\n"
+        "2. iOS no ejecuta Termux ni el Companion de Windows.\\n"
+        "3. Utiliza una estacion auditora autorizada con HTTPS, certificado confiable y token, o importa una captura JSON revisada.\\n"
+        "4. Confirma el CIDR y AUTORIZO desde el equipo auditor antes de escanear.\\n"
+        "5. Guarda los JSON de forma segura; la PWA no ejecuta scripts del sistema.\\n",
+        encoding="utf-8")
     windows = ROOT / "artifacts" / "RabbitMole-Companion-Windows.zip"
     if windows.is_file():
         if windows.is_symlink() or windows.stat().st_size > 100 * 1024 * 1024:

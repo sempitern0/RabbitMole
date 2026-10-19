@@ -6,8 +6,8 @@ const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
 const clientCache = new Map();
 
-const DISCOVERY_PACKAGES = new Set(["discovery-kit.zip","discovery-android-termux.zip","discovery-windows.zip"]);
-const OPTIONAL_PACKAGES = ["./discovery-kit.zip","./discovery-android-termux.zip","./discovery-windows.zip"];
+const DISCOVERY_PACKAGES = new Set(["discovery-kit.zip","discovery-android-termux.zip","discovery-windows.zip","discovery-ios-guide.txt"]);
+const OPTIONAL_PACKAGES = ["./discovery-kit.zip","./discovery-android-termux.zip","./discovery-windows.zip","./discovery-ios-guide.txt"];
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
 );

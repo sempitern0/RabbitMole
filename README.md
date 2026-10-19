@@ -412,3 +412,7 @@ Every open audit has an optional **File library** sidebar route, separate from t
 ### Audit-first file library and shortened navigation
 
 The primary navigation now labels the audit list **Auditorías**. The global file library first lists all locally stored audits by project, client and report reference. Choosing an audit expands only its files and type/search filters; choosing it again collapses the list. Browsing never changes the active audit or stored data. PDF verification/download use the selected audit's document, even if another audit is open. Explicit “Open evidence/measurements” actions switch audits only when requested. The library remains outside the report and operates offline.
+
+### Light and dark appearance
+
+Only **Light · RabbitMole** (default; midnight blue, steel and ivory) and **Dark · RabbitMole** remain. Obsolete palette preferences map to the equivalent light/dark option without changing audit JSON v3. Desktop text uses a compact 15px base and restrained headings, not CSS zoom. Touch/compact editable controls stay 16px to avoid Safari automatic focus zoom; reports keep white paper.

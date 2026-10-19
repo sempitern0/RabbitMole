@@ -101,3 +101,31 @@ py -3 discovery\\service.py --loopback-http --origin https://rabbitmole.danieldi
 El servidor escucha **exclusivamente en 127.0.0.1:8766**, imprime un token efímero en la consola y no es accesible desde otros dispositivos. En la PWA instalada en ese mismo PC entra en **Redes → Captura asistida → Discovery local**, elige «Usar servidor de este PC», introduce el token y comprueba la conexión. Algunos navegadores piden permiso para acceso a redes locales y ciertos entornos corporativos podrían bloquearlo. Si no funciona, exporta un JSON con `py -3 discovery\\discover.py wizard` e impórtalo manualmente. No desactives protecciones de CORS ni de seguridad para hacerlo funcionar.
 
 Si la PWA corre en **Android, iOS o una tablet** y Discovery en el PC, `127.0.0.1` apunta al dispositivo móvil, no al PC: debes emplear el modo **HTTPS LAN** con certificado confiable o transferir el JSON. El modo `--loopback-http` rechaza bind/host LAN y los parámetros de certificado. Nunca expongas HTTP a la Wi-Fi de un cliente.
+
+
+## Companion Windows por doble clic (kit PWA)
+
+Descarga «Discovery kit» desde la PWA y extrae el ZIP. Abre `discovery/iniciar.cmd`: aparece la ventana **RabbitMole Companion** (Python 3.9+ con Tkinter). Revisa el origen HTTPS exacto de tu PWA, pulsa **Iniciar puente**, luego **Copiar token temporal**; en la PWA selecciona `http://127.0.0.1:8766`, pega el token y pulsa **Comprobar conexión**. El servicio escucha únicamente en loopback y se detiene al cerrar la ventana. **Nunca inicia reconocimiento sin confirmar un CIDR autorizado en la PWA.**
+
+El botón **Capturar inventario de este Windows** utiliza `collect-local.ps1` incluido en el ZIP, solicita una ruta de salida JSON nueva y no sobrescribe archivos. Importa esa captura desde la PWA y revisa cada elemento. La captura local no obtiene información de equipos remotos; las licencias y el estado de Defender requieren validaciones adicionales específicas y no se afirman automáticamente.
+
+El Companion inicial no es un EXE autocontenido: requiere Python y Tkinter. Si faltan, usa `discovery/setup.ps1` (opcional `-InstallTools`) o el asistente de consola. El modo tablet sigue siendo HTTPS con certificado confiable, o transferencia de JSON. El token se mantiene en memoria y el botón copiar utiliza el portapapeles del propio Windows: evita dejar secretos en equipos compartidos.
+
+
+## Companion Windows portable: uso y retirada
+
+El workflow manual **Build portable Windows Companion** genera un ZIP de ejecutable autocontenido con Python integrado. Una versión solo debe ofrecerse tras revisar pruebas y publicarla expresamente en [GitHub Releases](https://github.com/sempitern0/RabbitMole/releases). Cloudflare únicamente publica la PWA y el kit Python de respaldo; **no instala ni publica automáticamente el EXE**.
+
+Extrae el ZIP, abre RabbitMole-Companion.exe, pulsa **Activar Discovery**. En la PWA instalada del **mismo PC**, pulsa **Conectar este PC** y acepta la solicitud en Companion. No se escanea sin revisar el CIDR y confirmar AUTORIZO. Los datos se revisan antes de incorporarlos a Hardware y Redes.
+
+Para desinstalar, pulsa **Desactivar**, cierra la aplicación y borra la carpeta extraída. Los JSON exportados se retienen o eliminan aparte. No se crea servicio persistente ni requiere elevar permisos. En tablets continúa siendo necesario HTTPS con certificado confiable o importar JSON. Un EXE sin firma puede mostrar advertencias de reputación: verifica procedencia y SHA-256, sin desactivar la protección del sistema.
+
+
+## Kits incluidos en la PWA y trabajo sin conexión
+
+El build Cloudflare produce `discovery-kit.zip` y `discovery-android-termux.zip`. El despliegue manual de producción compila primero el ejecutable Windows en GitHub Actions, verifica su ZIP y lo añade como `discovery-windows.zip` antes de desplegar. El sistema no necesita GitHub Releases para descargarlo desde la propia PWA. Los paquetes disponibles se guardan oportunistamente en CacheStorage durante la instalación y en su primera descarga. **La caché no es almacenamiento permanente garantizado**: antes de visitar una sede sin red, verifica el paquete descargado en Archivos/Descargas y guárdalo fuera del almacenamiento efímero del navegador.
+
+Android: descarga `discovery-android-termux.zip` desde RabbitMole, instala Termux por un canal confiable (por separado) y su paquete Python/Nmap mientras tengas acceso a los repositorios necesarios; ejecuta el script localmente. Un navegador no concede ejecución de Termux ni acceso a Android fuera de su sandbox. iOS/iPadOS: descarga las instrucciones o prepara un equipo auditor por HTTPS; las shells de iOS no garantizan ICMP/Nmap y el flujo portable no promete Discovery nativo.
+
+
+En iOS la PWA incluye también un documento descargable de instrucciones sin conexión (`discovery-ios-guide.txt`), disponible desde Discovery. Este modo no instala binarios nativos ni promete escanear iPhone/iPad directamente; conecta con un equipo auditor por HTTPS certificado o importa una captura en Archivos.

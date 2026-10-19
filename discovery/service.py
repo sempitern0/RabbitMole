@@ -18,10 +18,11 @@ import threading
 from urllib.parse import urlsplit
 
 try:
-    from . import discover, wizard
+    from . import discover, wizard, pairing
 except ImportError:
     import discover
     import wizard
+    import pairing
 
 MAX_BODY = 512
 MAX_RESPONSE = discover.MAX_XML
@@ -95,7 +96,9 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
     def authenticated(self):
         token = self.headers.get("X-RabbitMole-Token", "")
-        if not token or not secrets.compare_digest(token, self.server.access_token):
+        approved = getattr(self.server, "pairing", None)
+        if not ((token and secrets.compare_digest(token, self.server.access_token)) or
+                (approved and approved.authorized(token))):
             self.json_reply(403, {"error": "Token de sesión incorrecto o ausente."})
             return False
         return True
@@ -103,7 +106,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         if not self.allowed():
             return
-        if urlsplit(self.path).path not in ("/status", "/scan"):
+        if urlsplit(self.path).path not in ("/status", "/scan", "/pair/request", "/pair/status"):
             return self.json_reply(404, {"error": "Ruta no disponible."})
         requested = self.headers.get("Access-Control-Request-Headers", "").lower()
         if self.headers.get("Access-Control-Request-Method", "").upper() not in ("GET", "POST"):
@@ -119,7 +122,19 @@ class BridgeHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if not self.allowed() or not self.authenticated():
+        if not self.allowed():
+            return
+        if urlsplit(self.path).path == "/pair/status":
+            # Pair requests are unguessable 192-bit capabilities, consumed once.
+            from urllib.parse import parse_qs
+            query = parse_qs(urlsplit(self.path).query)
+            values = query.get("id", [])
+            if len(values) != 1 or len(values[0]) > 128:
+                return self.json_reply(400, {"error": "Identificador inválido."})
+            if not self.server.pairing_enabled:
+                return self.json_reply(404, {"error": "Emparejamiento no disponible."})
+            return self.json_reply(200, self.server.pairing.status(values[0]))
+        if not self.authenticated():
             return
         if urlsplit(self.path).path != "/status":
             return self.json_reply(404, {"error": "Ruta no disponible."})
@@ -134,7 +149,18 @@ class BridgeHandler(BaseHTTPRequestHandler):
         })
 
     def do_POST(self):
-        if not self.allowed() or not self.authenticated():
+        if not self.allowed():
+            return
+        if urlsplit(self.path).path == "/pair/request":
+            if not self.server.pairing_enabled:
+                return self.json_reply(404, {"error": "Emparejamiento no disponible."})
+            if self.headers.get("Content-Length") not in ("0", None):
+                return self.json_reply(400, {"error": "Solicitud sin cuerpo requerida."})
+            try:
+                return self.json_reply(200, self.server.pairing.begin())
+            except ValueError as error:
+                return self.json_reply(429, {"error": str(error)})
+        if not self.authenticated():
             return
         if urlsplit(self.path).path != "/scan":
             return self.json_reply(404, {"error": "Ruta no disponible."})
@@ -176,6 +202,22 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self.server.scan_lock.release()
 
 
+def local_server(origin, port=8766):
+    """Create a loopback-only server owned by Companion (never starts a scan)."""
+    class Server(ThreadingHTTPServer):
+        address_family = socket.AF_INET
+        daemon_threads = True
+        request_queue_size = 8
+    server = Server(("127.0.0.1", port), BridgeHandler)
+    server.allowed_origin = valid_origin(origin)
+    server.expected_host = "127.0.0.1:" + str(server.server_port)
+    server.access_token = secrets.token_urlsafe(32)
+    server.scan_lock = threading.Lock()
+    server.pairing_enabled = True
+    server.pairing = pairing.Pairing()
+    return server
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Servicio Discovery de la estación auditora: HTTPS en LAN o HTTP exclusivamente loopback.")
@@ -187,11 +229,14 @@ def main(argv=None):
     parser.add_argument("--loopback-http", action="store_true",
                         help="Solo PWA y Discovery en el MISMO ordenador; escucha exclusivamente 127.0.0.1 sin TLS")
     parser.add_argument("--origin", required=True, help="Origen HTTPS exacto de la PWA autorizada")
+    parser.add_argument("--pairing", action="store_true", help="Permite aprobación explícita en Companion local")
     args = parser.parse_args(argv)
     try:
         origin = valid_origin(args.origin)
         if not 1 <= args.port <= 65535:
             raise ValueError("Puerto fuera del intervalo válido.")
+        if args.pairing and not args.loopback_http:
+            raise ValueError("El emparejamiento guiado solo se permite en loopback.")
         if args.loopback_http:
             # Never silently downgrade a LAN endpoint to plaintext.
             if args.bind not in (None, "127.0.0.1") or args.host not in (None, "127.0.0.1"):
@@ -221,6 +266,8 @@ def main(argv=None):
             server.allowed_origin = origin
             server.expected_host = host + ":" + str(server.server_port)
             server.access_token = secrets.token_urlsafe(32)
+            server.pairing_enabled = bool(args.pairing)
+            server.pairing = pairing.Pairing()
             server.scan_lock = threading.Lock()
             if context is not None:
                 server.socket = context.wrap_socket(server.socket, server_side=True)

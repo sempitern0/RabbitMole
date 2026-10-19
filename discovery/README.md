@@ -72,3 +72,17 @@ In the installed PWA open Networks → Assisted capture → Local Discovery, ent
 Termux is **Android-only**. Install from the official [F-Droid package](https://f-droid.org/packages/com.termux/) or [GitHub releases](https://github.com/termux/termux-app/releases), without mixing plugin signing sources. After `pkg update`, `pkg upgrade`, and `pkg install python git nmap`, run `termux-setup-storage` only if shared Downloads access is needed. Clone the RabbitMole repository, run `python discovery/discover.py doctor` (no traffic), then use `python discovery/discover.py wizard` only with an explicitly authorized private CIDR, a fresh JSON output path, and its `AUTORIZO` prompt. Android may restrict ICMP, Nmap and interface discovery without root: do not bypass platform security. Import and approve the JSON separately in Hardware and Networks → Assisted capture.
 
 There is **no Termux on iOS/iPadOS**. [a-Shell](https://github.com/holzschu/a-shell) and [iSH](https://github.com/ish-app/ish) are optional terminals with different sandbox limits, not supported Discovery scanner platforms. For iPhone/iPad, collect with an authorized desktop, transfer the JSON via an approved channel into Files, and import from the installed PWA. The LAN HTTPS bridge is an optional alternative only after testing TLS trust, CORS and local-network permissions. The full [Spanish mobile field guide](../docs/AUDITORIA_MOVIL_ES.md) includes steps and privacy guidance.
+
+
+## Windows Companion (double-click)
+
+Download the Discovery ZIP from the PWA and extract it. Launch `discovery/iniciar.cmd`, verify the exact HTTPS PWA origin, choose **Iniciar puente**, and **Copiar token temporal**. In the same-PC PWA use `http://127.0.0.1:8766` and paste the temporary token. The service binds only to loopback and stops when the window closes; scans still require explicit authorized CIDR confirmation inside the PWA. The kit now includes setup scripts and the local PowerShell collector. **Capturar inventario de este Windows** writes a new JSON file without overwriting existing evidence. This GUI requires Python 3.9+ with Tkinter; it is not yet a standalone EXE, and tablet access still requires trusted HTTPS or file transfer.
+
+
+## Portable Windows Companion
+
+The manually triggered **Build portable Windows Companion** workflow produces a ZIP with a self-contained Python executable. It is available to users only after a verified package is explicitly uploaded to [GitHub Releases](https://github.com/sempitern0/RabbitMole/releases). Cloudflare only serves the PWA and backup Python kit; it neither runs Discovery nor publishes/install EXEs automatically.
+
+Extract the ZIP, open RabbitMole-Companion.exe and choose **Activar Discovery**. From the installed PWA on the **same PC**, click **Conectar este PC** and approve the prompt in Companion. Each scan still requires a reviewed authorized CIDR and AUTORIZO. Review JSON candidates before importing assets and networks.
+
+Uninstall by clicking **Desactivar**, closing Companion, and deleting the extracted folder. Handle exported JSON separately. No resident Windows service or administrator elevation is required. Tablets require a trusted HTTPS LAN connection or JSON import. Verify unsigned EXE provenance and SHA-256; do not disable endpoint protection.

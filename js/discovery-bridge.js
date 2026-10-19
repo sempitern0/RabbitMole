@@ -40,6 +40,7 @@
    if(state)state.textContent=busy?"Comprobando…":connected
      ?"Conectado · "+(backend||"No hay Nmap/ping"):"Estación sin comprobar";
    const scan=el("bridge-scan");if(scan)scan.disabled=busy||!connected||!backend;
+   const pair=el("bridge-pair-local");if(pair)pair.disabled=busy;
    const results=el("bridge-results");if(results)results.hidden=!capture;
    const totals=el("bridge-capture-summary");
    if(totals)totals.textContent=capture
@@ -58,6 +59,44 @@
    const data=await response.json();
    if(!response.ok)throw Error(data.error||"El servicio Discovery rechazó la operación.");
    return data;
+ }
+ async function pairLocal(){
+   if(busy)return;
+   const base="http://127.0.0.1:8766";
+   try{
+     if(globalThis.RabbitMoleDeployment?.profile!=="private-full")
+       throw Error("Abre la PWA instalada para conectar el Companion.");
+     endpoint=privateEndpoint(base);token="";connected=false;backend="";capture=null;busy=true;
+     setStatus("Solicitando aprobación al Companion…");refresh();
+     const response=await fetch(base+"/pair/request",{method:"POST",mode:"cors",cache:"no-store",signal:AbortSignal.timeout(12000)});
+     const initial=await response.json();
+     if(!response.ok)throw Error(initial.error||"Error solicitando conexión.");
+     if(!/^[A-Za-z0-9_-]{24,128}$/.test(initial.requestId||""))throw Error("Solicitud inválida.");
+     let granted="";
+     for(let n=0;n<35;n++){
+       await new Promise(resolve=>setTimeout(resolve,2000));
+       const poll=await fetch(base+"/pair/status?id="+encodeURIComponent(initial.requestId),{mode:"cors",cache:"no-store",signal:AbortSignal.timeout(12000)});
+       if(!poll.ok)throw Error("Error comprobando aprobación.");
+       const answer=await poll.json();
+       if(answer.state==="denied")throw Error("Conexión denegada en Companion.");
+       if(answer.state==="expired")throw Error("La solicitud ha caducado.");
+       if(answer.state==="approved"){granted=answer.token;break;}
+     }
+     if(typeof granted!=="string"||!granted||granted.length>160)throw Error("No se recibió aprobación.");
+     token=granted;
+     const status=await request("/status");
+     if(status.api!=="rabbitmole-discovery-bridge-v1"||status.available!==true)throw Error("Servicio incompatible.");
+     connected=true;backend=status.backend==="nmap"?"Nmap":status.backend==="native"?"ping":"";
+     const list=el("bridge-suggestions"),field=el("bridge-cidr");list.replaceChildren();
+     for(const row of Array.isArray(status.interfaces)?status.interfaces:[]){
+       if(typeof row.cidr!=="string")continue;
+       const option=document.createElement("option");option.value=row.cidr;
+       option.label=String(row.interface||"Red")+" · "+row.cidr;list.append(option);
+     }
+     if(field&&!field.value&&status.interfaces?.[0]?.cidr)field.value=status.interfaces[0].cidr;
+     setStatus("Equipo conectado. Confirma alcance y autorización antes del escaneo.","success");
+   }catch(error){token="";connected=false;backend="";capture=null;setStatus("Emparejamiento: "+diagnostic(error),"error");}
+   finally{busy=false;refresh();}
  }
  async function connect(){
    if(busy)return;
@@ -148,9 +187,14 @@
    const panel=document.createElement("section");panel.id="bridge-panel";
    panel.className="bridge-panel";panel.setAttribute("aria-label","Discovery LAN guiado");
    panel.innerHTML=`<h3>Discovery guiado · PWA y equipo auditor</h3>
-     <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Necesitas un PC autorizado con Python/Nmap o generar un JSON en Android con Termux.</p>
+     <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Descarga el Companion en Windows: abre una ventana local, inicia el puente y permite copiar el token sin escribir comandos. También puedes generar JSON en Android con Termux.</p>
      <details class="bridge-setup" open><summary><strong>1. Preparar el equipo auditor</strong></summary>
-       <p><a class="button quiet" href="./discovery-kit.zip" download="rabbitmole-discovery-kit.zip">Descargar kit Discovery sin clonar el repositorio (.zip)</a></p><p>Descomprime el kit, abre PowerShell desde su carpeta raíz (contiene <code>discovery/</code>) y sigue el método correspondiente.</p><p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
+       <p><a class="button quiet" href="./discovery-windows.zip" download="RabbitMole-Companion-Windows.zip">Companion Windows (cuando esté incluido en esta versión)</a></p><p><a class="button quiet" href="./discovery-android-termux.zip" download="rabbitmole-termux.zip">Android · Kit Termux offline</a></p><p><a class="button quiet" href="./discovery-ios-guide.txt" download="rabbitmole-ios-instrucciones.txt">iOS / iPadOS · Guía de conexión offline</a></p><p><a class="button quiet" href="./discovery-kit.zip" download="rabbitmole-discovery-kit.zip">Kit de respaldo (.zip, requiere Python)</a></p><p class="subtle">El ejecutable se incorpora cuando exista una compilación Windows validada. Los kits se pueden conservar en la caché offline si hay espacio.</p><p>Descomprime el kit y en Windows abre <code>discovery/iniciar.cmd</code> con doble clic. En el Companion pulsa «Iniciar puente» y «Copiar token temporal», y después pégalo aquí. El kit incluye setup.ps1 y setup.sh para preparar dependencias. No inicia escaneos por sí solo.</p><p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
+       <div class="bridge-stage"><h4>Conectar este PC</h4>
+         <p>Abre RabbitMole Companion, pulsa «Activar Discovery» y después «Conectar este PC» aquí. Aprueba la solicitud en el Companion: no tendrás que copiar un token.</p>
+         <button type="button" id="bridge-pair-local" class="button accent">Conectar este PC</button>
+         <p class="subtle">Solo en el mismo PC. Desde una tablet utiliza HTTPS LAN o una captura JSON.</p>
+       </div>
        <div class="intake-command"><div class="intake-command-head"><strong>Opción A · mismo PC, sin certificados</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
          <pre><code id="bridge-command-pc"></code></pre></div>
        <button type="button" id="bridge-use-local" class="button quiet">Usar servidor de este PC (127.0.0.1)</button>
@@ -159,19 +203,19 @@
          <div class="intake-command"><div class="intake-command-head"><strong>Servicio HTTPS en la LAN</strong><button type="button" class="button quiet small" id="bridge-copy-lan">Copiar comando</button></div>
            <pre><code id="bridge-command-lan"></code></pre></div>
        </details>
-       <p class="subtle">Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall y detén el proceso con Ctrl+C. La PWA no puede iniciar una consola automáticamente.</p>
+       <p class="subtle">Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall y detén el proceso con Ctrl+C. El Companion se cierra y detiene el puente desde su ventana. La PWA no puede ejecutarlo automáticamente.</p>
        <details><summary>Android / Termux · opción sin servidor intermedio</summary>
          <p>La PWA no puede abrir la consola de Termux ni tiene un directorio de scripts local. Ejecuta Discovery desde Termux y después importa el JSON con «Subir archivo».</p>
          <div class="intake-command"><div class="intake-command-head"><strong>Preparación de Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre><code id="bridge-command-android">pkg update
-pkg install python git nmap
+pkg install python nmap unzip
 termux-setup-storage
-git clone https://github.com/sempitern0/RabbitMole.git
-cd RabbitMole
-python discovery/discover.py doctor
-python discovery/discover.py wizard</code></pre></div>
+unzip ~/storage/downloads/rabbitmole-termux.zip -d ~/rabbitmole-discovery
+cd ~/rabbitmole-discovery
+python discover.py doctor
+python discover.py wizard</code></pre></div>
          <p class="subtle">Guarda el JSON en una carpeta accesible desde Archivos. Android puede limitar Nmap o el ping.</p>
        </details>
-       <p class="subtle">En iOS/iPadOS se recomienda una estación PC o un JSON importado. Una web no puede iniciar una shell arbitraria en su supuesto directorio de instalación.</p>
+       <p class="subtle">En iOS/iPadOS, puedes guardar el kit y las instrucciones para uso offline, pero no ejecutar Termux: utiliza una estación HTTPS confiable o importa JSON. Una web no puede iniciar una shell arbitraria en su supuesto directorio de instalación.</p>
      </details>
      <div class="bridge-stage"><h4>2. Comprobar la estación</h4>
        <p class="subtle">El <strong>token de consola</strong> es una clave temporal que imprime el servicio Python. No es un token Cloudflare y no se guarda en el expediente.</p>
@@ -203,6 +247,7 @@ python discovery/discover.py wizard</code></pre></div>
    el("bridge-copy-lan").addEventListener("click",()=>void copyCommand("bridge-command-lan"));
    el("bridge-copy-pc").addEventListener("click",()=>void copyCommand("bridge-command-pc"));
    el("bridge-copy-android").addEventListener("click",()=>void copyCommand("bridge-command-android"));
+   el("bridge-pair-local").addEventListener("click",()=>void pairLocal());
    el("bridge-connect").addEventListener("click",()=>void connect());
    el("bridge-scan").addEventListener("click",()=>void scan());
    el("bridge-assets").addEventListener("click",()=>void review("assets"));

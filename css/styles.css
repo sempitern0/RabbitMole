@@ -877,42 +877,6 @@ main {
   --hero-c: #5f7d87;
   --sidebar-active: #eadcc5;
 }
-:root[data-palette="forest"] {
-  --navy: #17281f;
-  --navy2: #284532;
-  --brand: #287e59;
-  --brand-hover: #1c6344;
-  --teal: #287e59;
-  --brand-tint: #eaf5ed;
-  --hero-a: #1a3327;
-  --hero-b: #296245;
-  --hero-c: #49876c;
-  --sidebar-active: #8be2a7;
-}
-:root[data-palette="indigo"] {
-  --navy: #1c2246;
-  --navy2: #283667;
-  --brand: #5965c9;
-  --brand-hover: #414ca5;
-  --teal: #5965c9;
-  --brand-tint: #eeeefe;
-  --hero-a: #20235b;
-  --hero-b: #3e4fa0;
-  --hero-c: #6b70ce;
-  --sidebar-active: #9aa7ff;
-}
-:root[data-palette="graphite"] {
-  --navy: #151a24;
-  --navy2: #27303c;
-  --brand: #465b6c;
-  --brand-hover: #324450;
-  --teal: #3d6371;
-  --brand-tint: #eaf1f5;
-  --hero-a: #1a232d;
-  --hero-b: #344554;
-  --hero-c: #516374;
-  --sidebar-active: #a6bac8;
-}
 .button.accent {
   background: var(--brand);
   border-color: var(--brand);
@@ -1108,230 +1072,42 @@ nav button.active {
   --report-muted: #6a7278;
   --report-cover: #0c1a2a;
 }
-:root[data-palette="forest"] {
-  --report-accent: #287e59;
-  --report-heading: #285c42;
-  --report-tint: #eaf5ed;
-  --report-muted: #557566;
-  --report-cover: #1a3327;
-}
-:root[data-palette="indigo"] {
-  --report-accent: #5965c9;
-  --report-heading: #333e82;
-  --report-tint: #eeefff;
-  --report-muted: #676b94;
-  --report-cover: #242957;
-}
-:root[data-palette="graphite"] {
-  --report-accent: #526779;
-  --report-heading: #2b4154;
-  --report-tint: #edf2f6;
-  --report-muted: #637788;
-  --report-cover: #15242f;
-}
-:root[data-palette="midnight"] {
-  --report-accent: #5ca8f0;
-  --report-heading: #264879;
-  --report-tint: #e9f2fb;
-  --report-muted: #51708b;
-  --report-cover: #0d1b34;
-}
-:root[data-palette="obsidian"] {
-  --report-accent: #7c90a9;
-  --report-heading: #303d4d;
-  --report-tint: #edf0f3;
-  --report-muted: #586b7a;
-  --report-cover: #141b26;
-}
-:root[data-palette="pine-dark"] {
-  --report-accent: #299978;
-  --report-heading: #1e644f;
-  --report-tint: #e6f6ef;
-  --report-muted: #54806b;
-  --report-cover: #0c2b20;
-}
-:root[data-palette="amethyst-dark"] {
-  --report-accent: #986bd2;
-  --report-heading: #60418d;
-  --report-tint: #f2eafa;
-  --report-muted: #83639f;
-  --report-cover: #24153d;
-}
-:root[data-palette="crimson-dark"] {
-  --report-accent: #c45b77;
-  --report-heading: #87374e;
-  --report-tint: #fceef2;
-  --report-muted: #8d5a67;
-  --report-cover: #3c1524;
-}
-:root[data-palette="midnight"],
-:root[data-palette="obsidian"],
-:root[data-palette="pine-dark"],
-:root[data-palette="amethyst-dark"],
-:root[data-palette="crimson-dark"] {
+/* RabbitMole dark: share composition and component geometry with the light mode. */
+:root[data-palette="rabbitmole-dark"] {
   color-scheme: dark;
-  --ink: #e2edf4;
-  --muted: #a6b8c7;
-  --line: #33455a;
-  --paper: #1b2939;
-  --canvas: #101925;
-  --navy: #09131f;
-  --navy2: #152435;
-  --brand: #4ba7c6;
-  --brand-hover: #347e9c;
-  --teal: #69c1c5;
-  --brand-tint: #163a44;
-  --hero-a: #102a3b;
-  --hero-b: #183f51;
-  --hero-c: #205b64;
-  --sidebar-active: #6ce2ca;
+  --navy: #081425; --navy2: #172b41;
+  --ink: #e7edf3; --muted: #b0c0d0; --line: #384b5e;
+  --paper: #192a3b; --canvas: #0f1c2b;
+  --brand: #476c80; --brand-hover: #3e6479; --brand-tint: #294457;
+  --teal: #a6d6e1; --light-teal: #294457;
+  --hero-a: #081425; --hero-b: #17304a; --hero-c: #385c70;
+  --sidebar-active: #eadcc5;
+  /* White paper PDF color tokens remain accessible in dark UI. */
+  --report-accent: #587680; --report-heading: #223345;
+  --report-tint: #edf1f2; --report-muted: #6a7278; --report-cover: #0c1a2a;
 }
-:root[data-palette="obsidian"] {
-  --canvas: #111318;
-  --paper: #1e222b;
-  --line: #3e4654;
-  --navy: #0c0f15;
-  --teal: #b4c9de;
-  --brand: #687d95;
-  --brand-hover: #506277;
-  --hero-a: #131822;
-  --hero-b: #263342;
-  --hero-c: #415264;
+:root[data-palette="rabbitmole-dark"] :is(.topbar,.card,.stat) {
+  background: var(--paper); color: var(--ink);
 }
-:root[data-palette="pine-dark"] {
-  --canvas: #0f1915;
-  --paper: #192921;
-  --line: #365245;
-  --navy: #07140f;
-  --teal: #86d4af;
-  --brand: #398c68;
-  --brand-hover: #286a4d;
-  --hero-a: #102218;
-  --hero-b: #1a4330;
-  --hero-c: #306c4b;
+:root[data-palette="rabbitmole-dark"] :is(.entry,.audit-row,.empty) {
+  background: var(--paper); border-color: var(--line);
 }
-:root[data-palette="amethyst-dark"] {
-  --canvas: #191522;
-  --paper: #282039;
-  --line: #4c3d61;
-  --navy: #140f22;
-  --teal: #c9afff;
-  --brand: #9067c3;
-  --brand-hover: #7751a7;
-  --hero-a: #20122e;
-  --hero-b: #38234f;
-  --hero-c: #5c3978;
+:root[data-palette="rabbitmole-dark"] :is(
+  .field input,.field select,.field textarea,.theme-select select,.library-toolbar input
+) { background: var(--canvas); color: var(--ink); border-color: var(--line); }
+:root[data-palette="rabbitmole-dark"] :is(
+  .field label,.breadcrumb strong,.entry-head strong,.stat .metric,.empty b
+) { color: var(--ink); }
+:root[data-palette="rabbitmole-dark"] :is(.notice,.notice.warn) {
+  background: var(--paper); color: var(--muted); border-color: var(--line);
 }
-:root[data-palette="crimson-dark"] {
-  --canvas: #21151a;
-  --paper: #302029;
-  --line: #583949;
-  --navy: #1b1017;
-  --teal: #f3a6c3;
-  --brand: #bd607e;
-  --brand-hover: #a94e6b;
-  --hero-a: #301723;
-  --hero-b: #5a293c;
-  --hero-c: #823c59;
+:root[data-palette="rabbitmole-dark"] .button.quiet {
+  background: var(--canvas); color: var(--ink); border-color: var(--line);
 }
-:root[data-palette$="dark"] .topbar,
-:root[data-palette="midnight"] .topbar,
-:root[data-palette="obsidian"] .topbar,
-:root[data-palette$="dark"] .card,
-:root[data-palette="midnight"] .card,
-:root[data-palette="obsidian"] .card,
-:root[data-palette$="dark"] .stat,
-:root[data-palette="midnight"] .stat,
-:root[data-palette="obsidian"] .stat {
-  background: var(--paper);
-  color: var(--ink);
+:root[data-palette="rabbitmole-dark"] .button.danger {
+  background: var(--canvas); color: #ffd2d8; border-color: #b46a7a;
 }
-:root[data-palette$="dark"] :is(.entry, .audit-row, .empty),
-:root[data-palette="midnight"] :is(.entry, .audit-row, .empty),
-:root[data-palette="obsidian"] :is(.entry, .audit-row, .empty) {
-  background: var(--paper);
-  border-color: var(--line);
-}
-:root[data-palette$="dark"]
-  :is(
-    .field input,
-    .field select,
-    .field textarea,
-    .theme-select select,
-    .library-toolbar input
-  ),
-:root[data-palette="midnight"]
-  :is(
-    .field input,
-    .field select,
-    .field textarea,
-    .theme-select select,
-    .library-toolbar input
-  ),
-:root[data-palette="obsidian"]
-  :is(
-    .field input,
-    .field select,
-    .field textarea,
-    .theme-select select,
-    .library-toolbar input
-  ) {
-  background: var(--canvas);
-  color: var(--ink);
-  border-color: var(--line);
-}
-:root[data-palette$="dark"]
-  :is(
-    .field label,
-    .breadcrumb strong,
-    .entry-head strong,
-    .stat .metric,
-    .empty b
-  ),
-:root[data-palette="midnight"]
-  :is(
-    .field label,
-    .breadcrumb strong,
-    .entry-head strong,
-    .stat .metric,
-    .empty b
-  ),
-:root[data-palette="obsidian"]
-  :is(
-    .field label,
-    .breadcrumb strong,
-    .entry-head strong,
-    .stat .metric,
-    .empty b
-  ) {
-  color: var(--ink);
-}
-:root[data-palette$="dark"] :is(.notice, .notice.warn),
-:root[data-palette="midnight"] :is(.notice, .notice.warn),
-:root[data-palette="obsidian"] :is(.notice, .notice.warn) {
-  background: var(--paper);
-  color: var(--muted);
-  border-color: var(--line);
-}
-:root[data-palette$="dark"] .button.quiet,
-:root[data-palette="midnight"] .button.quiet,
-:root[data-palette="obsidian"] .button.quiet {
-  background: var(--canvas);
-  color: var(--ink);
-  border-color: var(--line);
-}
-:root[data-palette$="dark"] .button.danger,
-:root[data-palette="midnight"] .button.danger,
-:root[data-palette="obsidian"] .button.danger {
-  background: var(--canvas);
-  color: #f6a8b1;
-  border-color: #8a4152;
-}
-:root[data-palette$="dark"] .entry-head,
-:root[data-palette="midnight"] .entry-head,
-:root[data-palette="obsidian"] .entry-head {
-  border-color: var(--line);
-}
+:root[data-palette="rabbitmole-dark"] .entry-head { border-color: var(--line); }
 .logo-preview {
   display: flex;
   gap: 20px;
@@ -1412,8 +1188,8 @@ nav button.active {
 /* v5: accessibility-first typography; the open source Atkinson Hyperlegible
    may be added locally later: see FONTS.md. No external font requests. */
 :root {
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.5;
   font-family:
     "Atkinson Hyperlegible",
     "Segoe UI",
@@ -1454,8 +1230,13 @@ textarea {
 .field input,
 .field textarea,
 .field select {
-  min-height: 48px;
+  min-height: 46px;
   font-size: 1rem;
+}
+/* Editable inputs stay 16px on compact/touch screens (iOS focus zoom prevention). */
+@media (max-width: 1000px), (pointer: coarse) {
+  .field input, .field select, .field textarea, .theme-select select,
+  input:not([type="checkbox"]):not([type="radio"]), textarea { font-size: 16px; }
 }
 .field label {
   font-weight: 720;
@@ -1464,7 +1245,7 @@ textarea {
   font-size: 0.91rem;
 }
 .page-title {
-  font-size: clamp(1.85rem, 3vw, 2.35rem);
+  font-size: clamp(1.75rem, 2.4vw, 2.15rem);
 }
 .topbar {
   background: var(--paper);
@@ -1524,153 +1305,13 @@ textarea {
 :root .button.quiet:hover {
   background: var(--brand-tint);
 }
-:root[data-palette="ocean"] {
-  --canvas: #eef7fb;
-  --paper: #fff;
-  --line: #d3e7ed;
-  --brand: #03798c;
-  --brand-hover: #005f71;
-  --brand-tint: #e5f5f7;
-  --teal: #03798c;
+/* Dark mode semantics use the same tokens as every workbench surface. */
+:root[data-palette="rabbitmole-dark"] .hero p { color: #e6ebf6; }
+:root[data-palette="rabbitmole-dark"] .notice {
+  color: var(--ink); background: var(--brand-tint); border-color: var(--line);
 }
-:root[data-palette="forest"] {
-  --canvas: #f0f7ef;
-  --paper: #fff;
-  --line: #d3e6d6;
-  --brand-tint: #e3f5e7;
-}
-:root[data-palette="indigo"] {
-  --canvas: #f3f1ff;
-  --paper: #fff;
-  --line: #dcd9f5;
-  --brand-tint: #e9e9fd;
-}
-:root[data-palette="graphite"] {
-  --canvas: #ebedf1;
-  --paper: #fff;
-  --line: #d2dbe2;
-  --brand-tint: #e4edf2;
-}
-:root[data-palette="midnight"] {
-  --canvas: #0b1628;
-  --paper: #152a40;
-  --line: #29455e;
-  --ink: #eaf4ff;
-  --muted: #a9bfd7;
-  --navy: #051225;
-  --brand: #2578dc;
-  --brand-hover: #165cb0;
-  --teal: #8bcbff;
-  --brand-tint: #193d66;
-  --hero-a: #061a39;
-  --hero-b: #15366a;
-  --hero-c: #2e67aa;
-}
-:root[data-palette="obsidian"] {
-  --canvas: #101115;
-  --paper: #24252a;
-  --line: #454953;
-  --ink: #f3f4f6;
-  --muted: #bdc2cb;
-  --navy: #07080a;
-  --brand: #9dabbc;
-  --brand-hover: #7c8ca2;
-  --teal: #cfdae7;
-  --brand-tint: #3c414b;
-  --hero-a: #14161c;
-  --hero-b: #333844;
-  --hero-c: #5c6170;
-}
-:root[data-palette="pine-dark"] {
-  --canvas: #081c16;
-  --paper: #16352a;
-  --line: #31594a;
-  --ink: #e4f8ea;
-  --muted: #acceb9;
-  --navy: #04120d;
-  --brand: #249c74;
-  --brand-hover: #1b7859;
-  --teal: #9aebc8;
-  --brand-tint: #26503c;
-  --hero-a: #051f13;
-  --hero-b: #165c3c;
-  --hero-c: #388c65;
-}
-:root[data-palette="amethyst-dark"] {
-  --canvas: #171023;
-  --paper: #2e2145;
-  --line: #57446f;
-  --ink: #f3ecff;
-  --muted: #c5b4df;
-  --navy: #120820;
-  --brand: #9764de;
-  --brand-hover: #754ab3;
-  --teal: #dab7ff;
-  --brand-tint: #493365;
-  --hero-a: #210f37;
-  --hero-b: #4c2675;
-  --hero-c: #8250af;
-}
-:root[data-palette="crimson-dark"] {
-  --canvas: #230f1b;
-  --paper: #3b1e2b;
-  --line: #6f3850;
-  --ink: #fff0f4;
-  --muted: #e0b0c4;
-  --navy: #190912;
-  --brand: #d66085;
-  --brand-hover: #b34a6d;
-  --teal: #ffbdd0;
-  --brand-tint: #67304a;
-  --hero-a: #290b1a;
-  --hero-b: #762b4e;
-  --hero-c: #bd5b7e;
-}
-/* Distinctly visible theme surfaces and accessible state on dark backgrounds. */
-:root:is(
-    [data-palette="midnight"],
-    [data-palette="obsidian"],
-    [data-palette="pine-dark"],
-    [data-palette="amethyst-dark"],
-    [data-palette="crimson-dark"]
-  )
-  .hero
-  p {
-  color: #e6ebf6;
-}
-:root:is(
-    [data-palette="midnight"],
-    [data-palette="obsidian"],
-    [data-palette="pine-dark"],
-    [data-palette="amethyst-dark"],
-    [data-palette="crimson-dark"]
-  )
-  .entry-head {
-  border-color: var(--line);
-}
-:root:is(
-    [data-palette="midnight"],
-    [data-palette="obsidian"],
-    [data-palette="pine-dark"],
-    [data-palette="amethyst-dark"],
-    [data-palette="crimson-dark"]
-  )
-  .notice {
-  color: var(--ink);
-  background: var(--brand-tint);
-  border-color: var(--line);
-}
-:root:is(
-    [data-palette="midnight"],
-    [data-palette="obsidian"],
-    [data-palette="pine-dark"],
-    [data-palette="amethyst-dark"],
-    [data-palette="crimson-dark"]
-  )
-  .timeline
-  b {
-  background: var(--brand-tint);
-  color: var(--ink);
+:root[data-palette="rabbitmole-dark"] .timeline b {
+  color: var(--ink); background: var(--brand-tint);
 }
 .brand-mark {
   width: 52px;
@@ -1754,46 +1395,12 @@ textarea {
 :root[data-palette="rabbitmole"] .report-cover .sup {
   color: #b7cbd0;
 }
-:root[data-palette="forest"] {
-  --pdf-cover-bg: #e6f4e5;
-  --pdf-cover-ink: #1a4632;
-  --pdf-cover-sub: #3c7053;
+:root[data-palette="rabbitmole-dark"] {
+  --pdf-cover-bg: #0c1a2a;
+  --pdf-cover-ink: #f3e6d2;
+  --pdf-cover-sub: #a5bcc5;
 }
-:root[data-palette="indigo"] {
-  --pdf-cover-bg: #e7e8ff;
-  --pdf-cover-ink: #292962;
-  --pdf-cover-sub: #505ba9;
-}
-:root[data-palette="graphite"] {
-  --pdf-cover-bg: #e3e8ee;
-  --pdf-cover-ink: #1d2e3b;
-  --pdf-cover-sub: #47596c;
-}
-:root[data-palette="midnight"] {
-  --pdf-cover-bg: #102a54;
-  --pdf-cover-ink: #fff;
-  --pdf-cover-sub: #bbdbff;
-}
-:root[data-palette="obsidian"] {
-  --pdf-cover-bg: #20242c;
-  --pdf-cover-ink: #fff;
-  --pdf-cover-sub: #d4dfef;
-}
-:root[data-palette="pine-dark"] {
-  --pdf-cover-bg: #103b2a;
-  --pdf-cover-ink: #fff;
-  --pdf-cover-sub: #b5f6d7;
-}
-:root[data-palette="amethyst-dark"] {
-  --pdf-cover-bg: #39204e;
-  --pdf-cover-ink: #fff;
-  --pdf-cover-sub: #e5d2ff;
-}
-:root[data-palette="crimson-dark"] {
-  --pdf-cover-bg: #561b39;
-  --pdf-cover-ink: #fff;
-  --pdf-cover-sub: #ffd1e3;
-}
+:root[data-palette="rabbitmole-dark"] .report-cover .sup { color: #b7cbd0; }
 .report-cover {
   background: var(--pdf-cover-bg);
   color: var(--pdf-cover-ink);
@@ -2175,10 +1782,10 @@ button:focus-visible {
   accent-color: var(--brand);
 }
 .card h2 {
-  font-size: 1.3rem;
+  font-size: 1.22rem;
 }
 .card h3 {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
 }
 .button {
   font-size: 0.92rem;
@@ -2320,13 +1927,7 @@ button:focus-visible {
   }
 }
 
-/* Navigation accent is independent of status colors and follows each palette. */
-:root[data-palette="midnight"] { --sidebar-active: #9bc5ff; }
-:root[data-palette="obsidian"] { --sidebar-active: #b4c9de; }
-:root[data-palette="pine-dark"] { --sidebar-active: #92dab1; }
-:root[data-palette="amethyst-dark"] { --sidebar-active: #e1c2ff; }
-:root[data-palette="crimson-dark"] { --sidebar-active: #ffb8ce; }
-
+/* Sidebar icons inherit the two supported palette tokens. */
 /* Vector navigation icons: fixed geometry and sharp strokes across display densities. */
 #global-navigation button .nav-icon {
   display: block;

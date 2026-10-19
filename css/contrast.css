@@ -13,17 +13,13 @@
   --aw-card-bg: color-mix(in srgb, var(--canvas) 70%, var(--brand-tint));
   --aw-field-focus: var(--brand);
 }
-:root[data-palette="midnight"],
-:root[data-palette="obsidian"],
-:root[data-palette="pine-dark"],
-:root[data-palette="amethyst-dark"],
-:root[data-palette="crimson-dark"] {
+:root[data-palette="rabbitmole-dark"] {
   color-scheme: dark;
-  --aw-field-bg: #101b27;
-  --aw-field-placeholder: #b5c4d2;
-  --aw-field-focus-ring: #63aadb80;
-  --aw-field-border: #637b91;
-  --aw-field-hover: #a0b5c8;
+  --aw-field-bg: #0f1c2b;
+  --aw-field-placeholder: #b0c0d0;
+  --aw-field-focus-ring: #a6d6e180;
+  --aw-field-border: #748a9d;
+  --aw-field-hover: #9fb2c2;
   --aw-card-bg: var(--paper);
   --aw-card-bg: color-mix(in srgb, var(--paper) 82%, var(--brand-tint));
 }

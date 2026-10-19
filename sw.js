@@ -1,11 +1,13 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v109-discovery-loopback";
+const CACHE_NAME = "rabbitmole-shell-v112-offline-discovery-packages";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
 const clientCache = new Map();
 
+const DISCOVERY_PACKAGES = new Set(["discovery-kit.zip","discovery-android-termux.zip","discovery-windows.zip","discovery-ios-guide.txt"]);
+const OPTIONAL_PACKAGES = ["./discovery-kit.zip","./discovery-android-termux.zip","./discovery-windows.zip","./discovery-ios-guide.txt"];
 const OPTIONAL_FONTS = ["Regular", "Bold", "Italic", "BoldItalic"].map(
   (weight) => `./fonts/AtkinsonHyperlegible-${weight}.woff2`,
 );
@@ -254,6 +256,13 @@ self.addEventListener("install", (event) => {
         await cache.put(urlFor(READY_KEY), new Response("ready"));
         const readiness = await shellHealth();
         if (!readiness.ok) throw Error("La versión offline está incompleta.");
+        await Promise.all(OPTIONAL_PACKAGES.map(async path => {
+          try {
+            const response = await fetch(new Request(urlFor(path), {cache:"reload",credentials:"same-origin"}));
+            if (response.ok && !response.redirected && response.type !== "opaque")
+              await cache.put(urlFor(path), response);
+          } catch (_ignored) { /* Optional packages do not prevent PWA installation. */ }
+        }));
         await Promise.all(
           OPTIONAL_FONTS.map(async (path) => {
             try {
@@ -297,6 +306,22 @@ self.addEventListener("fetch", (event) => {
     !url.pathname.startsWith(new URL(self.registration.scope).pathname)
   )
     return;
+  const packageName=url.pathname.slice(url.pathname.lastIndexOf("/")+1);
+  if (DISCOVERY_PACKAGES.has(packageName) && url.pathname===new URL("./"+packageName,self.registration.scope).pathname) {
+    event.respondWith((async()=>{
+      const name=await shellForClient(event);
+      const cache=name&&await caches.open(name);
+      const existing=cache&&await cache.match(urlFor("./"+packageName));
+      if(existing)return existing;
+      try{
+        const response=await fetch(request);
+        if(response.ok && !response.redirected && response.type!=="opaque" && cache)
+          event.waitUntil(cache.put(urlFor("./"+packageName),response.clone()));
+        return response;
+      }catch(_error){return new Response("Paquete no disponible offline en este dispositivo.",{status:503});}
+    })());
+    return;
+  }
   // Local Discovery has no offline cache or Cloudflare equivalent; always hit the loopback helper.
   if (url.pathname.startsWith(new URL("./_local/discovery/",self.registration.scope).pathname)) return;
   // Connectivity probes must not be answered from CacheStorage.

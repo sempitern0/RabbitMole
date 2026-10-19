@@ -1,0 +1,43 @@
+name: Build portable Windows Companion
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  companion:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate pairing and bridge
+        run: python -m unittest discover -s tests -p "test_discovery*.py" -v
+      - name: Build standalone executable
+        run: |
+          python -m pip install pyinstaller==6.16.0
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name RabbitMole-Companion --paths discovery --add-data "collect-local.ps1;." discovery/companion.py
+      - name: Package portable ZIP
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force portable | Out-Null
+          Copy-Item dist/RabbitMole-Companion.exe portable/
+          @'
+          RabbitMole Companion - portable Windows edition
+          Extract this ZIP, then double-click RabbitMole-Companion.exe.
+          Activate Discovery, open the same-PC PWA and choose Conectar este PC.
+          Approve the request in Companion. Confirm authorized CIDR before scanning.
+          Uninstall: close Companion, delete the extracted folder.
+          Exported audit JSON files are separate; handle according to policy.
+          Unsigned executable: verify the release provenance and SHA256.
+          '@ | Set-Content -Encoding UTF8 portable/README.txt
+          Get-FileHash portable/RabbitMole-Companion.exe -Algorithm SHA256 | ForEach-Object {
+            "$($_.Hash.ToLowerInvariant())  RabbitMole-Companion.exe"
+          } | Set-Content -Encoding ascii portable/SHA256SUMS.txt
+          Compress-Archive -Path portable/* -DestinationPath RabbitMole-Companion-Windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RabbitMole-Companion-Windows
+          path: RabbitMole-Companion-Windows.zip
+          if-no-files-found: error

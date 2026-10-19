@@ -38,7 +38,7 @@
 .glossary-aliases,.glossary-disclaimer{font-size:.85rem;color:var(--muted);line-height:1.5;margin-top:1.1rem}
 .glossary-empty{padding:1.5rem;color:var(--muted)}
 .glossary-shell mark{background:#ffe4a0;color:#392a08;border-radius:3px;padding:0 .1em}
-:root[data-palette$="dark"] .glossary-shell mark,:root[data-palette="midnight"] .glossary-shell mark,:root[data-palette="obsidian"] .glossary-shell mark{background:#67501f;color:#fff4ce}
+:root[data-palette="rabbitmole-dark"] .glossary-shell mark{background:#67501f;color:#fff4ce}
 .glossary-shell :is(button,input):focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 @media(max-width:760px){.glossary-layout{grid-template-columns:1fr;gap:.75rem}.glossary-index{max-height:12rem}.glossary-detail{min-height:0}.glossary-toolbar{grid-template-columns:1fr}.glossary-counter{padding:.5rem 0}}
 @media print{.glossary-shell,.glossary-help{display:none!important}}

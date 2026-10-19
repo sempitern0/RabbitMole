@@ -14,6 +14,7 @@ COMMANDS = [
     ['node', 'tests/test_app_modules.cjs'],
     ['node', 'tests/test_storage.cjs'],
     ['node', 'tests/test_pending_writes.cjs'],
+    ['node', 'tests/test_assistant_flow.cjs'],
     ['node', 'tests/test_mobile_choices.cjs'],
     ['node', 'tests/test_photo_hints.cjs'],
     ['node', 'tests/test_palette_preferences.cjs'],

@@ -376,3 +376,7 @@ The offline glossary contains **212 concepts**, **96 diagnostic guides**, and **
 ## Field release acceptance
 
 See [field audit readiness](docs/RELEASE_READINESS.md) for persistence fixes, release checks and the real-device acceptance steps before a visit.
+
+### Faster assistant navigation
+
+The library's **Resume · last step** action remembers each audit's last section in this browser, outside its exported JSON. New audits start at client/scope. A top step selector and Evidence/Quality shortcuts avoid scrolling to the form footer. Each record offers **Next record** within visible search results and **Add another record**, which focuses a blank entry without copying observations or verification states. Confirmed audits remain navigable but cannot add/edit records.

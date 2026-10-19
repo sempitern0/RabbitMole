@@ -610,13 +610,26 @@
       alert("No se ha creado la auditoría: " + error.message);
     }
   }
+  // Local navigation preference only: never exported as audit evidence/progress.
+  const auditStepKey = (id) => "rabbitmole:ui:last-step:v1:" + id;
+  function savedAuditStep(id) {
+    try {
+      const step = localStorage.getItem(auditStepKey(id));
+      if (nav.some(([key]) => key === step)) return step;
+    } catch (_ignored) {}
+    return "dashboard";
+  }
+  function rememberAuditStep(id, step) {
+    if (!id || !nav.some(([key]) => key === step)) return;
+    try { localStorage.setItem(auditStepKey(id), step); } catch (_ignored) {}
+  }
   async function switchAudit(id) {
     const record = records.find((r) => r.id === id);
     if (!record) return;
     try {
       await flush();
       setActive(record);
-      move("dashboard");
+      move(savedAuditStep(id));
     } catch (error) {
       alert(error.message);
     }
@@ -634,6 +647,7 @@
       await flush();
       await enqueue(() => repository.remove(id));
       records = records.filter((r) => r.id !== id);
+      try { localStorage.removeItem(auditStepKey(id)); } catch (_ignored) {}
       if (currentId === id) {
         if (records.length) {
           setActive(
@@ -1104,7 +1118,7 @@
       ? items
           .map(
             (r) =>
-              `<article class="audit-row${r.id === currentId ? " current" : ""}"><div class="audit-description"><span class="eyebrow">${r.id === currentId ? "ABIERTA · " : ""}${html(r.audit.meta.reportId || "SIN REFERENCIA")}</span><h3>${html(r.audit.meta.project || "Auditoría sin título")}</h3><p>${html(r.audit.meta.client || "Cliente por identificar")} · Actualizada ${html(new Date(r.updatedAt).toLocaleString("es-ES"))}</p><small>${r.audit.assets.length} equipos · ${r.audit.findings.length} hallazgos · ${r.audit.controls.length} controles</small></div><div class="audit-actions"><button class="button accent" data-open="${html(r.id)}">Editar</button><button class="button quiet" data-copy="${html(r.id)}">Duplicar</button><button class="button quiet" data-export-record="${html(r.id)}">JSON</button><button class="button danger" data-delete-record="${html(r.id)}">Borrar</button></div></article>`,
+              `<article class="audit-row${r.id === currentId ? " current" : ""}"><div class="audit-description"><span class="eyebrow">${r.id === currentId ? "ABIERTA · " : ""}${html(r.audit.meta.reportId || "SIN REFERENCIA")}</span><h3>${html(r.audit.meta.project || "Auditoría sin título")}</h3><p>${html(r.audit.meta.client || "Cliente por identificar")} · Actualizada ${html(new Date(r.updatedAt).toLocaleString("es-ES"))}</p><small>${r.audit.assets.length} equipos · ${r.audit.findings.length} hallazgos · ${r.audit.controls.length} controles</small></div><div class="audit-actions"><button class="button accent" data-open="${html(r.id)}">Reanudar · ${html(nav.find(([key]) => key === savedAuditStep(r.id))?.[2] || "Resumen")}</button><button class="button quiet" data-copy="${html(r.id)}">Duplicar</button><button class="button quiet" data-export-record="${html(r.id)}">JSON</button><button class="button danger" data-delete-record="${html(r.id)}">Borrar</button></div></article>`,
           )
           .join("")
       : '<div class="empty"><b>Sin resultados</b>Prueba otro nombre o crea una auditoría.</div>';
@@ -1642,7 +1656,7 @@
                         )
                         .join("")}</div></div>`
                     : ""
-                }</div>`,
+                }<div class="action-row entry-continue"><button type="button" class="button quiet small" data-entry-next>Ir al siguiente registro ↓</button><button type="button" class="button accent small" data-add="${block}" ${state.documentControl?.status === "confirmed" || rows.length >= LIMIT_ROWS ? "disabled" : ""}>+ Añadir otro registro</button></div></div>`,
             )
             .join("")
         : `<div class="empty"><b>No hay registros todavía</b>Usa «Añadir registro» para empezar.</div>`
@@ -1781,9 +1795,16 @@
   }
   function renderWizardTop() {
     const i = nav.findIndex((n) => n[0] === page);
-    return i < 0
-      ? ""
-      : `<div class="wizard-top"><span>Fase ${i + 1} / ${nav.length}</span><progress max="${nav.length}" value="${i + 1}"></progress><span>${html(nav[i][2])}</span></div>`;
+    if (i < 0) return "";
+    const options = nav.map(([id, , label], index) =>
+      `<option value="${id}"${id === page ? " selected" : ""}>${index + 1}. ${html(label)}</option>`
+    ).join("");
+    return `<div class="wizard-top wizard-fast-nav" role="navigation" aria-label="Acceso rápido al asistente">
+      <label class="wizard-jump" for="wizard-step-top">Ir al paso <select id="wizard-step-top">${options}</select></label>
+      <span>Fase ${i + 1} / ${nav.length}</span>
+      <div class="action-row"><button type="button" class="button quiet small" data-go="evidence">Evidencias</button><button type="button" class="button quiet small" data-go="quality">Revisar pendientes</button>
+      ${nav[i + 1] ? `<button type="button" class="button accent small" data-go="${nav[i + 1][0]}">Siguiente →</button>` : ""}</div>
+    </div>`;
   }
   function renderWizard() {
     const current = nav.findIndex((n) => n[0] === page);
@@ -2490,6 +2511,7 @@
                               : renderGroup(page)) +
       (inLibrary ? "" : renderWizard());
     refreshRecordNavigator();
+    byId("wizard-step-top")?.addEventListener("change", (event) => move(event.target.value));
     byId("wizard-step-select")?.addEventListener("change", (event) =>
       move(event.target.value),
     );
@@ -2556,6 +2578,7 @@
       nav.some((n) => n[0] === section)
     ) {
       page = section;
+      rememberAuditStep(currentId, section);
       render();
       scrollTo(0, 0);
       // SPA navigation must announce the new page to keyboard and screen-reader users.
@@ -2572,7 +2595,7 @@
       "input,select,textarea,button",
     )) {
       if (
-        ["wizard-step-select", "record-search", "record-jump"].includes(
+        ["wizard-step-select", "wizard-step-top", "record-search", "record-jump"].includes(
           element.id,
         ) ||
         element.closest(".document-control") ||
@@ -3300,6 +3323,14 @@
         b.dataset.transfer !== undefined)
     )
       return;
+    if (b.hasAttribute("data-entry-next")) {
+      const entries = [...workspace.querySelectorAll(".entry[data-entry-key]")].filter(entry => !entry.hidden);
+      const index = entries.indexOf(b.closest(".entry"));
+      const next = entries[index + 1];
+      if (index >= 0 && next) recordNavigation.focus(next.dataset.entryKey, {clearSearch: false});
+      else byId("wizard-step-select")?.focus();
+      return;
+    }
     if (b.id === "record-search-clear") {
       clearRecordSearch();
       byId("record-search")?.focus();

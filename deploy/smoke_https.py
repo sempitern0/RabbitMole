@@ -14,6 +14,10 @@ def read(base, path):
         raise ValueError('URL de destino fuera del origen HTTPS.')
     try:
         with urlopen(Request(url, headers={'User-Agent': 'RabbitMoleDeploymentCheck/1'}), timeout=12) as response:
+            # urllib silently follows 307/308. PWA CacheStorage must not depend
+            # on canonical HTML redirects: verify the final path exactly.
+            if urlsplit(response.geturl()).path != urlsplit(url).path:
+                raise AssertionError('Redirección inesperada: ' + url + ' -> ' + response.geturl())
             return response.status, response.headers, response.read(3_000_000)
     except HTTPError as error:
         return error.code, error.headers, error.read(4096)

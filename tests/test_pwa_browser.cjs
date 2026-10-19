@@ -6,7 +6,8 @@ const {chromium}=require('playwright');
  const root=path.resolve('dist-pages');
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync('deploy/worker.js')).toString('base64'));
  const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.webmanifest':'application/manifest+json','.png':'image/png','.svg':'image/svg+xml','.woff2':'font/woff2'};
- const env={ASSETS:{fetch:async request=>{const u=new URL(request.url);const filename=path.join(root,u.pathname==='/'?'index.html':u.pathname);try{return new Response(fs.readFileSync(filename),{headers:{'Content-Type':mime[path.extname(filename)]||'text/plain'}});}catch{return new Response('Not found',{status:404});}}}};
+ const env={ASSETS:{fetch:async request=>{const u=new URL(request.url);// Emulate Cloudflare html_handling="none": / is not an implicit index.
+ const filename=path.join(root,u.pathname);try{return new Response(fs.readFileSync(filename),{headers:{'Content-Type':mime[path.extname(filename)]||'text/plain'}});}catch{return new Response('Not found',{status:404});}}}};
  const server=http.createServer(async(req,res)=>{try{const response=await worker.fetch(new Request('http://127.0.0.1:'+server.address().port+req.url,{method:req.method}),env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}catch(e){res.writeHead(500);res.end(String(e));}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const origin='http://127.0.0.1:'+server.address().port;
@@ -385,15 +386,38 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#f-assets-0-ram').inputValue(),'__custom__');
    assert.equal(await page.locator('#f-assets-0-ram').locator('xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " field ")][1]').locator('[data-custom]').inputValue(),'24 GiB verificados');
 
+   // Continue entry without returning to the page header; new rows stay blank.
+   await page.locator('#wizard-step-top').selectOption('assets');
+   const existingKey=await page.locator('.entry[data-entry-key]').first().getAttribute('data-entry-key');
+   await page.locator('.entry-continue [data-add="assets"]').first().click();
+   assert.notEqual(await page.locator('.entry[data-entry-key]').first().getAttribute('data-entry-key'),existingKey);
+   assert.equal(await page.locator('[data-block="assets"][data-field="name"]').first().inputValue(),'');
+   assert.equal(await page.locator('.entry[data-entry-key]').first().evaluate(el=>el.contains(document.activeElement)),true);
+   await page.locator('[data-entry-next]').first().click();
+   assert.equal(await page.locator('.entry[data-entry-key]').nth(1).evaluate(el=>el.contains(document.activeElement)),true);
+   // The top selector works without reaching the bottom of a long inventory.
+   await page.locator('#wizard-step-top').selectOption('software');
+   assert.equal(await page.locator('#wizard-step-select').inputValue(),'software');
+   await page.locator('#wizard-step-top').selectOption('assets');
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
    await page.waitForFunction(()=>document.getElementById('save-status').textContent.includes('Guardado'));
    await context.setOffline(true);await page.reload();
    await page.waitForFunction(()=>!!document.querySelector('[data-new]')||!!document.querySelector('#wizard-step-select'));
    // Start from library if navigation was not persisted, then reopen the audit.
    const open=page.locator('[data-open]');if(await open.count())await open.first().click();
+   assert.equal(await page.locator('#wizard-step-top').inputValue(),'assets','Reopening resumes the last audit step');
    await page.locator('#wizard-step-select').selectOption('assets');
    assert.equal(await page.locator('[data-block="assets"][data-field="name"]').first().inputValue(),'Equipo offline de prueba');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
+   await page.locator('#global-navigation [data-go="records"]').click();
+   const firstAudit=await page.locator('[data-open]').first().getAttribute('data-open');
+   assert.match(await page.locator('[data-open]').first().textContent(),/Reanudar.*Hardware/);
+   await page.locator('[data-new]').first().click();
+   assert.equal(await page.locator('#wizard-step-top').inputValue(),'engagement','A new audit starts at client and scope');
+   await page.locator('#wizard-step-top').selectOption('networks');
+   await page.locator('#global-navigation [data-go="records"]').click();
+   await page.locator('[data-open="'+firstAudit+'"]').click();
+   assert.equal(await page.locator('#wizard-step-top').inputValue(),'assets','Resume is isolated by audit');
    assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
    if(process.env.PWA_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.PWA_SCREENSHOT_DIR,installed?'pwa-installed.png':'pwa-web.png'),fullPage:false});
    await context.close();

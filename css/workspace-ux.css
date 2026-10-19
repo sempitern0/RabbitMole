@@ -1069,3 +1069,15 @@
 #pwa-install-card .mobile-terminal-setup summary:focus-visible,#pwa-install-card .mobile-terminal-setup a:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
 @media(max-width:720px){#pwa-install-card .mobile-terminal-setup{padding:.3rem .5rem}#pwa-install-card .mobile-terminal-setup>details{padding:.35rem .5rem}}
 @media print{#pwa-install-card .mobile-terminal-setup{display:none!important}}
+
+/* Fast audit navigation stays in normal flow so phone keyboards retain space. */
+#workspace .wizard-fast-nav { padding: .75rem; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+#workspace .wizard-fast-nav .action-row { margin: 0; flex-wrap: wrap; }
+#workspace .wizard-fast-nav .wizard-jump { flex-wrap: wrap; min-width: 0; }
+#workspace .wizard-fast-nav select { max-width: 100%; }
+#workspace .entry-continue { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid var(--line); flex-wrap: wrap; }
+@media(max-width:720px) {
+  #workspace .wizard-fast-nav .wizard-jump { width: 100%; }
+  #workspace .wizard-fast-nav select { flex: 1; min-width: 0; }
+  #workspace .wizard-fast-nav .button, #workspace .entry-continue .button { min-height: 44px; white-space: normal; }
+}

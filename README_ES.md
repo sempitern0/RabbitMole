@@ -410,3 +410,15 @@ La ayuda contextual de **Hardware** incorpora rol, modalidad, almacenamiento y a
 ## Aceptación para auditoría de campo
 
 Consulta [la preparación de auditoría](docs/RELEASE_READINESS_ES.md): correcciones de guardado, pruebas de entrega y comprobación en el dispositivo real antes de la visita.
+
+### Asistente: continuar con menos desplazamientos
+
+La biblioteca muestra **Reanudar · último paso** por expediente. La posición se recuerda únicamente en este navegador, separada del JSON; los nuevos expedientes empiezan en Cliente y alcance. En la cabecera puedes cambiar de fase, abrir Evidencias o Revisar pendientes sin llegar al final del formulario. Al pie de cada ficha, **Ir al siguiente registro** recorre los resultados visibles y **Añadir otro registro** abre una ficha nueva con foco, sin copiar datos ni comprobaciones. Los expedientes confirmados conservan navegación y bloquean altas/edición.
+
+### Diagnóstico de instalación de la PWA en Cloudflare Workers
+
+La distribución Workers de RabbitMole necesita responder **200 sin redirecciones** para `/` y `/index.html`, porque ambos documentos forman parte de la caché de instalación. El Worker resuelve `/` internamente a `index.html` y `wrangler.toml` usa `assets.html_handling = "none"`. El smoke test HTTPS también comprueba las redirecciones: el mensaje de Wrangler `Success! Deployed` solo demuestra publicación, no funcionamiento en navegadores reales.
+
+Antes de instalar o reparar, abre en el navegador del dispositivo la raíz `https://rabbitmole.danieldigitalspace.workers.dev/`, `/sw.js` y `/release.json`. Si ni siquiera la raíz abre en el móvil, **no es un problema de caché PWA**: comprueba acceso con Wi-Fi y datos móviles, DNS privado, VPN, bloqueos por ISP y políticas de Cloudflare Access. No borres los datos de RabbitMole ni desinstales hasta exportar los expedientes. Si la web abre, usa **Dispositivo e instalación**, comprueba **Protección del trabajo offline → Comprobar**, instala desde el navegador y prueba la apertura desde el icono sin conexión. No presupongas compatibilidad real de Android/iOS por una prueba emulada de Chromium.
+
+Para verificar desde un equipo con acceso público, ejecuta `python3 deploy/smoke_https.py https://rabbitmole.danieldigitalspace.workers.dev`. La comprobación consulta cada recurso del precache y la versión publicada; no envía expedientes. Una instalación previa defectuosa puede seguir usando su caché: actualiza tras respaldar los datos y usa la reparación solo desde el mismo origen y con conexión estable.

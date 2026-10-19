@@ -110,3 +110,12 @@ Descarga «Discovery kit» desde la PWA y extrae el ZIP. Abre `discovery/iniciar
 El botón **Capturar inventario de este Windows** utiliza `collect-local.ps1` incluido en el ZIP, solicita una ruta de salida JSON nueva y no sobrescribe archivos. Importa esa captura desde la PWA y revisa cada elemento. La captura local no obtiene información de equipos remotos; las licencias y el estado de Defender requieren validaciones adicionales específicas y no se afirman automáticamente.
 
 El Companion inicial no es un EXE autocontenido: requiere Python y Tkinter. Si faltan, usa `discovery/setup.ps1` (opcional `-InstallTools`) o el asistente de consola. El modo tablet sigue siendo HTTPS con certificado confiable, o transferencia de JSON. El token se mantiene en memoria y el botón copiar utiliza el portapapeles del propio Windows: evita dejar secretos en equipos compartidos.
+
+
+## Companion Windows portable: uso y retirada
+
+El workflow manual **Build portable Windows Companion** genera un ZIP de ejecutable autocontenido con Python integrado. Una versión solo debe ofrecerse tras revisar pruebas y publicarla expresamente en [GitHub Releases](https://github.com/sempitern0/RabbitMole/releases). Cloudflare únicamente publica la PWA y el kit Python de respaldo; **no instala ni publica automáticamente el EXE**.
+
+Extrae el ZIP, abre RabbitMole-Companion.exe, pulsa **Activar Discovery**. En la PWA instalada del **mismo PC**, pulsa **Conectar este PC** y acepta la solicitud en Companion. No se escanea sin revisar el CIDR y confirmar AUTORIZO. Los datos se revisan antes de incorporarlos a Hardware y Redes.
+
+Para desinstalar, pulsa **Desactivar**, cierra la aplicación y borra la carpeta extraída. Los JSON exportados se retienen o eliminan aparte. No se crea servicio persistente ni requiere elevar permisos. En tablets continúa siendo necesario HTTPS con certificado confiable o importar JSON. Un EXE sin firma puede mostrar advertencias de reputación: verifica procedencia y SHA-256, sin desactivar la protección del sistema.

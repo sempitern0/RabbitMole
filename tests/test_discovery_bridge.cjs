@@ -28,6 +28,7 @@ assert.equal(validate('https://192.168.1.20:8766'),'https://192.168.1.20:8766');
 assert.equal(validate('http://127.0.0.1:8766'),'http://127.0.0.1:8766');
 assert(source.includes('discovery/iniciar.cmd'),'Companion launch instructions absent');
 assert(source.includes('Copiar token temporal'),'Companion token copy guidance absent');
+assert(source.includes('bridge-pair-local') && source.includes('/pair/request') && source.includes('/pair/status'));
 assert(source.includes('--loopback-http'),'Same-device mode must avoid TLS setup');
 assert(source.includes('bridge-command-lan'),'Keep HTTPS LAN mode distinct');
 for(const url of ['http://192.168.1.20:8766','https://8.8.8.8:8766',

@@ -1099,3 +1099,7 @@
 #workspace .network-quick-add>.button{min-height:48px;white-space:normal}
 @media(max-width:720px){#workspace .network-quick-add>.button{flex:1 1 100%}}
 @media print{#workspace .network-quick-add{display:none!important}}
+
+/* Hash inventory stays readable in printed A4: do not truncate the SHA-256. */
+.appendix-manifest code,.appendix-versions code{overflow-wrap:anywhere;word-break:break-all;font-size:.77em}
+@media print{.appendix-manifest{table-layout:fixed;width:100%}.appendix-manifest td{overflow-wrap:anywhere;vertical-align:top}.appendix-manifest th:nth-child(1){width:27%}.appendix-manifest th:nth-child(2){width:22%}.appendix-manifest th:nth-child(3){width:12%}.appendix-manifest th:nth-child(4){width:39%}.appendix-manifest tr{break-inside:avoid}}

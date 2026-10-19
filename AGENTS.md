@@ -124,3 +124,8 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 - Derive display data from `RabbitMoleExternalNetwork.effective()` rather than normalizing stale aggregate arrays. Keep confirmed documents/digests immutable. Group distinct SSIDs as observations, not declared client inventory.
 - Preserve hardware `model` when changing `vendor` (preset and custom), as with router vendor/model. Regression in browser test.
 - A4 report radio tables are deliberately compact; third-party PDF annexes are separate files by hash and are not appended in PDF generation.
+
+## Versioned PDF evidence manifest
+- `js/pdf-appendices.js` supports deduplication by SHA-256, optional version replacement only after confirmation, stable IDs, and real digest verification before PDF printing/downloading. Legacy annexes must normalize without inserting default fields (otherwise a previously confirmed JSON digest can change).
+- Only current PDF bytes remain in JSON; older versions store limited metadata (SHA-256, name, size, version, replacement timestamp). Identical filenames suggest a version; they do not prove same source. Preserve document-control audit history without duplicating large base64 in rectification comparisons.
+- Report's final appendix-integrity inventory includes identifiers, versions, bytes and full SHA-256, with prior version history in technical report. Do not assert that the digest independently proves provenance, custody, or delivery. Run `tests/test_pdf_appendices.cjs`, `tests/test_document_control.cjs`, `tests/test_report_browser.cjs`, whole CI before merging.

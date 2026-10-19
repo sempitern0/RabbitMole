@@ -5320,9 +5320,26 @@
             [1, "Confidencialidad y límites de la evaluación", executiveLegal],
           ];
     if (state.pdfAppendices?.length) {
-      chapters.push([14, "Anexos PDF externos", section(14, "Anexos PDF externos",
-        '<p>Los documentos relacionados se entregan separadamente del PDF principal. Conserva originales, comprueba las huellas SHA-256 y usa un canal protegido.</p>' +
-        '<ul>' + state.pdfAppendices.map(item=>'<li>' + (item.category==='wifi-analysis'?'Análisis WiFi externo · ':'') + html(item.name) + (item.source?' · '+html(item.source):'') + (item.observedAt?' · '+html(item.observedAt):'') + ' · ' + item.size + ' bytes · SHA-256 ' + html(item.sha256) + '</li>').join('') + '</ul>')]);
+      const annexes=pdfAppendices.normalize(state.pdfAppendices);
+      const manifest=annexes.map(item=>({
+        id:item.id,version:item.version||1,name:item.name,size:item.size,
+        sha256:item.sha256,history:item.history||[]
+      }));
+      const full=reportProfile==="technical";
+      const rows=full
+        ? '<table class="report-table appendix-manifest"><thead><tr><th>Identificador / versión</th><th>Documento</th><th>Bytes</th><th>SHA-256 (contenido vigente)</th></tr></thead><tbody>'+
+          manifest.map(x=>'<tr><td><code>'+html(x.id)+'</code><div>v'+x.version+'</div></td><td>'+html(x.name)+
+          '</td><td>'+x.size+'</td><td><code>'+html(x.sha256)+'</code></td></tr>').join('')+
+          '</tbody></table>'+
+          manifest.filter(x=>x.history.length).map(x=>'<details open><summary>Historial documental: '+html(x.id)+'</summary><ol>'+
+            x.history.map(v=>'<li>v'+v.version+' · '+html(v.name)+' · '+v.size+
+            ' bytes · SHA-256 <code>'+html(v.sha256)+'</code> · sustituido '+html(v.at)+
+            ' (archivo anterior no almacenado)</li>').join('')+'</ol></details>').join('')
+        : '<ul>'+manifest.map(x=>'<li><strong>'+html(x.name)+'</strong> · ID <code>'+html(x.id)+
+          '</code> · v'+x.version+' · '+x.size+' bytes · SHA-256 <code>'+html(x.sha256)+'</code></li>').join('')+'</ul>';
+      chapters.push([14, "Inventario de integridad de anexos", section(14, "Inventario de integridad de anexos",
+        '<p>Este manifiesto identifica las copias actuales de los PDF entregados por separado. Antes de imprimir se comprueba su SHA-256 respecto al expediente. Para verificar la entrega, calcula el SHA-256 de cada archivo recibido y compáralo con la huella completa indicada. Una coincidencia no demuestra autoría, fecha cierta ni cadena de custodia.</p>'+
+        rows+'<p>El histórico almacena identificadores y huellas anteriores, no los PDF sustituidos. Mantén originales y actas de entrega por separado.</p>')]);
     }
     const activeChapters = chapters.filter(([_id, _title, content]) =>
       Boolean(content),

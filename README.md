@@ -400,3 +400,7 @@ The Router/Gateway Security section now asks for device type before vendor and m
 ### Recovering previously imported Acrylic data
 
 The report derives a read-only view from saved per-file CSV snapshots without changing confirmed audit JSON or document hashes. Old versions could mistake roaming exports for AP captures and overwrite radio summaries. The new report shows per-SSID counts and compact radio data tables; timestamps discarded by the old importer still require reimporting the original CSV. Third-party PDFs stay separately referenced annexes. Hardware custom models remain preserved when changing vendors.
+
+### PDF appendix integrity inventory and versioning
+
+PDF annexes are SHA-256 checked against their actual stored bytes before downloading or printing. Same-content files are deduplicated; files with matching name and category may be versioned after explicit confirmation, retaining a stable ID and only the current PDF bytes. Previous versions retain hashes and metadata, not payloads. Both PDF profiles have an appendix integrity inventory (full version history in technical, concise in executive). Recipients must independently calculate SHA-256 of delivered copies to compare against the manifest. Hash equality does not prove authorship, an independently trusted timestamp or chain of custody. Confirmed audits still require a documented amendment. Third-party PDFs remain separate deliverables.

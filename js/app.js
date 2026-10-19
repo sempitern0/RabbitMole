@@ -29,6 +29,7 @@
   const rackAudit = globalThis.RabbitMoleRackAudit;
   const serverInstall = globalThis.RabbitMoleServerInstall;
   const recordNavigatorModule = globalThis.RabbitMoleRecordNavigator;
+  const networkOverview = globalThis.RabbitMoleNetworkOverview;
   const comparison = globalThis.AuditComparison;
   if (!storage)
     throw Error("No se ha cargado el módulo de almacenamiento offline.");
@@ -49,6 +50,7 @@
   if (!rackAudit) throw Error("No se ha cargado el módulo de racks.");
   if (!serverInstall) throw Error("No se ha cargado el módulo de instalación de servidores.");
   if (!recordNavigatorModule) throw Error("No se ha cargado el módulo de navegación de registros.");
+  if (!networkOverview) throw Error("No se ha cargado el resumen de redes offline.");
   if (!comparison)
     throw Error("No se ha cargado el resumen comparativo offline.");
   const SETTINGS_KEY = "rabbitmole:settings:v1";
@@ -1638,10 +1640,37 @@
       ${analysis?`<div class="action-row"><button type="button" class="button quiet" data-go="delivery">Ver documentación de entrega →</button><button type="button" class="button danger" data-network-analysis-clear ${readonly?"disabled":""}>Retirar análisis importado</button></div>`:""}
     </section>`;
   }
+  function renderNetworkOverview(report = false) {
+    const totals = networkOverview.summarize(state.networks);
+    const pairs = totals.links.filter(group => group.ssids.length && group.segments.length);
+    const title = totals.wifi + " redes Wi-Fi · " + totals.segments +
+      " segmentos/VLAN · " + totals.equipment + " equipos de red";
+    const details = pairs.map(group =>
+      '<li><strong>' + html((group.site || "Sede no indicada") + " · VLAN " + group.vlan) +
+      '</strong>: ' + html(group.ssids.join(", ")) + ' ↔ ' +
+      html(group.segments.join(", ")) + '</li>').join("");
+    if (report)
+      return '<p class="report-note">' + html(title) +
+        '. Relaciones declaradas a partir de sede y VLAN: no verifican aislamiento entre redes.</p>' +
+        (details ? '<ul>' + details + '</ul>' : '');
+    return '<section class="card network-overview" aria-label="Resumen de Wi-Fi y segmentos">' +
+      '<h2>Mapa rápido de redes</h2><p class="subtle">' + html(title) +
+      ' · ' + totals.unreviewed + ' sin estado de segmentación documentado.</p>' +
+      '<p class="subtle">Registra cada SSID lógico una sola vez aunque tenga varios puntos de acceso. ' +
+      'Anota la misma sede y VLAN si pertenecen al mismo segmento. La coincidencia no prueba aislamiento.</p>' +
+      '<div class="action-row network-quick-add">' +
+      '<button type="button" class="button accent" data-add="networks" data-network-kind="Wi-Fi">+ Añadir Wi-Fi</button>' +
+      '<button type="button" class="button quiet" data-add="networks" data-network-kind="Segmento / VLAN">+ Añadir segmento / VLAN</button>' +
+      '</div>' +
+      (details ? '<details class="inventory-baseline"><summary>Relaciones declaradas por VLAN (' +
+        pairs.length + ')</summary><div class="inventory-baseline-content"><ul>' +
+        details + '</ul><p class="subtle">Relación orientativa, pendiente de comprobar mediante evidencias.</p></div></details>' : '') +
+      '</section>';
+  }
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -4088,6 +4117,8 @@
           status: "Sin verificar",
         };
       if (type === "controls") row.status = "Pendiente";
+      if (type === "networks" && ["Wi-Fi","Segmento / VLAN"].includes(b.dataset.networkKind))
+        row.networkKind = b.dataset.networkKind;
       if (type === "evidence") row.links = relations.normalizeLinks(null);
       state[type].unshift(row);
       persist();
@@ -5237,7 +5268,7 @@
               5,
               "Infraestructura de redes",
               state.networks.length||state.externalNetworkAnalysis
-                ? section(5, "Infraestructura de redes", (state.networks.length?reportRows("networks"):"") + renderExternalNetworkAnalysis(true))
+                ? section(5, "Infraestructura de redes", (state.networks.length?renderNetworkOverview(true)+reportRows("networks"):"") + renderExternalNetworkAnalysis(true))
                 : "",
             ],
             [

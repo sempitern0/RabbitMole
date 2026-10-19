@@ -12,6 +12,8 @@ const defs=context.RabbitMoleAppDefinitions.create({
 });
 assert(defs.groups.assets.fields.length>10);
 assert(defs.groups.networks.fields.some(row=>row[0]==='cidr'));
+for(const field of ['networkKind','site','ssid','segmentationState'])
+ assert(defs.groups.networks.fields.some(row=>row[0]===field),'Network field missing '+field);
 assert.equal(defs.nav[0][0],'dashboard');
 const str=v=>typeof v==='string'?v.slice(0,20000):'';
 const team=context.RabbitMoleAppTeam.create({str,safeLogo:()=>'',SETTINGS_KEY:'test-settings'});

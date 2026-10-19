@@ -1081,3 +1081,12 @@
   #workspace .wizard-fast-nav select { flex: 1; min-width: 0; }
   #workspace .wizard-fast-nav .button, #workspace .entry-continue .button { min-height: 44px; white-space: normal; }
 }
+
+/* A concise network map, not a topology inference or scanning surface. */
+#workspace .network-overview{display:grid;gap:.7rem;min-width:0}
+#workspace .network-overview h2,#workspace .network-overview p{margin:0}
+#workspace .network-overview li{line-height:1.6;overflow-wrap:anywhere}
+#workspace .network-quick-add{display:flex;gap:.7rem;flex-wrap:wrap}
+#workspace .network-quick-add>.button{min-height:48px;white-space:normal}
+@media(max-width:720px){#workspace .network-quick-add>.button{flex:1 1 100%}}
+@media print{#workspace .network-quick-add{display:none!important}}

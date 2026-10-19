@@ -426,3 +426,9 @@ Para verificar desde un equipo con acceso público, ejecuta `python3 deploy/smok
 ### Cambio de pasos del asistente en móvil y tablet
 
 Cuando avanzas, retrocedes o seleccionas un paso de la misma auditoría en pantallas de hasta 1000 px, la vista se coloca en los controles superiores del nuevo paso, justo encima del formulario, en lugar de volver al inicio del menú. La navegación a Biblioteca, Configuración y otras áreas, y el comportamiento de escritorio, se mantienen. Se conserva el foco accesible sin desplazamientos secundarios, y no se cambia el contenido del expediente ni el último paso guardado.
+
+### Ergonomía táctil y compatibilidad iPhone/iPad (PR #6)
+
+En pantallas de hasta 1000 px, al seleccionar un destino en el menú desplegado este se contrae automáticamente para recuperar espacio de trabajo; el botón **Mostrar menú** permite reabrirlo. El cierre automático no sustituye la preferencia guardada por el usuario. Formularios y botones utilizan tamaños táctiles también en Safari de iPhone/iPad, incluidos selectores con texto mínimo de 16 px para evitar el zoom automático; la PWA respeta los márgenes de pantalla y el indicador de inicio mediante `viewport-fit=cover` y `safe-area-inset-*`. Al añadir registros desde móvil se evita combinar desplazamiento animado con apertura del teclado virtual.
+
+**Aceptación real iOS:** en Safari selecciona Compartir → Añadir a pantalla de inicio → Abrir como app web. Verifica navegación, teclado, giro de pantalla, adjuntar/capturar foto, exportación a Archivos, reinstalación no destructiva y apertura offline después de comprobar caché; iOS puede limitar APIs, permisos y persistencia. Las pruebas Chromium con agente iOS verifican la interfaz, pero **no equivalen a probar WebKit en un iPhone/iPad real**. Exporta una copia cifrada antes de limpiar datos del navegador o reinstalar.

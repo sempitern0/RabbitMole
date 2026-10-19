@@ -104,3 +104,8 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 ## Mobile/tablet wizard scroll
 - `js/app.js` tracks transitions between `nav` steps, and after rendering aligns the fresh `.wizard-fast-nav` within a viewport up to 1000px. General navigation and desktop still go to page top. `heading.focus({preventScroll:true})` avoids a second jump.
 - Do not alter audit JSON, active record or last-step persistence. Test real phone/tablet scrolling in `tests/test_pwa_browser.cjs` and the source contract in `tests/test_mobile_pwa.cjs`. Increment SW cache when updating JS.
+
+## Compact navigation and iOS safe areas
+- `js/ui-layout.js` auto-closes the expanded menu on compact (< =1000px) destination buttons in `#global-navigation` and `#navigation`, without changing saved manual preference. Navigation closure uses `data-navigation-instant` so the collapsing menu does not shift the new wizard after scrolling.
+- `js/android-touch.js` sets generic `touch-device` for coarse pointer Android/iOS (retains `android-touch` for Android-only detection). Shared CSS in `css/android-touch.css`; `css/layout-collapse.css` maintains viewport safe-area padding and 16px menu inputs, without fixed root containers. `index.html` uses viewport-fit=cover.
+- Phone/tablet record navigation avoids smooth scrolling while software keyboard may resize viewport. Tests: `tests/test_android_touch.cjs`, `tests/test_mobile_pwa.cjs`, `tests/test_pwa_browser.cjs` (iOS UA emulation explicitly not native WebKit). Do not assume iOS parity without real-device acceptance.

@@ -2584,6 +2584,11 @@
     ) {
       page = section;
       rememberAuditStep(currentId, section);
+      if (wizardStepChange && window.matchMedia("(max-width: 1000px)").matches &&
+          document.activeElement?.matches("input, textarea, select")) {
+        // Dismiss native mobile pickers/keyboard before replacing their step.
+        document.activeElement.blur();
+      }
       render();
       if (wizardStepChange && window.matchMedia("(max-width: 1000px)").matches) {
         // Anchor to the new step rather than to the global navigation.

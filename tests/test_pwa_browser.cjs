@@ -446,6 +446,48 @@ const {chromium}=require('playwright');
    if(process.env.PWA_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.PWA_SCREENSHOT_DIR,installed?'pwa-installed.png':'pwa-web.png'),fullPage:false});
    await context.close();
   }
+  // This emulates iOS viewport/UA/touch behavior in Chromium; actual Mobile
+  // Safari/WebKit installation still requires device acceptance.
+  for(const device of [
+    {name:'iPhone',width:390,height:844,ua:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'},
+    {name:'iPad',width:820,height:1180,ua:'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'},
+    {name:'Android tablet',width:820,height:1180,ua:'Mozilla/5.0 (Linux; Android 15; Pixel Tablet) AppleWebKit/537.36 Chrome/128 Mobile Safari/537.36'}
+  ]){
+    const ctx=await browser.newContext({viewport:{width:device.width,height:device.height},
+      isMobile:true,hasTouch:true,userAgent:device.ua,deviceScaleFactor:2});
+    try{
+      const touchPage=await ctx.newPage();
+      touchPage.setDefaultTimeout(12000);
+      await touchPage.goto(origin);
+      await touchPage.waitForFunction(()=>document.querySelector('[data-new]'));
+      const layout=await touchPage.evaluate(()=>({
+        touch:document.documentElement.classList.contains('touch-device'),
+        android:document.documentElement.classList.contains('android-touch'),
+        overflow:document.documentElement.scrollWidth>innerWidth+2,
+        safePadding:parseFloat(getComputedStyle(document.querySelector('main')).paddingBottom),
+        menuFont:parseFloat(getComputedStyle(document.getElementById('palette')).fontSize)
+      }));
+      assert(layout.touch,device.name+' touch forms should be enabled');
+      assert.equal(layout.android,device.name==='Android tablet');
+      assert.equal(layout.overflow,false,device.name+' horizontal overflow');
+      assert(layout.safePadding>=65,device.name+' bottom safe area');
+      assert(layout.menuFont>=16,device.name+' menu picker must avoid Safari zoom');
+      await touchPage.locator('[data-new]').first().click();
+      const expanded=await touchPage.locator('#sidebar-body').getAttribute('aria-hidden');
+      assert.equal(expanded,'false','Fresh profile starts with menu expanded');
+      await touchPage.locator('#navigation button[data-go="assets"]').click();
+      assert.equal(await touchPage.locator('#sidebar-body').getAttribute('aria-hidden'),'true',
+        device.name+' sidebar should fold after navigating to an audit section');
+      const anchor=await touchPage.locator('.wizard-fast-nav').evaluate(el=>el.getBoundingClientRect().top);
+      assert(anchor>=-24&&anchor<100,device.name+' should return near the wizard: '+anchor);
+      await touchPage.locator('#sidebar-toggle').click();
+      assert.equal(await touchPage.locator('#sidebar-body').getAttribute('aria-hidden'),'false');
+      await touchPage.locator('#global-navigation button[data-go="device"]').click();
+      assert.equal(await touchPage.locator('#sidebar-body').getAttribute('aria-hidden'),'true',
+        device.name+' global menu navigation should fold automatically');
+      assert.equal(await touchPage.locator('#pwa-install-card').isVisible(),true);
+    }finally{await ctx.close();}
+  }
   console.log('PASS Chromium: web/installed modes, SW install, offline reload and persisted audit, no external requests');
  }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

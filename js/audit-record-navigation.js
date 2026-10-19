@@ -124,9 +124,11 @@
     (editable || entry).focus({ preventScroll: true });
     entry.scrollIntoView({
       block: "start",
-      behavior: getWindow().matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
+      // On mobile, WebKit may open the keyboard during focus. Do not combine
+      // that viewport resize with smooth scrolling of a newly added record.
+      behavior: getWindow().matchMedia("(max-width: 1000px)").matches ||
+        getWindow().matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto" : "smooth",
     });
   }
 

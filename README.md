@@ -384,3 +384,7 @@ The library's **Resume · last step** action remembers each audit's last section
 ### Phone/tablet assistant step changes
 
 When moving to a new audit step on viewports up to 1000px (next, previous or step selectors), RabbitMole scrolls to the new step's quick-navigation controls instead of returning above the global menu. Desktop and main-route navigation retain their original behavior. Accessible heading focus uses preventScroll, while stored audit data and per-record last-step preferences are unchanged.
+
+### Mobile and iOS PWA usability
+
+On phone/tablet layouts (up to 1000px), selecting an audit or main section from the expanded menu collapses it, leaving workspace visible; manual menu preferences are not overwritten. Shared coarse-pointer styles now cover Android, iPhone and iPad rather than Android only, with at least 16px sidebar form controls to avoid Safari input auto-zoom, and safe-area-aware padding with viewport-fit cover. Newly added record focus avoids smooth scroll during mobile keyboard resizing. Chromium tests emulate iPhone, iPad and Android tablet touch/viewport behavior, **not real iOS WebKit**. Validate standalone install, keyboard, rotation, file/photo attachment and offline cold launch on physical Safari before field use.

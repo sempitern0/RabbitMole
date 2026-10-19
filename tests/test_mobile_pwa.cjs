@@ -77,6 +77,15 @@ async function permissionCheck(granted,verified=granted){
  assert(appSource.includes('workspace.querySelector(".wizard-fast-nav")'),'New audit step must anchor in workspace');
  assert(appSource.includes('anchor.getBoundingClientRect().top - 12'),'Scrolled position must follow rendered wizard');
  assert(appSource.includes('heading.focus({ preventScroll: true })'),'Heading focus must not undo the new scroll');
+ const ui=fs.readFileSync('js/ui-layout.js','utf8'),
+  collapse=fs.readFileSync('css/layout-collapse.css','utf8');
+ assert(ui.includes('function closeCompactOnNavigate('),'Compact menu must close after navigation');
+ assert(ui.includes('app.dataset.navigationInstant = "true"'),'Closing the compact menu must avoid scroll-jarring animation');
+ assert(ui.includes('requestAnimationFrame('),'Compact closure must restore transitions');
+ assert(collapse.includes('data-navigation-instant'),'Missing CSS transition guard');
+ assert(appSource.includes('document.activeElement.blur()'),'Mobile pickers must close on step change');
+ assert(fs.readFileSync('js/audit-record-navigation.js','utf8').includes('"(max-width: 1000px)"'),
+  'New record focus must avoid smooth scrolling while phone keyboard resizes');
  const cacheVersion=Number(sw.match(/const CACHE_NAME\s*=\s*"rabbitmole-shell-v(\d+)-/)?.[1]);
  assert(Number.isInteger(cacheVersion)&&cacheVersion>92,'Mobile shell changes need a bumped cache');
  assert(css.includes('#pwa-install-card.pwa-install-card:not([hidden])'));

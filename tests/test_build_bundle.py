@@ -30,6 +30,9 @@ class BuildTest(unittest.TestCase):
                               'discovery/setup.ps1', 'discovery/setup.sh', 'collect-local.ps1'):
                     self.assertIn(entry, kit.namelist())
                 self.assertIn(b'companion.py', kit.read('discovery/iniciar.cmd'))
+            with zipfile.ZipFile(root/'dist-pages/discovery-android-termux.zip') as kit:
+                for entry in ('discover.py','wizard.py','INSTRUCCIONES.txt'):
+                    self.assertIn(entry,kit.namelist())
             self.assertEqual(first,build())
             with (root/'sw.js').open('a') as file:file.write('\n// Service worker only change\n')
             self.assertNotEqual(first,build())

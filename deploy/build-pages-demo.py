@@ -72,6 +72,23 @@ def main():
         info = zipfile.ZipInfo("collect-local.ps1", (2024, 1, 1, 0, 0, 0))
         info.compress_type = zipfile.ZIP_DEFLATED
         archive.writestr(info, source.read_bytes())
+    with zipfile.ZipFile(DIST / "discovery-android-termux.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+        for name in ("discover.py", "wizard.py", "README_ES.md", "README.md"):
+            source = ROOT / "discovery" / name
+            info = zipfile.ZipInfo(name, (2024, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(info, source.read_bytes())
+        info = zipfile.ZipInfo("INSTRUCCIONES.txt", (2024, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        archive.writestr(info, b"Termux: pkg install python nmap unzip; unzip rabbitmole-termux.zip -d rabbitmole-discovery; cd rabbitmole-discovery; python discover.py doctor; python discover.py wizard\n")
+    windows = ROOT / "artifacts" / "RabbitMole-Companion-Windows.zip"
+    if windows.is_file():
+        if windows.is_symlink() or windows.stat().st_size > 100 * 1024 * 1024:
+            raise SystemExit("Invalid Companion artifact")
+        with zipfile.ZipFile(windows) as archive:
+            if archive.testzip() is not None or "RabbitMole-Companion.exe" not in archive.namelist():
+                raise SystemExit("Windows Companion must be a valid ZIP")
+        shutil.copyfile(windows, DIST / "discovery-windows.zip")
     html = (ROOT / "index.html").read_text(encoding="utf-8")
     if 'js/deployment-profile.js' not in html or "connect-src 'self' https:" not in html:
         raise SystemExit("Missing profile or required installed-app CSP")

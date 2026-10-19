@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v99-assistant-flow";
+const CACHE_NAME = "rabbitmole-shell-v109-discovery-loopback";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -28,6 +28,7 @@ const CORE = [
   "./css/relations.css",
   "./js/audit-relations.js",
   "./js/audit-evidence-images.js",
+  "./js/audit-attachment-library.js",
   "./js/audit-identifiers.js",
   "./css/templates.css",
   "./css/quality.css",
@@ -71,6 +72,7 @@ const CORE = [
   "./js/document-control.js",
   "./js/pdf-appendices.js",
   "./js/external-network-analysis.js",
+  "./js/network-overview.js",
   "./js/pwa-updates.js",
   "./js/pwa-install.js",
   "./js/discovery-bridge.js",

@@ -81,3 +81,23 @@ Termux es opcional y no ejecuta un shell dentro de la PWA. Python en Android no 
 ### Guía de preparación en Android e iOS
 
 La guía de campo [RabbitMole en móviles](../docs/AUDITORIA_MOVIL_ES.md) describe instalación de Termux (Android), preparación de `python discovery/discover.py doctor`, permisos de archivos, uso autorizado del wizard, transporte seguro del JSON y recuperación offline. **iOS/iPadOS no ejecuta Termux**: a-Shell e iSH son terminales auxiliares, sin garantía de compatibilidad con Nmap/ICMP/Discovery. En iPhone/iPad se recomienda producir el JSON desde un PC autorizado y revisarlo mediante Archivos → Hardware/Redes → Captura asistida, o probar el bridge HTTPS con permisos y certificado confiable.
+
+## Discovery guiado desde la PWA de Cloudflare
+
+El Worker sirve la aplicación estática, pero **no** ejecuta Python ni mantiene un servidor Discovery. Para conectar la PWA instalada directamente con un escáner de la LAN, prepara una estación auditora autorizada y arranca `discovery/service.py` en una terminal local con una IP privada, un certificado TLS confiable en el móvil y `--origin` idéntico al origen HTTPS de la PWA. El servicio imprime un **token efímero** que cambia en cada arranque y **no es un token de Cloudflare**. Solo funciona mientras la terminal siga abierta; nunca abras el puerto a Internet.
+
+En **Redes → Captura asistida → Discovery local** aparece ahora un asistente de cuatro pasos: preparar el PC o Termux, comprobar la conexión HTTPS/token y motor Nmap/ping, confirmar un CIDR privado autorizado de hasta 256 direcciones escribiendo `AUTORIZO`, y revisar los registros detectados. Se reutiliza un único JSON para las vistas previas de Hardware y Redes y puede descargarse el JSON si el navegador no permite pasarlo directamente al importador (especialmente WebKit/iOS). Los candidatos no se guardan hasta que los seleccionas y confirmas en el asistente; cada campo puede revisarse o editarse manualmente después.
+
+**Limitaciones reales:** compartir Wi-Fi no garantiza alcance entre dispositivos si hay aislamiento AP, filtros de red o problemas de certificado. Una PWA no puede abrir una shell ni navegar a la supuesta carpeta de scripts de su instalación; Cloudflare tampoco puede escanear las IP privadas del centro. En Android, Termux es una alternativa independiente para generar JSON. Discovery realiza descubrimiento de hosts con ping/Nmap sin reconocimiento de puertos y no verifica firmware, contraseñas, VLAN, SSID ni controles de seguridad.
+
+## Discovery sin certificados en el mismo PC (loopback)
+
+Si RabbitMole se ejecuta como PWA en **el mismo Windows** en el que vas a capturar la red, no necesitas HTTPS propio ni clonar la interfaz de RabbitMole en otro servidor. Desde la carpeta que contenga los scripts `discovery`, abre PowerShell y ejecuta:
+
+```powershell
+py -3 discovery\\service.py --loopback-http --origin https://rabbitmole.danieldigitalspace.workers.dev
+```
+
+El servidor escucha **exclusivamente en 127.0.0.1:8766**, imprime un token efímero en la consola y no es accesible desde otros dispositivos. En la PWA instalada en ese mismo PC entra en **Redes → Captura asistida → Discovery local**, elige «Usar servidor de este PC», introduce el token y comprueba la conexión. Algunos navegadores piden permiso para acceso a redes locales y ciertos entornos corporativos podrían bloquearlo. Si no funciona, exporta un JSON con `py -3 discovery\\discover.py wizard` e impórtalo manualmente. No desactives protecciones de CORS ni de seguridad para hacerlo funcionar.
+
+Si la PWA corre en **Android, iOS o una tablet** y Discovery en el PC, `127.0.0.1` apunta al dispositivo móvil, no al PC: debes emplear el modo **HTTPS LAN** con certificado confiable o transferir el JSON. El modo `--loopback-http` rechaza bind/host LAN y los parámetros de certificado. Nunca expongas HTTP a la Wi-Fi de un cliente.

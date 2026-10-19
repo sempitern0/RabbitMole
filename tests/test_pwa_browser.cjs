@@ -173,7 +173,29 @@ const {chromium}=require('playwright');
    assert.equal(keyboardFocus.interactive,true,'Tab must reach an interactive element');
    assert.equal(keyboardFocus.visible,true,'Keyboard focus must remain visible');
    assert.notEqual(keyboardFocus.outline,'none','Keyboard focus indicator must remain visible');
+   assert.equal(await page.locator('#global-navigation [data-go="records"]').getAttribute('aria-label'),'Auditorías');
+   assert.equal(await page.locator('#audit-file-library-link').isVisible(),true,
+     'Global file library must be accessible even before opening an audit');
+   await page.locator('#audit-file-library-link').click();
+   assert.equal(await page.locator('#workspace h1').textContent(),'Biblioteca de archivos');
+   assert.match(await page.locator('#workspace').textContent(),/No hay auditorías guardadas/);
+   assert.equal(await page.locator('#attachment-filter').count(),0);
+   await page.locator('#global-navigation [data-go="records"]').click();
    await page.locator('[data-new]').first().click();
+   await page.locator('#audit-file-library-link').click();
+   assert.equal(await page.locator('[data-library-select-audit]').count(),1);
+   assert.equal(await page.locator('#attachment-filter').count(),0,
+     'First choose an audit before showing its files');
+   await page.locator('[data-library-select-audit]').first().click();
+   assert.equal(await page.locator('#attachment-filter').isVisible(),true);
+   assert.equal(await page.locator('[data-library-select-audit]').first().getAttribute('aria-expanded'),'true');
+   await page.locator('#attachment-filter').selectOption('images');
+   await page.locator('#attachment-search').fill('sin-coincidencias');
+   assert.match(await page.locator('#attachment-visible-count').textContent(),/0 archivos/);
+   await page.locator('[data-library-select-audit]').first().click();
+   assert.equal(await page.locator('#attachment-filter').count(),0,'Collapsing should hide the file list');
+   await page.locator('#global-navigation [data-go="records"]').click();
+   await page.locator('[data-open]').first().click();
    // Quick help preserves the live input node, its value, the current step and URL.
    const contextualHelp=page.locator('[data-glossary-term][data-glossary-field]').first();
    const returnField=await contextualHelp.getAttribute('data-glossary-field');
@@ -276,7 +298,9 @@ const {chromium}=require('playwright');
    assert(await routerModel.locator('option[value="RB5009UG+S+IN"]').count(),'Router model should follow vendor');
    await routerModel.selectOption('RB5009UG+S+IN');
    await routerVendor.selectOption('TP-Link (Omada)');
-   assert.equal(await routerModel.inputValue(),'','Changing vendor must clear incompatible model');
+   assert.equal(await routerModel.inputValue(),'__custom__',
+     'Switching vendor must retain previously captured model as a custom entry');
+   assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'RB5009UG+S+IN');
    assert.equal(await routerModel.locator('option[value="RB5009UG+S+IN"]').count(),0);
    await routerModel.selectOption('ER605');
    assert.equal(await routerReview.locator('[data-field="routerModel"][data-preset]').inputValue(),'ER605');
@@ -285,6 +309,23 @@ const {chromium}=require('playwright');
    await routerModel.selectOption('__custom__');
    await routerReview.locator('[data-field="routerModel"][data-custom]').fill('Modelo no catalogado');
    assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
+   // A real field report was losing routerVendor/routerModel when the network
+   // device type was entered after those values. Type changes must be safe.
+   const routerType=routerReview.locator('[data-field="networkDeviceType"]');
+   await routerType.selectOption('ONT');
+   assert.equal(await routerVendor.inputValue(),'__custom__');
+   assert.equal(await routerReview.locator('[data-field="routerVendor"][data-custom]').inputValue(),'Fabricante de laboratorio');
+   assert.equal(await routerModel.inputValue(),'__custom__');
+   assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
+   await routerType.selectOption('Firewall');
+   assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
+   // Switching away and back must retain both values even when custom.
+   await page.locator('#wizard-step-top').selectOption('assets');
+   await page.locator('#wizard-step-top').selectOption('networks');
+   await page.locator('.router-security-review').first().locator('summary').click();
+   assert.equal(await page.locator('#f-networks-0-networkDeviceType').inputValue(),'Firewall');
+   assert.equal(await page.locator('[data-field="routerVendor"][data-custom]').first().inputValue(),'Fabricante de laboratorio');
+   assert.equal(await page.locator('[data-field="routerModel"][data-custom]').first().inputValue(),'Modelo no catalogado');
    const helpIcon=routerReview.locator('.glossary-help').first();
    assert.equal(await helpIcon.locator('svg.glossary-help-icon').count(),1);
    assert.equal(await helpIcon.evaluate(el=>getComputedStyle(el).width),'40px');
@@ -299,6 +340,11 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('.intake-command pre').count()>=3,true);
    await page.locator('[data-intake-mode="local"]').click();
    assert.equal(await page.locator('#discovery-check').count(),1);
+   await page.waitForSelector('#bridge-panel');
+   assert.match(await page.locator('#bridge-panel').textContent(),/token.*Cloudflare/is);
+   assert.equal(await page.locator('#bridge-scan').isDisabled(),true);
+   assert.equal(await page.locator('#bridge-download').isVisible(),false);
+   assert.match(await page.locator('#bridge-command-pc').textContent(),/--origin/);
    await page.locator('[data-go="networks"]').last().click();
    await page.setViewportSize({width:390,height:844});
    await page.locator('#sidebar-toggle').click();
@@ -328,6 +374,30 @@ const {chromium}=require('playwright');
    await page.locator('[data-open]').first().click();
    await page.locator('#wizard-step-select').selectOption('networks');
    assert.equal(await page.locator('.record-navigator').evaluate(el=>getComputedStyle(el).position),'static','Mobile filters must not cover editable records');
+   // Phone/tablet step changes must not jump to the global navigation area.
+   const assertWizardVisible = async label => {
+     const metrics=await page.locator('#workspace .wizard-fast-nav').evaluate(el=>{
+       const rect=el.getBoundingClientRect();
+       const maxScroll=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+       const expected=Math.min(maxScroll,Math.max(0,scrollY+rect.top-12));
+       return {scrollY,top:rect.top,bottom:rect.bottom,maxScroll,expected,viewport:innerHeight};
+     });
+     assert(Math.abs(metrics.scrollY-metrics.expected)<=24,
+       label+' must align the new wizard: '+JSON.stringify(metrics));
+     assert(metrics.bottom>0&&metrics.top<metrics.viewport,
+       label+' must expose wizard controls: '+JSON.stringify(metrics));
+   };
+   await assertWizardVisible('Phone bottom picker');
+   await page.locator('.wizard-buttons [data-go="software"]').click();
+   await assertWizardVisible('Phone next');
+   await page.locator('.wizard-buttons [data-go="networks"]').click();
+   await assertWizardVisible('Phone previous');
+   await page.locator('#wizard-step-top').selectOption('assets');
+   await assertWizardVisible('Phone top picker');
+   await page.setViewportSize({width:820,height:900});
+   await page.locator('#wizard-step-top').selectOption('networks');
+   await assertWizardVisible('Tablet top picker');
+   await page.setViewportSize({width:390,height:844});
    await page.setViewportSize({width:1280,height:900});
    await page.locator('#wizard-step-select').selectOption('delivery');
    assert.equal(await page.locator('#pdf-appendix-upload').count(),1);
@@ -398,8 +468,32 @@ const {chromium}=require('playwright');
    // The top selector works without reaching the bottom of a long inventory.
    await page.locator('#wizard-step-top').selectOption('software');
    assert.equal(await page.locator('#wizard-step-select').inputValue(),'software');
+   await page.locator('#wizard-step-top').selectOption('networks');
+   assert.equal(await page.locator('[data-network-kind="Wi-Fi"]').count(),1);
+   await page.locator('[data-network-kind="Wi-Fi"]').click();
+   assert.equal(await page.locator('#f-networks-0-networkKind').inputValue(),'Wi-Fi');
+   await page.locator('#f-networks-0-name').fill('Red Wi-Fi visitantes');
+   await page.locator('#f-networks-0-ssid').fill('Invitados');
+   await page.locator('#f-networks-0-vlan').fill('30');
+   await page.locator('#f-networks-0-site').fill('Sede A');
+   await page.locator('[data-network-kind="Segmento / VLAN"]').click();
+   assert.equal(await page.locator('#f-networks-0-networkKind').inputValue(),'Segmento / VLAN');
+   await page.locator('#f-networks-0-name').fill('VLAN invitados');
+   await page.locator('#f-networks-0-vlan').fill('30');
+   await page.locator('#f-networks-0-site').fill('Sede A');
+   assert.match(await page.locator('.network-overview').textContent(),/1 redes Wi-Fi · 1 segmentos/);
+   await page.locator('.network-overview details summary').click();
+   assert.match(await page.locator('.network-overview details').textContent(),/Invitados/);
    await page.locator('#wizard-step-top').selectOption('assets');
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
+   const vendor=page.locator('#f-assets-0-vendor');
+   await vendor.selectOption('__custom__');
+   await page.locator('[data-block="assets"][data-field="vendor"][data-custom]').first().fill('Fabricante documentado');
+   await page.locator('#f-assets-0-model').selectOption('__custom__');
+   await page.locator('[data-block="assets"][data-field="model"][data-custom]').first().fill('Modelo identificado');
+   await vendor.selectOption('Cisco');
+   assert.equal(await page.locator('[data-block="assets"][data-field="model"][data-custom]').first().inputValue(),'Modelo identificado',
+     'Changing hardware vendor must not reset a captured custom model');
    await page.waitForFunction(()=>document.getElementById('save-status').textContent.includes('Guardado'));
    await context.setOffline(true);await page.reload();
    await page.waitForFunction(()=>!!document.querySelector('[data-new]')||!!document.querySelector('#wizard-step-select'));
@@ -408,6 +502,13 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'assets','Reopening resumes the last audit step');
    await page.locator('#wizard-step-select').selectOption('assets');
    assert.equal(await page.locator('[data-block="assets"][data-field="name"]').first().inputValue(),'Equipo offline de prueba');
+   // Verify persistence through the actual offline storage roundtrip.
+   await page.locator('#wizard-step-select').selectOption('networks');
+   await page.locator('.router-security-review').first().locator('summary').click();
+   assert.equal(await page.locator('#f-networks-0-networkDeviceType').inputValue(),'Firewall');
+   assert.equal(await page.locator('[data-field="routerVendor"][data-custom]').first().inputValue(),'Fabricante de laboratorio');
+   assert.equal(await page.locator('[data-field="routerModel"][data-custom]').first().inputValue(),'Modelo no catalogado');
+   await page.locator('#wizard-step-select').selectOption('assets');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
    await page.locator('#global-navigation [data-go="records"]').click();
    const firstAudit=await page.locator('[data-open]').first().getAttribute('data-open');
@@ -415,12 +516,61 @@ const {chromium}=require('playwright');
    await page.locator('[data-new]').first().click();
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'engagement','A new audit starts at client and scope');
    await page.locator('#wizard-step-top').selectOption('networks');
+   await page.locator('#audit-file-library-link').click();
+   assert.equal(await page.locator('[data-library-select-audit]').count(),2,
+     'Every saved audit should be independently selectable in the file library');
+   const otherId=(await page.locator('[data-library-select-audit]').all()).length;
+   assert.equal(otherId,2);
+   await page.locator('[data-library-select-audit]').last().click();
+   assert.equal(await page.locator('[data-library-select-audit][aria-expanded="true"]').count(),1);
    await page.locator('#global-navigation [data-go="records"]').click();
    await page.locator('[data-open="'+firstAudit+'"]').click();
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'assets','Resume is isolated by audit');
    assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
    if(process.env.PWA_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.PWA_SCREENSHOT_DIR,installed?'pwa-installed.png':'pwa-web.png'),fullPage:false});
    await context.close();
+  }
+  // This emulates iOS viewport/UA/touch behavior in Chromium; actual Mobile
+  // Safari/WebKit installation still requires device acceptance.
+  for(const device of [
+    {name:'iPhone',width:390,height:844,ua:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'},
+    {name:'iPad',width:820,height:1180,ua:'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1'},
+    {name:'Android tablet',width:820,height:1180,ua:'Mozilla/5.0 (Linux; Android 15; Pixel Tablet) AppleWebKit/537.36 Chrome/128 Mobile Safari/537.36'}
+  ]){
+    const ctx=await browser.newContext({viewport:{width:device.width,height:device.height},
+      isMobile:true,hasTouch:true,userAgent:device.ua,deviceScaleFactor:2});
+    try{
+      const touchPage=await ctx.newPage();
+      touchPage.setDefaultTimeout(12000);
+      await touchPage.goto(origin);
+      await touchPage.waitForFunction(()=>document.querySelector('[data-new]'));
+      const layout=await touchPage.evaluate(()=>({
+        touch:document.documentElement.classList.contains('touch-device'),
+        android:document.documentElement.classList.contains('android-touch'),
+        overflow:document.documentElement.scrollWidth>innerWidth+2,
+        safePadding:parseFloat(getComputedStyle(document.querySelector('main')).paddingBottom),
+        menuFont:parseFloat(getComputedStyle(document.getElementById('palette')).fontSize)
+      }));
+      assert(layout.touch,device.name+' touch forms should be enabled');
+      assert.equal(layout.android,device.name==='Android tablet');
+      assert.equal(layout.overflow,false,device.name+' horizontal overflow');
+      assert(layout.safePadding>=65,device.name+' bottom safe area');
+      assert(layout.menuFont>=16,device.name+' menu picker must avoid Safari zoom');
+      await touchPage.locator('[data-new]').first().click();
+      const expanded=await touchPage.locator('#sidebar-body').getAttribute('aria-hidden');
+      assert.equal(expanded,'false','Fresh profile starts with menu expanded');
+      await touchPage.locator('#navigation button[data-go="assets"]').click();
+      assert.equal(await touchPage.locator('#sidebar-body').getAttribute('aria-hidden'),'true',
+        device.name+' sidebar should fold after navigating to an audit section');
+      const anchor=await touchPage.locator('.wizard-fast-nav').evaluate(el=>el.getBoundingClientRect().top);
+      assert(anchor>=-24&&anchor<100,device.name+' should return near the wizard: '+anchor);
+      await touchPage.locator('#sidebar-toggle').click();
+      assert.equal(await touchPage.locator('#sidebar-body').getAttribute('aria-hidden'),'false');
+      await touchPage.locator('#global-navigation button[data-go="device"]').click();
+      assert.equal(await touchPage.locator('#sidebar-body').getAttribute('aria-hidden'),'true',
+        device.name+' global menu navigation should fold automatically');
+      assert.equal(await touchPage.locator('#pwa-install-card').isVisible(),true);
+    }finally{await ctx.close();}
   }
   console.log('PASS Chromium: web/installed modes, SW install, offline reload and persisted audit, no external requests');
  }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}

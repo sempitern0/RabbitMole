@@ -380,3 +380,35 @@ See [field audit readiness](docs/RELEASE_READINESS.md) for persistence fixes, re
 ### Faster assistant navigation
 
 The library's **Resume · last step** action remembers each audit's last section in this browser, outside its exported JSON. New audits start at client/scope. A top step selector and Evidence/Quality shortcuts avoid scrolling to the form footer. Each record offers **Next record** within visible search results and **Add another record**, which focuses a blank entry without copying observations or verification states. Confirmed audits remain navigable but cannot add/edit records.
+
+### Phone/tablet assistant step changes
+
+When moving to a new audit step on viewports up to 1000px (next, previous or step selectors), RabbitMole scrolls to the new step's quick-navigation controls instead of returning above the global menu. Desktop and main-route navigation retain their original behavior. Accessible heading focus uses preventScroll, while stored audit data and per-record last-step preferences are unchanged.
+
+### Mobile and iOS PWA usability
+
+On phone/tablet layouts (up to 1000px), selecting an audit or main section from the expanded menu collapses it, leaving workspace visible; manual menu preferences are not overwritten. Shared coarse-pointer styles now cover Android, iPhone and iPad rather than Android only, with at least 16px sidebar form controls to avoid Safari input auto-zoom, and safe-area-aware padding with viewport-fit cover. Newly added record focus avoids smooth scroll during mobile keyboard resizing. Chromium tests emulate iPhone, iPad and Android tablet touch/viewport behavior, **not real iOS WebKit**. Validate standalone install, keyboard, rotation, file/photo attachment and offline cold launch on physical Safari before field use.
+
+### Multiple Wi-Fi and VLAN segments
+
+**Networks** now offers **Add Wi-Fi** (one logical SSID per record) and **Add segment/VLAN** with optional site, VLAN, CIDR and Wi-Fi security. A local-only summary links matching site/VLAN labels for presentation, **not as proof of isolation**. Segmentation must be explicitly documented from authorized evidence. Router checks and external BSSID/CSV radio observations remain separate and optional. Legacy schema-v3 records remain compatible; the technical report includes both network rows and their summary, without probing or automatic findings.
+
+### Preserve router/ONT/firewall inventory details
+
+The Router/Gateway Security section now asks for device type before vendor and model. Subsequent device-type or vendor changes preserve already recorded strings, including custom vendors and models that are no longer in the filtered catalogue. Unmatched values appear in the editable “Other” field rather than being silently erased. Existing JSON-v3 inventory, backups and reports remain compatible. Records previously saved without these values must be corrected from an earlier verified backup or primary evidence, not guessed.
+
+### Recovering previously imported Acrylic data
+
+The report derives a read-only view from saved per-file CSV snapshots without changing confirmed audit JSON or document hashes. Old versions could mistake roaming exports for AP captures and overwrite radio summaries. The new report shows per-SSID counts and compact radio data tables; timestamps discarded by the old importer still require reimporting the original CSV. Third-party PDFs stay separately referenced annexes. Hardware custom models remain preserved when changing vendors.
+
+### PDF appendix integrity inventory and versioning
+
+PDF annexes are SHA-256 checked against their actual stored bytes before downloading or printing. Same-content files are deduplicated; files with matching name and category may be versioned after explicit confirmation, retaining a stable ID and only the current PDF bytes. Previous versions retain hashes and metadata, not payloads. Both PDF profiles have an appendix integrity inventory (full version history in technical, concise in executive). Recipients must independently calculate SHA-256 of delivered copies to compare against the manifest. Hash equality does not prove authorship, an independently trusted timestamp or chain of custody. Confirmed audits still require a documented amendment. Third-party PDFs remain separate deliverables.
+
+### Audit file library (screen only)
+
+Every open audit has an optional **File library** sidebar route, separate from the wizard and report generation. Search and filter existing Evidence photos, PDF appendices, parsed Wi-Fi CSV imports and external signature-file references without storing duplicate payloads or changing schema v3. Confirmed audit file browsing is read-only. PDF content is verifiable/downloadable; photographs are optimized JPEGs, whereas raw CSV and external signed files were never kept for download. The previously required appendix integrity inventory remains a separate report feature; the new library does not appear as a PDF chapter.
+
+### Audit-first file library and shortened navigation
+
+The primary navigation now labels the audit list **Auditorías**. The global file library first lists all locally stored audits by project, client and report reference. Choosing an audit expands only its files and type/search filters; choosing it again collapses the list. Browsing never changes the active audit or stored data. PDF verification/download use the selected audit's document, even if another audit is open. Explicit “Open evidence/measurements” actions switch audits only when requested. The library remains outside the report and operates offline.

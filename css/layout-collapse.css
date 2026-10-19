@@ -60,3 +60,39 @@
 .sidebar,.content-wrap,.sidebar-toggle svg,.sidebar-body,.record-nav-body,.record-nav-toggle svg{transition:none!important}
 }
 @media(forced-colors:active){.sidebar-toggle,.record-nav-toggle{border:1px solid ButtonText}.sidebar-toggle:focus-visible{outline-color:Highlight}}
+
+/* Compact navigation closes immediately after selecting a destination. */
+@media screen and (max-width:1000px){
+ .app[data-navigation-instant="true"] .sidebar-body{transition:none!important}
+}
+/* iOS standalone home indicator, notches and landscape insets. Keep the
+ * document scrollable: fixed root layouts break WebKit's software keyboard. */
+@media screen and (max-width:1000px){
+ .sidebar{
+  padding-top:max(12px,env(safe-area-inset-top,0px));
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px))
+ }
+ .topbar{
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px))
+ }
+ main{
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px));
+  padding-bottom:max(65px,calc(28px + env(safe-area-inset-bottom,0px)))
+ }
+ #pwa-install-card{
+  margin-left:max(1rem,env(safe-area-inset-left,0px));
+  margin-right:max(1rem,env(safe-area-inset-right,0px))
+ }
+}
+/* Safari must never auto-zoom form controls on touch devices. */
+@media screen and (pointer:coarse){
+ .sidebar :is(input:not([type="checkbox"]),select,textarea),
+ #pwa-install-card :is(input:not([type="checkbox"]),select,textarea){
+  font-size:16px
+ }
+ .sidebar :is(button,select,summary),
+ #pwa-install-card :is(button,select,summary){min-height:44px}
+}

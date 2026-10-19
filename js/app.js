@@ -12,6 +12,8 @@
   const backupCrypto = globalThis.AuditSecureTransfer;
   const relations = globalThis.AuditRelations;
   const evidenceImages = globalThis.AuditEvidenceImages;
+  const attachmentLibrary = globalThis.RabbitMoleAttachmentLibrary;
+  if(!attachmentLibrary)throw Error("Falta el catálogo de archivos del expediente.");
   const pdfAppendices = globalThis.RabbitMolePdfAppendices;
   const externalNetwork = globalThis.RabbitMoleExternalNetwork;
   const identifiers = globalThis.AuditIdentifiers;
@@ -29,6 +31,7 @@
   const rackAudit = globalThis.RabbitMoleRackAudit;
   const serverInstall = globalThis.RabbitMoleServerInstall;
   const recordNavigatorModule = globalThis.RabbitMoleRecordNavigator;
+  const networkOverview = globalThis.RabbitMoleNetworkOverview;
   const comparison = globalThis.AuditComparison;
   if (!storage)
     throw Error("No se ha cargado el módulo de almacenamiento offline.");
@@ -49,6 +52,7 @@
   if (!rackAudit) throw Error("No se ha cargado el módulo de racks.");
   if (!serverInstall) throw Error("No se ha cargado el módulo de instalación de servidores.");
   if (!recordNavigatorModule) throw Error("No se ha cargado el módulo de navegación de registros.");
+  if (!networkOverview) throw Error("No se ha cargado el resumen de redes offline.");
   if (!comparison)
     throw Error("No se ha cargado el resumen comparativo offline.");
   const SETTINGS_KEY = "rabbitmole:settings:v1";
@@ -460,6 +464,7 @@
   let state = fresh(),
     currentId = "",
     page = "records",
+    attachmentType = "all", attachmentSearch = "", attachmentAuditId = "",
     records = [],
     storageError = false,
     dirty = false,
@@ -494,6 +499,7 @@
     audit,
   });
   function setActive(record) {
+    attachmentType="all"; attachmentSearch="";attachmentAuditId="";
     currentId = record.id;
     state = validate(record.audit);
     try {
@@ -1311,7 +1317,8 @@
     const toolNames = active ? [localDiscovery.tools?.nmap && "Nmap",localDiscovery.tools?.ping && "ping"].filter(Boolean).join(" / ") : "";
     return `<section class="card intake-card local-discovery">
       <span class="intake-kicker">03 · Herramientas locales</span><h2>Discovery de la red autorizada</h2>
-      <p>Detecta equipos que responden en una subred privada: no explora puertos, no instala agentes y <strong>no sustituye la revisión del auditor</strong>. La PWA pública no puede iniciar procesos locales.</p>
+      <p>Detecta equipos que responden en una subred privada: no explora puertos, no instala agentes y <strong>no sustituye la revisión del auditor</strong>.</p>
+      <p class="subtle"><strong>Dos servicios distintos:</strong> «Comprobar herramientas locales» solo funciona desde <code>localhost</code> con <code>serve.py --enable-discovery</code>. Si estás usando la PWA del Worker, sigue el <strong>asistente del servicio HTTPS de una estación auditora</strong> que aparece debajo. También puedes ejecutar Discovery en Termux y subir su JSON. Cloudflare no lanza escaneos.</p>
       <div class="action-row"><button type="button" class="button quiet" id="discovery-check">Comprobar herramientas locales</button></div>
       <p class="subtle" role="status">${active ? "Herramientas: "+html(toolNames || "Ninguna") : html(localDiscovery?.reason || "Inicia serve.py --enable-discovery y comprueba las herramientas disponibles.")}</p>
       ${active ? `<div class="fields"><div class="field"><label for="discovery-cidr">CIDR privado autorizado (máximo 256 IP)</label><input id="discovery-cidr" autocomplete="off" placeholder="192.168.10.0/24" list="discovery-cidr-list"><datalist id="discovery-cidr-list">${candidates.map(x=>`<option value="${html(x.cidr)}">${html(x.interface)} · ${html(x.address)}</option>`).join("")}</datalist></div>
@@ -1473,19 +1480,19 @@
   }
 
   // Optional router checklist is documentary: never capture passwords or probe credentials.
-  const ROUTER_AUDIT_FIELDS = Object.freeze(["routerVendor","routerModel","routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"]);
+  const ROUTER_AUDIT_FIELDS = Object.freeze(["networkDeviceType","routerVendor","routerModel","routerDevice","routerCredentials","routerAccounts","routerMfa","routerMgmt","routerRemote","routerFirmware","routerServices","routerPerimeter","routerDns","routerBackups","routerAuditEvidence"]);
   const ROUTER_AUDIT_SET = new Set(ROUTER_AUDIT_FIELDS);
   function renderRouterAudit(record,index,definitions) {
     const routerFields=definitions.filter(([name])=>ROUTER_AUDIT_SET.has(name));
     const documented=routerFields.filter(([name])=>str(record[name]).trim()).length;
     return `<details class="inventory-baseline router-security-review">
       <summary><span><strong>Seguridad del router / gateway</strong>
-      <small>Credenciales de fábrica, administración, firmware, exposición y recuperación · solo revisión autorizada</small></span>
+      <small>Tipo, fabricante, modelo, administración, firmware y recuperación · solo revisión autorizada</small></span>
       <span class="inventory-baseline-count">${documented} / ${routerFields.length} datos documentados</span></summary>
       <div class="inventory-baseline-content">
         <p><strong>Credenciales de fábrica:</strong> solicita al responsable el registro de instalación, la política de cambio y una evidencia saneada del estado de cuentas.
         No pruebes usuarios o contraseñas predeterminados ni introduzcas secretos en el expediente. Si procede validar acceso, debe hacerlo un administrador autorizado.</p>
-        <p class="subtle">«No verificado» significa que no hay evidencia suficiente. Ningún estado supone conformidad automática: registra controles y hallazgos cuando corresponda.</p>
+        <p class="subtle">Elige primero el tipo de equipo. Si después cambias el tipo o fabricante, se conservan fabricante y modelo previamente anotados para evitar pérdidas accidentales: revisa que la combinación sea correcta y ajusta los valores si es necesario. «No verificado» significa que no hay evidencia suficiente.</p>
         <div class="fields">${routerFields.map(def=>renderField(record,"networks",def,index)).join("")}</div>
         <div class="action-row"><button type="button" class="button quiet" data-router-controls="true">Abrir plantillas de controles de routers →</button></div>
       </div></details>`;
@@ -1588,7 +1595,8 @@
     return workflowViews.renderAppendixActions(item,readonly,{html});
   }
   function renderExternalNetworkAnalysis(print=false) {
-    const analysis=externalNetwork.normalize(state.externalNetworkAnalysis);
+    // Reassemble views from archived per-file CSV snapshots without modifying the signed audit.
+    const analysis=externalNetwork.effective(state.externalNetworkAnalysis);
     const readonly=state.documentControl?.status==="confirmed";
     const escape=html;
     const metrics=externalNetwork.metrics(analysis);
@@ -1596,20 +1604,32 @@
     const table=(items,columns,limit=50)=>items?.length
       ? `<div class="network-analysis-table-wrap"><table class="network-analysis-table"><thead><tr>${columns.map(c=>`<th scope="col">${escape(c)}</th>`).join("")}</tr></thead><tbody>${items.slice(0,limit).map(item=>`<tr>${columns.map(c=>`<td>${escape(item[c]||"—")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
       : '<p class="subtle">Sin mediciones importadas en esta categoría.</p>';
-    const wifi=analysis?.aps?.filter(r=>r.Banda&&r["Dirección MAC"]&&!r.SSID.startsWith("[Cliente Lan]"))||[];
+    const wifi=analysis?.aps?.filter(r=>r.SSID&&r["Dirección MAC"]&&!r.SSID.startsWith("[Cliente Lan]"))||[];
+    const groupsBySsid=new Map();
+    for(const radio of wifi){
+      if(!groupsBySsid.has(radio.SSID))groupsBySsid.set(radio.SSID,{SSID:radio.SSID,Radios:0,Bandas:new Set()});
+      const item=groupsBySsid.get(radio.SSID);item.Radios++;
+      if(radio.Banda)item.Bandas.add(radio.Banda);
+    }
+    const ssidList=[...groupsBySsid.values()].sort((a,b)=>b.Radios-a.Radios)
+      .map(x=>({SSID:x.SSID,Radios:String(x.Radios),Bandas:[...x.Bandas].join(", ")||"No indicada"}));
+    const radioPrint=wifi.map(x=>({...x,Protección:["WPA3","WPA2","WPA","WEP"]
+      .filter(k=>x[k]).map(k=>k+": "+x[k]).join("; ")||x.Seguridad||"No registrada"}));
     const tiles=metrics?`<div class="network-analysis-metrics">
       ${[[metrics.wifi,"Radios/AP WiFi observados"],[metrics.lan,"Clientes LAN listados"],[metrics.observedDevices,"Dispositivos del CSV"],[metrics.latency?.average??"—","Latencia media (ms)"]].map(([value,label])=>`<div><strong>${escape(value)}</strong><span>${escape(label)}</span></div>`).join("")}
       </div>`:"";
     const details=analysis?`<div class="network-analysis-data">
       ${tiles}
-      <p class="subtle">Banda 2,4 GHz: ${metrics.band24} · 5 GHz: ${metrics.band5} · 6 GHz: ${metrics.band6}. La captura de una herramienta externa puede incluir AP ajenos y clientes LAN; los registros no constituyen automáticamente activos autorizados ni hallazgos.</p>
-      <details ${print?"open":""}><summary>Puntos de acceso y redes WiFi (${wifi.length})</summary>${table(wifi,["SSID","Dirección MAC","RSSI","Canal","Banda","Ancho","WPA2","WPA3","WPS","Fabricante"],print?150:50)}</details>
+      <p class="subtle">Banda 2,4 GHz: ${metrics.band24} · 5 GHz: ${metrics.band5} · 6 GHz: ${metrics.band6}. Se observan ${ssidList.length} SSID distintos. Los AP y redes próximas no se consideran automáticamente infraestructura del cliente ni hallazgos.</p>
+      <details ${print?"open":""}><summary>Redes SSID observadas (${ssidList.length})</summary>${table(ssidList,["SSID","Radios","Bandas"],print?150:50)}</details>
+      <details ${print?"open":""}><summary>Puntos de acceso y radios WiFi (${wifi.length})</summary>${table(print?radioPrint:wifi,print?["SSID","Dirección MAC","RSSI","Canal","Banda","Protección"]:["SSID","Dirección MAC","RSSI","Canal","Banda","Ancho","WPA2","WPA3","WPS","Fabricante"],print?150:50)}</details>
       <details ${print?"open":""}><summary>Dispositivos observados (${analysis.devices.length})</summary>${table(analysis.devices,["Dirección MAC","Estado","RSSI","Fabricante"],print?150:35)}</details>
       <details ${print?"open":""}><summary>Pruebas y conectividad</summary>
         ${analysis.latency?`<p><strong>Latencia:</strong> ${analysis.latency.count} muestras, mínimo ${escape(analysis.latency.min??"—")} ms, máximo ${escape(analysis.latency.max??"—")} ms, media ${escape(analysis.latency.average??"—")} ms; pérdida media registrada ${escape(analysis.latency.packetLoss??"N/D")}.</p>`:''}
         ${[["ip","Direcciones IP",["Interfaz Wifi","IPv4 local","Puerta de enlace","Servidores DNS"]],["roaming","Roaming",["Interfaz Wifi","SSID","Dirección MAC","Duración"]],["transfer","Transferencia",["Interfaz Wifi","Bytes enviados","Bytes recibidos","Subida","Bajada"]],["speed","Test de velocidad",["Ancho de Descarga","Fecha"]],["iperf","iPerf",["Ancho de Descarga","Ancho de Subida","Fecha"]]].map(([key,label,columns])=>`<h4>${label}</h4>${table(diagnostic[key],columns)}`).join("")}
       </details>
-      <p class="subtle">Herramienta: ${escape(analysis.source||"No indicada")} · Fecha de análisis: ${escape(analysis.observedAt||"No indicada")} · Importación: ${escape(analysis.importedAt)} · CSV: ${analysis.files.map(escape).join(", ")}. Se muestran hasta 50 AP por vista; el PDF externo original sigue siendo la fuente íntegra.</p>
+      <p class="subtle">Herramienta: ${escape(analysis.source||"No indicada")} · Fecha de análisis: ${escape(analysis.observedAt||"No indicada")} · Importación: ${escape(analysis.importedAt)} · CSV: ${analysis.files.map(escape).join(", ")}. Se muestran hasta 50 AP por vista. El PDF original se conserva como anexo separado, no se fusiona con este informe.</p>
+      ${analysis.imports?.some(x=>x.kind==="aps"&&/(?:^|[_-])roaming\\.csv$/i.test(x.filename))?'<p class="notice warn">Los puntos de acceso se han reconstruido desde los CSV archivados. Para recuperar los tiempos de roaming descartados por el importador anterior, importa nuevamente el CSV original en una rectificación.</p>':''}
     </div>`:"";
     if(print)return analysis?`<div class="report-external-analysis"><p>Resumen documental de mediciones aportadas por herramienta externa; no implica validación independiente por RabbitMole.</p>${details}</div>`:"";
     return `<section class="card external-network-analysis" aria-labelledby="external-network-title">
@@ -1624,7 +1644,7 @@
             <input id="network-analysis-date" type="date" value="${html(analysis?.observedAt||"")}" ${readonly?"disabled":""}></div>
         </div>
         <label for="external-wifi-pdf">Informe externo en PDF</label>
-        <input id="external-wifi-pdf" type="file" accept=".pdf,application/pdf" ${readonly||pdfAppendices.normalize(state.pdfAppendices).length>=pdfAppendices.MAX_COUNT?"disabled":""}>
+        <input id="external-wifi-pdf" type="file" accept=".pdf,application/pdf" ${readonly?"disabled":""}>
         <p class="subtle">Se incorpora como documento complementario del expediente y se entrega por separado, con SHA-256. Máximo 2 MiB por PDF, cuatro anexos en total. Si tu herramienta produce HTML, conviértelo a PDF antes de adjuntarlo.</p>
         ${pdfAppendices.normalize(state.pdfAppendices).filter(item=>item.category==="wifi-analysis").map(item=>`<div class="network-analysis-pdf"><span><strong>${html(item.name)}</strong><small>${html(item.source||"Origen no indicado")} · ${html(item.observedAt||"Fecha no indicada")} · SHA-256 ${html(item.sha256)}</small></span>${renderAppendixActions(item,readonly)}</div>`).join("")}
       </div>
@@ -1638,10 +1658,37 @@
       ${analysis?`<div class="action-row"><button type="button" class="button quiet" data-go="delivery">Ver documentación de entrega →</button><button type="button" class="button danger" data-network-analysis-clear ${readonly?"disabled":""}>Retirar análisis importado</button></div>`:""}
     </section>`;
   }
+  function renderNetworkOverview(report = false) {
+    const totals = networkOverview.summarize(state.networks);
+    const pairs = totals.links.filter(group => group.ssids.length && group.segments.length);
+    const title = totals.wifi + " redes Wi-Fi · " + totals.segments +
+      " segmentos/VLAN · " + totals.equipment + " equipos de red";
+    const details = pairs.map(group =>
+      '<li><strong>' + html((group.site || "Sede no indicada") + " · VLAN " + group.vlan) +
+      '</strong>: ' + html(group.ssids.join(", ")) + ' ↔ ' +
+      html(group.segments.join(", ")) + '</li>').join("");
+    if (report)
+      return '<p class="report-note">' + html(title) +
+        '. Relaciones declaradas a partir de sede y VLAN: no verifican aislamiento entre redes.</p>' +
+        (details ? '<ul>' + details + '</ul>' : '');
+    return '<section class="card network-overview" aria-label="Resumen de Wi-Fi y segmentos">' +
+      '<h2>Mapa rápido de redes</h2><p class="subtle">' + html(title) +
+      ' · ' + totals.unreviewed + ' sin estado de segmentación documentado.</p>' +
+      '<p class="subtle">Registra cada SSID lógico una sola vez aunque tenga varios puntos de acceso. ' +
+      'Anota la misma sede y VLAN si pertenecen al mismo segmento. La coincidencia no prueba aislamiento.</p>' +
+      '<div class="action-row network-quick-add">' +
+      '<button type="button" class="button accent" data-add="networks" data-network-kind="Wi-Fi">+ Añadir Wi-Fi</button>' +
+      '<button type="button" class="button quiet" data-add="networks" data-network-kind="Segmento / VLAN">+ Añadir segmento / VLAN</button>' +
+      '</div>' +
+      (details ? '<details class="inventory-baseline"><summary>Relaciones declaradas por VLAN (' +
+        pairs.length + ')</summary><div class="inventory-baseline-content"><ul>' +
+        details + '</ul><p class="subtle">Relación orientativa, pendiente de comprobar mediante evidencias.</p></div></details>' : '') +
+      '</section>';
+  }
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -2217,11 +2264,12 @@
     const readonly = state.documentControl?.status === "confirmed";
     return `<section class="card pdf-appendices" aria-labelledby="pdf-appendices-title">
       <h2 id="pdf-appendices-title">Documentación complementaria (PDF)</h2>
-      <p>Adjunta documentos externos para acompañar la entrega: <strong>máximo cuatro PDF, 2 MiB por archivo y 6 MiB en total</strong>.
+      <p>Adjunta documentos externos para acompañar la entrega: <strong>máximo cuatro PDF activos, 2 MiB por archivo y 6 MiB en total</strong>. Se evita duplicar bytes idénticos y se puede registrar una nueva versión bajo el mismo ID, previa confirmación.
       Se guardan dentro del JSON local; el informe los referencia por nombre y SHA-256, pero <strong>no fusiona sus páginas</strong>. Descarga los originales y entrégalos junto al informe por un medio autorizado.</p>
       <label for="pdf-appendix-upload">Añadir PDF al expediente</label>
-      <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly || list.length>=pdfAppendices.MAX_COUNT?'disabled':''}>
-      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span>${renderAppendixActions(item,readonly)}</li>`).join('')}</ul>
+      <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly?'disabled':''}>
+      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>ID: ${html(item.id)} · v${item.version||1} · ${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small>
+      ${(item.history||[]).length?`<details class="appendix-versions"><summary>Versiones anteriores (${item.history.length}) · solo metadatos</summary><ol>${item.history.map(v=>`<li>v${v.version} · ${html(v.name)} · ${v.size} bytes · SHA-256 <code>${html(v.sha256)}</code> · Sustituida ${html(v.at)}</li>`).join('')}</ol></details>`:""}</span>${renderAppendixActions(item,readonly)}</li>`).join('')}</ul>
       <p class="subtle">Los anexos pueden incluir datos confidenciales. No se cargan a servidores ni se visualizan dentro de la app.</p>
     </section>`;
   }
@@ -2416,10 +2464,13 @@
         "connections",
         "glossary",
         "device",
+        "attachments",
       ].includes(page) || !currentId;
     byId("navigation").hidden = true;
     byId("audit-context").hidden = true;
     byId("workspace-label").textContent = "MENÚ PRINCIPAL";
+    // The file library is global; first choose a local audit to view its files.
+    // The hidden wizard-step navigation is intentionally separate.
     // Keep the global menu in sync with the current view, including the glossary.
     for (const button of byId("global-navigation").querySelectorAll(
       "[data-go]",
@@ -2451,7 +2502,7 @@
       .join("");
     byId("current-section").textContent =
       page === "records"
-        ? "Biblioteca de auditorías"
+        ? "Auditorías"
         : page === "backups"
           ? "Copias de seguridad"
           : page === "device"
@@ -2464,7 +2515,9 @@
                 ? "Diccionario técnico"
                 : page === "intake"
                   ? "Captura asistida"
-                  : nav.find((n) => n[0] === page)?.[2] || "Expediente";
+                  : page === "attachments"
+                    ? "Biblioteca de archivos"
+                    : nav.find((n) => n[0] === page)?.[2] || "Expediente";
     byId("active-audit-label").textContent = inLibrary
       ? "Selecciona una auditoría"
       : (state.meta.reportId || "Sin referencia") +
@@ -2476,7 +2529,7 @@
     byId("pwa-install-card").hidden = !devicePage;
     byId("workspace").hidden = devicePage;
     byId("workspace").innerHTML =
-      (inLibrary ? "" : renderWizardTop()) +
+      (inLibrary || page === "attachments" ? "" : renderWizardTop()) +
       (page === "dashboard"
         ? renderOverview()
         : page === "records"
@@ -2491,6 +2544,12 @@
                 ? renderConnections()
                 : page === "glossary"
                   ? renderGlossary()
+                  : page === "attachments"
+                    ? attachmentLibrary.renderAudits(
+                        records.map(row=>row.id===currentId?{...row,audit:state}:row),
+                        attachmentAuditId,attachmentType,attachmentSearch,
+                        {html,validImage:evidenceImages.validImage}
+                      )
                   : page === "intake"
                     ? renderIntake()
                     : page === "engagement"
@@ -2509,8 +2568,19 @@
                             : page === "delivery"
                               ? renderDelivery()
                               : renderGroup(page)) +
-      (inLibrary ? "" : renderWizard());
+      (inLibrary || page === "attachments" ? "" : renderWizard());
     refreshRecordNavigator();
+    if(page==="attachments"){
+      const refresh=()=>{
+        const audit=attachmentAuditId===currentId?state:
+          records.find(row=>row.id===attachmentAuditId)?.audit;
+        const shown=attachmentLibrary.filter(attachmentLibrary.collect(audit),attachmentType,attachmentSearch);
+        byId("attachment-results").innerHTML=attachmentLibrary.cards(shown,{html,validImage:evidenceImages.validImage});
+        byId("attachment-visible-count").textContent=shown.length+" archivos visibles";
+      };
+      byId("attachment-search")?.addEventListener("input",e=>{attachmentSearch=e.target.value;refresh()});
+      byId("attachment-filter")?.addEventListener("change",e=>{attachmentType=e.target.value;refresh()});
+    }
     byId("wizard-step-top")?.addEventListener("change", (event) => move(event.target.value));
     byId("wizard-step-select")?.addEventListener("change", (event) =>
       move(event.target.value),
@@ -2540,6 +2610,11 @@
       if (page !== "glossary") openGlossary("", { page, scrollY: window.scrollY });
       return;
     }
+    // Track a transition between audit steps before replacing the wizard DOM.
+    // On compact viewports the global menu is above the form.
+    const wizardStepChange = page !== section &&
+      nav.some(([id]) => id === page) &&
+      nav.some(([id]) => id === section);
     if (nav.some((n) => n[0] === section)) lastAuditPage = section;
     if (!fromHistory && page === "glossary" &&
         window.history.state?.[HISTORY_KEY]?.view === "glossary") {
@@ -2558,6 +2633,7 @@
         "connections",
         "glossary",
         "device",
+        "attachments",
       ].includes(section) &&
       !currentId
     ) {
@@ -2573,14 +2649,31 @@
         "connections",
         "glossary",
         "device",
+        "attachments",
       ].includes(section) ||
       section === "intake" ||
       nav.some((n) => n[0] === section)
     ) {
+      if(section==="attachments" && page!=="attachments"){
+        attachmentAuditId="";attachmentType="all";attachmentSearch="";
+      }
       page = section;
       rememberAuditStep(currentId, section);
+      if (wizardStepChange && window.matchMedia("(max-width: 1000px)").matches &&
+          document.activeElement?.matches("input, textarea, select")) {
+        // Dismiss native mobile pickers/keyboard before replacing their step.
+        document.activeElement.blur();
+      }
       render();
-      scrollTo(0, 0);
+      if (wizardStepChange && window.matchMedia("(max-width: 1000px)").matches) {
+        // Anchor to the new step rather than to the global navigation.
+        // Synchronous scrolling avoids animation and soft-keyboard jumps.
+        const anchor = workspace.querySelector(".wizard-fast-nav");
+        const target = anchor ? window.scrollY + anchor.getBoundingClientRect().top - 12 : 0;
+        window.scrollTo(0, Math.max(0, target));
+      } else {
+        window.scrollTo(0, 0);
+      }
       // SPA navigation must announce the new page to keyboard and screen-reader users.
       const heading = section === "device" ? byId("pwa-install-heading") : workspace.querySelector("h1");
       if (heading) {
@@ -2595,7 +2688,8 @@
       "input,select,textarea,button",
     )) {
       if (
-        ["wizard-step-select", "wizard-step-top", "record-search", "record-jump"].includes(
+        ["wizard-step-select", "wizard-step-top", "record-search", "record-jump",
+           "attachment-search","attachment-filter"].includes(
           element.id,
         ) ||
         element.closest(".document-control") ||
@@ -2742,14 +2836,10 @@
     if (obj) {
       const previous = obj[t.dataset.field];
       obj[t.dataset.field] = t.value;
-      if (t.dataset.block === "networks" && ["routerVendor","networkDeviceType"].includes(t.dataset.field) &&
+      if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
           t.dataset.custom !== undefined && previous !== t.value) {
-        obj.routerModel = "";
-        if(t.dataset.field==="networkDeviceType"){
-          obj.routerVendor="";
-          const sibling=workspace.querySelector(`#f-networks-${t.dataset.index}-routerVendor`)?.closest(".field");
-          if(sibling)sibling.outerHTML=renderField(obj,"networks",groups.networks.fields.find(([name])=>name==="routerVendor"),Number(t.dataset.index));
-        }
+        // Changing a custom vendor updates suggestions but must not delete an
+        // already captured model (including non-catalogue models).
         refreshRouterModel(obj, Number(t.dataset.index));
       }
       if (
@@ -2860,7 +2950,7 @@
       return;
     }
     const t = e.target;
-    if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert}))return;
+    if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
     if (t.id === "intake-file" && t.files?.length) {
       try {
         const file = t.files[0];
@@ -3228,10 +3318,12 @@
       const custom = t.closest(".field").querySelector("[data-custom]");
       const isOther = t.value === "__custom__";
       custom.hidden = !isOther;
+      if (isOther && !custom.value && previous) custom.value = previous;
       obj[t.dataset.field] = isOther ? custom.value : t.value;
       if (t.dataset.block === "networks" && t.dataset.field === "routerVendor" &&
-          previous !== (t.dataset.field === "networkDeviceType" ? obj.networkDeviceType : obj.routerVendor)) {
-        obj.routerModel = "";
+          previous !== obj.routerVendor) {
+        // Keep the previous model even if it is no longer in the new vendor
+        // catalogue. The renderer makes it editable as "Otro / escribir".
         refreshRouterModel(obj, Number(t.dataset.index));
       }
       if(t.dataset.block==="assets"&&t.dataset.field==="type"&&previous!==obj.type){
@@ -3243,7 +3335,7 @@
       if(osField)osField.outerHTML=renderField(obj,"assets",groups.assets.fields.find(([key])=>key==="os"),Number(t.dataset.index));
     }
     if (t.dataset.block === "assets" && t.dataset.field === "vendor") {
-        obj.model = "";
+        // Preserve the previously recorded model; mismatches stay editable as "Otro".
         const sibling = workspace
           .querySelector(`#f-assets-${t.dataset.index}-model`)
           ?.closest(".field");
@@ -3261,8 +3353,8 @@
     }
     obj[t.dataset.field] = t.value;
     if(t.dataset.block==="networks" && t.dataset.field==="networkDeviceType"){
-      obj.routerVendor="";
-      obj.routerModel="";
+      // Type selection can happen after recording device details. Never
+      // clear vendor/model implicitly; show unmatched values as custom.
       const index=Number(t.dataset.index);
       for(const name of ["routerVendor","routerModel"]){
         const sibling=workspace.querySelector(`#f-networks-${index}-${name}`)?.closest(".field");
@@ -3279,7 +3371,7 @@
       if (target) updateValidation(target);
     }
     if (t.dataset.block === "assets" && t.dataset.field === "vendor") {
-      obj.model = "";
+      // Keep model when a vendor changes; only explicit model edits may clear it.
       const sibling = workspace
         .querySelector(`#f-assets-${t.dataset.index}-model`)
         ?.closest(".field");
@@ -3336,6 +3428,51 @@
       byId("record-search")?.focus();
       return;
     }
+    if(page==="attachments" && b.dataset.librarySelectAudit!==undefined){
+      const id=b.dataset.librarySelectAudit;
+      if(!records.some(row=>row.id===id))return;
+      attachmentAuditId=attachmentAuditId===id?"":id;
+      attachmentType="all";attachmentSearch="";
+      render();
+      const button=[...workspace.querySelectorAll("[data-library-select-audit]")]
+        .find(el=>el.dataset.librarySelectAudit===id);
+      button?.focus({preventScroll:true});
+      button?.scrollIntoView({block:"nearest",behavior:"auto"});
+      return;
+    }
+    if(page==="attachments" && (b.dataset.libraryPdfVerify!==undefined ||
+      b.dataset.libraryPdfDownload!==undefined)){
+      const audit=attachmentAuditId===currentId?state:
+        records.find(row=>row.id===attachmentAuditId)?.audit;
+      const id=b.dataset.libraryPdfVerify??b.dataset.libraryPdfDownload;
+      const item=audit?.pdfAppendices?.find(pdf=>pdf.id===id);
+      if(!item)return;
+      try{
+        const checked=await pdfAppendices.verify(item);
+        if(b.dataset.libraryPdfDownload!==undefined)downloadBlob(item.name,pdfAppendices.asBlob(item));
+        else alert("Integridad comprobada: "+checked.id+" · v"+checked.version+
+          " · SHA-256 "+checked.sha256+". No acredita autoría ni custodia.");
+      }catch(error){alert("No se pudo verificar el PDF: "+error.message)}
+      return;
+    }
+    if(page==="attachments" && (b.dataset.libraryEvidenceKey!==undefined ||
+      b.dataset.libraryGo!==undefined)){
+      const section=b.dataset.libraryGo||(b.dataset.libraryEvidenceKey!==undefined?"evidence":"");
+      const record=records.find(row=>row.id===attachmentAuditId);
+      if(!record || !["evidence","networks","delivery"].includes(section))return;
+      if(record.id!==currentId){
+        try{await flush();setActive(record);}
+        catch(error){alert("No se pudo abrir la auditoría: "+error.message);return;}
+      }
+      move(section);
+      if(b.dataset.libraryEvidenceKey!==undefined){
+        const key=b.dataset.libraryEvidenceKey;
+        const target=[...workspace.querySelectorAll(".entry[data-entry-key]")]
+          .find(row=>row.dataset.entryKey===key);
+        target?.scrollIntoView({block:"start",behavior:"auto"});
+      }
+      return;
+    }
     if (
       state.documentControl?.status === "confirmed" &&
       ![
@@ -3345,6 +3482,7 @@
         "online",
         "settings",
         "glossary",
+        "attachments",
       ].includes(page)
     ) {
       const safe = [
@@ -3366,6 +3504,8 @@
         !b.dataset.glossaryBack &&
         !b.dataset.deliveryOpen &&
         b.dataset.pdfAppendixDownload === undefined &&
+        b.dataset.pdfAppendixVerify === undefined &&
+        b.dataset.libraryEvidenceKey === undefined &&
         !safe.includes(b.id)
       ) {
         alert(
@@ -4070,6 +4210,8 @@
           status: "Sin verificar",
         };
       if (type === "controls") row.status = "Pendiente";
+      if (type === "networks" && ["Wi-Fi","Segmento / VLAN"].includes(b.dataset.networkKind))
+        row.networkKind = b.dataset.networkKind;
       if (type === "evidence") row.links = relations.normalizeLinks(null);
       state[type].unshift(row);
       persist();
@@ -5219,7 +5361,7 @@
               5,
               "Infraestructura de redes",
               state.networks.length||state.externalNetworkAnalysis
-                ? section(5, "Infraestructura de redes", (state.networks.length?reportRows("networks"):"") + renderExternalNetworkAnalysis(true))
+                ? section(5, "Infraestructura de redes", (state.networks.length?renderNetworkOverview(true)+reportRows("networks"):"") + renderExternalNetworkAnalysis(true))
                 : "",
             ],
             [
@@ -5259,9 +5401,26 @@
             [1, "Confidencialidad y límites de la evaluación", executiveLegal],
           ];
     if (state.pdfAppendices?.length) {
-      chapters.push([14, "Anexos PDF externos", section(14, "Anexos PDF externos",
-        '<p>Los documentos relacionados se entregan separadamente del PDF principal. Conserva originales, comprueba las huellas SHA-256 y usa un canal protegido.</p>' +
-        '<ul>' + state.pdfAppendices.map(item=>'<li>' + (item.category==='wifi-analysis'?'Análisis WiFi externo · ':'') + html(item.name) + (item.source?' · '+html(item.source):'') + (item.observedAt?' · '+html(item.observedAt):'') + ' · ' + item.size + ' bytes · SHA-256 ' + html(item.sha256) + '</li>').join('') + '</ul>')]);
+      const annexes=pdfAppendices.normalize(state.pdfAppendices);
+      const manifest=annexes.map(item=>({
+        id:item.id,version:item.version||1,name:item.name,size:item.size,
+        sha256:item.sha256,history:item.history||[]
+      }));
+      const full=reportProfile==="technical";
+      const rows=full
+        ? '<table class="report-table appendix-manifest"><thead><tr><th>Identificador / versión</th><th>Documento</th><th>Bytes</th><th>SHA-256 (contenido vigente)</th></tr></thead><tbody>'+
+          manifest.map(x=>'<tr><td><code>'+html(x.id)+'</code><div>v'+x.version+'</div></td><td>'+html(x.name)+
+          '</td><td>'+x.size+'</td><td><code>'+html(x.sha256)+'</code></td></tr>').join('')+
+          '</tbody></table>'+
+          manifest.filter(x=>x.history.length).map(x=>'<details open><summary>Historial documental: '+html(x.id)+'</summary><ol>'+
+            x.history.map(v=>'<li>v'+v.version+' · '+html(v.name)+' · '+v.size+
+            ' bytes · SHA-256 <code>'+html(v.sha256)+'</code> · sustituido '+html(v.at)+
+            ' (archivo anterior no almacenado)</li>').join('')+'</ol></details>').join('')
+        : '<ul>'+manifest.map(x=>'<li><strong>'+html(x.name)+'</strong> · ID <code>'+html(x.id)+
+          '</code> · v'+x.version+' · '+x.size+' bytes · SHA-256 <code>'+html(x.sha256)+'</code></li>').join('')+'</ul>';
+      chapters.push([14, "Inventario de integridad de anexos", section(14, "Inventario de integridad de anexos",
+        '<p>Este manifiesto identifica las copias actuales de los PDF entregados por separado. Antes de imprimir se comprueba su SHA-256 respecto al expediente. Para verificar la entrega, calcula el SHA-256 de cada archivo recibido y compáralo con la huella completa indicada. Una coincidencia no demuestra autoría, fecha cierta ni cadena de custodia.</p>'+
+        rows+'<p>El histórico almacena identificadores y huellas anteriores, no los PDF sustituidos. Mantén originales y actas de entrega por separado.</p>')]);
     }
     const activeChapters = chapters.filter(([_id, _title, content]) =>
       Boolean(content),
@@ -5516,6 +5675,8 @@
         return;
       }
     }
+    try {await pdfAppendices.verifyAll(state.pdfAppendices);}
+    catch(error){alert('Generación PDF detenida: '+error.message);return;}
     buildReport();
     await printPreparedReport();
   }

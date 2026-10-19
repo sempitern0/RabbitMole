@@ -50,7 +50,29 @@
       const source=typeof item.source==='string'?item.source.trim().slice(0,100):'';
       const observedAt=typeof item.observedAt==='string'?item.observedAt:'';
       if(observedAt&&!/^\d{4}-\d{2}-\d{2}$/.test(observedAt))throw Error('Fecha de análisis no válida.');
-      return {id:item.id, name, size:item.size, sha256:item.sha256, data:item.data, category, source, observedAt};
+      const result={id:item.id,name,size:item.size,sha256:item.sha256,data:item.data,category,source,observedAt};
+      // Do not inject defaults into legacy confirmed JSON: its document hash
+      // was calculated before per-file versioning existed.
+      if(item.version!==undefined||item.history!==undefined){
+        if(!Number.isInteger(item.version)||item.version<1||item.version>41||
+           !Array.isArray(item.history)||item.history.length>40||
+           item.history.length>item.version-1)throw Error('Historial de versiones PDF inválido.');
+        const seenVersions=new Set();
+        result.version=item.version;
+        result.history=item.history.map(entry=>{
+          if(!entry||typeof entry!=='object'||Array.isArray(entry)||
+             !Number.isInteger(entry.version)||entry.version<1||entry.version>=item.version||
+             seenVersions.has(entry.version)||typeof entry.name!=='string'||!entry.name||
+             entry.name.length>160||typeof entry.sha256!=='string'||
+             !/^[a-f0-9]{64}$/.test(entry.sha256)||!Number.isInteger(entry.size)||
+             entry.size<1||entry.size>MAX_PDF_BYTES||typeof entry.at!=='string'||
+             !/^\d{4}-\d\d-\d\dT/.test(entry.at))
+            throw Error('Entrada de versión de anexo inválida.');
+          seenVersions.add(entry.version);
+          return {version:entry.version,name:entry.name,size:entry.size,sha256:entry.sha256,at:entry.at};
+        });
+      }
+      return result;
     });
   }
   async function fromFile(file, metadata={}) {
@@ -70,10 +92,50 @@
       source: metadata.source || '', observedAt: metadata.observedAt || ''
     };
   }
-  function asBlob(item) {
-    const bytes = decoded(item.data);
-    checkBytes(bytes);
-    return new Blob([bytes], {type:'application/pdf'});
+  function planUpload(value,incoming){
+    const items=normalize(value),file=normalize([incoming])[0];
+    const equal=items.find(x=>x.sha256===file.sha256);
+    if(equal)return {status:'duplicate',item:equal};
+    const old=items.find(x=>x.category===file.category&&
+      x.name.toLocaleLowerCase('es')===file.name.toLocaleLowerCase('es'));
+    return {status:old?'replacement':'new',item:old||null};
   }
-  globalThis.RabbitMolePdfAppendices = Object.freeze({MAX_PDF_BYTES, MAX_COUNT, MAX_TOTAL_BYTES, normalize, fromFile, asBlob});
+  function applyUpload(value,incoming,allowReplace=false){
+    const items=normalize(value),file=normalize([incoming])[0],plan=planUpload(items,file);
+    if(plan.status==='duplicate')return {items,status:'duplicate',id:plan.item.id};
+    if(plan.status==='replacement'){
+      if(!allowReplace)throw Error('Confirma la sustitución del PDF antes de versionarlo.');
+      const current=plan.item,version=current.version||1;
+      if(version>=41)throw Error('Se alcanzó el límite del historial de versiones.');
+      const history=[...(current.history||[]),{
+        version,name:current.name,size:current.size,sha256:current.sha256,at:new Date().toISOString()
+      }];
+      const next={...file,id:current.id,version:version+1,history};
+      return {items:normalize(items.map(x=>x.id===current.id?next:x)),status:'versioned',id:current.id};
+    }
+    if(items.length>=MAX_COUNT)throw Error('Límite de cuatro anexos PDF.');
+    const created={...file,version:1,history:[]};
+    return {items:normalize([...items,created]),status:'added',id:created.id};
+  }
+  async function verify(item){
+    const file=normalize([item])[0];
+    if(!globalThis.crypto?.subtle)throw Error('SHA-256 requiere HTTPS o localhost.');
+    const bytes=decoded(file.data);
+    const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
+    const actual=Array.from(hash,b=>b.toString(16).padStart(2,'0')).join('');
+    if(actual!==file.sha256)throw Error('Integridad fallida para anexo '+file.id+'. SHA-256 no coincide.');
+    return {id:file.id,version:file.version||1,size:bytes.length,sha256:actual,verified:true};
+  }
+  async function verifyAll(value){
+    const checks=[];
+    for(const item of normalize(value))checks.push(await verify(item));
+    return checks;
+  }
+  function asBlob(item){
+    const bytes=decoded(item.data);checkBytes(bytes);
+    return new Blob([bytes],{type:'application/pdf'});
+  }
+  globalThis.RabbitMolePdfAppendices=Object.freeze({
+    MAX_PDF_BYTES,MAX_COUNT,MAX_TOTAL_BYTES,normalize,fromFile,planUpload,applyUpload,verify,verifyAll,asBlob
+  });
 })();

@@ -2,7 +2,7 @@
 'use strict';
 (()=>{
  async function handleChange(t,ctx){
-  const {state,pdfAppendices,externalNetwork,getCurrentId,byId,persist,render,alert}=ctx;
+  const {state,pdfAppendices,externalNetwork,getCurrentId,byId,persist,render,alert,confirm}=ctx;
     if (t.id === "external-wifi-pdf" && t.files?.length) {
       const auditId=getCurrentId();
       try {
@@ -10,8 +10,11 @@
         const meta={category:"wifi-analysis",source:byId("network-analysis-source")?.value?.trim()||"",observedAt:byId("network-analysis-date")?.value||""};
         const file=await pdfAppendices.fromFile(t.files[0],meta);
         if(auditId!==getCurrentId()||state.documentControl?.status==="confirmed")throw Error("El expediente ha cambiado.");
-        state.pdfAppendices=pdfAppendices.normalize([...state.pdfAppendices,file]);
-        persist();render();
+        const plan=pdfAppendices.planUpload(state.pdfAppendices,file);
+        if(plan.status==='replacement'&&!confirm('Existe un anexo PDF con este nombre. ¿Versionarlo? Se conservará el ID y la huella anterior, pero no los bytes antiguos.'))return true;
+        const updated=pdfAppendices.applyUpload(state.pdfAppendices,file,plan.status==='replacement');
+        if(updated.status==='duplicate'){alert('Archivo idéntico ya registrado con ID '+updated.id+'.');return true;}
+        state.pdfAppendices=updated.items;persist();render();
       }catch(error){alert("No se pudo adjuntar el informe WiFi: "+error.message);t.value="";}
       return true;
     }
@@ -37,9 +40,11 @@
         if (state.documentControl?.status === "confirmed") throw Error("Abre una rectificación antes de adjuntar documentos.");
         const file = await pdfAppendices.fromFile(t.files[0],{category:"general"});
         if (auditId !== getCurrentId() || state.documentControl?.status === "confirmed") throw Error("El expediente ha cambiado durante la carga.");
-        state.pdfAppendices = pdfAppendices.normalize([...state.pdfAppendices, file]);
-        persist();
-        render();
+        const plan=pdfAppendices.planUpload(state.pdfAppendices,file);
+        if(plan.status==='replacement'&&!confirm('Existe un PDF del mismo nombre. ¿Versionarlo sin conservar una copia adicional de los bytes anteriores?'))return true;
+        const updated=pdfAppendices.applyUpload(state.pdfAppendices,file,plan.status==='replacement');
+        if(updated.status==='duplicate'){alert('Archivo idéntico ya registrado con ID '+updated.id+'.');return true;}
+        state.pdfAppendices=updated.items;persist();render();
       } catch (error) { alert("No se pudo adjuntar el PDF: " + error.message); t.value = ""; }
       return true;
     }
@@ -128,9 +133,20 @@
       if(!confirm("¿Retirar del expediente el resumen CSV importado? Los anexos PDF permanecerán intactos."))return true;
       state.externalNetworkAnalysis=null;persist();render();return true;
     }
+    if(b.dataset.pdfAppendixVerify!==undefined){
+      const item=state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixVerify);
+      if(item)try{
+        const check=await pdfAppendices.verify(item);
+        alert('Integridad correcta: '+check.id+' · v'+check.version+' · SHA-256 '+check.sha256+'. No acredita autoría ni custodia.');
+      }catch(error){alert('Anexo no verificable: '+error.message);}
+      return true;
+    }
     if (b.dataset.pdfAppendixDownload) {
-      const item = state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixDownload);
-      if(item) downloadBlob(item.name,pdfAppendices.asBlob(item));
+      const item=state.pdfAppendices.find(x=>x.id===b.dataset.pdfAppendixDownload);
+      if(item)try{
+        await pdfAppendices.verify(item);
+        downloadBlob(item.name,pdfAppendices.asBlob(item));
+      }catch(error){alert('Descarga cancelada por integridad: '+error.message);}
       return true;
     }
     if(b.dataset.pdfAppendixSave){

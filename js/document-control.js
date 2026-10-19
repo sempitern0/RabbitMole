@@ -42,7 +42,10 @@
       }
       if(value&&typeof value==='object'){
         for(const [key,item] of Object.entries(value)){
-          if(key==='documentControl'||(path.startsWith('evidence[')&&key==='image'))continue;
+          // The confirmation digest still covers all bytes. The amendment
+          // diff uses PDF hash + metadata to avoid exceeding the 20k field cap.
+          if(key==='documentControl'||(path.startsWith('evidence[')&&key==='image')||
+             (path.startsWith('pdfAppendices[')&&key==='data'))continue;
           flatten(item,path?(path+'.'+key):key,level+1);
         }
         return;

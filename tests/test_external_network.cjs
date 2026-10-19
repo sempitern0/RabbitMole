@@ -22,6 +22,21 @@ const first=data.imports.find(item=>item.kind==='aps');
 assert(first&&first.filename==='aps.csv');
 const extra=m.merge(data,{...parsed,filename:'other.csv'});
 assert.equal(extra.imports.length,3);
+// A roaming export must never replace the AP captures it references.
+const roam=m.parseText('Interfaz Wifi;SSID;Dirección MAC;Fabricante;Conectado;Desconectado;Duración\nwlan0;Lab;02:00:00:00:00:01;Example;10:00;10:05;5');
+assert.equal(roam.kind,'roaming');
+const afterRoam=m.merge(extra,{...roam,filename:'acrylic_roaming.csv'});
+assert.equal(m.metrics(afterRoam).wifi,1);
+assert.equal(afterRoam.diagnostics.roaming.length,1);
+const damaged={...extra,aps:[{SSID:'Lab','Dirección MAC':'02:00:00:00:00:01'}],
+ imports:[...extra.imports,{id:'legacy-roaming',kind:'aps',filename:'acrylic_troubleshooting_roaming.csv',
+ files:['acrylic_troubleshooting_roaming.csv'],source:'',observedAt:'',importedAt:'',
+ snapshot:{...extra.imports[0].snapshot,aps:[{SSID:'Lab','Dirección MAC':'02:00:00:00:00:01'}]}}]};
+const untouched=JSON.stringify(damaged),repaired=m.effective(damaged);
+assert.equal(repaired.aps[0].Banda,'2.4GHz','Retain AP snapshot instead of broken roaming classification');
+assert.equal(JSON.stringify(damaged),untouched,'Do not mutate confirmed JSON');
+const more=m.merge(extra,{...parsed,filename:'second-aps.csv'});
+assert.equal(m.metrics(more).wifi,1,'Deduplicate BSSID across repeated AP CSV files');
 const restored=m.removeImport(extra,extra.imports.at(-1).id);
 assert.equal(restored.imports.length,2);
 assert.equal(m.metrics(restored).wifi,1);
@@ -33,6 +48,7 @@ assert.equal(legacy.imports.length,2);
 assert.equal(m.normalize(JSON.parse(JSON.stringify(legacy))).imports.length,2);
 assert.throws(()=>m.removeImport(historical,'aps.csv'),/antiguos/);
 assert.equal(m.parseText('sep=;\nAncho de Descarga;Fecha\n').kind,'speed');
+assert.equal(m.parseText('Ancho de Descarga;Ancho de Subida;Fecha\n1;2;2026-10-19').kind,'iperf');
 assert.throws(()=>m.parseText('header;unexpected\nfoo;bar'),/CSV no compatible/);
 assert.throws(()=>m.parseText('SSID;SSID;Dirección MAC;Canal;Banda\nx;y;z;6;2.4GHz'),/repetidas/);
 assert.equal(JSON.stringify(data).includes('192.0.2.1'),true);

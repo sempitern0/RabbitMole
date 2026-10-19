@@ -83,7 +83,10 @@
    return rows;
  }
  function detect(headers){
-   return Object.entries(FIELDS).find(([,needed])=>needed.every(x=>headers.includes(x)))?.[0]||null;
+   // Roaming shares SSID/MAC with AP captures; iPerf shares speed columns.
+   // Choose the most specific schema to avoid overwriting unrelated datasets.
+   const preferred=['roaming','iperf','ip','latency','transfer','devices','aps','speed'];
+   return preferred.find(kind=>FIELDS[kind].every(field=>headers.includes(field)))||null;
  }
  function parseText(raw){
    const rows=csvRows(raw),headers=rows.shift().map(canonical);
@@ -173,19 +176,56 @@
    }
    return out;
  }
- function rebuild(imports){
-   if(!imports.length)return null;
-   const out={source:'',observedAt:'',importedAt:'',files:[],aps:[],devices:[],diagnostics:{},latency:null,imports};
+ // Recover CSV-derived tables without changing confirmed audit data or hashes.
+ function wasRoamingMisclassified(entry){
+   return entry.kind==='aps'&&/(?:^|[_-])roaming\.csv$/i.test(entry.filename);
+ }
+ function aggregate(imports){
+   const result={source:'',observedAt:'',importedAt:'',files:[],aps:[],devices:[],diagnostics:{},latency:null,imports};
+   const aps=new Map(),devices=new Map();
+   const accumulate=(target,rows,keyOf)=>{
+     for(const row of rows){
+       const key=keyOf(row);
+       if(target.has(key))target.delete(key);
+       target.set(key,row);
+     }
+   };
    for(const entry of imports){
      const s=entry.snapshot;
-     if(entry.kind==='historical'){out.aps=s.aps;out.devices=s.devices;out.diagnostics={...s.diagnostics};out.latency=s.latency;}
-     else if(entry.kind==='aps'||entry.kind==='devices')out[entry.kind]=s[entry.kind];
-     else if(entry.kind==='latency')out.latency=s.latency;
-     else out.diagnostics[entry.kind]=s.diagnostics[entry.kind];
-     out.files=[...new Set([...out.files,...entry.files])].slice(-8);
-     out.source=entry.source;out.observedAt=entry.observedAt;out.importedAt=entry.importedAt;
+     if(entry.kind==='historical'){
+       accumulate(aps,s.aps,r=>(r.SSID+'|'+r['Dirección MAC']).toLowerCase());
+       accumulate(devices,s.devices,r=>(r['Dirección MAC']||'').toLowerCase());
+       result.diagnostics={...result.diagnostics,...s.diagnostics};
+       if(s.latency)result.latency=s.latency;
+     }else if(wasRoamingMisclassified(entry)){
+       // Original timing columns were discarded by older parsers; don't
+       // pretend this incomplete capture is another point of access.
+     }else if(entry.kind==='aps'){
+       accumulate(aps,s.aps,r=>(r.SSID+'|'+r['Dirección MAC']).toLowerCase());
+     }else if(entry.kind==='devices'){
+       accumulate(devices,s.devices,r=>(r['Dirección MAC']||'').toLowerCase());
+     }else if(entry.kind==='latency')result.latency=s.latency;
+     else result.diagnostics[entry.kind]=[
+       ...(result.diagnostics[entry.kind]||[]),...(s.diagnostics[entry.kind]||[])
+     ].slice(0,MAX_DIAGNOSTIC_ROWS);
+     result.files=[...new Set([...result.files,...entry.files])].slice(-8);
+     if(entry.source)result.source=entry.source;
+     if(entry.observedAt)result.observedAt=entry.observedAt;
+     if(entry.importedAt)result.importedAt=entry.importedAt;
    }
-   return normalize(out);
+   result.aps=[...aps.values()];
+   result.devices=[...devices.values()];
+   if(result.aps.length>MAX_APS||result.devices.length>MAX_DEVICES)
+     throw Error('CSV combinados demasiado grandes: divide la captura o reduce los archivos importados.');
+   return result;
+ }
+ function rebuild(imports){
+   if(!imports.length)return null;
+   return normalize(aggregate(imports));
+ }
+ function effective(value){
+   const stored=normalize(value);
+   return stored?.imports?.length?aggregate(stored.imports):stored;
  }
  function removeImport(value,id){
    const current=normalize(value);
@@ -223,5 +263,5 @@
      band6:wifi.filter(x=>/^6\s*GHz$/i.test(x.Banda)).length,
      observedDevices:v.devices.length,latency:v.latency};
  }
- globalThis.RabbitMoleExternalNetwork=Object.freeze({MAX_BYTES,MAX_APS,MAX_DEVICES,csvRows,parseText,parseFile,normalize,merge,removeImport,metrics});
+ globalThis.RabbitMoleExternalNetwork=Object.freeze({MAX_BYTES,MAX_APS,MAX_DEVICES,csvRows,parseText,parseFile,normalize,effective,merge,removeImport,metrics});
 })();

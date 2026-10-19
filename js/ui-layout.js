@@ -29,6 +29,22 @@
     update();
     try { localStorage.setItem(KEY, String(collapsed)); } catch (_ignored) {}
   });
+  // Choosing an audit section from the expanded compact menu should return
+  // the operator to the working area, not leave the full menu above it.
+  // Capture before app.js renders the new section, with no collapse animation.
+  function closeCompactOnNavigate(event) {
+    if (!narrow.matches || collapsed || !event.target.closest("button[data-go]")) return;
+    if (sidebar.contains(document.activeElement) && document.activeElement !== toggle)
+      toggle.focus({preventScroll:true});
+    app.dataset.navigationInstant = "true";
+    collapsed = true;
+    update();
+    requestAnimationFrame(() => { delete app.dataset.navigationInstant; });
+    // Automatic closing is view state only; do not overwrite the user's
+    // manually chosen and persisted sidebar preference.
+  }
+  for (const id of ["global-navigation","navigation"])
+    document.getElementById(id)?.addEventListener("click", closeCompactOnNavigate, true);
   if (narrow.addEventListener) narrow.addEventListener("change", update);
   else if (narrow.addListener) narrow.addListener(update);
   update();

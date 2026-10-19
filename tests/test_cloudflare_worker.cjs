@@ -4,7 +4,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
  const source=fs.readFileSync('deploy/worker.js','utf8');
  const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
  let calls=0;const env={ASSETS:{fetch:async()=>{calls++;return new Response('asset',{headers:{'Content-Type':'text/plain'}})}}};
- for(const path of ['/','/index.html','/sw.js','/js/pwa-install.js','/icons/icon-192.png','/release.json','/checksums.json']){
+ for(const path of ['/','/index.html','/sw.js','/js/pwa-install.js','/icons/icon-192.png','/release.json','/checksums.json','/discovery-kit.zip']){
   const response=await worker.fetch(new Request('https://rabbit.example'+path),env);
   assert.equal(response.status,200,path);assert.equal(response.headers.get('X-Frame-Options'),'DENY');
   assert(response.headers.get('Content-Security-Policy').includes("connect-src 'self' https:"));

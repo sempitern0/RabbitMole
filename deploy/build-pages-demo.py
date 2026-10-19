@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist-pages"
@@ -14,7 +15,7 @@ ALLOWED = {"css": {".css"}, "js": {".js"}, "fonts": {".woff2"},
            "icons": {".png", ".svg"}}
 CSP = ("default-src 'none'; script-src 'self'; script-src-elem 'self'; "
        "script-src-attr 'none'; style-src 'self'; "
-       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https:; "
+       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https: http://127.0.0.1:*; "
        "object-src 'none'; frame-src blob:; form-action 'none'; "
        "base-uri 'none'; manifest-src 'self'; worker-src 'self'; "
        "frame-ancestors 'none'")
@@ -55,6 +56,16 @@ def main():
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dst)
 
+    # Only the minimal Discovery helper, never audit data or credentials.
+    with zipfile.ZipFile(DIST / "discovery-kit.zip", "w", zipfile.ZIP_DEFLATED) as archive:
+        for name in ("service.py", "discover.py", "wizard.py", "run.ps1",
+                     "run.sh", "iniciar.cmd", "README_ES.md", "README.md"):
+            source = ROOT / "discovery" / name
+            if not source.is_file() or source.is_symlink():
+                raise SystemExit("Missing Discovery kit source: " + str(source))
+            info = zipfile.ZipInfo("discovery/" + name, (2024, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(info, source.read_bytes())
     html = (ROOT / "index.html").read_text(encoding="utf-8")
     if 'js/deployment-profile.js' not in html or "connect-src 'self' https:" not in html:
         raise SystemExit("Missing profile or required installed-app CSP")

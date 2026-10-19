@@ -21,6 +21,14 @@ for(const vendor of ['Cisco','MikroTik','Ubiquiti','TP-Link (Omada)','AVM (FRITZ
 const app=fs.readFileSync('js/app.js','utf8'),field=fs.readFileSync('js/audit-field-renderer.js','utf8'),style=fs.readFileSync('css/glossary.css','utf8');
 for(const part of ['routerVendor','routerModel','refreshRouterModel','glossaryHelpIcon'])
  assert(app.includes(part),'Missing router UX '+part);
+const networkInput=app.slice(app.indexOf('workspace.addEventListener("input"'),app.indexOf('// Progressive enhancement only:',app.indexOf('workspace.addEventListener("input"')));
+const networkChange=app.slice(app.indexOf('const previous = obj[t.dataset.field];',app.indexOf('workspace.addEventListener("change"')),app.indexOf('if(t.dataset.block==="assets"&&t.dataset.field==="type"',app.indexOf('workspace.addEventListener("change"')));
+assert(!networkInput.includes('obj.routerModel = ""'),'Custom vendor edits must not erase model');
+assert(!networkInput.includes('obj.routerVendor=""'),'Type updates must not erase vendor');
+assert(!networkChange.includes('obj.routerModel = ""'),'Vendor picker must not erase model');
+assert(app.includes('ROUTER_AUDIT_FIELDS = Object.freeze(["networkDeviceType"'),'Choose equipment type before vendor/model');
+assert(app.includes('if (isOther && !custom.value && previous) custom.value = previous;'),
+ 'Selecting custom must not erase previously selected device values');
 assert(field.includes('Otro / escribir…') && field.includes('data-custom="true"'),'Missing custom network-device entry in the field renderer');
 assert(style.includes('.glossary-help-icon'),'Unified SVG sizing is required');
 console.log('PASS offline router catalog, dependent selectors and consistent SVG assistance');

@@ -1,11 +1,11 @@
 /* RabbitMole Workers static-asset gateway: no API, storage, or proxy.
  * Never embed secrets or handle client audit data here. */
 const CSP = "default-src 'none'; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; style-src 'self'; " +
-  "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https:; " +
+  "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https: http://127.0.0.1:*; " +
   "object-src 'none'; frame-src blob:; form-action 'none'; base-uri 'none'; " +
   "manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'";
 const ROOT_FILES = new Set(["/","/index.html","/sw.js","/manifest.webmanifest",
-  "/robots.txt","/release.json","/checksums.json"]);
+  "/robots.txt","/release.json","/checksums.json","/discovery-kit.zip"]);
 const ASSET_PATH = /^\/(?:css\/[a-z0-9-]+\.css|js\/[a-z0-9-]+\.js|fonts\/[A-Za-z0-9-]+\.woff2|icons\/[A-Za-z0-9_-]+\.(?:png|svg))$/;
 const NO_STORE = new Set(["/","/index.html","/sw.js","/manifest.webmanifest",
   "/js/deployment-profile.js","/release.json","/checksums.json"]);

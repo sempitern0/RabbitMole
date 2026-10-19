@@ -35,6 +35,7 @@
 
   function renderAppendixActions(item,readonly,{html}){
     return `<div class="pdf-appendix-tools"><div class="action-row">
+      <button type="button" class="button quiet small" data-pdf-appendix-verify="${html(item.id)}">Verificar SHA-256</button>
       <button type="button" class="button quiet small" data-pdf-appendix-download="${html(item.id)}">Descargar</button>
       <button type="button" class="button danger small" data-pdf-appendix-remove="${html(item.id)}" ${readonly?"disabled":""}>Quitar PDF</button></div>
       <details class="pdf-appendix-editor" data-ui-expand="appendix-${html(item.id)}">

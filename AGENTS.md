@@ -100,3 +100,51 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 
 ## Flujo rápido del asistente
 `js/app.js` conserva el último paso por expediente en `rabbitmole:ui:last-step:v1:<id>`: preferencia local validada contra `nav`, jamás progreso verificado ni parte del JSON. Eliminar el expediente elimina esa preferencia. `#wizard-step-top` debe seguir habilitado en expedientes confirmados. Los botones `[data-entry-next]` solo navegan por fichas visibles y usan `recordNavigation.focus(key,{clearSearch:false})`; los botones `data-add` reutilizan límites, identificadores y bloqueos existentes. No copiar observaciones o estados entre registros. CSS en `workspace-ux.css`; E2E en `test_pwa_browser.cjs`.
+
+## Mobile/tablet wizard scroll
+- `js/app.js` tracks transitions between `nav` steps, and after rendering aligns the fresh `.wizard-fast-nav` within a viewport up to 1000px. General navigation and desktop still go to page top. `heading.focus({preventScroll:true})` avoids a second jump.
+- Do not alter audit JSON, active record or last-step persistence. Test real phone/tablet scrolling in `tests/test_pwa_browser.cjs` and the source contract in `tests/test_mobile_pwa.cjs`. Increment SW cache when updating JS.
+
+## Compact navigation and iOS safe areas
+- `js/ui-layout.js` auto-closes the expanded menu on compact (< =1000px) destination buttons in `#global-navigation` and `#navigation`, without changing saved manual preference. Navigation closure uses `data-navigation-instant` so the collapsing menu does not shift the new wizard after scrolling.
+- `js/android-touch.js` sets generic `touch-device` for coarse pointer Android/iOS (retains `android-touch` for Android-only detection). Shared CSS in `css/android-touch.css`; `css/layout-collapse.css` maintains viewport safe-area padding and 16px menu inputs, without fixed root containers. `index.html` uses viewport-fit=cover.
+- Phone/tablet record navigation avoids smooth scrolling while software keyboard may resize viewport. Tests: `tests/test_android_touch.cjs`, `tests/test_mobile_pwa.cjs`, `tests/test_pwa_browser.cjs` (iOS UA emulation explicitly not native WebKit). Do not assume iOS parity without real-device acceptance.
+
+## Wi-Fi and VLAN inventory design
+- One Wi-Fi logical SSID or segment per `networks` record. Optional fields `networkKind`, `site`, and `segmentationState` preserve JSON v3 and the existing importer. Do not equate BSSID/AP observations to distinct SSIDs.
+- `js/network-overview.js` groups declared site+VLAN only and is deliberately read-only: it cannot infer network isolation, VLAN routing rules, DHCP correctness or vulnerabilities. No automated scan/finding. `renderNetworkOverview` displays the mapping in the assistant and technical report.
+- Keep installer and SW resource parity and run `tests/test_network_overview.cjs`, `tests/test_app_modules.cjs`, browser audit workflow, `npm run check` before merge. Confirmed documents must reject adding rows.
+
+## Router security data-loss regression
+- Never clear `networks.routerVendor` or `networks.routerModel` as a side effect of changing `networkDeviceType` or `routerVendor`. Models may be custom and valid even if absent from the new catalogue; preserve and show as `Otro / escribir` for explicit revision.
+- Render `networkDeviceType` first in `router-security-review`; do not display it a second time in the extended group. The `app-model.js` JSON v3 validator must roundtrip router details and reportRows(networks) should render every populated field.
+- Regression: `tests/test_router_catalog.cjs`, `tests/test_app_modules.cjs`, `tests/test_pwa_browser.cjs` including offline reload after changing type/vendor. Do not infer missing values from external sources.
+
+## Prevent CSV overwrite and silent hardware model loss
+- Derive display data from `RabbitMoleExternalNetwork.effective()` rather than normalizing stale aggregate arrays. Keep confirmed documents/digests immutable. Group distinct SSIDs as observations, not declared client inventory.
+- Preserve hardware `model` when changing `vendor` (preset and custom), as with router vendor/model. Regression in browser test.
+- A4 report radio tables are deliberately compact; third-party PDF annexes are separate files by hash and are not appended in PDF generation.
+
+## Versioned PDF evidence manifest
+- `js/pdf-appendices.js` supports deduplication by SHA-256, optional version replacement only after confirmation, stable IDs, and real digest verification before PDF printing/downloading. Legacy annexes must normalize without inserting default fields (otherwise a previously confirmed JSON digest can change).
+- Only current PDF bytes remain in JSON; older versions store limited metadata (SHA-256, name, size, version, replacement timestamp). Identical filenames suggest a version; they do not prove same source. Preserve document-control audit history without duplicating large base64 in rectification comparisons.
+- Report's final appendix-integrity inventory includes identifiers, versions, bytes and full SHA-256, with prior version history in technical report. Do not assert that the digest independently proves provenance, custody, or delivery. Run `tests/test_pdf_appendices.cjs`, `tests/test_document_control.cjs`, `tests/test_report_browser.cjs`, whole CI before merging.
+
+## Visible per-audit file library navigation
+- `#navigation` is intentionally always hidden by the current wizard layout and `#navigation[hidden]{display:none!important}`. Never append essential route actions to it. The File library belongs to the visible `#global-navigation` (id `audit-file-library-link`), visible only when `currentId` exists. `#global-navigation ...[hidden]` needs explicit CSS because nav buttons use `display:flex`.
+- Playwright must test actual `isVisible()` before creating an audit and after opening one, not just presence in DOM. Also test mobile collapsed sidebar. Keep file library separate from wizard progress and PDF output.
+
+## Global file library and audit selection
+- Main navigation uses `Auditorías` (records) and always displays `Biblioteca de archivos`, even without an active audit. `attachments` is an allowed top-level route without `currentId` and is treated as a library page; never insert the route into the wizard `nav` list.
+- `js/audit-attachment-library.js` renders stored audit records first; only the audit chosen by `attachmentAuditId` expands and displays filters, with no mutation or duplication of bytes. For the in-memory active audit, pass `state` instead of potentially stale repository snapshot. Browser selection does not modify `currentId`.
+- All file actions must bind to the selected audit. PDF verify/download checks the selected PDF against SHA-256. Navigation to an evidence/CSV section explicitly switches audit only after flushing pending changes. Keep image previews protected and the report content unchanged. Test empty library, two audits, selected filters, offline and confirmed records.
+
+## Guided discovery on Worker-installed PWA
+- `discovery/service.py` is a temporary HTTPS service started on an auditor-owned workstation, **not** a Cloudflare Worker. `js/discovery-bridge.js` provides 4 guided stages and explicitly distinguishes the independent localhost `serve.py` mode. HTTPS token is ephemeral, must not be stored in local/session storage, URLs or audit exports.
+- Never claim that an installed PWA can launch Termux or arbitrary native shell scripts. Browser private-network restrictions, TLS certificates, firewalls and client isolation can block the bridge. No auto-scanning; require approved private CIDR, typed `AUTORIZO`, confirmation; host reachability does not verify VLAN isolation, OS, firmware or credentials.
+- Reuse one capture with the existing `AuditInventoryImport` review for Hardware/Networks and offer JSON download as fallback. Update `tests/test_discovery_bridge.cjs` and browser tests; real Safari/Android bridge connectivity still needs field acceptance.
+
+## Same-PC loopback Discovery
+- `discovery/service.py --loopback-http --origin https://<installed-worker-origin>` is allowed only when binding to 127.0.0.1; it must refuse all non-loopback bind/host and TLS options. This serves no LAN clients, uses the original exact-Origin/token checks and bounded discovery authorization.
+- Cloudflare Worker and generated Pages CSP grant only `http://127.0.0.1:*` in addition to existing HTTPS targets. Do not loosen CSP to arbitrary HTTP or turn Cloudflare into a scan proxy. Cross-origin browser localhost permissions vary; JSON import is the fallback.
+- Tests must cover URL validator allowing HTTP loopback but refusing HTTP private LAN, and server refusing loopback mode mixed with LAN bind. Verify real browser behavior rather than claiming browser compatibility from static checks.

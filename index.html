@@ -2,7 +2,7 @@
 <html lang="es" data-palette="rabbitmole">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
     <title>RabbitMole · Auditoría offline</title>
     <meta name="theme-color" content="#081425" />
@@ -72,7 +72,7 @@
           <div class="sidebar-body-content">
         <div class="side-caption" id="workspace-label">MENÚ PRINCIPAL</div>
         <nav id="global-navigation" aria-label="Menú principal">
-          <button type="button" data-go="records" aria-label="Biblioteca de auditorías" title="Biblioteca de auditorías">
+          <button type="button" data-go="records" aria-label="Auditorías" title="Auditorías">
             <svg
               class="nav-icon"
               xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +89,16 @@
             >
               <rect x="4" y="3" width="16" height="18" rx="2" />
               <path d="M8 8h8M8 12h8M8 16h5" /></svg
-            ><span>Biblioteca de auditorías</span>
+            ><span>Auditorías</span>
+          </button>
+          <button id="audit-file-library-link" type="button" data-go="attachments"
+            aria-label="Biblioteca de archivos de las auditorías" title="Biblioteca de archivos">
+            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+              width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <path d="M3 10h18"/>
+            </svg><span>Biblioteca de archivos</span>
           </button>
           <button type="button" data-go="backups" aria-label="Copias y exportaciones" title="Copias y exportaciones">
             <svg
@@ -551,6 +560,7 @@ python3 --version</code></pre>
     <script src="js/glossary.js" defer></script>
     <script src="js/audit-relations.js" defer></script>
     <script src="js/audit-evidence-images.js" defer></script>
+    <script src="js/audit-attachment-library.js" defer></script>
     <script src="js/audit-identifiers.js" defer></script>
     <script src="js/control-templates.js" defer></script>
     <script src="js/field-assist.js" defer></script>
@@ -568,6 +578,7 @@ python3 --version</code></pre>
     <script src="js/document-control.js" defer></script>
     <script src="js/pdf-appendices.js" defer></script>
     <script src="js/external-network-analysis.js" defer></script>
+    <script src="js/network-overview.js" defer></script>
     <script src="js/pwa-updates.js" defer></script>
     <script src="js/pwa-install.js" defer></script>
     <script src="js/discovery-bridge.js" defer></script>

@@ -89,3 +89,15 @@ El Worker sirve la aplicación estática, pero **no** ejecuta Python ni mantiene
 En **Redes → Captura asistida → Discovery local** aparece ahora un asistente de cuatro pasos: preparar el PC o Termux, comprobar la conexión HTTPS/token y motor Nmap/ping, confirmar un CIDR privado autorizado de hasta 256 direcciones escribiendo `AUTORIZO`, y revisar los registros detectados. Se reutiliza un único JSON para las vistas previas de Hardware y Redes y puede descargarse el JSON si el navegador no permite pasarlo directamente al importador (especialmente WebKit/iOS). Los candidatos no se guardan hasta que los seleccionas y confirmas en el asistente; cada campo puede revisarse o editarse manualmente después.
 
 **Limitaciones reales:** compartir Wi-Fi no garantiza alcance entre dispositivos si hay aislamiento AP, filtros de red o problemas de certificado. Una PWA no puede abrir una shell ni navegar a la supuesta carpeta de scripts de su instalación; Cloudflare tampoco puede escanear las IP privadas del centro. En Android, Termux es una alternativa independiente para generar JSON. Discovery realiza descubrimiento de hosts con ping/Nmap sin reconocimiento de puertos y no verifica firmware, contraseñas, VLAN, SSID ni controles de seguridad.
+
+## Discovery sin certificados en el mismo PC (loopback)
+
+Si RabbitMole se ejecuta como PWA en **el mismo Windows** en el que vas a capturar la red, no necesitas HTTPS propio ni clonar la interfaz de RabbitMole en otro servidor. Desde la carpeta que contenga los scripts `discovery`, abre PowerShell y ejecuta:
+
+```powershell
+py -3 discovery\\service.py --loopback-http --origin https://rabbitmole.danieldigitalspace.workers.dev
+```
+
+El servidor escucha **exclusivamente en 127.0.0.1:8766**, imprime un token efímero en la consola y no es accesible desde otros dispositivos. En la PWA instalada en ese mismo PC entra en **Redes → Captura asistida → Discovery local**, elige «Usar servidor de este PC», introduce el token y comprueba la conexión. Algunos navegadores piden permiso para acceso a redes locales y ciertos entornos corporativos podrían bloquearlo. Si no funciona, exporta un JSON con `py -3 discovery\\discover.py wizard` e impórtalo manualmente. No desactives protecciones de CORS ni de seguridad para hacerlo funcionar.
+
+Si la PWA corre en **Android, iOS o una tablet** y Discovery en el PC, `127.0.0.1` apunta al dispositivo móvil, no al PC: debes emplear el modo **HTTPS LAN** con certificado confiable o transferir el JSON. El modo `--loopback-http` rechaza bind/host LAN y los parámetros de certificado. Nunca expongas HTTP a la Wi-Fi de un cliente.

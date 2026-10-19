@@ -464,3 +464,7 @@ Desde **Menú principal → Biblioteca de archivos** se muestran primero **todas
 ### Discovery guiado en móvil/tablet (Worker + LAN)
 
 En **Redes → Captura asistida → Discovery local**, el nuevo asistente detalla cómo arrancar el servicio temporal en un PC auditor, obtener el token de consola (generado en el PC, **no** en Cloudflare), comprobar conexión/certificado y motor disponible, autorizar una subred privada y revisar una captura en Hardware/Redes. Dispone de descarga JSON de respaldo cuando falla la transferencia al importador. No hay acceso a una terminal del dispositivo desde la PWA ni servidor Cloudflare que lance scripts. Android Termux genera JSON por separado; iOS/iPadOS necesita un PC auditor o una captura importada. Los resultados nunca se convierten directamente en evidencias verificadas.
+
+### Discovery local sin certificado en el mismo PC
+
+Si utilizas la PWA Cloudflare instalada y Discovery en el **mismo Windows**, el nuevo modo `py -3 discovery\\service.py --loopback-http --origin https://rabbitmole.danieldigitalspace.workers.dev` usa un servicio temporal escuchando exclusivamente en `http://127.0.0.1:8766`. El Worker solo aloja la PWA y su CSP permite contactar con ese loopback; puede ser necesario permiso de acceso local del navegador. No sirve para escanear una LAN desde una tablet diferente: en ese caso necesitas HTTPS LAN o importar JSON desde una captura externa. Mantén la consola abierta y no abras puertos en el router.

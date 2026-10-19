@@ -19,6 +19,13 @@ class BridgeTests(unittest.TestCase):
   self.assertEqual(bridge.valid_origin('https://audit.example'),'https://audit.example')
   for value in ('http://audit.example','https://audit.example/path','https://evil@audit.example','https://audit.example/?x=1'):
    with self.subTest(value=value),self.assertRaises(ValueError):bridge.valid_origin(value)
+ def test_loopback_only_contract(self):
+  source=(root/'discovery'/'service.py').read_text(encoding='utf-8')
+  self.assertIn('args.loopback_http',source)
+  self.assertIn('args.bind not in (None, "127.0.0.1")',source)
+  self.assertIn('bind = host = "127.0.0.1"',source)
+  self.assertIn('if context is not None:',source)
+  self.assertIn('args.cert or args.key',source)
  def test_read_only_and_no_public_network(self):
   import discover
   with self.assertRaises(ValueError):discover.scope_network('8.8.8.0/24',max_hosts=256)

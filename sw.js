@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v105-appendix-integrity";
+const CACHE_NAME = "rabbitmole-shell-v106-attachment-library";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -28,6 +28,7 @@ const CORE = [
   "./css/relations.css",
   "./js/audit-relations.js",
   "./js/audit-evidence-images.js",
+  "./js/audit-attachment-library.js",
   "./js/audit-identifiers.js",
   "./css/templates.css",
   "./css/quality.css",

@@ -1103,3 +1103,21 @@
 /* Hash inventory stays readable in printed A4: do not truncate the SHA-256. */
 .appendix-manifest code,.appendix-versions code{overflow-wrap:anywhere;word-break:break-all;font-size:.77em}
 @media print{.appendix-manifest{table-layout:fixed;width:100%}.appendix-manifest td{overflow-wrap:anywhere;vertical-align:top}.appendix-manifest th:nth-child(1){width:27%}.appendix-manifest th:nth-child(2){width:22%}.appendix-manifest th:nth-child(3){width:12%}.appendix-manifest th:nth-child(4){width:39%}.appendix-manifest tr{break-inside:avoid}}
+
+/* Per-audit file library: screen-only and touch-friendly. */
+#workspace .attachment-library{display:grid;gap:.85rem;min-width:0}
+#workspace .attachment-library-controls{display:grid;grid-template-columns:minmax(0,2fr) minmax(155px,1fr);gap:.75rem}
+#workspace .attachment-library-controls :is(input,select){min-width:0;width:100%;min-height:44px}
+#workspace .attachment-library-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:.75rem}
+#workspace .attachment-library-card{display:flex;gap:.75rem;border:1px solid var(--line);border-radius:.8rem;padding:.8rem;min-width:0}
+#workspace .attachment-library-preview{width:80px;height:80px;flex:none;display:grid;place-items:center;overflow:hidden;background:var(--canvas);border-radius:.5rem;text-align:center}
+#workspace .attachment-library-preview img{width:100%;height:100%;object-fit:cover}
+#workspace .attachment-library-details{flex:1;min-width:0;overflow-wrap:anywhere}
+#workspace .attachment-library-details h3{margin:.2rem 0}
+#workspace .attachment-library-details p{margin:.3rem 0;line-height:1.5}
+#workspace .attachment-library-details code{word-break:break-all}
+#workspace .attachment-library-details summary{padding:.45rem 0;min-height:44px;cursor:pointer}
+#workspace .attachment-library-details .action-row{display:flex;gap:.5rem;flex-wrap:wrap}
+#workspace .attachment-library-details .button{min-height:44px}
+#workspace .attachment-library-empty{padding:1rem;border:1px dashed var(--line);border-radius:.7rem}
+@media(max-width:720px){#workspace .attachment-library-controls{grid-template-columns:1fr}#workspace .attachment-library-preview{width:60px;height:60px}}

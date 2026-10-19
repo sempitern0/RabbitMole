@@ -21,6 +21,7 @@ COMMANDS = [
     ['node', 'tests/test_palette_icons.cjs'],
     ['node', 'tests/test_ui_collapse.cjs'],
     ['node', 'tests/test_pdf_appendices.cjs'],
+    ['node', 'tests/test_attachment_library.cjs'],
     ['node', 'tests/test_external_network.cjs'],
     ['node', 'tests/test_network_overview.cjs'],
     ['node', 'tests/test_router_catalog.cjs'],

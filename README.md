@@ -404,3 +404,7 @@ The report derives a read-only view from saved per-file CSV snapshots without ch
 ### PDF appendix integrity inventory and versioning
 
 PDF annexes are SHA-256 checked against their actual stored bytes before downloading or printing. Same-content files are deduplicated; files with matching name and category may be versioned after explicit confirmation, retaining a stable ID and only the current PDF bytes. Previous versions retain hashes and metadata, not payloads. Both PDF profiles have an appendix integrity inventory (full version history in technical, concise in executive). Recipients must independently calculate SHA-256 of delivered copies to compare against the manifest. Hash equality does not prove authorship, an independently trusted timestamp or chain of custody. Confirmed audits still require a documented amendment. Third-party PDFs remain separate deliverables.
+
+### Audit file library (screen only)
+
+Every open audit has an optional **File library** sidebar route, separate from the wizard and report generation. Search and filter existing Evidence photos, PDF appendices, parsed Wi-Fi CSV imports and external signature-file references without storing duplicate payloads or changing schema v3. Confirmed audit file browsing is read-only. PDF content is verifiable/downloadable; photographs are optimized JPEGs, whereas raw CSV and external signed files were never kept for download. The previously required appendix integrity inventory remains a separate report feature; the new library does not appear as a PDF chapter.

@@ -12,6 +12,8 @@
   const backupCrypto = globalThis.AuditSecureTransfer;
   const relations = globalThis.AuditRelations;
   const evidenceImages = globalThis.AuditEvidenceImages;
+  const attachmentLibrary = globalThis.RabbitMoleAttachmentLibrary;
+  if(!attachmentLibrary)throw Error("Falta el catálogo de archivos del expediente.");
   const pdfAppendices = globalThis.RabbitMolePdfAppendices;
   const externalNetwork = globalThis.RabbitMoleExternalNetwork;
   const identifiers = globalThis.AuditIdentifiers;
@@ -462,6 +464,7 @@
   let state = fresh(),
     currentId = "",
     page = "records",
+    attachmentType = "all", attachmentSearch = "",
     records = [],
     storageError = false,
     dirty = false,
@@ -496,6 +499,7 @@
     audit,
   });
   function setActive(record) {
+    attachmentType="all"; attachmentSearch="";
     currentId = record.id;
     state = validate(record.audit);
     try {
@@ -2491,7 +2495,10 @@
         ([id, symbol, name]) =>
           `<button type="button" data-go="${id}" class="${page === id ? "active" : ""}" ${page === id ? 'aria-current="page"' : ""}><span class="nav-mark">${symbol}</span>${name}</button>`,
       )
-      .join("");
+      .join("")+
+      '<button type="button" data-go="attachments" class="'+(page==="attachments"?"active":"")+
+      '" '+(page==="attachments"?'aria-current="page"':"")+
+      '><span class="nav-mark">▣</span>Biblioteca de archivos</button>';
     byId("current-section").textContent =
       page === "records"
         ? "Biblioteca de auditorías"
@@ -2507,7 +2514,9 @@
                 ? "Diccionario técnico"
                 : page === "intake"
                   ? "Captura asistida"
-                  : nav.find((n) => n[0] === page)?.[2] || "Expediente";
+                  : page === "attachments"
+                    ? "Biblioteca de archivos"
+                    : nav.find((n) => n[0] === page)?.[2] || "Expediente";
     byId("active-audit-label").textContent = inLibrary
       ? "Selecciona una auditoría"
       : (state.meta.reportId || "Sin referencia") +
@@ -2519,7 +2528,7 @@
     byId("pwa-install-card").hidden = !devicePage;
     byId("workspace").hidden = devicePage;
     byId("workspace").innerHTML =
-      (inLibrary ? "" : renderWizardTop()) +
+      (inLibrary || page === "attachments" ? "" : renderWizardTop()) +
       (page === "dashboard"
         ? renderOverview()
         : page === "records"
@@ -2534,6 +2543,8 @@
                 ? renderConnections()
                 : page === "glossary"
                   ? renderGlossary()
+                  : page === "attachments"
+                    ? attachmentLibrary.render(state,attachmentType,attachmentSearch,{html,validImage:evidenceImages.validImage})
                   : page === "intake"
                     ? renderIntake()
                     : page === "engagement"
@@ -2552,8 +2563,17 @@
                             : page === "delivery"
                               ? renderDelivery()
                               : renderGroup(page)) +
-      (inLibrary ? "" : renderWizard());
+      (inLibrary || page === "attachments" ? "" : renderWizard());
     refreshRecordNavigator();
+    if(page==="attachments"){
+      const refresh=()=>{
+        const shown=attachmentLibrary.filter(attachmentLibrary.collect(state),attachmentType,attachmentSearch);
+        byId("attachment-results").innerHTML=attachmentLibrary.cards(shown,{html,validImage:evidenceImages.validImage});
+        byId("attachment-visible-count").textContent=shown.length+" archivos visibles";
+      };
+      byId("attachment-search")?.addEventListener("input",e=>{attachmentSearch=e.target.value;refresh()});
+      byId("attachment-filter")?.addEventListener("change",e=>{attachmentType=e.target.value;refresh()});
+    }
     byId("wizard-step-top")?.addEventListener("change", (event) => move(event.target.value));
     byId("wizard-step-select")?.addEventListener("change", (event) =>
       move(event.target.value),
@@ -2622,7 +2642,7 @@
         "glossary",
         "device",
       ].includes(section) ||
-      section === "intake" ||
+      section === "intake" || section === "attachments" ||
       nav.some((n) => n[0] === section)
     ) {
       page = section;
@@ -2656,7 +2676,8 @@
       "input,select,textarea,button",
     )) {
       if (
-        ["wizard-step-select", "wizard-step-top", "record-search", "record-jump"].includes(
+        ["wizard-step-select", "wizard-step-top", "record-search", "record-jump",
+           "attachment-search","attachment-filter"].includes(
           element.id,
         ) ||
         element.closest(".document-control") ||
@@ -3425,6 +3446,8 @@
         !b.dataset.glossaryBack &&
         !b.dataset.deliveryOpen &&
         b.dataset.pdfAppendixDownload === undefined &&
+        b.dataset.pdfAppendixVerify === undefined &&
+        b.dataset.libraryEvidenceKey === undefined &&
         !safe.includes(b.id)
       ) {
         alert(
@@ -3432,6 +3455,14 @@
         );
         return;
       }
+    }
+    if(b.dataset.libraryEvidenceKey!==undefined){
+      const key=b.dataset.libraryEvidenceKey;
+      move("evidence");
+      const row=[...workspace.querySelectorAll(".entry[data-entry-key]")]
+        .find(el=>el.dataset.entryKey===key);
+      row?.scrollIntoView({block:"start",behavior:"auto"});
+      return;
     }
     if (b.id === "sync-auditor-signatures") {
       try {

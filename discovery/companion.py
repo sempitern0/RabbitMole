@@ -97,6 +97,12 @@ class Companion:
                         self.copy_button.config(state="normal")
                     elif "No se pudo iniciar" in value or "error:" in value.lower():
                         self.status.set("Error de arranque: " + value[:180])
+                elif kind == "capture":
+                    self.status.set(value)
+                    if value.startswith("Captura fallida") or value.startswith("No se ha encontrado"):
+                        messagebox.showerror("Captura local", value)
+                    else:
+                        messagebox.showinfo("Captura local", "JSON generado. Impórtalo en la PWA y revisa los datos.")
                 elif kind == "exit":
                     self.proc = None
                     self.token = ""
@@ -108,7 +114,8 @@ class Companion:
                     self.session.set("No hay ninguna sesión activa.")
         except queue.Empty:
             pass
-        self.window.after(100, self.poll)
+        if self.window.winfo_exists():
+            self.window.after(100, self.poll)
 
     def copy(self):
         if self.token:
@@ -157,6 +164,8 @@ class Companion:
     def stop(self):
         if self.proc is not None and self.proc.poll() is None:
             self.proc.terminate()
+        self.token = ""
+        self.copy_button.config(state="disabled")
         self.status.set("Deteniendo servicio…")
 
     def close(self):

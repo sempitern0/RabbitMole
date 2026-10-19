@@ -69,7 +69,9 @@ def main():
         source = ROOT / "collect-local.ps1"
         if not source.is_file() or source.is_symlink():
             raise SystemExit("Missing local collector: " + str(source))
-        archive.write(source, "collect-local.ps1")
+        info = zipfile.ZipInfo("collect-local.ps1", (2024, 1, 1, 0, 0, 0))
+        info.compress_type = zipfile.ZIP_DEFLATED
+        archive.writestr(info, source.read_bytes())
     html = (ROOT / "index.html").read_text(encoding="utf-8")
     if 'js/deployment-profile.js' not in html or "connect-src 'self' https:" not in html:
         raise SystemExit("Missing profile or required installed-app CSP")

@@ -1317,7 +1317,8 @@
     const toolNames = active ? [localDiscovery.tools?.nmap && "Nmap",localDiscovery.tools?.ping && "ping"].filter(Boolean).join(" / ") : "";
     return `<section class="card intake-card local-discovery">
       <span class="intake-kicker">03 · Herramientas locales</span><h2>Discovery de la red autorizada</h2>
-      <p>Detecta equipos que responden en una subred privada: no explora puertos, no instala agentes y <strong>no sustituye la revisión del auditor</strong>. La PWA pública no puede iniciar procesos locales.</p>
+      <p>Detecta equipos que responden en una subred privada: no explora puertos, no instala agentes y <strong>no sustituye la revisión del auditor</strong>.</p>
+      <p class="subtle"><strong>Dos servicios distintos:</strong> «Comprobar herramientas locales» solo funciona desde <code>localhost</code> con <code>serve.py --enable-discovery</code>. Si estás usando la PWA del Worker, sigue el <strong>asistente del servicio HTTPS de una estación auditora</strong> que aparece debajo. También puedes ejecutar Discovery en Termux y subir su JSON. Cloudflare no lanza escaneos.</p>
       <div class="action-row"><button type="button" class="button quiet" id="discovery-check">Comprobar herramientas locales</button></div>
       <p class="subtle" role="status">${active ? "Herramientas: "+html(toolNames || "Ninguna") : html(localDiscovery?.reason || "Inicia serve.py --enable-discovery y comprueba las herramientas disponibles.")}</p>
       ${active ? `<div class="fields"><div class="field"><label for="discovery-cidr">CIDR privado autorizado (máximo 256 IP)</label><input id="discovery-cidr" autocomplete="off" placeholder="192.168.10.0/24" list="discovery-cidr-list"><datalist id="discovery-cidr-list">${candidates.map(x=>`<option value="${html(x.cidr)}">${html(x.interface)} · ${html(x.address)}</option>`).join("")}</datalist></div>

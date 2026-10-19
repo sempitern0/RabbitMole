@@ -1132,3 +1132,14 @@
 #workspace .attachment-library-empty{padding:1rem;border:1px dashed var(--line);border-radius:.7rem}
 @media(max-width:720px){#workspace .attachment-library-controls{grid-template-columns:1fr}#workspace .attachment-library-preview{width:60px;height:60px}#workspace .attachment-audit-toggle{flex-wrap:wrap}#workspace .attachment-audit-count{flex-basis:100%}}
 
+
+/* Guided LAN Discovery (station / pairing / authorization / review). */
+#workspace #bridge-panel{display:grid;gap:.85rem;min-width:0;margin-top:1rem}
+#workspace #bridge-panel :is(h3,h4){margin:.2rem 0}
+#workspace #bridge-panel .bridge-stage,#workspace #bridge-panel .bridge-setup{border:1px solid var(--line);border-radius:.75rem;padding:1rem;min-width:0}
+#workspace #bridge-panel details>summary{min-height:44px;padding:.5rem 0;cursor:pointer}
+#workspace #bridge-panel pre{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+#workspace #bridge-panel :is(input,button){min-height:44px}
+#workspace #bridge-panel .action-row{display:flex;gap:.6rem;flex-wrap:wrap}
+#workspace #bridge-status[data-state="success"],#workspace #bridge-status[data-state="warning"],#workspace #bridge-status[data-state="error"]{font-weight:700}
+@media(max-width:720px){#workspace #bridge-panel .bridge-stage,#workspace #bridge-panel .bridge-setup{padding:.7rem}#workspace #bridge-panel .action-row .button{flex:1 1 100%}}

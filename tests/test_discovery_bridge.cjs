@@ -10,12 +10,20 @@ assert(source.includes('discovery.json'));
 assert(source.includes('data-intake-mode="file"'));
 assert(source.includes('DataTransfer'));
 assert(!source.includes('localStorage.') && !source.includes('sessionStorage.'));
+for(const name of ['bridge-command-pc','bridge-copy-android','bridge-download','bridge-connection-state',
+  'bridge-capture-summary','diagnostic(error)','location.origin'])
+ assert(source.includes(name),'Discovery guidance missing: '+name);
+assert(!source.includes('window.open("termux:'));
+assert(source.includes('token=""')||source.includes('token = ""'));
 const root={protocol:'https:'};
 const context={URL,document:{getElementById:id=>id==='workspace'?{}:null,
  querySelector:()=>null},MutationObserver:class{observe(){}},globalThis:null};
 context.globalThis=context;
 vm.runInNewContext(source,context);
 const validate=context.RabbitMoleDiscoveryBridge.privateEndpoint;
+const diagnostic=context.RabbitMoleDiscoveryBridge.diagnostic;
+assert.match(diagnostic(new Error('Failed to fetch')),/certificado HTTPS/);
+assert.match(diagnostic(new Error('Token de sesión incorrecto o ausente.')),/Cloudflare/);
 assert.equal(validate('https://192.168.1.20:8766'),'https://192.168.1.20:8766');
 for(const url of ['http://192.168.1.20:8766','https://8.8.8.8:8766',
  'https://example.com','https://192.168.1.20:8766/path',

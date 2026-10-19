@@ -1639,7 +1639,7 @@
             <input id="network-analysis-date" type="date" value="${html(analysis?.observedAt||"")}" ${readonly?"disabled":""}></div>
         </div>
         <label for="external-wifi-pdf">Informe externo en PDF</label>
-        <input id="external-wifi-pdf" type="file" accept=".pdf,application/pdf" ${readonly||pdfAppendices.normalize(state.pdfAppendices).length>=pdfAppendices.MAX_COUNT?"disabled":""}>
+        <input id="external-wifi-pdf" type="file" accept=".pdf,application/pdf" ${readonly?"disabled":""}>
         <p class="subtle">Se incorpora como documento complementario del expediente y se entrega por separado, con SHA-256. Máximo 2 MiB por PDF, cuatro anexos en total. Si tu herramienta produce HTML, conviértelo a PDF antes de adjuntarlo.</p>
         ${pdfAppendices.normalize(state.pdfAppendices).filter(item=>item.category==="wifi-analysis").map(item=>`<div class="network-analysis-pdf"><span><strong>${html(item.name)}</strong><small>${html(item.source||"Origen no indicado")} · ${html(item.observedAt||"Fecha no indicada")} · SHA-256 ${html(item.sha256)}</small></span>${renderAppendixActions(item,readonly)}</div>`).join("")}
       </div>
@@ -2259,11 +2259,12 @@
     const readonly = state.documentControl?.status === "confirmed";
     return `<section class="card pdf-appendices" aria-labelledby="pdf-appendices-title">
       <h2 id="pdf-appendices-title">Documentación complementaria (PDF)</h2>
-      <p>Adjunta documentos externos para acompañar la entrega: <strong>máximo cuatro PDF, 2 MiB por archivo y 6 MiB en total</strong>.
+      <p>Adjunta documentos externos para acompañar la entrega: <strong>máximo cuatro PDF activos, 2 MiB por archivo y 6 MiB en total</strong>. Se evita duplicar bytes idénticos y se puede registrar una nueva versión bajo el mismo ID, previa confirmación.
       Se guardan dentro del JSON local; el informe los referencia por nombre y SHA-256, pero <strong>no fusiona sus páginas</strong>. Descarga los originales y entrégalos junto al informe por un medio autorizado.</p>
       <label for="pdf-appendix-upload">Añadir PDF al expediente</label>
-      <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly || list.length>=pdfAppendices.MAX_COUNT?'disabled':''}>
-      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small></span>${renderAppendixActions(item,readonly)}</li>`).join('')}</ul>
+      <input id="pdf-appendix-upload" type="file" accept=".pdf,application/pdf" ${readonly?'disabled':''}>
+      <ul class="pdf-appendix-list">${list.map(item=>`<li><span><strong>${html(item.name)}</strong><small>ID: ${html(item.id)} · v${item.version||1} · ${item.category==="wifi-analysis"?"Análisis WiFi externo · ":""}${html(item.source||"")}${item.observedAt?" · "+html(item.observedAt):""} · ${(item.size/1024).toFixed(0)} KiB · SHA-256 ${html(item.sha256)}</small>
+      ${(item.history||[]).length?`<details class="appendix-versions"><summary>Versiones anteriores (${item.history.length}) · solo metadatos</summary><ol>${item.history.map(v=>`<li>v${v.version} · ${html(v.name)} · ${v.size} bytes · SHA-256 <code>${html(v.sha256)}</code> · Sustituida ${html(v.at)}</li>`).join('')}</ol></details>`:""}</span>${renderAppendixActions(item,readonly)}</li>`).join('')}</ul>
       <p class="subtle">Los anexos pueden incluir datos confidenciales. No se cargan a servidores ni se visualizan dentro de la app.</p>
     </section>`;
   }
@@ -2916,7 +2917,7 @@
       return;
     }
     const t = e.target;
-    if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert}))return;
+    if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
     if (t.id === "intake-file" && t.files?.length) {
       try {
         const file = t.files[0];
@@ -5576,6 +5577,8 @@
         return;
       }
     }
+    try {await pdfAppendices.verifyAll(state.pdfAppendices);}
+    catch(error){alert('Generación PDF detenida: '+error.message);return;}
     buildReport();
     await printPreparedReport();
   }

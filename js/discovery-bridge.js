@@ -1,150 +1,200 @@
-/* Optional HTTPS LAN Discovery integration. No audit state, token or capture is persisted. */
+/* Optional LAN Discovery bridge. Never persists tokens or probe results. */
 "use strict";
 (() => {
-  let bridge = "", token = "", capture = null, busy = false;
-  const id = value => document.getElementById(value);
-  const privateEndpoint = raw => {
-    const parsed = new URL(String(raw || "").trim());
-    if (parsed.protocol !== "https:" || parsed.username || parsed.password ||
-        parsed.pathname !== "/" || parsed.search || parsed.hash)
-      throw Error("Introduce solo la URL HTTPS del equipo auditor.");
-    const octets = parsed.hostname.split(".");
-    if (octets.length !== 4 || octets.some(part => !/^\d{1,3}$/.test(part) || Number(part) > 255))
-      throw Error("Utiliza la dirección IPv4 privada del equipo auditor.");
-    const [a, b] = octets.map(Number);
-    if (!(a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)))
-      throw Error("El servicio debe encontrarse en una red privada RFC1918.");
-    return parsed.origin;
-  };
-  const request = async (path, body) => {
-    const response = await fetch(bridge + path, {
-      method: body ? "POST" : "GET", mode: "cors", cache: "no-store",
-      headers: { "X-RabbitMole-Token": token, ...(body ? {"Content-Type":"application/json"} : {}) },
-      ...(body ? {body: JSON.stringify(body)} : {}),
-      signal: AbortSignal.timeout(190000)
-    });
-    const payload = await response.json();
-    if (!response.ok) throw Error(payload.error || "El servicio Discovery rechazó la operación.");
-    return payload;
-  };
-  const setStatus = text => { const element=id("bridge-status"); if(element) element.textContent=text; };
-  function renderResults() {
-    const buttons = id("bridge-results");
-    if (!buttons) return;
-    buttons.hidden = !capture;
-  }
-  async function connect() {
-    if (busy) return;
-    try {
-      if (globalThis.RabbitMoleDeployment?.profile !== "private-full")
-        throw Error("Instala y abre la PWA para utilizar Discovery en la red local.");
-      bridge = privateEndpoint(id("bridge-url")?.value);
-      token = String(id("bridge-token")?.value || "").trim();
-      if (!token || token.length > 160) throw Error("Introduce el token temporal de la consola.");
-      id("bridge-token").value = "";
-      busy = true;
-      setStatus("Comprobando el servicio autorizado…");
-      const data = await request("/status");
-      if (data.api !== "rabbitmole-discovery-bridge-v1" || data.available !== true)
-        throw Error("La respuesta no pertenece a un bridge Discovery compatible.");
-      const choice = id("bridge-cidr");
-      const choices = id("bridge-suggestions");
-      choices.replaceChildren();
-      for (const item of data.interfaces || []) {
-        const option = document.createElement("option");
-        option.value = item.cidr;
-        option.textContent = item.interface + " · " + item.cidr;
-        choices.append(option);
-      }
-      id("bridge-scan").disabled = !data.backend;
-      setStatus("Servicio listo. Selecciona o escribe una red privada autorizada (máximo 256 direcciones).");
-    } catch (error) {
-      bridge = ""; token = "";
-      setStatus("Conexión no disponible: " + error.message);
-    } finally { busy = false; }
-  }
-  async function scan() {
-    if (busy || !bridge || !token) return;
-    const cidr = String(id("bridge-cidr")?.value || "").trim();
-    if (!cidr || id("bridge-confirmation")?.value.trim() !== "AUTORIZO") {
-      setStatus("Indica el CIDR aprobado y escribe AUTORIZO antes de iniciar.");
-      return;
-    }
-    if (!confirm("¿Dispones de autorización expresa para reconocer " + cidr + " desde el equipo auditor?")) return;
-    busy = true;
-    id("bridge-scan").disabled = true;
-    setStatus("Reconocimiento en curso. No cierres esta ventana.");
-    try {
-      const result = await request("/scan", {cidr, confirmation:"AUTORIZO"});
-      if (result.capture?.kind !== "rabbitmole-discovery-v1") throw Error("Captura no compatible.");
-      capture = result.capture;
-      renderResults();
-      setStatus("Finalizado: " + result.hosts + " equipos observados en " + result.scope +
-        ". Selecciona Hardware o Redes para revisar los nuevos registros; no se incorporan automáticamente.");
-    } catch(error) {
-      setStatus("No se pudo completar Discovery: " + error.message);
-    } finally {
-      busy = false;
-      if (id("bridge-scan")) id("bridge-scan").disabled = false;
-    }
-  }
-  async function review(block) {
-    if (!capture) return;
-    const file = new File([JSON.stringify(capture)], "rabbitmole-discovery.json", {type:"application/json"});
-    if (file.size > 2 * 1024 * 1024) return setStatus("Captura demasiado grande para importar.");
-    const mode = document.querySelector('[data-intake-mode="file"]');
-    if (!mode) return setStatus("Abre Captura asistida para incorporar resultados.");
-    mode.click();
-    const selector = id("intake-block");
-    const input = id("intake-file");
-    if (!selector || !input) return setStatus("El importador no está disponible.");
-    selector.value = block;
-    selector.dispatchEvent(new Event("change", {bubbles:true}));
-    // Changing the block re-renders the intake form. Read the fresh input, not a detached node.
-    const current = id("intake-file");
-    if (!current) return;
-    const transfer = new DataTransfer();
-    transfer.items.add(file);
-    current.files = transfer.files;
-    current.dispatchEvent(new Event("change", {bubbles:true}));
-  }
-  function mount() {
-    const container = document.querySelector(".local-discovery");
-    if (!container || container.querySelector("#bridge-panel")) return;
-    const section = document.createElement("section");
-    section.id = "bridge-panel";
-    section.className = "bridge-panel";
-    section.setAttribute("aria-label","Servicio Discovery HTTPS");
-    section.innerHTML = `<h3>Discovery desde la tablet · Servicio HTTPS LAN</h3>
-      <p class="subtle">Un equipo auditor de la red ejecuta el servicio autorizado. La tablet solo solicita y revisa los resultados. Se necesita certificado HTTPS confiable.</p>
-      <div class="fields">
-        <div class="field"><label for="bridge-url">Dirección HTTPS de la estación auditora</label>
-          <input id="bridge-url" type="url" inputmode="url" autocomplete="off" placeholder="https://192.168.10.20:8766"></div>
-        <div class="field"><label for="bridge-token">Token temporal de emparejamiento</label>
-          <input id="bridge-token" type="password" autocomplete="off" placeholder="Copia el token de la consola"></div>
-      </div>
-      <button type="button" id="bridge-connect" class="button quiet">Conectar equipo auditor</button>
-      <div class="fields"><div class="field"><label for="bridge-cidr">CIDR privado autorizado</label>
-        <input id="bridge-cidr" list="bridge-suggestions" inputmode="text" placeholder="192.168.10.0/24">
-        <datalist id="bridge-suggestions"></datalist></div>
-        <div class="field"><label for="bridge-confirmation">Confirmación: escribe AUTORIZO</label>
-          <input id="bridge-confirmation" autocomplete="off" placeholder="AUTORIZO"></div>
-      </div>
-      <button type="button" id="bridge-scan" class="button accent" disabled>Ejecutar reconocimiento autorizado</button>
-      <p id="bridge-status" role="status" aria-live="polite" class="subtle">Sin conectar. Ningún reconocimiento se inicia automáticamente.</p>
-      <div id="bridge-results" class="action-row" hidden>
-        <button class="button quiet" type="button" id="bridge-assets">Revisar Hardware</button>
-        <button class="button quiet" type="button" id="bridge-networks">Revisar Redes</button>
-      </div>`;
-    container.append(section);
-    id("bridge-connect").addEventListener("click", () => void connect());
-    id("bridge-scan").addEventListener("click", () => void scan());
-    id("bridge-assets").addEventListener("click", () => void review("assets"));
-    id("bridge-networks").addEventListener("click", () => void review("networks"));
-    renderResults();
-  }
-  // Existing SPA owns navigation and inventory writes; only mount a UI adapter.
-  new MutationObserver(mount).observe(document.getElementById("workspace"), {childList:true,subtree:false});
-  mount();
-  globalThis.RabbitMoleDiscoveryBridge = Object.freeze({privateEndpoint});
+ let endpoint="",token="",capture=null,busy=false,connected=false,backend="";
+ let message="Servicio sin comprobar; el Worker no ejecuta Discovery.",severity="idle";
+ const el=id=>document.getElementById(id);
+ function privateEndpoint(raw){
+   const parsed=new URL(String(raw||"").trim());
+   if(parsed.protocol!=="https:"||parsed.username||parsed.password||parsed.pathname!=="/"||parsed.search||parsed.hash)
+     throw Error("Indica únicamente la URL HTTPS de la estación auditora.");
+   const parts=parsed.hostname.split(".");
+   if(parts.length!==4||parts.some(x=>!/^\d{1,3}$/.test(x)||Number(x)>255))
+     throw Error("Introduce la IPv4 privada de la estación, por ejemplo https://192.168.1.20:8766.");
+   const [a,b]=parts.map(Number);
+   if(!(a===10||(a===172&&b>=16&&b<=31)||(a===192&&b===168)))
+     throw Error("El servicio debe encontrarse en una IPv4 privada RFC1918.");
+   return parsed.origin;
+ }
+ function diagnostic(error){
+   const text=String(error?.message||error||"Error desconocido");
+   if(error?.name==="TimeoutError"||error?.name==="AbortError")
+     return "Tiempo agotado. Comprueba la Wi-Fi, el firewall y que el servicio siga abierto.";
+   if(/failed to fetch|networkerror|load failed/i.test(text)||error instanceof TypeError)
+     return "No se pudo contactar con el equipo auditor. Revisa IP, puerto, certificado HTTPS confiable en el móvil, permisos del navegador para redes privadas, firewall y aislamiento entre clientes Wi-Fi.";
+   if(/token.*incorrecto|token.*ausente/i.test(text))
+     return "Token incorrecto: usa la clave temporal impresa en el PC al iniciar Discovery. No es el token de Cloudflare.";
+   if(/origen o dirección no autorizados/i.test(text))
+     return "El origen de la PWA no está autorizado: arranca el servicio con --origin igual a la URL HTTPS exacta de esta PWA.";
+   return text;
+ }
+ function setStatus(text,level="info"){message=text;severity=level;const node=el("bridge-status");
+   if(node){node.textContent=text;node.dataset.state=level;}}
+ function refresh(){
+   const state=el("bridge-connection-state");
+   if(state)state.textContent=busy?"Comprobando…":connected
+     ?"Conectado · "+(backend||"No hay Nmap/ping"):"Estación sin comprobar";
+   const scan=el("bridge-scan");if(scan)scan.disabled=busy||!connected||!backend;
+   const results=el("bridge-results");if(results)results.hidden=!capture;
+   const totals=el("bridge-capture-summary");
+   if(totals)totals.textContent=capture
+     ?"Captura recibida: "+(capture.items?.assets?.length||0)+" posibles equipos y "+
+       (capture.items?.networks?.length||0)+" segmentos. Todavía no se ha incorporado nada al expediente.":"";
+   const notice=el("bridge-status");
+   if(notice){notice.textContent=message;notice.dataset.state=severity;}
+ }
+ async function request(path,body){
+   const response=await fetch(endpoint+path,{
+     method:body?"POST":"GET",mode:"cors",cache:"no-store",
+     headers:{"X-RabbitMole-Token":token,...(body?{"Content-Type":"application/json"}:{})},
+     ...(body?{body:JSON.stringify(body)}:{}),
+     signal:AbortSignal.timeout(body?190000:12000)
+   });
+   const data=await response.json();
+   if(!response.ok)throw Error(data.error||"El servicio Discovery rechazó la operación.");
+   return data;
+ }
+ async function connect(){
+   if(busy)return;
+   try{
+     if(globalThis.RabbitMoleDeployment?.profile!=="private-full")
+       throw Error("Abre la PWA instalada desde su icono para utilizar Discovery.");
+     endpoint=privateEndpoint(el("bridge-url")?.value);
+     token=String(el("bridge-token")?.value||"").trim();
+     if(!token||token.length>160)throw Error("Inicia Discovery en un PC y copia su token temporal; no es un token Cloudflare.");
+     el("bridge-token").value="";
+     busy=true;connected=false;backend="";capture=null;
+     setStatus("Comprobando URL, token y herramientas de la estación…");refresh();
+     const status=await request("/status");
+     if(status.api!=="rabbitmole-discovery-bridge-v1"||status.available!==true)
+       throw Error("El servicio remoto no es un bridge Discovery compatible.");
+     connected=true;backend=status.backend==="nmap"?"Nmap":status.backend==="native"?"ping":"";
+     const list=el("bridge-suggestions"),field=el("bridge-cidr");list.replaceChildren();
+     for(const row of Array.isArray(status.interfaces)?status.interfaces:[]){
+       if(typeof row.cidr!=="string")continue;
+       const option=document.createElement("option");option.value=row.cidr;
+       option.label=String(row.interface||"Red")+" · "+row.cidr;list.append(option);
+     }
+     if(field&&!field.value&&status.interfaces?.[0]?.cidr)field.value=status.interfaces[0].cidr;
+     setStatus(backend?"Estación lista con "+backend+". Confirma la autorización del CIDR antes de reconocer.":
+       "Estación conectada sin Nmap ni ping: instala una herramienta en el equipo auditor y reinicia el servicio.",
+       backend?"success":"warning");
+   }catch(error){
+     endpoint="";token="";connected=false;backend="";capture=null;
+     setStatus("Conexión no disponible: "+diagnostic(error),"error");
+   }finally{busy=false;refresh();}
+ }
+ async function scan(){
+   if(busy||!connected||!backend)return;
+   const cidr=String(el("bridge-cidr")?.value||"").trim();
+   if(!cidr||String(el("bridge-confirmation")?.value||"").trim()!=="AUTORIZO")
+     return setStatus("Indica un CIDR privado aprobado (hasta 256 IP) y escribe AUTORIZO.","warning");
+   if(!confirm("¿Tienes autorización expresa para descubrir hosts en "+cidr+
+     " desde la estación auditora? No se exploran puertos."))return;
+   busy=true;capture=null;setStatus("Discovery se está ejecutando en el equipo auditor. Espera a que termine.");refresh();
+   try{
+     const response=await request("/scan",{cidr,confirmation:"AUTORIZO"});
+     if(response.capture?.kind!=="rabbitmole-discovery-v1")throw Error("Captura incompatible.");
+     capture=response.capture;
+     setStatus("Finalizado: "+response.hosts+" hosts respondieron en "+response.scope+
+       ". Revisa Hardware y Redes con la misma captura o descarga JSON. No se han importado activos automáticamente.",
+       response.hosts?"success":"warning");
+   }catch(error){setStatus("Discovery no completado: "+diagnostic(error),"error");}
+   finally{busy=false;refresh();}
+ }
+ function downloadCapture(){
+   if(!capture)return;
+   const url=URL.createObjectURL(new Blob([JSON.stringify(capture,null,2)],{type:"application/json"}));
+   const link=document.createElement("a");link.href=url;link.download="rabbitmole-discovery.json";
+   document.body.append(link);link.click();link.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),30000);
+   setStatus("Descarga iniciada. Comprueba el JSON en Archivos antes de utilizarlo.","info");
+ }
+ async function review(block){
+   if(!capture)return;
+   if(!capture.items?.[block]?.length)
+     return setStatus("No hay candidatos de "+(block==="assets"?"Hardware":"Redes")+" en esta captura.","warning");
+   const file=new File([JSON.stringify(capture)],"rabbitmole-discovery.json",{type:"application/json"});
+   if(file.size>2*1024*1024)return setStatus("Captura demasiado grande: divide el alcance y utiliza JSON menores.","warning");
+   const mode=document.querySelector('[data-intake-mode="file"]');
+   if(!mode)return setStatus("Abre Captura asistida para incorporar los datos.","warning");
+   mode.click();
+   const selector=el("intake-block");
+   if(!selector)return setStatus("No se ha encontrado el importador.","error");
+   selector.value=block;selector.dispatchEvent(new Event("change",{bubbles:true}));
+   const input=el("intake-file");
+   if(!input)return;
+   try{
+     if(typeof DataTransfer==="undefined")throw Error("No disponible");
+     const transfer=new DataTransfer();transfer.items.add(file);
+     input.files=transfer.files;input.dispatchEvent(new Event("change",{bubbles:true}));
+   }catch(error){setStatus("Importación automática no compatible con este navegador: descarga JSON y utiliza «Subir archivo». "+diagnostic(error),"warning");}
+ }
+ async function copyCommand(idCode){
+   try{
+     if(!navigator.clipboard?.writeText)throw Error("Sin portapapeles");
+     await navigator.clipboard.writeText(el(idCode)?.textContent||"");
+     setStatus("Comando copiado. Ejecútalo manualmente en la consola correspondiente.");
+   }catch{setStatus("Selecciona y copia manualmente el comando visible.","warning");}
+ }
+ function mount(){
+   const parent=document.querySelector(".local-discovery");
+   if(!parent||parent.querySelector("#bridge-panel"))return;
+   const panel=document.createElement("section");panel.id="bridge-panel";
+   panel.className="bridge-panel";panel.setAttribute("aria-label","Discovery LAN guiado");
+   panel.innerHTML=`<h3>Discovery guiado · PWA y equipo auditor</h3>
+     <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Necesitas un PC autorizado con Python/Nmap o generar un JSON en Android con Termux.</p>
+     <details class="bridge-setup" open><summary><strong>1. Preparar el equipo auditor</strong></summary>
+       <p>En tu PC descarga/clona el repositorio RabbitMole, abre una terminal desde su carpeta local y ejecuta el comando siguiente. Sustituye la IP y rutas de certificado/clave.</p>
+       <div class="intake-command"><div class="intake-command-head"><strong>Servicio HTTPS temporal</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div><pre><code id="bridge-command-pc"></code></pre></div>
+       <p class="subtle">El certificado TLS debe ser confiable en el móvil e incluir SAN para la IP del PC. Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall, no publiques el puerto y detén el proceso con Ctrl+C.</p>
+       <details><summary>Android / Termux · opción sin servidor intermedio</summary>
+         <p>La PWA no puede abrir la consola de Termux ni tiene un directorio de scripts local. Ejecuta Discovery desde Termux y después importa el JSON con «Subir archivo».</p>
+         <div class="intake-command"><div class="intake-command-head"><strong>Preparación de Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre><code id="bridge-command-android">pkg update
+pkg install python git nmap
+termux-setup-storage
+git clone https://github.com/sempitern0/RabbitMole.git
+cd RabbitMole
+python discovery/discover.py doctor
+python discovery/discover.py wizard</code></pre></div>
+         <p class="subtle">Guarda el JSON en una carpeta accesible desde Archivos. Android puede limitar Nmap o el ping.</p>
+       </details>
+       <p class="subtle">En iOS/iPadOS se recomienda una estación PC o un JSON importado. Una web no puede iniciar una shell arbitraria en su supuesto directorio de instalación.</p>
+     </details>
+     <div class="bridge-stage"><h4>2. Comprobar la estación</h4>
+       <p class="subtle">El <strong>token de consola</strong> es una clave temporal que imprime el servicio Python. No es un token Cloudflare y no se guarda en el expediente.</p>
+       <div class="fields"><div class="field"><label for="bridge-url">URL HTTPS de la estación</label><input id="bridge-url" type="url" autocomplete="off" placeholder="https://192.168.1.20:8766"></div>
+       <div class="field"><label for="bridge-token">Token temporal mostrado en la consola</label><input id="bridge-token" type="password" autocomplete="off" placeholder="Pega aquí el token del PC"></div></div>
+       <button type="button" id="bridge-connect" class="button quiet">Comprobar conexión y herramientas</button>
+       <p id="bridge-connection-state" class="subtle">Estación sin comprobar</p>
+     </div>
+     <div class="bridge-stage"><h4>3. Reconocimiento autorizado</h4>
+       <div class="fields"><div class="field"><label for="bridge-cidr">CIDR privado aprobado (máximo 256 direcciones)</label><input id="bridge-cidr" list="bridge-suggestions" placeholder="192.168.10.0/24"><datalist id="bridge-suggestions"></datalist></div>
+       <div class="field"><label for="bridge-confirmation">Confirmación expresa</label><input id="bridge-confirmation" placeholder="Escribe AUTORIZO" autocomplete="off"></div></div>
+       <button type="button" id="bridge-scan" class="button accent" disabled>Iniciar Discovery autorizado</button>
+       <p id="bridge-status" role="status" aria-live="polite" data-state="idle">Sin conectar. No se inicia nada automáticamente.</p>
+     </div>
+     <div class="bridge-stage"><h4>4. Revisar la captura</h4>
+       <p class="subtle">Reutiliza una captura en Hardware y Redes, revisa candidatos nuevos, duplicados y conflictos antes de incorporarlos, y edita los campos manualmente. Discovery no acredita VLAN, fabricantes, licencias ni vulnerabilidades.</p>
+       <p id="bridge-capture-summary" class="subtle" role="status"></p>
+       <div id="bridge-results" class="action-row" hidden>
+         <button class="button quiet" type="button" id="bridge-assets">Revisar Hardware</button>
+         <button class="button quiet" type="button" id="bridge-networks">Revisar Redes</button>
+         <button class="button quiet" type="button" id="bridge-download">Descargar JSON</button>
+       </div>
+     </div>`;
+   parent.append(panel);
+   el("bridge-command-pc").textContent="python3 discovery/service.py --bind <IP_PRIVADA_PC> --port 8766 --cert <CERTIFICADO.pem> --key <CLAVE.pem> --origin "+location.origin;
+   el("bridge-copy-pc").addEventListener("click",()=>void copyCommand("bridge-command-pc"));
+   el("bridge-copy-android").addEventListener("click",()=>void copyCommand("bridge-command-android"));
+   el("bridge-connect").addEventListener("click",()=>void connect());
+   el("bridge-scan").addEventListener("click",()=>void scan());
+   el("bridge-assets").addEventListener("click",()=>void review("assets"));
+   el("bridge-networks").addEventListener("click",()=>void review("networks"));
+   el("bridge-download").addEventListener("click",downloadCapture);
+   refresh();
+ }
+ new MutationObserver(mount).observe(el("workspace"),{childList:true,subtree:false});
+ mount();
+ globalThis.RabbitMoleDiscoveryBridge=Object.freeze({privateEndpoint,diagnostic});
 })();

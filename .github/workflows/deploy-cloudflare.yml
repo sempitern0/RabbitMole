@@ -7,7 +7,34 @@ concurrency:
   group: rabbitmole-production
   cancel-in-progress: false
 jobs:
+  companion-windows:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Discovery tests
+        run: python -m unittest discover -s tests -p "test_discovery*.py" -v
+      - name: Build self-contained Windows package
+        run: |
+          python -m pip install pyinstaller==6.16.0
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name RabbitMole-Companion --paths discovery --add-data "collect-local.ps1;." discovery/companion.py
+      - name: Archive and checksum
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force package | Out-Null
+          Copy-Item dist/RabbitMole-Companion.exe package/
+          (Get-FileHash package/RabbitMole-Companion.exe -Algorithm SHA256).Hash.ToLowerInvariant() | Set-Content -Encoding ascii package/SHA256.txt
+          Compress-Archive package/* RabbitMole-Companion-Windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: companion-for-cloudflare
+          path: RabbitMole-Companion-Windows.zip
+          if-no-files-found: error
   deploy:
+    needs: companion-windows
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     environment: production
@@ -23,6 +50,21 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - uses: actions/download-artifact@v4
+        with:
+          name: companion-for-cloudflare
+          path: artifacts/
+      - name: Verify native package before publishing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          package = Path("artifacts/RabbitMole-Companion-Windows.zip")
+          with ZipFile(package) as z:
+              assert "RabbitMole-Companion.exe" in z.namelist()
+              assert z.testzip() is None
+          print("Validated Companion: " + str(package.stat().st_size) + " bytes")
+          PY
       - run: npm ci
       - run: npm run check
       - run: npx playwright install --with-deps chromium

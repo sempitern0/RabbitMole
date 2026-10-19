@@ -6,14 +6,19 @@
  const el=id=>document.getElementById(id);
  function privateEndpoint(raw){
    const parsed=new URL(String(raw||"").trim());
-   if(parsed.protocol!=="https:"||parsed.username||parsed.password||parsed.pathname!=="/"||parsed.search||parsed.hash)
-     throw Error("Indica únicamente la URL HTTPS de la estación auditora.");
+   const loopback=parsed.protocol==="http:"&&parsed.hostname==="127.0.0.1";
+   if((parsed.protocol!=="https:"&&!loopback)||parsed.username||parsed.password||
+      parsed.pathname!=="/"||parsed.search||parsed.hash)
+     throw Error("Utiliza HTTPS en la LAN o HTTP exclusivamente en 127.0.0.1 en este mismo PC.");
    const parts=parsed.hostname.split(".");
    if(parts.length!==4||parts.some(x=>!/^\d{1,3}$/.test(x)||Number(x)>255))
      throw Error("Introduce la IPv4 privada de la estación, por ejemplo https://192.168.1.20:8766.");
    const [a,b]=parts.map(Number);
-   if(!(a===10||(a===172&&b>=16&&b<=31)||(a===192&&b===168)))
-     throw Error("El servicio debe encontrarse en una IPv4 privada RFC1918.");
+   if(!(loopback||(a===10||(a===172&&b>=16&&b<=31)||(a===192&&b===168))))
+     throw Error("El servicio debe estar en una IPv4 privada o en 127.0.0.1 local.");
+   if(parsed.protocol==="https:"&&parsed.hostname==="127.0.0.1") {
+     // HTTPS loopback remains allowed, e.g. for locally trusted certificates.
+   }
    return parsed.origin;
  }
  function diagnostic(error){
@@ -145,9 +150,16 @@
    panel.innerHTML=`<h3>Discovery guiado · PWA y equipo auditor</h3>
      <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Necesitas un PC autorizado con Python/Nmap o generar un JSON en Android con Termux.</p>
      <details class="bridge-setup" open><summary><strong>1. Preparar el equipo auditor</strong></summary>
-       <p>En tu PC descarga/clona el repositorio RabbitMole, abre una terminal desde su carpeta local y ejecuta el comando siguiente. Sustituye la IP y rutas de certificado/clave.</p>
-       <div class="intake-command"><div class="intake-command-head"><strong>Servicio HTTPS temporal</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div><pre><code id="bridge-command-pc"></code></pre></div>
-       <p class="subtle">El certificado TLS debe ser confiable en el móvil e incluir SAN para la IP del PC. Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall, no publiques el puerto y detén el proceso con Ctrl+C.</p>
+       <p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
+       <div class="intake-command"><div class="intake-command-head"><strong>Opción A · mismo PC, sin certificados</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
+         <pre><code id="bridge-command-pc"></code></pre></div>
+       <button type="button" id="bridge-use-local" class="button quiet">Usar servidor de este PC (127.0.0.1)</button>
+       <details><summary>Opción B · PWA en tablet y servicio en otro equipo de la LAN (HTTPS)</summary>
+         <p>Solo para dispositivos distintos: requiere un certificado TLS confiable en la tablet con SAN de la IP del PC y reglas restrictivas de firewall.</p>
+         <div class="intake-command"><div class="intake-command-head"><strong>Servicio HTTPS en la LAN</strong><button type="button" class="button quiet small" id="bridge-copy-lan">Copiar comando</button></div>
+           <pre><code id="bridge-command-lan"></code></pre></div>
+       </details>
+       <p class="subtle">Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall y detén el proceso con Ctrl+C. La PWA no puede iniciar una consola automáticamente.</p>
        <details><summary>Android / Termux · opción sin servidor intermedio</summary>
          <p>La PWA no puede abrir la consola de Termux ni tiene un directorio de scripts local. Ejecuta Discovery desde Termux y después importa el JSON con «Subir archivo».</p>
          <div class="intake-command"><div class="intake-command-head"><strong>Preparación de Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre><code id="bridge-command-android">pkg update
@@ -163,7 +175,7 @@ python discovery/discover.py wizard</code></pre></div>
      </details>
      <div class="bridge-stage"><h4>2. Comprobar la estación</h4>
        <p class="subtle">El <strong>token de consola</strong> es una clave temporal que imprime el servicio Python. No es un token Cloudflare y no se guarda en el expediente.</p>
-       <div class="fields"><div class="field"><label for="bridge-url">URL HTTPS de la estación</label><input id="bridge-url" type="url" autocomplete="off" placeholder="https://192.168.1.20:8766"></div>
+       <div class="fields"><div class="field"><label for="bridge-url">Servidor (HTTP en 127.0.0.1 o HTTPS en LAN)</label><input id="bridge-url" type="url" autocomplete="off" placeholder="http://127.0.0.1:8766"></div>
        <div class="field"><label for="bridge-token">Token temporal mostrado en la consola</label><input id="bridge-token" type="password" autocomplete="off" placeholder="Pega aquí el token del PC"></div></div>
        <button type="button" id="bridge-connect" class="button quiet">Comprobar conexión y herramientas</button>
        <p id="bridge-connection-state" class="subtle">Estación sin comprobar</p>
@@ -184,7 +196,11 @@ python discovery/discover.py wizard</code></pre></div>
        </div>
      </div>`;
    parent.append(panel);
-   el("bridge-command-pc").textContent="python3 discovery/service.py --bind <IP_PRIVADA_PC> --port 8766 --cert <CERTIFICADO.pem> --key <CLAVE.pem> --origin "+location.origin;
+   el("bridge-command-pc").textContent="py -3 discovery\\service.py --loopback-http --origin "+location.origin;
+   el("bridge-command-lan").textContent="python3 discovery/service.py --bind <IP_PRIVADA_PC> --port 8766 --cert <CERTIFICADO.pem> --key <CLAVE.pem> --origin "+location.origin;
+   el("bridge-url").value="http://127.0.0.1:8766";
+   el("bridge-use-local").addEventListener("click",()=>{el("bridge-url").value="http://127.0.0.1:8766";});
+   el("bridge-copy-lan").addEventListener("click",()=>void copyCommand("bridge-command-lan"));
    el("bridge-copy-pc").addEventListener("click",()=>void copyCommand("bridge-command-pc"));
    el("bridge-copy-android").addEventListener("click",()=>void copyCommand("bridge-command-android"));
    el("bridge-connect").addEventListener("click",()=>void connect());

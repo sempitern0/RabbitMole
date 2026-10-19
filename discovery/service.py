@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Explicit, HTTPS-only LAN bridge for RabbitMole Discovery (stdlib, no agents).
+"""Explicit auditor-operated Discovery bridge (stdlib, no agents).
 
-Runs on an auditor-controlled workstation, never in Cloudflare or the PWA.
-Do not expose this bridge to the public Internet or install it as a daemon.
+LAN mode uses HTTPS and a trusted certificate. Same-device mode may use
+HTTP only on 127.0.0.1 and must never be exposed to the network.
+Never runs in Cloudflare or the PWA. No automatic scans.
 """
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -177,25 +178,38 @@ class BridgeHandler(BaseHTTPRequestHandler):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Servicio Discovery HTTPS limitado a la LAN; no expone expedientes ni instala agentes.")
-    parser.add_argument("--bind", required=True, help="IPv4 privada de la estación auditor (no 0.0.0.0)")
+        description="Servicio Discovery de la estación auditora: HTTPS en LAN o HTTP exclusivamente loopback.")
+    parser.add_argument("--bind", help="IPv4 privada de la estación auditora (modo LAN HTTPS)")
     parser.add_argument("--port", type=int, default=8766)
     parser.add_argument("--host", help="Host HTTPS publicado; por defecto la misma IPv4 --bind")
-    parser.add_argument("--cert", required=True, help="Certificado TLS confiable para la tablet (PEM)")
-    parser.add_argument("--key", required=True, help="Clave privada TLS (PEM); nunca subirla al repositorio")
+    parser.add_argument("--cert", help="Certificado TLS confiable para la tablet (PEM), obligatorio en modo LAN")
+    parser.add_argument("--key", help="Clave privada TLS (PEM), obligatoria en modo LAN")
+    parser.add_argument("--loopback-http", action="store_true",
+                        help="Solo PWA y Discovery en el MISMO ordenador; escucha exclusivamente 127.0.0.1 sin TLS")
     parser.add_argument("--origin", required=True, help="Origen HTTPS exacto de la PWA autorizada")
     args = parser.parse_args(argv)
     try:
-        bind = bind_address(args.bind)
-        host = validate_host(args.host or bind)
         origin = valid_origin(args.origin)
         if not 1 <= args.port <= 65535:
             raise ValueError("Puerto fuera del intervalo válido.")
-        if not Path(args.cert).is_file() or not Path(args.key).is_file():
-            raise ValueError("Certificado y clave TLS deben existir en el equipo auditor.")
-        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.minimum_version = ssl.TLSVersion.TLSv1_2
-        context.load_cert_chain(certfile=args.cert, keyfile=args.key)
+        if args.loopback_http:
+            # Never silently downgrade a LAN endpoint to plaintext.
+            if args.bind not in (None, "127.0.0.1") or args.host not in (None, "127.0.0.1"):
+                raise ValueError("--loopback-http solo puede escuchar en 127.0.0.1, nunca en una IP LAN.")
+            if args.cert or args.key:
+                raise ValueError("No combines --loopback-http con certificados TLS.")
+            bind = host = "127.0.0.1"
+            context = None
+        else:
+            if not args.bind or not args.cert or not args.key:
+                raise ValueError("Modo LAN: se requieren --bind, --cert y --key; en el mismo PC utiliza --loopback-http.")
+            bind = bind_address(args.bind)
+            host = validate_host(args.host or bind)
+            if not Path(args.cert).is_file() or not Path(args.key).is_file():
+                raise ValueError("Certificado y clave TLS deben existir en el equipo auditor.")
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+            context.load_cert_chain(certfile=args.cert, keyfile=args.key)
     except (ValueError, OSError, ssl.SSLError) as error:
         parser.error(str(error))
     class Server(ThreadingHTTPServer):
@@ -208,9 +222,11 @@ def main(argv=None):
             server.expected_host = host + ":" + str(server.server_port)
             server.access_token = secrets.token_urlsafe(32)
             server.scan_lock = threading.Lock()
-            server.socket = context.wrap_socket(server.socket, server_side=True)
-            print("\nRabbitMole · Discovery LAN HTTPS (solo mientras esta consola permanezca abierta)")
-            print("Servidor: https://" + server.expected_host)
+            if context is not None:
+                server.socket = context.wrap_socket(server.socket, server_side=True)
+            scheme = "http" if args.loopback_http else "https"
+            print("\nRabbitMole · Discovery temporal (" + ("solo este PC" if args.loopback_http else "LAN HTTPS") + ")")
+            print("Servidor: " + scheme + "://" + server.expected_host)
             print("PWA autorizada: " + origin)
             print("Token temporal (copiar en la PWA, nunca en una URL): " + server.access_token)
             print("Sin escaneos automáticos. Cada alcance requiere AUTORIZO y confirmación.")

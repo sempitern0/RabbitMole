@@ -14,7 +14,7 @@ ALLOWED = {"css": {".css"}, "js": {".js"}, "fonts": {".woff2"},
            "icons": {".png", ".svg"}}
 CSP = ("default-src 'none'; script-src 'self'; script-src-elem 'self'; "
        "script-src-attr 'none'; style-src 'self'; "
-       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https:; "
+       "font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https: http://127.0.0.1:*; "
        "object-src 'none'; frame-src blob:; form-action 'none'; "
        "base-uri 'none'; manifest-src 'self'; worker-src 'self'; "
        "frame-ancestors 'none'")

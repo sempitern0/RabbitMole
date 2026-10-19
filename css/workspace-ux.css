@@ -1143,3 +1143,12 @@
 #workspace #bridge-panel .action-row{display:flex;gap:.6rem;flex-wrap:wrap}
 #workspace #bridge-status[data-state="success"],#workspace #bridge-status[data-state="warning"],#workspace #bridge-status[data-state="error"]{font-weight:700}
 @media(max-width:720px){#workspace #bridge-panel .bridge-stage,#workspace #bridge-panel .bridge-setup{padding:.7rem}#workspace #bridge-panel .action-row .button{flex:1 1 100%}}
+
+/* Distinct local/remote Discovery modes; ensure touch buttons never crowd or overlap. */
+#workspace #bridge-panel .intake-command-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.85rem;margin:.4rem 0}
+#workspace #bridge-panel .bridge-stage>*+*,#workspace #bridge-panel .bridge-setup>*+*{margin-block-start:.85rem}
+#workspace #bridge-panel .bridge-stage .fields{display:grid;gap:1rem;margin:1rem 0}
+#workspace #bridge-panel :is(.bridge-stage,.bridge-setup) .button{margin:.3rem 0;white-space:normal;max-width:100%}
+#workspace #bridge-panel details[open]>summary{margin-block-end:.85rem}
+#workspace #bridge-panel #bridge-use-local{margin:.75rem 0}
+@media(max-width:720px){#workspace #bridge-panel .intake-command-head>.button{width:100%}#workspace #bridge-panel #bridge-use-local{width:100%}}

@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v108-discovery-guidance";
+const CACHE_NAME = "rabbitmole-shell-v109-discovery-loopback";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";

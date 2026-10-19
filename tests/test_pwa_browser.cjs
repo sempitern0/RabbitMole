@@ -94,7 +94,7 @@ const {chromium}=require('playwright');
    assert(versionStyle.weight>=700 && versionStyle.radius>=15,'Version badge must be distinct and understated');
    await page.locator('#sidebar-maintenance > summary').click();
    // Every palette retains a dark, legible maintenance panel independently of the workspace theme.
-   for(const palette of ['rabbitmole','ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+   for(const palette of ['rabbitmole','rabbitmole-dark']){
     await page.locator('#palette').selectOption(palette);
     const contrast=await page.locator('#offline-health-panel').evaluate(el=>{
       const style=getComputedStyle(el), child=getComputedStyle(el.querySelector('strong'));
@@ -146,8 +146,8 @@ const {chromium}=require('playwright');
     assert(selector.insideSidebar && selector.height>=44 && selector.label.includes('Paleta de colores'),
       palette+' sidebar palette selector is not accessible');
    }
-   await page.locator('#palette').selectOption('ocean');
-   assert.equal(await page.evaluate(()=>localStorage.getItem('rabbitmole:palette:explicit:v1')),'ocean');
+   await page.locator('#palette').selectOption('rabbitmole-dark');
+   assert.equal(await page.evaluate(()=>localStorage.getItem('rabbitmole:palette:explicit:v1')),'rabbitmole-dark');
    // Storage permission has independent feedback; health checks must not overwrite it.
    await page.evaluate(()=>{Object.defineProperty(navigator,'storage',{configurable:true,value:{
      persist:async()=>false,persisted:async()=>false,estimate:async()=>({quota:1000000,usage:1000})
@@ -219,7 +219,7 @@ const {chromium}=require('playwright');
    await page.locator('#glossary-quick-full').click();
    await page.locator('#glossary-detail .glossary-article').waitFor();
    // Verify real computed spacing across glossary cards and the contextual drawer.
-   for(const palette of ['rabbitmole','ocean','amethyst-dark']){
+   for(const palette of ['rabbitmole','rabbitmole-dark']){
      await page.locator('#palette').selectOption(palette);
      const sample=await page.locator('#glossary-detail').evaluate(detail=>{
        const nodes=['.glossary-example','.glossary-definition','.glossary-evidence','.glossary-caution','.glossary-audit-steps'];
@@ -241,7 +241,7 @@ const {chromium}=require('playwright');
    await page.locator('[data-glossary-back]').first().click();
    await page.waitForFunction(id=>document.activeElement?.id===id,returnField);
    // Canonical form controls must have computed styling and room around adjacent fields.
-   for(const palette of ['rabbitmole','ocean','forest','indigo','graphite','midnight','obsidian','pine-dark','amethyst-dark','crimson-dark']){
+   for(const palette of ['rabbitmole','rabbitmole-dark']){
      await page.locator('#palette').selectOption(palette);
      const form=await page.locator('#workspace .field input:not([type="file"])').first().evaluate(el=>{
        const s=getComputedStyle(el), wrapper=el.closest('.field');
@@ -251,7 +251,7 @@ const {chromium}=require('playwright');
      });
      assert(form.radius>=8&&form.padding>=10&&form.height>=44,palette+' unstyled field: '+JSON.stringify(form));
    }
-   await page.locator('#palette').selectOption('ocean');
+   await page.locator('#palette').selectOption('rabbitmole-dark');
    await page.locator('#wizard-step-select').selectOption('controls');
    await page.locator('[data-add="controls"]').first().click();
    const sticky=await page.locator('.record-navigator').evaluate(el=>({position:getComputedStyle(el).position,border:parseFloat(getComputedStyle(el).borderLeftWidth),background:getComputedStyle(el).backgroundColor}));

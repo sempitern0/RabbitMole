@@ -64,18 +64,7 @@
   const BACKUP_KEY = "rabbitmole:backup-settings:v1";
   const BACKUP_DB = "rabbitmole-backup-directory";
   const DEFAULT_PALETTE = "rabbitmole";
-  const palettes = [
-    DEFAULT_PALETTE,
-    "ocean",
-    "forest",
-    "indigo",
-    "graphite",
-    "midnight",
-    "obsidian",
-    "pine-dark",
-    "amethyst-dark",
-    "crimson-dark",
-  ];
+  const palettes = [DEFAULT_PALETTE, "rabbitmole-dark"];
   const CVE_PATTERN = /^CVE-(?:1999|2\d{3})-\d{4,}$/i;
   const safeLogo = (value) =>
     typeof value === "string" &&

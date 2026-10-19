@@ -468,3 +468,5 @@ En **Redes → Captura asistida → Discovery local**, el nuevo asistente detall
 ### Discovery local sin certificado en el mismo PC
 
 Si utilizas la PWA Cloudflare instalada y Discovery en el **mismo Windows**, el nuevo modo `py -3 discovery\\service.py --loopback-http --origin https://rabbitmole.danieldigitalspace.workers.dev` usa un servicio temporal escuchando exclusivamente en `http://127.0.0.1:8766`. El Worker solo aloja la PWA y su CSP permite contactar con ese loopback; puede ser necesario permiso de acceso local del navegador. No sirve para escanear una LAN desde una tablet diferente: en ese caso necesitas HTTPS LAN o importar JSON desde una captura externa. Mantén la consola abierta y no abras puertos en el router.
+
+**Kit independiente:** la nueva compilación publica `/discovery-kit.zip` directamente en Cloudflare, con los scripts locales de Discovery sin descargar todo el repositorio. Descomprime y ejecuta desde su carpeta raíz `py -3 discovery\\service.py --loopback-http --origin https://rabbitmole.danieldigitalspace.workers.dev` en el mismo PC Windows. El Worker no ejecuta código Python.

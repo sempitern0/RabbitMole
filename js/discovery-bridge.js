@@ -150,7 +150,7 @@
    panel.innerHTML=`<h3>Discovery guiado · PWA y equipo auditor</h3>
      <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Necesitas un PC autorizado con Python/Nmap o generar un JSON en Android con Termux.</p>
      <details class="bridge-setup" open><summary><strong>1. Preparar el equipo auditor</strong></summary>
-       <p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
+       <p><a class="button quiet" href="./discovery-kit.zip" download="rabbitmole-discovery-kit.zip">Descargar kit Discovery sin clonar el repositorio (.zip)</a></p><p>Descomprime el kit, abre PowerShell desde su carpeta raíz (contiene <code>discovery/</code>) y sigue el método correspondiente.</p><p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
        <div class="intake-command"><div class="intake-command-head"><strong>Opción A · mismo PC, sin certificados</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
          <pre><code id="bridge-command-pc"></code></pre></div>
        <button type="button" id="bridge-use-local" class="button quiet">Usar servidor de este PC (127.0.0.1)</button>

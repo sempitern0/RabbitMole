@@ -372,3 +372,11 @@ In **Device and installation → Terminal and Discovery preparation**, the offli
 ### Final glossary coverage: servers, software and licensing
 
 The offline glossary contains **212 concepts**, **96 diagnostic guides**, and **221 references**. The 30 new topics cover Windows Server Core and roles, BMC management, RAID/SMART, shared storage, UPS, hypervisors, capacity and lifecycle, together with SAM/ITAM, entitlements, OEM/retail/volume, CALs, core-based and user licensing, SaaS subscriptions, BYOL, EULAs, open-source obligations and SPDX expressions. 17 new mostly read-only diagnostic guides include evidence and limitations. Server and software inventory fields now link to relevant glossary help. Neither installing an application nor having an activation key proves license compliance; contractual assessment must use vendor/product-specific terms. No commands execute in the PWA.
+
+## Field release acceptance
+
+See [field audit readiness](docs/RELEASE_READINESS.md) for persistence fixes, release checks and the real-device acceptance steps before a visit.
+
+### Faster assistant navigation
+
+The library's **Resume · last step** action remembers each audit's last section in this browser, outside its exported JSON. New audits start at client/scope. A top step selector and Evidence/Quality shortcuts avoid scrolling to the form footer. Each record offers **Next record** within visible search results and **Add another record**, which focuses a blank entry without copying observations or verification states. Confirmed audits remain navigable but cannot add/edit records.

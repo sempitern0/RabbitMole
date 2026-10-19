@@ -407,6 +407,14 @@ El diccionario offline alcanza **212 conceptos**, **96 guías de diagnóstico** 
 
 La ayuda contextual de **Hardware** incorpora rol, modalidad, almacenamiento y administración del servidor; la de **Software** incorpora licencia, estado, modelo, versión, soporte y actualizaciones. Esta información es orientativa: **una instalación detectada o una clave de activación no prueban conformidad contractual**. Antes de emitir conclusiones verifica condiciones y derechos del producto/edición concreta con el titular.
 
+## Aceptación para auditoría de campo
+
+Consulta [la preparación de auditoría](docs/RELEASE_READINESS_ES.md): correcciones de guardado, pruebas de entrega y comprobación en el dispositivo real antes de la visita.
+
+### Asistente: continuar con menos desplazamientos
+
+La biblioteca muestra **Reanudar · último paso** por expediente. La posición se recuerda únicamente en este navegador, separada del JSON; los nuevos expedientes empiezan en Cliente y alcance. En la cabecera puedes cambiar de fase, abrir Evidencias o Revisar pendientes sin llegar al final del formulario. Al pie de cada ficha, **Ir al siguiente registro** recorre los resultados visibles y **Añadir otro registro** abre una ficha nueva con foco, sin copiar datos ni comprobaciones. Los expedientes confirmados conservan navegación y bloquean altas/edición.
+
 ### Diagnóstico de instalación de la PWA en Cloudflare Workers
 
 La distribución Workers de RabbitMole necesita responder **200 sin redirecciones** para `/` y `/index.html`, porque ambos documentos forman parte de la caché de instalación. El Worker resuelve `/` internamente a `index.html` y `wrangler.toml` usa `assets.html_handling = "none"`. El smoke test HTTPS también comprueba las redirecciones: el mensaje de Wrangler `Success! Deployed` solo demuestra publicación, no funcionamiento en navegadores reales.

@@ -103,8 +103,8 @@
       refreshRecordNavigator();
     }
   }
-  function focusAddedRecord(key) {
-    clearRecordSearch();
+  function focusAddedRecord(key, {clearSearch = true} = {}) {
+    if (clearSearch) clearRecordSearch();
     const entry = [...getWorkspace().querySelectorAll("[data-entry-key]")].find(
       (item) => item.dataset.entryKey === key,
     );

@@ -32,8 +32,15 @@
         tx.oncomplete = () => resolve(result);
         tx.onerror = () => reject(tx.error || Error('Error de almacenamiento'));
         tx.onabort = () => reject(tx.error || Error('Transacción cancelada'));
-        const request = action(objectStore);
-        if (request) request.onsuccess = () => { result = request.result; };
+        try {
+          const request = action(objectStore);
+          if (request) request.onsuccess = () => { result = request.result; };
+        } catch (error) {
+          // A synchronous DataCloneError/DataError does not abort IndexedDB.
+          // Roll back earlier queued writes before rejecting the whole batch.
+          tx.abort();
+          reject(error);
+        }
       });
     }
 

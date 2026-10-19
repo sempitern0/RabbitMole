@@ -18,7 +18,7 @@ function installStatus(userAgent,platform,touches){
 assert.match(installStatus('Mozilla/5.0 (iPhone; CPU iPhone OS 17)','iPhone',5),/Safari/);
 assert.match(installStatus('Mozilla/5.0 (Linux; Android 15)','Linux armv8l',5),/Instala RabbitMole/);
 assert.match(installStatus('Mozilla/5.0 (Macintosh)','MacIntel',5),/pantalla de inicio/);
-async function permissionCheck(granted){
+async function permissionCheck(granted,verified=granted){
  const nodes={};
  for(const id of ['offline-health-check','offline-health-persist','offline-health-repair']){
   nodes[id]={disabled:false,addEventListener(type,cb){this[type]=cb}};
@@ -26,14 +26,14 @@ async function permissionCheck(granted){
  nodes['offline-health-status']={textContent:''};
  nodes['offline-storage-status']={textContent:'',dataset:{}};
  const ctx={
-  navigator:{onLine:true,storage:{persisted:async()=>false,persist:async()=>granted}},
+  navigator:{onLine:true,storage:{persisted:async()=>verified,persist:async()=>granted}},
   document:{readyState:'complete',getElementById:id=>nodes[id]||null},
   setTimeout,clearTimeout,MessageChannel:class{}
  };ctx.globalThis=ctx;
  vm.runInNewContext(storage,ctx);
  nodes['offline-health-persist'].click();
  for(let i=0;i<5;i++)await new Promise(resolve=>setImmediate(resolve));
- assert.equal(nodes['offline-storage-status'].dataset.result,granted?'granted':'denied');
+ assert.equal(nodes['offline-storage-status'].dataset.result,granted!==verified?'unknown':granted?'granted':'denied');
  assert(!nodes['offline-storage-status'].textContent.includes('Caché incompleta'));
  assert(storage.indexOf('const request=storage.persist()') < storage.indexOf('const granted=await request'), 'Request must be made before any await');
  assert.equal(nodes['offline-health-persist'].disabled,false);
@@ -43,6 +43,8 @@ async function permissionCheck(granted){
 (async()=>{
  assert.match(await permissionCheck(true),/Persistencia concedida/);
  assert.match(await permissionCheck(false),/no concedida/);
+ assert.match(await permissionCheck(true,false),/No se ha podido confirmar/);
+ assert.match(await permissionCheck(false,true),/No se ha podido confirmar/);
  const html=fs.readFileSync('index.html','utf8');
  const css=fs.readFileSync('css/workspace-ux.css','utf8');
  const sw=fs.readFileSync('sw.js','utf8');

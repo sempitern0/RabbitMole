@@ -32,7 +32,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
  assert.deepEqual(routed,['/index.html','/index.html','/index.html'],
   'Both shell URLs must fetch the same exact asset, without redirects');
  const config=fs.readFileSync('wrangler.toml','utf8');
- assert.match(config,/html_handling\\s*=\\s*"none"/,'Disable Cloudflare HTML redirects for offline shell URLs');
+ assert.match(config,/html_handling\s*=\s*"none"/,'Disable Cloudflare HTML redirects for offline shell URLs');
  for(const method of ['POST','PUT','DELETE'])assert.equal((await worker.fetch(new Request('https://rabbit.example/',{method}),env)).status,405);
  assert.equal(await (await worker.fetch(new Request('https://rabbit.example/',{method:'HEAD'}),env)).text(),'');
  console.log('PASS Worker allowlist, methods, headers and no data endpoints');

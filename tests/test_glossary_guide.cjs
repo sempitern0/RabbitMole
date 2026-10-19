@@ -81,7 +81,8 @@ assert(Object.keys(hw).length>=45,'Not enough hardware vendors for desktop/lapto
 for(const brand of ['Dell','HP','Lenovo','ASUS','Acer','Apple','MSI','Dynabook','Framework','Microsoft'])
  assert(hw[brand]?.length>0,'Missing PC manufacturer: '+brand);
 assert(hw.Dell.some(x=>x.includes('Latitude'))&&hw.Lenovo.some(x=>x.includes('ThinkPad')),'Missing laptop families');
-assert(app.includes('class="field-heading"')&&app.includes('glossary-help')&&app.includes('<svg viewBox="0 0 24 24"'),'Glossary buttons must be independent SVG controls');
+const fields=fs.readFileSync(path.join(root,'js/audit-field-renderer.js'),'utf8');
+assert(fields.includes('class="field-heading"')&&fields.includes('glossary-help')&&fields.includes('${glossaryHelpIcon}')&&app.includes('<svg class="glossary-help-icon"'),'Glossary buttons must be independent SVG controls');
 assert(app.includes('backToAudit()')&&app.includes('glossary-inline-back'),'Glossary return shortcut missing');
 assert(!app.includes('${html(label)}${help}</label>'),'Help must not be nested inside label');
 console.log('PASS offline glossary: concepts, synonyms, filters, contextual guidance');
@@ -109,7 +110,7 @@ for(const id of ['term-1','term-2','term-25']){
  assert(g.PROTOCOLS[id]?.length>=4,'Missing scoped protocol: '+id);
  assert(g.PROTOCOLS[id].every(text=>typeof text==='string'&&text.length>40));
 }
-assert(fs.readFileSync(path.join(root,'index.html'),'utf8').includes('<option value="rabbitmole">Predeterminado</option>'),'Brand palette label');
+assert(fs.readFileSync(path.join(root,'index.html'),'utf8').includes('<option value="rabbitmole" selected>Predeterminado</option>'),'Brand palette label');
 
 /* Regression: glossary sections with borders must keep their inner spacing.
  * A generic 'padding: ... 0' used to wipe example/evidence/caution padding. */

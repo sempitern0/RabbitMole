@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const app=fs.readFileSync('js/app.js','utf8');
+const enqueue=app.slice(app.indexOf('  function enqueue(action)'),app.indexOf('  function selectPalette'));
+const safe=app.match(/isSafeToReload: (\(\) =>[^\n]+),/)[1];
+const ctx=vm.createContext({});
+vm.runInContext('let dirty=false,storageError=false,saveTimer=null,pendingWrites=0,writeQueue=Promise.resolve();'+enqueue+';globalThis.safe='+safe+';globalThis.enqueue=enqueue;',ctx);
+(async()=>{
+ assert.equal(ctx.safe(),true);
+ let release;
+ const first=ctx.enqueue(()=>new Promise(resolve=>{release=resolve;}));
+ const second=ctx.enqueue(()=>{assert.equal(ctx.safe(),false);});
+ assert.equal(ctx.safe(),false,'queued writes must prevent reload');
+ await new Promise(setImmediate);
+ release();await first;await second;
+ assert.equal(ctx.safe(),true);
+ await assert.rejects(ctx.enqueue(()=>{throw Error('quota');}),/quota/);
+ assert.equal(ctx.safe(),true,'pending counter recovers after rejection');
+ await ctx.enqueue(()=>{});
+ console.log('PASS pending writes block reload and queue recovers after errors');
+})().catch(e=>{console.error(e);process.exitCode=1;});

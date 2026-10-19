@@ -23,6 +23,6 @@ for(const asset of ['js/os-catalog.js','js/glossary-terms.js','js/glossary-guide
 const app=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
 assert(app.includes('function renderGlossary()'));
 assert(app.includes('datalist'));
-assert(app.includes('osCatalog?.ALL'));
+assert(fs.readFileSync(path.join(root,'js/audit-field-renderer.js'),'utf8').includes('osCatalog?.ALL'));
 assert(html.indexOf('js/os-catalog.js')<html.indexOf('js/app.js'));
 console.log('PASS autocomplete + 169 OS variants + glossary + PWA assets');

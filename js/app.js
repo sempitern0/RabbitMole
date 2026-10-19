@@ -2467,6 +2467,10 @@
     byId("navigation").hidden = true;
     byId("audit-context").hidden = true;
     byId("workspace-label").textContent = "MENÚ PRINCIPAL";
+    // The step navigation (#navigation) is intentionally hidden in this layout;
+    // expose the per-audit file library through the visible main navigation.
+    // Only display it when an actual audit is open.
+    byId("audit-file-library-link").hidden = !currentId;
     // Keep the global menu in sync with the current view, including the glossary.
     for (const button of byId("global-navigation").querySelectorAll(
       "[data-go]",
@@ -2495,10 +2499,7 @@
         ([id, symbol, name]) =>
           `<button type="button" data-go="${id}" class="${page === id ? "active" : ""}" ${page === id ? 'aria-current="page"' : ""}><span class="nav-mark">${symbol}</span>${name}</button>`,
       )
-      .join("")+
-      '<button type="button" data-go="attachments" class="'+(page==="attachments"?"active":"")+
-      '" '+(page==="attachments"?'aria-current="page"':"")+
-      '><span class="nav-mark">▣</span>Biblioteca de archivos</button>';
+      .join("");
     byId("current-section").textContent =
       page === "records"
         ? "Biblioteca de auditorías"

@@ -20,6 +20,15 @@ for(const file of ['index.html','sw.js','rabbitmole.sh','rabbitmole.ps1'])
  assert(fs.readFileSync(file,'utf8').includes('js/audit-attachment-library.js'));
 const app=fs.readFileSync('js/app.js','utf8');
 assert(app.includes('section === "attachments"'));
+assert(app.includes('byId("audit-file-library-link").hidden = !currentId'),
+ 'Link should appear only when the user has an active audit');
+assert(!app.includes('<button type="button" data-go="attachments" class='),
+ 'Do not append file library to the intentionally hidden wizard nav');
+const index=fs.readFileSync('index.html','utf8');
+assert(index.includes('id="audit-file-library-link"') &&
+ index.includes('data-go="attachments"'));
+assert(fs.readFileSync('css/workspace-ux.css','utf8').includes(
+ '#global-navigation #audit-file-library-link[hidden]{display:none!important}'));
 assert(app.includes('attachmentLibrary.render(state,attachmentType,attachmentSearch'));
 assert(app.includes('"attachment-search","attachment-filter"'));
 assert(!app.includes('chapters.push([14, "Biblioteca de archivos"'));

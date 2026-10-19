@@ -173,7 +173,22 @@ const {chromium}=require('playwright');
    assert.equal(keyboardFocus.interactive,true,'Tab must reach an interactive element');
    assert.equal(keyboardFocus.visible,true,'Keyboard focus must remain visible');
    assert.notEqual(keyboardFocus.outline,'none','Keyboard focus indicator must remain visible');
+   assert.equal(await page.locator('#audit-file-library-link').isVisible(),false,
+     'File library should remain hidden before an audit is created');
    await page.locator('[data-new]').first().click();
+   // Opening an audit makes its file library reachable from the visible menu,
+   // not the hidden #navigation wizard container.
+   assert.equal(await page.locator('#audit-file-library-link').isVisible(),true,
+     'File library link must be visible with an active audit');
+   await page.locator('#audit-file-library-link').click();
+   assert.equal(await page.locator('#workspace h1').textContent(),'Biblioteca de archivos');
+   assert.equal(await page.locator('#workspace #attachment-filter').isVisible(),true);
+   await page.locator('#attachment-filter').selectOption('images');
+   await page.locator('#attachment-search').fill('sin-coincidencias');
+   assert.match(await page.locator('#attachment-visible-count').textContent(),/0 archivos/);
+   await page.locator('#global-navigation [data-go="records"]').click();
+   assert.equal(await page.locator('#audit-file-library-link').isVisible(),true);
+   await page.locator('[data-open]').first().click();
    // Quick help preserves the live input node, its value, the current step and URL.
    const contextualHelp=page.locator('[data-glossary-term][data-glossary-field]').first();
    const returnField=await contextualHelp.getAttribute('data-glossary-field');

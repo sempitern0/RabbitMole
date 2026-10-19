@@ -1121,3 +1121,7 @@
 #workspace .attachment-library-details .button{min-height:44px}
 #workspace .attachment-library-empty{padding:1rem;border:1px dashed var(--line);border-radius:.7rem}
 @media(max-width:720px){#workspace .attachment-library-controls{grid-template-columns:1fr}#workspace .attachment-library-preview{width:60px;height:60px}}
+
+/* Explicitly hide the per-audit file library until an audit is open.
+   nav button's display:flex overrides the user-agent [hidden] default. */
+#global-navigation #audit-file-library-link[hidden]{display:none!important}

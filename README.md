@@ -396,3 +396,7 @@ On phone/tablet layouts (up to 1000px), selecting an audit or main section from 
 ### Preserve router/ONT/firewall inventory details
 
 The Router/Gateway Security section now asks for device type before vendor and model. Subsequent device-type or vendor changes preserve already recorded strings, including custom vendors and models that are no longer in the filtered catalogue. Unmatched values appear in the editable “Other” field rather than being silently erased. Existing JSON-v3 inventory, backups and reports remain compatible. Records previously saved without these values must be corrected from an earlier verified backup or primary evidence, not guessed.
+
+### Recovering previously imported Acrylic data
+
+The report derives a read-only view from saved per-file CSV snapshots without changing confirmed audit JSON or document hashes. Old versions could mistake roaming exports for AP captures and overwrite radio summaries. The new report shows per-SSID counts and compact radio data tables; timestamps discarded by the old importer still require reimporting the original CSV. Third-party PDFs stay separately referenced annexes. Hardware custom models remain preserved when changing vendors.

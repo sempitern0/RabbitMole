@@ -119,3 +119,8 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 - Never clear `networks.routerVendor` or `networks.routerModel` as a side effect of changing `networkDeviceType` or `routerVendor`. Models may be custom and valid even if absent from the new catalogue; preserve and show as `Otro / escribir` for explicit revision.
 - Render `networkDeviceType` first in `router-security-review`; do not display it a second time in the extended group. The `app-model.js` JSON v3 validator must roundtrip router details and reportRows(networks) should render every populated field.
 - Regression: `tests/test_router_catalog.cjs`, `tests/test_app_modules.cjs`, `tests/test_pwa_browser.cjs` including offline reload after changing type/vendor. Do not infer missing values from external sources.
+
+## Prevent CSV overwrite and silent hardware model loss
+- Derive display data from `RabbitMoleExternalNetwork.effective()` rather than normalizing stale aggregate arrays. Keep confirmed documents/digests immutable. Group distinct SSIDs as observations, not declared client inventory.
+- Preserve hardware `model` when changing `vendor` (preset and custom), as with router vendor/model. Regression in browser test.
+- A4 report radio tables are deliberately compact; third-party PDF annexes are separate files by hash and are not appended in PDF generation.

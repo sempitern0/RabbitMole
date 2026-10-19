@@ -1590,7 +1590,8 @@
     return workflowViews.renderAppendixActions(item,readonly,{html});
   }
   function renderExternalNetworkAnalysis(print=false) {
-    const analysis=externalNetwork.normalize(state.externalNetworkAnalysis);
+    // Reassemble views from archived per-file CSV snapshots without modifying the signed audit.
+    const analysis=externalNetwork.effective(state.externalNetworkAnalysis);
     const readonly=state.documentControl?.status==="confirmed";
     const escape=html;
     const metrics=externalNetwork.metrics(analysis);
@@ -1598,20 +1599,32 @@
     const table=(items,columns,limit=50)=>items?.length
       ? `<div class="network-analysis-table-wrap"><table class="network-analysis-table"><thead><tr>${columns.map(c=>`<th scope="col">${escape(c)}</th>`).join("")}</tr></thead><tbody>${items.slice(0,limit).map(item=>`<tr>${columns.map(c=>`<td>${escape(item[c]||"—")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
       : '<p class="subtle">Sin mediciones importadas en esta categoría.</p>';
-    const wifi=analysis?.aps?.filter(r=>r.Banda&&r["Dirección MAC"]&&!r.SSID.startsWith("[Cliente Lan]"))||[];
+    const wifi=analysis?.aps?.filter(r=>r.SSID&&r["Dirección MAC"]&&!r.SSID.startsWith("[Cliente Lan]"))||[];
+    const groupsBySsid=new Map();
+    for(const radio of wifi){
+      if(!groupsBySsid.has(radio.SSID))groupsBySsid.set(radio.SSID,{SSID:radio.SSID,Radios:0,Bandas:new Set()});
+      const item=groupsBySsid.get(radio.SSID);item.Radios++;
+      if(radio.Banda)item.Bandas.add(radio.Banda);
+    }
+    const ssidList=[...groupsBySsid.values()].sort((a,b)=>b.Radios-a.Radios)
+      .map(x=>({SSID:x.SSID,Radios:String(x.Radios),Bandas:[...x.Bandas].join(", ")||"No indicada"}));
+    const radioPrint=wifi.map(x=>({...x,Protección:["WPA3","WPA2","WPA","WEP"]
+      .filter(k=>x[k]).map(k=>k+": "+x[k]).join("; ")||x.Seguridad||"No registrada"}));
     const tiles=metrics?`<div class="network-analysis-metrics">
       ${[[metrics.wifi,"Radios/AP WiFi observados"],[metrics.lan,"Clientes LAN listados"],[metrics.observedDevices,"Dispositivos del CSV"],[metrics.latency?.average??"—","Latencia media (ms)"]].map(([value,label])=>`<div><strong>${escape(value)}</strong><span>${escape(label)}</span></div>`).join("")}
       </div>`:"";
     const details=analysis?`<div class="network-analysis-data">
       ${tiles}
-      <p class="subtle">Banda 2,4 GHz: ${metrics.band24} · 5 GHz: ${metrics.band5} · 6 GHz: ${metrics.band6}. La captura de una herramienta externa puede incluir AP ajenos y clientes LAN; los registros no constituyen automáticamente activos autorizados ni hallazgos.</p>
-      <details ${print?"open":""}><summary>Puntos de acceso y redes WiFi (${wifi.length})</summary>${table(wifi,["SSID","Dirección MAC","RSSI","Canal","Banda","Ancho","WPA2","WPA3","WPS","Fabricante"],print?150:50)}</details>
+      <p class="subtle">Banda 2,4 GHz: ${metrics.band24} · 5 GHz: ${metrics.band5} · 6 GHz: ${metrics.band6}. Se observan ${ssidList.length} SSID distintos. Los AP y redes próximas no se consideran automáticamente infraestructura del cliente ni hallazgos.</p>
+      <details ${print?"open":""}><summary>Redes SSID observadas (${ssidList.length})</summary>${table(ssidList,["SSID","Radios","Bandas"],print?150:50)}</details>
+      <details ${print?"open":""}><summary>Puntos de acceso y radios WiFi (${wifi.length})</summary>${table(print?radioPrint:wifi,print?["SSID","Dirección MAC","RSSI","Canal","Banda","Protección"]:["SSID","Dirección MAC","RSSI","Canal","Banda","Ancho","WPA2","WPA3","WPS","Fabricante"],print?150:50)}</details>
       <details ${print?"open":""}><summary>Dispositivos observados (${analysis.devices.length})</summary>${table(analysis.devices,["Dirección MAC","Estado","RSSI","Fabricante"],print?150:35)}</details>
       <details ${print?"open":""}><summary>Pruebas y conectividad</summary>
         ${analysis.latency?`<p><strong>Latencia:</strong> ${analysis.latency.count} muestras, mínimo ${escape(analysis.latency.min??"—")} ms, máximo ${escape(analysis.latency.max??"—")} ms, media ${escape(analysis.latency.average??"—")} ms; pérdida media registrada ${escape(analysis.latency.packetLoss??"N/D")}.</p>`:''}
         ${[["ip","Direcciones IP",["Interfaz Wifi","IPv4 local","Puerta de enlace","Servidores DNS"]],["roaming","Roaming",["Interfaz Wifi","SSID","Dirección MAC","Duración"]],["transfer","Transferencia",["Interfaz Wifi","Bytes enviados","Bytes recibidos","Subida","Bajada"]],["speed","Test de velocidad",["Ancho de Descarga","Fecha"]],["iperf","iPerf",["Ancho de Descarga","Ancho de Subida","Fecha"]]].map(([key,label,columns])=>`<h4>${label}</h4>${table(diagnostic[key],columns)}`).join("")}
       </details>
-      <p class="subtle">Herramienta: ${escape(analysis.source||"No indicada")} · Fecha de análisis: ${escape(analysis.observedAt||"No indicada")} · Importación: ${escape(analysis.importedAt)} · CSV: ${analysis.files.map(escape).join(", ")}. Se muestran hasta 50 AP por vista; el PDF externo original sigue siendo la fuente íntegra.</p>
+      <p class="subtle">Herramienta: ${escape(analysis.source||"No indicada")} · Fecha de análisis: ${escape(analysis.observedAt||"No indicada")} · Importación: ${escape(analysis.importedAt)} · CSV: ${analysis.files.map(escape).join(", ")}. Se muestran hasta 50 AP por vista. El PDF original se conserva como anexo separado, no se fusiona con este informe.</p>
+      ${analysis.imports?.some(x=>x.kind==="aps"&&/(?:^|[_-])roaming\\.csv$/i.test(x.filename))?'<p class="notice warn">Los puntos de acceso se han reconstruido desde los CSV archivados. Para recuperar los tiempos de roaming descartados por el importador anterior, importa nuevamente el CSV original en una rectificación.</p>':''}
     </div>`:"";
     if(print)return analysis?`<div class="report-external-analysis"><p>Resumen documental de mediciones aportadas por herramienta externa; no implica validación independiente por RabbitMole.</p>${details}</div>`:"";
     return `<section class="card external-network-analysis" aria-labelledby="external-network-title">
@@ -3288,7 +3301,7 @@
       if(osField)osField.outerHTML=renderField(obj,"assets",groups.assets.fields.find(([key])=>key==="os"),Number(t.dataset.index));
     }
     if (t.dataset.block === "assets" && t.dataset.field === "vendor") {
-        obj.model = "";
+        // Preserve the previously recorded model; mismatches stay editable as "Otro".
         const sibling = workspace
           .querySelector(`#f-assets-${t.dataset.index}-model`)
           ?.closest(".field");
@@ -3324,7 +3337,7 @@
       if (target) updateValidation(target);
     }
     if (t.dataset.block === "assets" && t.dataset.field === "vendor") {
-      obj.model = "";
+      // Keep model when a vendor changes; only explicit model edits may clear it.
       const sibling = workspace
         .querySelector(`#f-assets-${t.dataset.index}-model`)
         ?.closest(".field");

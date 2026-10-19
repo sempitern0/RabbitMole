@@ -459,6 +459,14 @@ const {chromium}=require('playwright');
    assert.match(await page.locator('.network-overview details').textContent(),/Invitados/);
    await page.locator('#wizard-step-top').selectOption('assets');
    await page.locator('[data-block="assets"][data-field="name"]').first().fill('Equipo offline de prueba');
+   const vendor=page.locator('#f-assets-0-vendor');
+   await vendor.selectOption('__custom__');
+   await page.locator('[data-block="assets"][data-field="vendor"][data-custom]').first().fill('Fabricante documentado');
+   await page.locator('#f-assets-0-model').selectOption('__custom__');
+   await page.locator('[data-block="assets"][data-field="model"][data-custom]').first().fill('Modelo identificado');
+   await vendor.selectOption('Cisco');
+   assert.equal(await page.locator('[data-block="assets"][data-field="model"][data-custom]').first().inputValue(),'Modelo identificado',
+     'Changing hardware vendor must not reset a captured custom model');
    await page.waitForFunction(()=>document.getElementById('save-status').textContent.includes('Guardado'));
    await context.setOffline(true);await page.reload();
    await page.waitForFunction(()=>!!document.querySelector('[data-new]')||!!document.querySelector('#wizard-step-select'));

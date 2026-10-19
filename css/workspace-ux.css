@@ -687,7 +687,16 @@
 .network-analysis-table th,.network-analysis-table td{padding:.6rem .7rem;border-block-end:1px solid var(--line);text-align:start;white-space:nowrap}
 .network-analysis-table th{background:var(--canvas);color:var(--ink);font-weight:750}
 @media(max-width:800px){.network-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media print{.report-external-analysis .network-analysis-data>details{break-inside:auto}.report-external-analysis .network-analysis-table-wrap{overflow:visible}.report-external-analysis .network-analysis-table th,.report-external-analysis .network-analysis-table td{white-space:normal}}
+@media print{
+ .report-external-analysis .network-analysis-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem}
+ .report-external-analysis .network-analysis-metrics>div{padding:.4rem .55rem}
+ .report-external-analysis .network-analysis-metrics strong{font-size:1.2rem}
+ .report-external-analysis .network-analysis-data>details{overflow:visible;break-inside:auto}
+ .report-external-analysis .network-analysis-table-wrap{overflow:visible;max-width:100%}
+ .report-external-analysis .network-analysis-table{table-layout:fixed;width:100%;font-size:9px}
+ .report-external-analysis .network-analysis-table th,.report-external-analysis .network-analysis-table td{padding:4px 5px;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+ .report-external-analysis .network-analysis-table tr{break-inside:avoid}
+}
 
 /* Generic WiFi supplementary documents are surfaced directly in Networks. */
 #workspace .external-network-analysis .network-analysis-import{gap:.85rem}

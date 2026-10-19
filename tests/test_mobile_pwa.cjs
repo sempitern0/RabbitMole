@@ -71,6 +71,12 @@ async function permissionCheck(granted,verified=granted){
  assert(!setup.includes('<script')&&!setup.includes('onclick='),'Read-only instructions must not execute scripts');
  assert(css.includes('.mobile-terminal-setup summary:focus-visible'),'Keyboard-accessible terminal guide');
  assert(css.includes('#pwa-install-card .mobile-field-items input:focus-visible'),'Keyboard focus in field checklist');
+ const appSource=fs.readFileSync('js/app.js','utf8');
+ assert(appSource.includes('const wizardStepChange = page !== section'),'Step navigation must detect audit transitions');
+ assert(appSource.includes('window.matchMedia("(max-width: 1000px)").matches'),'Phone/tablet breakpoint missing');
+ assert(appSource.includes('workspace.querySelector(".wizard-fast-nav")'),'New audit step must anchor in workspace');
+ assert(appSource.includes('anchor.getBoundingClientRect().top - 12'),'Scrolled position must follow rendered wizard');
+ assert(appSource.includes('heading.focus({ preventScroll: true })'),'Heading focus must not undo the new scroll');
  const cacheVersion=Number(sw.match(/const CACHE_NAME\s*=\s*"rabbitmole-shell-v(\d+)-/)?.[1]);
  assert(Number.isInteger(cacheVersion)&&cacheVersion>92,'Mobile shell changes need a bumped cache');
  assert(css.includes('#pwa-install-card.pwa-install-card:not([hidden])'));

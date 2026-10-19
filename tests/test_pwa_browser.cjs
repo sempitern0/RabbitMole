@@ -328,6 +328,30 @@ const {chromium}=require('playwright');
    await page.locator('[data-open]').first().click();
    await page.locator('#wizard-step-select').selectOption('networks');
    assert.equal(await page.locator('.record-navigator').evaluate(el=>getComputedStyle(el).position),'static','Mobile filters must not cover editable records');
+   // Phone/tablet step changes must not jump to the global navigation area.
+   const assertWizardVisible = async label => {
+     const metrics=await page.locator('#workspace .wizard-fast-nav').evaluate(el=>{
+       const rect=el.getBoundingClientRect();
+       const maxScroll=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+       const expected=Math.min(maxScroll,Math.max(0,scrollY+rect.top-12));
+       return {scrollY,top:rect.top,bottom:rect.bottom,maxScroll,expected,viewport:innerHeight};
+     });
+     assert(Math.abs(metrics.scrollY-metrics.expected)<=24,
+       label+' must align the new wizard: '+JSON.stringify(metrics));
+     assert(metrics.bottom>0&&metrics.top<metrics.viewport,
+       label+' must expose wizard controls: '+JSON.stringify(metrics));
+   };
+   await assertWizardVisible('Phone bottom picker');
+   await page.locator('.wizard-buttons [data-go="software"]').click();
+   await assertWizardVisible('Phone next');
+   await page.locator('.wizard-buttons [data-go="networks"]').click();
+   await assertWizardVisible('Phone previous');
+   await page.locator('#wizard-step-top').selectOption('assets');
+   await assertWizardVisible('Phone top picker');
+   await page.setViewportSize({width:820,height:900});
+   await page.locator('#wizard-step-top').selectOption('networks');
+   await assertWizardVisible('Tablet top picker');
+   await page.setViewportSize({width:390,height:844});
    await page.setViewportSize({width:1280,height:900});
    await page.locator('#wizard-step-select').selectOption('delivery');
    assert.equal(await page.locator('#pdf-appendix-upload').count(),1);

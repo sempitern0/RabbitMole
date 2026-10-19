@@ -2540,6 +2540,11 @@
       if (page !== "glossary") openGlossary("", { page, scrollY: window.scrollY });
       return;
     }
+    // Track a transition between audit steps before replacing the wizard DOM.
+    // On compact viewports the global menu is above the form.
+    const wizardStepChange = page !== section &&
+      nav.some(([id]) => id === page) &&
+      nav.some(([id]) => id === section);
     if (nav.some((n) => n[0] === section)) lastAuditPage = section;
     if (!fromHistory && page === "glossary" &&
         window.history.state?.[HISTORY_KEY]?.view === "glossary") {
@@ -2580,7 +2585,15 @@
       page = section;
       rememberAuditStep(currentId, section);
       render();
-      scrollTo(0, 0);
+      if (wizardStepChange && window.matchMedia("(max-width: 1000px)").matches) {
+        // Anchor to the new step rather than to the global navigation.
+        // Synchronous scrolling avoids animation and soft-keyboard jumps.
+        const anchor = workspace.querySelector(".wizard-fast-nav");
+        const target = anchor ? window.scrollY + anchor.getBoundingClientRect().top - 12 : 0;
+        window.scrollTo(0, Math.max(0, target));
+      } else {
+        window.scrollTo(0, 0);
+      }
       // SPA navigation must announce the new page to keyboard and screen-reader users.
       const heading = section === "device" ? byId("pwa-install-heading") : workspace.querySelector("h1");
       if (heading) {

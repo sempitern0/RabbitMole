@@ -100,3 +100,7 @@ El módulo `js/photo-code-hints.js` usa `BarcodeDetector` y opcionalmente `TextD
 
 ## Flujo rápido del asistente
 `js/app.js` conserva el último paso por expediente en `rabbitmole:ui:last-step:v1:<id>`: preferencia local validada contra `nav`, jamás progreso verificado ni parte del JSON. Eliminar el expediente elimina esa preferencia. `#wizard-step-top` debe seguir habilitado en expedientes confirmados. Los botones `[data-entry-next]` solo navegan por fichas visibles y usan `recordNavigation.focus(key,{clearSearch:false})`; los botones `data-add` reutilizan límites, identificadores y bloqueos existentes. No copiar observaciones o estados entre registros. CSS en `workspace-ux.css`; E2E en `test_pwa_browser.cjs`.
+
+## Mobile/tablet wizard scroll
+- `js/app.js` tracks transitions between `nav` steps, and after rendering aligns the fresh `.wizard-fast-nav` within a viewport up to 1000px. General navigation and desktop still go to page top. `heading.focus({preventScroll:true})` avoids a second jump.
+- Do not alter audit JSON, active record or last-step persistence. Test real phone/tablet scrolling in `tests/test_pwa_browser.cjs` and the source contract in `tests/test_mobile_pwa.cjs`. Increment SW cache when updating JS.

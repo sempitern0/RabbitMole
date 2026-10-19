@@ -380,3 +380,7 @@ See [field audit readiness](docs/RELEASE_READINESS.md) for persistence fixes, re
 ### Faster assistant navigation
 
 The library's **Resume · last step** action remembers each audit's last section in this browser, outside its exported JSON. New audits start at client/scope. A top step selector and Evidence/Quality shortcuts avoid scrolling to the form footer. Each record offers **Next record** within visible search results and **Add another record**, which focuses a blank entry without copying observations or verification states. Confirmed audits remain navigable but cannot add/edit records.
+
+### Phone/tablet assistant step changes
+
+When moving to a new audit step on viewports up to 1000px (next, previous or step selectors), RabbitMole scrolls to the new step's quick-navigation controls instead of returning above the global menu. Desktop and main-route navigation retain their original behavior. Accessible heading focus uses preventScroll, while stored audit data and per-record last-step preferences are unchanged.

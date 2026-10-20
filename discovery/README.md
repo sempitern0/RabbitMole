@@ -89,3 +89,8 @@ Uninstall by clicking **Desactivar**, closing Companion, and deleting the extrac
 
 ### Switching stations and retrying
 Returning to the wizard shows the active connection address. “Use this PC server” disconnects the previous station and discards its temporary capture: reconnect before scanning. Navigating away while the connection response arrives does not invalidate the session. Once approval or denial has been received, pairing can be retried subject to the five-second request cooldown; scans never start automatically.
+
+### Guided local startup
+Run `python serve.py` in a terminal to choose the port, IPv4/IPv6 loopback, Discovery and browser launch. Discovery defaults to disabled; enabling it never starts a scan. The wizard prints an equivalent command. Explicit arguments (for example `python serve.py 8765 --enable-discovery --no-open`) bypass prompts. Non-interactive input retains safe defaults without waiting. Ctrl+C or EOF cancels the wizard without opening a server.
+
+Device and installation shows an indicative Android, iOS/iPadOS or desktop/other platform and browser versus standalone mode. Platform detection does not grant permissions or establish offline readiness.

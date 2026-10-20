@@ -1355,7 +1355,7 @@
     const command = intakeCommands[key];
     return `<div class="intake-command">
       <div class="intake-command-head"><strong class="glossary-command-platform">${glossaryPlatformIcon(label)}${html(label)}</strong><button type="button" class="glossary-copy" data-intake-copy="${key}" aria-label="Copiar comando de ${html(label)}">Copiar</button></div>
-      <pre><code>${html(command)}</code></pre><p>${html(explanation)}</p>
+      <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code>${html(command)}</code></pre><p>${html(explanation)}</p>
     </div>`;
   }
   function renderIntakeGuided() {
@@ -1422,7 +1422,7 @@
       </div>
       <details class="intake-sample">
         <summary>Ver ejemplo de columnas CSV para ${html(block === "assets" ? "Hardware" : block === "networks" ? "Redes" : "Software")}</summary>
-        <pre><code>${html(currentSample)}</code></pre>
+        <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code>${html(currentSample)}</code></pre>
         <p class="subtle">Ejemplo ilustrativo, con direcciones de documentación. Ajusta columnas y valores a tu inventario real. <strong>No subas el JSON completo de una auditoría</strong> por este formulario; usa «Importar expediente».</p>
       </details>
       <p id="intake-status" class="intake-status" role="status" aria-live="polite">${html(intakeError)}</p>

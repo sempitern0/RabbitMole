@@ -394,6 +394,7 @@
         </header>
         <section id="pwa-install-card" class="pwa-install-card" aria-label="Dispositivo e instalación" hidden>
           <h2 id="pwa-install-heading">RabbitMole en tu dispositivo</h2>
+          <p id="pwa-device-status" class="subtle" role="status"></p>
           <p id="pwa-install-status" role="status" aria-live="polite"></p>
           <button type="button" class="button accent" id="pwa-install-button" hidden>Instalar RabbitMole</button>
           <details><summary>Instalación y funcionamiento sin conexión</summary>
@@ -428,7 +429,7 @@
                 <li>Instala <a href="https://f-droid.org/packages/com.termux/">Termux desde F-Droid</a> o desde las <a href="https://github.com/termux/termux-app/releases">versiones oficiales en GitHub</a>. Mantén todas las extensiones de Termux en la misma fuente de firma. No es una aplicación para iOS.</li>
                 <li>Abre Termux <strong>con conexión</strong> y prepara Python y Git. Nmap es opcional. Solo concede acceso a los archivos compartidos si vas a transferir el JSON mediante Descargas.</li>
               </ol>
-              <pre><code>pkg update
+              <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code>pkg update
 pkg upgrade
 pkg install python git nmap
 termux-setup-storage
@@ -437,7 +438,7 @@ cd RabbitMole
 python discovery/discover.py doctor</code></pre>
               <p class="mobile-field-help">El repositorio sin indicar rama utiliza <code>main</code> (versión publicada del código, que puede diferir de esta PR). Si necesitas probar esta PR antes del merge, clona con <code>--branch feature/pwa-version-offline-fallback-20261018</code>.</p>
               <p>Tras recibir autorización expresa para una subred IPv4 privada, puedes ejecutar el asistente:</p>
-              <pre><code>python discovery/discover.py wizard</code></pre>
+              <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code>python discovery/discover.py wizard</code></pre>
               <p>Introduce el CIDR aprobado, elige un motor disponible y guarda un archivo <code>.json</code> nuevo, por ejemplo en <code>~/storage/downloads/</code>; el asistente requiere escribir <code>AUTORIZO</code> antes de descubrir hosts. Abre RabbitMole → <strong>Hardware → Captura asistida</strong>; revisa e incorpora las filas. Repite con el mismo archivo en <strong>Redes → Captura asistida</strong>.</p>
               <p class="mobile-field-help">Android puede bloquear Nmap, ICMP o la detección de interfaces sin root. No eludas las restricciones del dispositivo. Las capturas en Descargas son potencialmente sensibles: muévelas a almacenamiento protegido y aplica la política de retención autorizada. Si no funciona, registra observaciones manualmente.</p>
             </details>
@@ -445,7 +446,7 @@ python discovery/discover.py doctor</code></pre>
               <summary>iPhone / iPad · alternativa sin Termux</summary>
               <p><strong>Termux no existe para iOS/iPadOS.</strong> Para tareas locales auxiliares puedes utilizar <a href="https://github.com/holzschu/a-shell">a-Shell</a> (terminal y Python) o <a href="https://github.com/ish-app/ish">iSH</a> (entorno Linux emulado), instaladas desde sus canales oficiales. No equivalen a Termux ni garantizan que Discovery pueda acceder a la red del dispositivo.</p>
               <p>En a-Shell, comprueba las utilidades disponibles sin realizar reconocimiento:</p>
-              <pre><code>help -l
+              <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code>help -l
 python3 --version</code></pre>
               <p>Para descubrir hosts, utiliza <strong>Discovery en un PC autorizado</strong> y transfiere su JSON mediante un canal aprobado a la app Archivos del iPhone/iPad. Después, importa el archivo desde <strong>Hardware → Captura asistida</strong> y <strong>Redes → Captura asistida</strong>. También existe un puente HTTPS LAN opcional si el navegador, el certificado y las políticas locales lo permiten.</p>
               <p class="mobile-field-help">En iOS, las apps están aisladas entre sí: utiliza Archivos o el selector del sistema. Si una app solicita permiso de red local, revísalo en Ajustes → Privacidad y seguridad → Red local. No presupongas soporte de sockets, Nmap, ICMP o escaneo de redes desde una terminal iOS.</p>

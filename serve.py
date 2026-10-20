@@ -197,6 +197,42 @@ class LocalHandler(BaseHTTPRequestHandler):
                 pass
 
 
+def interactive_options(input_fn=input, output=print):
+    """Collect explicit options; no listening or scanning happens in the wizard."""
+    output("RabbitMole · Asistente del servidor local")
+    output("Solo este dispositivo. Discovery necesita autorización adicional por cada CIDR.")
+    while True:
+        value = input_fn("Puerto [8765]: ").strip() or "8765"
+        if value.isascii() and value.isdecimal() and 1 <= int(value) <= 65535:
+            port = value
+            break
+        output("Introduce un puerto entre 1 y 65535.")
+    while True:
+        bind = input_fn("Dirección local [127.0.0.1] (o ::1): ").strip() or "127.0.0.1"
+        if bind in ("127.0.0.1", "::1"):
+            break
+        output("Elige 127.0.0.1 o ::1; este servidor no se publica en la LAN.")
+    def yes_no(question, default):
+        while True:
+            reply = input_fn(question).strip().lower()
+            if not reply:
+                return default
+            if reply in ("s", "si", "sí", "y", "yes"):
+                return True
+            if reply in ("n", "no"):
+                return False
+            output("Responde sí o no.")
+    discovery = yes_no("¿Habilitar Discovery local? [s/N]: ", False)
+    open_browser = yes_no("¿Abrir el navegador? [S/n]: ", True)
+    args = [port, "--bind", bind]
+    if discovery:
+        args.append("--enable-discovery")
+    if not open_browser:
+        args.append("--no-open")
+    output("Repetir esta configuración: python serve.py " + " ".join(args))
+    return args
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="RabbitMole: static PWA server on local loopback only")
     parser.add_argument("port", nargs="?", type=int, default=8765)
@@ -204,7 +240,14 @@ def main(argv=None):
     parser.add_argument("--no-open", action="store_true", help="No abrir navegador automáticamente.")
     parser.add_argument("--enable-discovery", action="store_true",
                         help="Habilitar reconocimiento CIDR autorizado desde ESTE servidor local.")
-    args = parser.parse_args(argv)
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if not arguments and sys.stdin.isatty():
+        try:
+            arguments = interactive_options()
+        except (EOFError, KeyboardInterrupt):
+            print("\nInicio cancelado. No se ha abierto ningún servidor.")
+            return
+    args = parser.parse_args(arguments)
     if not 1 <= args.port <= 65535:
         parser.error("Port must be between 1 and 65535")
     try:
@@ -226,6 +269,7 @@ def main(argv=None):
             print(f"RabbitMole local: http://{host}:{args.port}/", flush=True)
             print("Solo se escucha en loopback. Discovery: " +
                   ("habilitado (requiere consentimiento por CIDR)" if args.enable_discovery else "desactivado"), flush=True)
+            print("Detener: Ctrl+C · Los expedientes permanecen en el navegador.", flush=True)
             if not args.no_open:
                 try:
                     if not webbrowser.open(f"http://{host}:{args.port}/"):

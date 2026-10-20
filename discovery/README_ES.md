@@ -132,3 +132,8 @@ En iOS la PWA incluye también un documento descargable de instrucciones sin con
 
 ### Cambiar de estación y reintentar
 La dirección mostrada al volver al asistente corresponde a la conexión activa. «Usar servidor de este PC» desconecta la estación anterior y descarta su captura temporal: vuelve a conectar antes de escanear. Navegar a otra pantalla mientras llega la respuesta de conexión no invalida la sesión. Tras recibir una aprobación o denegación puedes solicitar otra conexión, respetando el intervalo de cinco segundos entre solicitudes; no se inicia ningún escaneo automáticamente.
+
+### Arranque local guiado
+Ejecuta `python serve.py` desde una terminal para elegir puerto, loopback IPv4/IPv6, Discovery y apertura del navegador. Discovery está desactivado por defecto; habilitarlo no inicia un escaneo. El asistente muestra el comando equivalente. Con argumentos, por ejemplo `python serve.py 8765 --enable-discovery --no-open`, el arranque es directo. Sin terminal interactiva se conservan los valores predeterminados sin preguntar. Ctrl+C o fin de entrada cancela el asistente sin iniciar el servidor.
+
+En Dispositivo e instalación, la PWA indica Android, iOS/iPadOS o escritorio/otro dispositivo y distingue navegador de ventana independiente. La detección es orientativa (el navegador puede ocultar su plataforma), no habilita permisos ni certifica el estado offline.

@@ -10,10 +10,19 @@
     card.classList.toggle('is-installed',installed);
     button.hidden=installed||!promptEvent;
     const ios=/iPad|iPhone|iPod/.test(navigator.userAgent||'') || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-    status.textContent=installed
+    const android=/Android/i.test(navigator.userAgentData?.platform||navigator.userAgent||'');
+    const platform=ios?'iOS / iPadOS':android?'Android':'Escritorio / otro dispositivo';
+    const standalone=typeof matchMedia==='function' && matchMedia('(display-mode: standalone)').matches || navigator.standalone===true;
+    const device=byId('pwa-device-status');
+    if(device)device.textContent=platform+' · '+(standalone?'Ventana de aplicación':'Navegador')+'. Detección orientativa; no concede permisos ni confirma recursos offline.';
+    const local=globalThis.RabbitMoleDeployment?.channel==='local';
+    status.textContent=local
+      ?'Edición local · Funciones completas. Comprueba los recursos offline antes de desconectar.'
+      :installed
       ?'Aplicación instalada · Funciones locales disponibles sin conexión.'
       :ios
         ?'Para instalar en iPhone o iPad: abre esta página en Safari, pulsa Compartir y elige «Añadir a pantalla de inicio» (activa «Abrir como app web» si aparece). Ábrela desde su icono para utilizar todas las funciones.'
+        :android?'Instala RabbitMole desde el menú del navegador Android y ábrela desde su icono. Si no aparece la opción, prueba un navegador compatible como Chrome o Edge.'
         :'Web limitada. Instala RabbitMole y ábrela desde su icono para usar la aplicación completa. Los expedientes se guardan en este dispositivo.';
   }
   window.addEventListener('beforeinstallprompt',event=>{

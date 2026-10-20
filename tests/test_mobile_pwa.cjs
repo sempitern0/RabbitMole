@@ -2,22 +2,26 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const install=fs.readFileSync('js/pwa-install.js','utf8');
 const storage=fs.readFileSync('js/offline-health.js','utf8');
-function installStatus(userAgent,platform,touches){
+function installStatus(userAgent,platform,touches,channel,deviceOnly=false){
  const nodes={
   'pwa-install-card':{hidden:true,classList:{toggle(){} }},
   'pwa-install-button':{hidden:true,addEventListener(){}},
-  'pwa-install-status':{textContent:''}
+  'pwa-install-status':{textContent:''},'pwa-device-status':{textContent:''}
  };
  const ctx={navigator:{userAgent,platform,maxTouchPoints:touches},document:{
   readyState:'complete',getElementById:id=>nodes[id]||null
  },window:{addEventListener(){}}};ctx.globalThis=ctx;
- ctx.RabbitMoleDeployment={installed:false};
+ ctx.RabbitMoleDeployment={installed:false,channel};
  vm.runInNewContext(install,ctx);
- return nodes['pwa-install-status'].textContent;
+ return nodes[deviceOnly?'pwa-device-status':'pwa-install-status'].textContent;
 }
 assert.match(installStatus('Mozilla/5.0 (iPhone; CPU iPhone OS 17)','iPhone',5),/Safari/);
 assert.match(installStatus('Mozilla/5.0 (Linux; Android 15)','Linux armv8l',5),/Instala RabbitMole/);
 assert.match(installStatus('Mozilla/5.0 (Macintosh)','MacIntel',5),/pantalla de inicio/);
+assert.match(installStatus('Mozilla/5.0 (Macintosh)','MacIntel',5,undefined,true),/iOS \/ iPadOS · Navegador/);
+assert.match(installStatus('Android','Linux',5,undefined,true),/Android · Navegador/);
+assert.match(installStatus('Windows NT','Win32',0,undefined,true),/Escritorio/);
+assert.match(installStatus('Windows NT','Win32',0,'local'),/Edición local/);
 async function permissionCheck(granted,verified=granted){
  const nodes={};
  for(const id of ['offline-health-check','offline-health-persist','offline-health-repair']){

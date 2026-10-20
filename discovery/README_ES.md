@@ -129,3 +129,6 @@ Android: descarga `discovery-android-termux.zip` desde RabbitMole, instala Termu
 
 
 En iOS la PWA incluye también un documento descargable de instrucciones sin conexión (`discovery-ios-guide.txt`), disponible desde Discovery. Este modo no instala binarios nativos ni promete escanear iPhone/iPad directamente; conecta con un equipo auditor por HTTPS certificado o importa una captura en Archivos.
+
+### Cambiar de estación y reintentar
+La dirección mostrada al volver al asistente corresponde a la conexión activa. «Usar servidor de este PC» desconecta la estación anterior y descarta su captura temporal: vuelve a conectar antes de escanear. Navegar a otra pantalla mientras llega la respuesta de conexión no invalida la sesión. Tras recibir una aprobación o denegación puedes solicitar otra conexión, respetando el intervalo de cinco segundos entre solicitudes; no se inicia ningún escaneo automáticamente.

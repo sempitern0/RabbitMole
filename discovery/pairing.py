@@ -17,7 +17,7 @@ class Pairing:
     def begin(self):
         with self.lock:
             now = self.clock()
-            if now < self.cooldown or (self.request and now < self.request["expires"]):
+            if now < self.cooldown or (self.request and not self.consumed and now < self.request["expires"]):
                 raise ValueError("Ya existe una solicitud pendiente. Revísala en el Companion.")
             self.request = {"id": secrets.token_urlsafe(24), "expires": now + 90,
                             "decision": "waiting"}

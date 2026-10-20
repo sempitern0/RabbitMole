@@ -1072,7 +1072,6 @@
 #pwa-install-card .mobile-terminal-setup>details>summary{font-weight:700;cursor:pointer;min-height:44px;padding:.6rem .1rem;line-height:1.5}
 #pwa-install-card .mobile-terminal-setup p,#pwa-install-card .mobile-terminal-setup li{line-height:1.65;overflow-wrap:anywhere}
 #pwa-install-card .mobile-terminal-setup ol{margin:.5rem 0;padding-inline-start:1.4rem}
-#pwa-install-card .mobile-terminal-setup pre{padding:.8rem;background:var(--canvas);border:1px solid var(--line);border-radius:.6rem;overflow-x:auto;max-width:100%;font-size:.85rem;white-space:pre}
 #pwa-install-card .mobile-terminal-setup code{overflow-wrap:normal}
 #pwa-install-card .mobile-terminal-setup a{text-underline-offset:.18em}
 #pwa-install-card .mobile-terminal-setup summary:focus-visible,#pwa-install-card .mobile-terminal-setup a:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
@@ -1152,3 +1151,23 @@
 #workspace #bridge-panel details[open]>summary{margin-block-end:.85rem}
 #workspace #bridge-panel #bridge-use-local{margin:.75rem 0}
 @media(max-width:720px){#workspace #bridge-panel .intake-command-head>.button{width:100%}#workspace #bridge-panel #bridge-use-local{width:100%}}
+
+/* Optional network tool: visible in Networks without adding a wizard step. */
+.discovery-entry{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1rem 0;padding:1.1rem;border:1px solid var(--brand);border-inline-start:4px solid var(--brand);border-radius:.75rem;background:var(--brand-tint)}
+.discovery-entry>div{flex:1 1 18rem;min-width:0}
+.discovery-entry h2{margin:.25rem 0}
+.discovery-entry p{margin:.4rem 0;max-width:65ch;line-height:1.6}
+/* Match the dictionary's platform header and monospace terminal surface. */
+.intake-command-head,#workspace #bridge-panel .intake-command-head{background:var(--canvas);margin:0;padding:.65rem .85rem}
+.intake-command pre,#workspace #bridge-panel .intake-command pre{margin:0;background:var(--navy);color:#f3e6d2;padding:.9rem;font:.88rem/1.65 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;white-space:pre;overflow-x:auto;overflow-wrap:normal;max-width:100%}
+.intake-command pre code{font:inherit;color:inherit;background:none;padding:0;border:0}
+.intake-command p{background:var(--brand-tint);color:var(--ink);line-height:1.6}
+.local-discovery p>code,.bridge-panel p>code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:var(--canvas);color:var(--ink);border:1px solid var(--line);border-radius:.25rem;padding:.1rem .3rem;overflow-wrap:anywhere}
+@media(max-width:720px){.discovery-entry>.button{width:100%}}
+@media(forced-colors:active){.intake-command pre,#workspace #bridge-panel .intake-command pre{background:Canvas;color:CanvasText;border-block:1px solid CanvasText}}
+
+/* Keyboard users can focus and horizontally scroll command examples. */
+pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+#mobile-terminal-setup pre{background:var(--navy);color:#f3e6d2;border:1px solid var(--line);border-radius:.65rem;padding:1rem;max-width:100%;overflow-x:auto;white-space:pre;font:.88rem/1.65 ui-monospace,SFMono-Regular,Consolas,monospace}
+#mobile-terminal-setup pre code{font:inherit;color:inherit;background:none}
+@media(forced-colors:active){#mobile-terminal-setup pre{background:Canvas;color:CanvasText}}

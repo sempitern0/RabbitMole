@@ -6,6 +6,27 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from serve import ROOT, CSP, resolve_asset
 
 class ServeTests(unittest.TestCase):
+    def wizard(self, answers):
+        from serve import interactive_options
+        values = iter(answers)
+        return interactive_options(lambda prompt: next(values), lambda text: None)
+
+    def test_wizard_defaults_keep_discovery_off(self):
+        self.assertEqual(self.wizard(["", "", "", ""]), ["8765", "--bind", "127.0.0.1"])
+
+    def test_wizard_validates_and_enables_explicit_options(self):
+        self.assertEqual(self.wizard(["0", "65536", "9000", "0.0.0.0", "::1", "perhaps", "sí", "no"]),
+                         ["9000", "--bind", "::1", "--enable-discovery", "--no-open"])
+
+    def test_wizard_cancellation_does_not_start_server(self):
+        from unittest.mock import patch
+        import serve
+        with patch.object(serve.sys.stdin, 'isatty', return_value=True), \
+             patch.object(serve, 'interactive_options', side_effect=EOFError), \
+             patch.object(serve, 'ThreadingHTTPServer') as server:
+            serve.main([])
+            server.assert_not_called()
+
     def test_core_resolves_independent_of_cwd(self):
         for name in ('/', '/index.html', '/sw.js', '/manifest.webmanifest',
                      '/js/hardware-catalog.js', '/js/software-catalog.js'):

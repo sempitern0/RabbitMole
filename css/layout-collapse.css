@@ -96,3 +96,13 @@
  .sidebar :is(button,select,summary),
  #pwa-install-card :is(button,select,summary){min-height:44px}
 }
+
+/* Desktop filters keep a readable width instead of stretching across the form. */
+@media screen and (min-width:1001px){
+ .record-nav-inner>div{flex:0 1 20rem;max-width:20rem}
+ .record-nav-inner{gap:.5rem .75rem}
+ .record-nav-inner>p{font-size:.8rem}
+}
+
+.section-heading{display:flex;align-items:center;gap:.6rem}
+.section-icon{flex:none;color:var(--brand)}

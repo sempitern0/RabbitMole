@@ -22,6 +22,18 @@ class PairingTests(unittest.TestCase):
         self.assertFalse(p.authorized("secret"))
         p.revoke()
         self.assertIsNone(p.pending())
+    def test_consumed_request_can_retry_after_cooldown(self):
+        for allow in (True, False):
+            clock = [0]
+            p = pairing.Pairing(clock=lambda: clock[0])
+            rid = p.begin()["requestId"]
+            p.decide(rid, allow, "secret")
+            p.status(rid)
+            with self.assertRaises(ValueError):
+                p.begin()
+            clock[0] = 6
+            self.assertNotEqual(p.begin()["requestId"], rid)
+
     def test_denial_parallel_and_timeout(self):
         clock=[0]
         p=pairing.Pairing(clock=lambda:clock[0])

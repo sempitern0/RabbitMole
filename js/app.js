@@ -1130,7 +1130,7 @@
         "Contexto, autorización, alcance, metodología y limitaciones de la evaluación.",
       ) +
       renderAuditTeam() +
-      `<section class="card"><h2>Logo específico del informe (opcional)</h2><p class="subtle">Adjunta tu logo o el de la consultora (PNG, JPEG o WebP; máximo 3 MiB). Se convierte a JPEG y se incluye en el JSON exportado y en la portada del PDF. No se sube a Internet.</p><input id="logo-upload" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Seleccionar logotipo corporativo">${state.meta.logo ? `<div class="logo-preview"><img src="${state.meta.logo}" alt="Logotipo corporativo incorporado"><button type="button" class="button danger small" id="logo-remove">Eliminar logotipo</button></div>` : ""}</section>`
+      `<section class="card"><h2>Logo específico del informe (opcional)</h2><p class="subtle">Adjunta tu logo o el de la empresa auditora (PNG, JPEG o WebP; máximo 3 MiB). Se convierte a JPEG y se incluye en el JSON exportado y en la portada del PDF. No se sube a Internet.</p><input id="logo-upload" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Seleccionar logotipo corporativo">${state.meta.logo ? `<div class="logo-preview"><img src="${state.meta.logo}" alt="Logotipo corporativo incorporado"><button type="button" class="button danger small" id="logo-remove">Eliminar logotipo</button></div>` : ""}</section>`
     );
   }
   const relationLabels = {
@@ -1354,8 +1354,8 @@
   function renderIntakeCommand(key, label, explanation) {
     const command = intakeCommands[key];
     return `<div class="intake-command">
-      <div class="intake-command-head"><strong>${html(label)}</strong><button type="button" class="glossary-copy" data-intake-copy="${key}" aria-label="Copiar comando de ${html(label)}">Copiar</button></div>
-      <pre><code>${html(command)}</code></pre><p>${html(explanation)}</p>
+      <div class="intake-command-head"><strong class="glossary-command-platform">${glossaryPlatformIcon(label)}${html(label)}</strong><button type="button" class="glossary-copy" data-intake-copy="${key}" aria-label="Copiar comando de ${html(label)}">Copiar</button></div>
+      <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code>${html(command)}</code></pre><p>${html(explanation)}</p>
     </div>`;
   }
   function renderIntakeGuided() {
@@ -1401,7 +1401,7 @@
     const currentSample = csvSamples[block];
     const importPanel = `<section class="card intake-card" aria-labelledby="intake-upload-title">
       <span class="intake-kicker">01 · Archivo existente</span>
-      <h2 id="intake-upload-title">Importar una captura o inventario</h2>
+      <h2 id="intake-upload-title" class="section-heading"><svg class="section-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 4V2h6v2M8 10h8M8 14h8M8 18h4"/></svg>Importar una captura o inventario</h2>
       <p>Selecciona un <strong>JSON de Discovery/recopilación</strong> o un <strong>CSV de inventario</strong>. El sistema identificará los registros compatibles y mostrará una vista previa antes de modificar el expediente.</p>
       <div class="intake-formats" id="intake-formats">
         <div class="intake-format"><span class="intake-format-type">JSON</span><div><strong>Captura técnica</strong><p>Archivo <code>.json</code> generado por Discovery o <code>collect-local</code>, con secciones <code>assets</code>, <code>networks</code> y <code>software</code>. También se admiten listas JSON de registros compatibles.</p></div></div>
@@ -1422,7 +1422,7 @@
       </div>
       <details class="intake-sample">
         <summary>Ver ejemplo de columnas CSV para ${html(block === "assets" ? "Hardware" : block === "networks" ? "Redes" : "Software")}</summary>
-        <pre><code>${html(currentSample)}</code></pre>
+        <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code>${html(currentSample)}</code></pre>
         <p class="subtle">Ejemplo ilustrativo, con direcciones de documentación. Ajusta columnas y valores a tu inventario real. <strong>No subas el JSON completo de una auditoría</strong> por este formulario; usa «Importar expediente».</p>
       </details>
       <p id="intake-status" class="intake-status" role="status" aria-live="polite">${html(intakeError)}</p>
@@ -1628,7 +1628,7 @@
         <h3>1 · Adjuntar informe original</h3>
         <div class="fields">
           <div class="field"><label for="network-analysis-source">Herramienta o procedencia (opcional)</label>
-            <input id="network-analysis-source" maxlength="100" placeholder="Analizador WiFi, controlador, consultora…" value="${html(analysis?.source||"")}" ${readonly?"disabled":""}></div>
+            <input id="network-analysis-source" maxlength="100" placeholder="Analizador WiFi, controlador, empresa auditora…" value="${html(analysis?.source||"")}" ${readonly?"disabled":""}></div>
           <div class="field"><label for="network-analysis-date">Fecha del análisis (opcional)</label>
             <input id="network-analysis-date" type="date" value="${html(analysis?.observedAt||"")}" ${readonly?"disabled":""}></div>
         </div>
@@ -1677,7 +1677,7 @@
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -1699,7 +1699,7 @@
     }</section>`;
   }
   const settingsFields = [
-    ["company", "Nombre legal de la consultora"],
+    ["company", "Nombre legal de la empresa auditora"],
     [
       "taxType",
       "Identificador fiscal",
@@ -1806,7 +1806,7 @@
     const team = state.meta.auditTeam || [];
     const seen = new Set(settings.members.map((m) => m.id));
     return `<section class="card"><h2>Profesionales asignados a esta auditoría</h2><p class="subtle">Selecciona los auditores que realizan el trabajo. Se pueden elegir varios. El equipo seleccionado se guarda dentro del expediente y se incorpora al PDF.</p>
-    ${settings.members.length ? `<div class="auditor-choice-list">${settings.members.map((member) => `<label class="auditor-choice"><input type="checkbox" data-auditor-select="${html(member.id)}" ${team.some((x) => x.id === member.id) ? "checked" : ""}><span><strong>${html(member.name)}</strong><small>${html(member.role || "Sin función definida")}${member.email ? " · " + html(member.email) : ""} · ${memberIdentityIssue(member) ? "Identificación pendiente" : "Identidad documentada"}</small></span></label>`).join("")}</div>` : '<div class="notice warn">Configura primero los miembros de la consultora. <button type="button" class="button quiet small" data-go="settings">Añadir auditores</button></div>'}
+    ${settings.members.length ? `<div class="auditor-choice-list">${settings.members.map((member) => `<label class="auditor-choice"><input type="checkbox" data-auditor-select="${html(member.id)}" ${team.some((x) => x.id === member.id) ? "checked" : ""}><span><strong>${html(member.name)}</strong><small>${html(member.role || "Sin función definida")}${member.email ? " · " + html(member.email) : ""} · ${memberIdentityIssue(member) ? "Identificación pendiente" : "Identidad documentada"}</small></span></label>`).join("")}</div>` : '<div class="notice warn">Configura primero los miembros de la empresa auditora. <button type="button" class="button quiet small" data-go="settings">Añadir auditores</button></div>'}
     ${team
       .filter((member) => !seen.has(member.id))
       .map(
@@ -1819,13 +1819,13 @@
     <small class="subtle">El expediente conserva una copia de los datos y la firma tal como estaban cuando asignaste al auditor. Usa «Incorporar firmas» después de subirlas al perfil. En un expediente confirmado, abre antes una rectificación y vuelve a validarlo. Para actualizar los demás datos, desmarca y vuelve a seleccionar al profesional mientras el expediente sea editable.</small></section>`;
   }
   function renderSettings() {
-    return `<span class="eyebrow">PREFERENCIAS / CONSULTORA</span><h1 class="page-title">Configuración de la consultora</h1>
-      <p class="lead">Gestiona por separado los datos fiscales de la consultora y los profesionales que realizan las auditorías. La información se conserva en este dispositivo hasta que exportes el perfil.</p>
+    return `<span class="eyebrow">PREFERENCIAS / EMPRESA AUDITORA</span><h1 class="page-title section-heading"><svg class="section-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M9 4V2h6v2M8 10h8M8 14h8M8 18h4"/></svg>Configuración de la empresa auditora</h1>
+      <p class="lead">Gestiona por separado los datos fiscales de la empresa auditora y los profesionales que realizan las auditorías. La información se conserva en este dispositivo hasta que exportes el perfil.</p>
       ${currentId ? '<button class="button quiet" type="button" data-go="engagement">← Volver al expediente abierto</button>' : ""}
       <section class="card"><h2>Datos de la empresa auditora</h2><div class="fields">${settingsFields.map((f) => renderField(settings, "settings", f)).join("")}</div></section>
       ${renderMemberDirectory()}
       <section class="card"><h2>Logotipo corporativo</h2><p class="subtle">Se copiará a cada expediente nuevo y al PDF. No se envía a ningún servidor.</p>
-      <input type="file" id="settings-logo-upload" accept="image/jpeg,image/png,image/webp" aria-label="Logotipo de la consultora">${settings.logo ? `<div class="logo-preview"><img src="${settings.logo}" alt="Logotipo configurado"><button type="button" class="button danger" id="settings-logo-remove">Eliminar logo</button></div>` : ""}</section>
+      <input type="file" id="settings-logo-upload" accept="image/jpeg,image/png,image/webp" aria-label="Logotipo de la empresa auditora">${settings.logo ? `<div class="logo-preview"><img src="${settings.logo}" alt="Logotipo configurado"><button type="button" class="button danger" id="settings-logo-remove">Eliminar logo</button></div>` : ""}</section>
       <section class="card"><h2>Identificadores y copia de seguridad</h2><p class="subtle">La referencia se asigna una sola vez al crear cada auditoría, utilizando el prefijo configurado, la fecha y un identificador aleatorio. Es de solo lectura y no depende del nombre del cliente.</p>
       <div class="action-row"><button class="button accent" id="settings-export">Exportar perfil JSON</button><button class="button quiet" id="settings-import">Importar perfil JSON</button><input type="file" id="settings-import-file" accept=".json,application/json" hidden></div></section>`;
   }
@@ -2497,7 +2497,7 @@
           : page === "device"
             ? "Dispositivo e instalación"
             : page === "settings"
-            ? "Configuración de consultora"
+            ? "Configuración de empresa auditora"
             : page === "connections" || page === "online"
               ? "Conexiones online"
               : page === "glossary"
@@ -3848,7 +3848,7 @@
     }
     if (b.id === "settings-export") {
       download(
-        "perfil-consultora.json",
+        "perfil-empresa-auditora.json",
         JSON.stringify(
           { kind: PROFILE_KIND, schemaVersion: VERSION, settings },
           null,
@@ -3863,7 +3863,7 @@
       return;
     }
     if (b.id === "settings-logo-remove") {
-      if (confirm("¿Eliminar el logo global de la consultora?")) {
+      if (confirm("¿Eliminar el logo global de la empresa auditora?")) {
         settings.logo = "";
         saveSettings();
         render();

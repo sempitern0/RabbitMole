@@ -81,7 +81,7 @@
   const documentPlaceholder=type=>ID_EXAMPLES[type]||'Número de identificación';
   const EXAMPLES=Object.freeze({
     meta:{clientEmail:'contacto@empresa.es',clientPostal:'28013',clientAddress:'Calle Mayor 12, Madrid',reportId:'AUD-001',revision:'1.0',contact:'Nombre y apellidos'},
-    settings:{email:'auditoria@consultora.es',postal:'28013',prefix:'AUD',address:'Calle Mayor 12, Madrid'},
+    settings:{email:'auditoria@auditora.example',postal:'28013',prefix:'AUD',address:'Calle Mayor 12, Madrid'},
     assets:{id:'ACT-001',name:'SRV-DC-01',serial:'SN123456789',ip:'192.168.10.25',cpu:'Intel Xeon / AMD EPYC',ram:'32 GiB',storage:'SSD 1 TiB',owner:'Departamento de sistemas'},
     networks:{name:'VLAN de servidores',cidr:'192.168.10.0/24',vlan:'20',gateway:'192.168.10.1',dns:'192.168.10.53, 192.168.10.54',firewall:'FW-001 / regla 120'},
     software:{version:'16.2.0',asset:'SRV-DC-01',vendor:'Fabricante o editor'},
@@ -94,7 +94,7 @@
     if(field==='clientTaxId')return documentPlaceholder(obj?.clientIdType);
     if(field==='contactId')return documentPlaceholder(obj?.contactIdType);
     if(block==='settings'&&field==='taxId')return documentPlaceholder(obj?.taxType);
-    if(block==='member')return {name:'Nombre y apellidos',email:'auditor@consultora.es',role:'Auditor técnico / responsable'}[field]||'';
+    if(block==='member')return {name:'Nombre y apellidos',email:'auditor@auditora.example',role:'Auditor técnico / responsable'}[field]||'';
     return EXAMPLES[block]?.[field]||'';
   }
 

@@ -6,7 +6,7 @@
  const el=id=>document.getElementById(id);
  function privateEndpoint(raw){
    const parsed=new URL(String(raw||"").trim());
-   const loopback=parsed.protocol==="http:"&&parsed.hostname==="127.0.0.1";
+   const loopback=["http:","https:"].includes(parsed.protocol)&&parsed.hostname==="127.0.0.1";
    if((parsed.protocol!=="https:"&&!loopback)||parsed.username||parsed.password||
       parsed.pathname!=="/"||parsed.search||parsed.hash)
      throw Error("Utiliza HTTPS en la LAN o HTTP exclusivamente en 127.0.0.1 en este mismo PC.");
@@ -37,6 +37,7 @@
    if(node){node.textContent=text;node.dataset.state=level;}}
  function refresh(){
    const state=el("bridge-connection-state");
+   const connect=el("bridge-connect");if(connect)connect.disabled=busy;
    if(state)state.textContent=busy?"Comprobando…":connected
      ?"Conectado · "+(backend||"No hay Nmap/ping"):"Estación sin comprobar";
    const scan=el("bridge-scan");if(scan)scan.disabled=busy||!connected||!backend;
@@ -66,7 +67,7 @@
    try{
      if(globalThis.RabbitMoleDeployment?.profile!=="private-full")
        throw Error("Abre la PWA instalada para conectar el Companion.");
-     endpoint=privateEndpoint(base);token="";connected=false;backend="";capture=null;busy=true;
+     endpoint=privateEndpoint(base);if(el("bridge-url"))el("bridge-url").value=endpoint;token="";connected=false;backend="";capture=null;busy=true;
      setStatus("Solicitando aprobación al Companion…");refresh();
      const response=await fetch(base+"/pair/request",{method:"POST",mode:"cors",cache:"no-store",signal:AbortSignal.timeout(12000)});
      const initial=await response.json();
@@ -87,11 +88,11 @@
      const status=await request("/status");
      if(status.api!=="rabbitmole-discovery-bridge-v1"||status.available!==true)throw Error("Servicio incompatible.");
      connected=true;backend=status.backend==="nmap"?"Nmap":status.backend==="native"?"ping":"";
-     const list=el("bridge-suggestions"),field=el("bridge-cidr");list.replaceChildren();
+     const list=el("bridge-suggestions"),field=el("bridge-cidr");list?.replaceChildren();
      for(const row of Array.isArray(status.interfaces)?status.interfaces:[]){
        if(typeof row.cidr!=="string")continue;
        const option=document.createElement("option");option.value=row.cidr;
-       option.label=String(row.interface||"Red")+" · "+row.cidr;list.append(option);
+       option.label=String(row.interface||"Red")+" · "+row.cidr;list?.append(option);
      }
      if(field&&!field.value&&status.interfaces?.[0]?.cidr)field.value=status.interfaces[0].cidr;
      setStatus("Equipo conectado. Confirma alcance y autorización antes del escaneo.","success");
@@ -113,11 +114,11 @@
      if(status.api!=="rabbitmole-discovery-bridge-v1"||status.available!==true)
        throw Error("El servicio remoto no es un bridge Discovery compatible.");
      connected=true;backend=status.backend==="nmap"?"Nmap":status.backend==="native"?"ping":"";
-     const list=el("bridge-suggestions"),field=el("bridge-cidr");list.replaceChildren();
+     const list=el("bridge-suggestions"),field=el("bridge-cidr");list?.replaceChildren();
      for(const row of Array.isArray(status.interfaces)?status.interfaces:[]){
        if(typeof row.cidr!=="string")continue;
        const option=document.createElement("option");option.value=row.cidr;
-       option.label=String(row.interface||"Red")+" · "+row.cidr;list.append(option);
+       option.label=String(row.interface||"Red")+" · "+row.cidr;list?.append(option);
      }
      if(field&&!field.value&&status.interfaces?.[0]?.cidr)field.value=status.interfaces[0].cidr;
      setStatus(backend?"Estación lista con "+backend+". Confirma la autorización del CIDR antes de reconocer.":
@@ -130,6 +131,10 @@
  }
  async function scan(){
    if(busy||!connected||!backend)return;
+   try{
+     if(privateEndpoint(el("bridge-url")?.value)!==endpoint)
+       return setStatus("La dirección ha cambiado. Comprueba la conexión antes de escanear.","warning");
+   }catch(error){return setStatus(diagnostic(error),"warning");}
    const cidr=String(el("bridge-cidr")?.value||"").trim();
    if(!cidr||String(el("bridge-confirmation")?.value||"").trim()!=="AUTORIZO")
      return setStatus("Indica un CIDR privado aprobado (hasta 256 IP) y escribe AUTORIZO.","warning");
@@ -187,26 +192,26 @@
    const panel=document.createElement("section");panel.id="bridge-panel";
    panel.className="bridge-panel";panel.setAttribute("aria-label","Discovery LAN guiado");
    panel.innerHTML=`<h3>Discovery guiado · PWA y equipo auditor</h3>
-     <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Descarga el Companion en Windows: abre una ventana local, inicia el puente y permite copiar el token sin escribir comandos. También puedes generar JSON en Android con Termux.</p>
+     <p class="subtle"><strong>Cloudflare aloja la PWA, pero no ejecuta Discovery.</strong> Descarga el Companion en Windows: abre una ventana local, inicia el puente y permite aprobar la conexión sin escribir comandos. También puedes generar JSON en Android con Termux.</p>
      <details class="bridge-setup" open><summary><strong>1. Preparar el equipo auditor</strong></summary>
-       <p><a class="button quiet" href="./discovery-windows.zip" download="RabbitMole-Companion-Windows.zip">Companion Windows (cuando esté incluido en esta versión)</a></p><p><a class="button quiet" href="./discovery-android-termux.zip" download="rabbitmole-termux.zip">Android · Kit Termux offline</a></p><p><a class="button quiet" href="./discovery-ios-guide.txt" download="rabbitmole-ios-instrucciones.txt">iOS / iPadOS · Guía de conexión offline</a></p><p><a class="button quiet" href="./discovery-kit.zip" download="rabbitmole-discovery-kit.zip">Kit de respaldo (.zip, requiere Python)</a></p><p class="subtle">El ejecutable se incorpora cuando exista una compilación Windows validada. Los kits se pueden conservar en la caché offline si hay espacio.</p><p>Descomprime el kit y en Windows abre <code>discovery/iniciar.cmd</code> con doble clic. En el Companion pulsa «Iniciar puente» y «Copiar token temporal», y después pégalo aquí. El kit incluye setup.ps1 y setup.sh para preparar dependencias. No inicia escaneos por sí solo.</p><p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
+       <p><a class="button quiet" href="./discovery-windows.zip" download="RabbitMole-Companion-Windows.zip">Companion Windows (cuando esté incluido en esta versión)</a></p><p><a class="button quiet" href="./discovery-android-termux.zip" download="rabbitmole-termux.zip">Android · Kit Termux offline</a></p><p><a class="button quiet" href="./discovery-ios-guide.txt" download="rabbitmole-ios-instrucciones.txt">iOS / iPadOS · Guía de conexión offline</a></p><p><a class="button quiet" href="./discovery-kit.zip" download="rabbitmole-discovery-kit.zip">Kit de respaldo (.zip, requiere Python)</a></p><p class="subtle">El ejecutable se incorpora cuando exista una compilación Windows validada. Los kits se pueden conservar en la caché offline si hay espacio.</p><p>Descomprime el paquete Windows y abre <code>RabbitMole-Companion.exe</code>. Si utilizas el kit de respaldo con Python, abre <code>discovery/iniciar.cmd</code>. En el Companion pulsa «Activar Discovery», después «Conectar este PC» en esta PWA y aprueba la solicitud en el Companion. El kit incluye setup.ps1 y setup.sh para preparar dependencias. No inicia escaneos por sí solo.</p><p><strong>Mismo PC Windows:</strong> puedes usar un puente HTTP limitado a <code>127.0.0.1</code>, sin certificado. La PWA y el proceso Discovery deben estar abiertos en ese <strong>mismo ordenador</strong>. La conexión puede requerir permiso de acceso local del navegador.</p>
        <div class="bridge-stage"><h4>Conectar este PC</h4>
          <p>Abre RabbitMole Companion, pulsa «Activar Discovery» y después «Conectar este PC» aquí. Aprueba la solicitud en el Companion: no tendrás que copiar un token.</p>
          <button type="button" id="bridge-pair-local" class="button accent">Conectar este PC</button>
          <p class="subtle">Solo en el mismo PC. Desde una tablet utiliza HTTPS LAN o una captura JSON.</p>
        </div>
-       <div class="intake-command"><div class="intake-command-head"><strong>Opción A · mismo PC, sin certificados</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
-         <pre><code id="bridge-command-pc"></code></pre></div>
+       <div class="intake-command"><div class="intake-command-head"><strong>Windows · PowerShell / CMD</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
+         <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code id="bridge-command-pc"></code></pre></div>
        <button type="button" id="bridge-use-local" class="button quiet">Usar servidor de este PC (127.0.0.1)</button>
        <details><summary>Opción B · PWA en tablet y servicio en otro equipo de la LAN (HTTPS)</summary>
          <p>Solo para dispositivos distintos: requiere un certificado TLS confiable en la tablet con SAN de la IP del PC y reglas restrictivas de firewall.</p>
-         <div class="intake-command"><div class="intake-command-head"><strong>Servicio HTTPS en la LAN</strong><button type="button" class="button quiet small" id="bridge-copy-lan">Copiar comando</button></div>
-           <pre><code id="bridge-command-lan"></code></pre></div>
+         <div class="intake-command"><div class="intake-command-head"><strong>Linux / macOS · Terminal · HTTPS LAN</strong><button type="button" class="button quiet small" id="bridge-copy-lan">Copiar comando</button></div>
+           <pre tabindex="0" aria-label="Comando o ejemplo de consola"><code id="bridge-command-lan"></code></pre></div>
        </details>
        <p class="subtle">Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall y detén el proceso con Ctrl+C. El Companion se cierra y detiene el puente desde su ventana. La PWA no puede ejecutarlo automáticamente.</p>
        <details><summary>Android / Termux · opción sin servidor intermedio</summary>
          <p>La PWA no puede abrir la consola de Termux ni tiene un directorio de scripts local. Ejecuta Discovery desde Termux y después importa el JSON con «Subir archivo».</p>
-         <div class="intake-command"><div class="intake-command-head"><strong>Preparación de Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre><code id="bridge-command-android">pkg update
+         <div class="intake-command"><div class="intake-command-head"><strong>Android · Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre tabindex="0" aria-label="Comando o ejemplo de consola"><code id="bridge-command-android">pkg update
 pkg install python nmap unzip
 termux-setup-storage
 unzip ~/storage/downloads/rabbitmole-termux.zip -d ~/rabbitmole-discovery
@@ -242,8 +247,14 @@ python discover.py wizard</code></pre></div>
    parent.append(panel);
    el("bridge-command-pc").textContent="py -3 discovery\\service.py --loopback-http --origin "+location.origin;
    el("bridge-command-lan").textContent="python3 discovery/service.py --bind <IP_PRIVADA_PC> --port 8766 --cert <CERTIFICADO.pem> --key <CLAVE.pem> --origin "+location.origin;
-   el("bridge-url").value="http://127.0.0.1:8766";
-   el("bridge-use-local").addEventListener("click",()=>{el("bridge-url").value="http://127.0.0.1:8766";});
+   el("bridge-url").value=endpoint||"http://127.0.0.1:8766";
+   el("bridge-use-local").addEventListener("click",()=>{
+     if(busy)return;
+     endpoint="";token="";connected=false;backend="";capture=null;
+     el("bridge-url").value="http://127.0.0.1:8766";
+     el("bridge-token").value="";
+     setStatus("Seleccionado este PC. Conecta el Companion antes de iniciar Discovery.");refresh();
+   });
    el("bridge-copy-lan").addEventListener("click",()=>void copyCommand("bridge-command-lan"));
    el("bridge-copy-pc").addEventListener("click",()=>void copyCommand("bridge-command-pc"));
    el("bridge-copy-android").addEventListener("click",()=>void copyCommand("bridge-command-android"));

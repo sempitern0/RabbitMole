@@ -110,7 +110,7 @@ for(const id of ['term-1','term-2','term-25']){
  assert(g.PROTOCOLS[id]?.length>=4,'Missing scoped protocol: '+id);
  assert(g.PROTOCOLS[id].every(text=>typeof text==='string'&&text.length>40));
 }
-assert(fs.readFileSync(path.join(root,'index.html'),'utf8').includes('<option value="rabbitmole" selected>Predeterminado</option>'),'Brand palette label');
+assert(fs.readFileSync(path.join(root,'index.html'),'utf8').includes('<option value="rabbitmole" selected>Claro</option>'),'Brand palette label');
 
 /* Regression: glossary sections with borders must keep their inner spacing.
  * A generic 'padding: ... 0' used to wipe example/evidence/caution padding. */

@@ -232,3 +232,10 @@
  .glossary-kicker,.glossary-category.is-active,.glossary-protocol,.glossary-command{border-color:CanvasText}
  .glossary-command pre{background:Canvas;color:CanvasText;border-block:1px solid CanvasText}
 }
+
+/* Prevent inherited SVG shrinking and fractional scaling in contextual help. */
+.glossary-help .glossary-help-icon,.glossary-stage-link .glossary-help-icon{
+ min-width:20px;min-height:20px;max-width:20px;max-height:20px;
+ transform:none;filter:none;opacity:1;
+}
+.glossary-help-icon *{vector-effect:non-scaling-stroke}

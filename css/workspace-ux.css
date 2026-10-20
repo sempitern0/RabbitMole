@@ -1072,7 +1072,6 @@
 #pwa-install-card .mobile-terminal-setup>details>summary{font-weight:700;cursor:pointer;min-height:44px;padding:.6rem .1rem;line-height:1.5}
 #pwa-install-card .mobile-terminal-setup p,#pwa-install-card .mobile-terminal-setup li{line-height:1.65;overflow-wrap:anywhere}
 #pwa-install-card .mobile-terminal-setup ol{margin:.5rem 0;padding-inline-start:1.4rem}
-#pwa-install-card .mobile-terminal-setup pre{padding:.8rem;background:var(--canvas);border:1px solid var(--line);border-radius:.6rem;overflow-x:auto;max-width:100%;font-size:.85rem;white-space:pre}
 #pwa-install-card .mobile-terminal-setup code{overflow-wrap:normal}
 #pwa-install-card .mobile-terminal-setup a{text-underline-offset:.18em}
 #pwa-install-card .mobile-terminal-setup summary:focus-visible,#pwa-install-card .mobile-terminal-setup a:focus-visible{outline:3px solid var(--brand);outline-offset:3px}

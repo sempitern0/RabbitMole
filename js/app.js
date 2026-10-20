@@ -1354,7 +1354,7 @@
   function renderIntakeCommand(key, label, explanation) {
     const command = intakeCommands[key];
     return `<div class="intake-command">
-      <div class="intake-command-head"><strong>${html(label)}</strong><button type="button" class="glossary-copy" data-intake-copy="${key}" aria-label="Copiar comando de ${html(label)}">Copiar</button></div>
+      <div class="intake-command-head"><strong class="glossary-command-platform">${glossaryPlatformIcon(label)}${html(label)}</strong><button type="button" class="glossary-copy" data-intake-copy="${key}" aria-label="Copiar comando de ${html(label)}">Copiar</button></div>
       <pre><code>${html(command)}</code></pre><p>${html(explanation)}</p>
     </div>`;
   }
@@ -1677,7 +1677,7 @@
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "networks", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<div class="action-row"><button type="button" class="button quiet" data-go="intake">Abrir Discovery y capturas autorizadas →</button></div><p class="subtle">Importa equipos y redes detectados desde el dispositivo auditor, siempre con autorización del titular.</p>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -2724,14 +2724,6 @@
   const workspace = byId("workspace");
   byId("global-navigation").addEventListener("click", (e) => {
     const b = e.target.closest("[data-go]");
-    if (b && b.dataset.discoveryShortcut !== undefined) {
-      if (!currentId) { alert("Abre o crea un expediente para revisar e incorporar capturas de Discovery."); move("records"); return; }
-      intakeReturn = ["assets", "networks", "software"].includes(page) ? page : "assets";
-      intakeBlock = "assets";
-      intakeMode = "local";
-      intakePreview = null; intakeSelected.clear(); intakeError = "";
-      move("intake"); return;
-    }
     if (b) move(b.dataset.go);
   });
   byId("navigation").addEventListener("click", (e) => {

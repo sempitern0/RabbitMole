@@ -200,18 +200,18 @@
          <button type="button" id="bridge-pair-local" class="button accent">Conectar este PC</button>
          <p class="subtle">Solo en el mismo PC. Desde una tablet utiliza HTTPS LAN o una captura JSON.</p>
        </div>
-       <div class="intake-command"><div class="intake-command-head"><strong>Opción A · mismo PC, sin certificados</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
+       <div class="intake-command"><div class="intake-command-head"><strong>Windows · PowerShell / CMD</strong><button type="button" class="button quiet small" id="bridge-copy-pc">Copiar comando</button></div>
          <pre><code id="bridge-command-pc"></code></pre></div>
        <button type="button" id="bridge-use-local" class="button quiet">Usar servidor de este PC (127.0.0.1)</button>
        <details><summary>Opción B · PWA en tablet y servicio en otro equipo de la LAN (HTTPS)</summary>
          <p>Solo para dispositivos distintos: requiere un certificado TLS confiable en la tablet con SAN de la IP del PC y reglas restrictivas de firewall.</p>
-         <div class="intake-command"><div class="intake-command-head"><strong>Servicio HTTPS en la LAN</strong><button type="button" class="button quiet small" id="bridge-copy-lan">Copiar comando</button></div>
+         <div class="intake-command"><div class="intake-command-head"><strong>Linux / macOS · Terminal · HTTPS LAN</strong><button type="button" class="button quiet small" id="bridge-copy-lan">Copiar comando</button></div>
            <pre><code id="bridge-command-lan"></code></pre></div>
        </details>
        <p class="subtle">Deja abierta la consola: verás la URL y un token nuevo en cada arranque. Restringe el firewall y detén el proceso con Ctrl+C. El Companion se cierra y detiene el puente desde su ventana. La PWA no puede ejecutarlo automáticamente.</p>
        <details><summary>Android / Termux · opción sin servidor intermedio</summary>
          <p>La PWA no puede abrir la consola de Termux ni tiene un directorio de scripts local. Ejecuta Discovery desde Termux y después importa el JSON con «Subir archivo».</p>
-         <div class="intake-command"><div class="intake-command-head"><strong>Preparación de Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre><code id="bridge-command-android">pkg update
+         <div class="intake-command"><div class="intake-command-head"><strong>Android · Termux</strong><button type="button" class="button quiet small" id="bridge-copy-android">Copiar comandos</button></div><pre><code id="bridge-command-android">pkg update
 pkg install python nmap unzip
 termux-setup-storage
 unzip ~/storage/downloads/rabbitmole-termux.zip -d ~/rabbitmole-discovery

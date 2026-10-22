@@ -575,6 +575,20 @@ const {chromium}=require('playwright');
    assert.match(await page.locator('[data-open]').first().textContent(),/Reanudar.*Hardware/);
    await page.locator('[data-new]').first().click();
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'engagement','A new audit starts at client and scope');
+   await page.locator('#wizard-step-top').selectOption('dashboard');
+   const dash=page.locator('.audit-dashboard');
+   assert.equal(await dash.count(),1);
+   assert.match(await dash.locator('.audit-dashboard-status').textContent(),/Borrador/);
+   assert.match(await dash.locator('.audit-dashboard-document').textContent(),/Rectificaciones finalizadas/);
+   assert.equal(await dash.locator('.audit-dashboard-metric').count(),6);
+   assert.equal(await dash.locator('.audit-dashboard-panel').count(),2);
+   assert.equal(await dash.locator('.audit-dashboard-coverage').evaluate(el=>el.open),false);
+   await page.setViewportSize({width:390,height:844});
+   assert.equal(await dash.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),true,
+     'Mobile overview must not overflow horizontally');
+   assert.equal(await dash.locator('.audit-dashboard-metrics').evaluate(el=>
+     getComputedStyle(el).gridTemplateColumns.split(' ').length),2);
+   await page.setViewportSize({width:1280,height:900});
    await page.locator('#wizard-step-top').selectOption('networks');
    await page.locator('#audit-file-library-link').click();
    assert.equal(await page.locator('[data-library-select-audit]').count(),2,

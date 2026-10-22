@@ -1057,17 +1057,7 @@
         terms.length + " de " + glossary.TERMS.length + " conceptos";
   }
   function renderOverview() {
-    const counts = Object.fromEntries(
-      severity.map((s) => [
-        s,
-        state.findings.filter((x) => x.severity === s).length,
-      ]),
-    );
-    return `<section class="hero"><span class="eyebrow">AUDIT / WORKSPACE</span><h2>${html(state.meta.project || "Tu próxima auditoría, bien documentada.")}</h2><p>Inventario técnico, evaluación de controles, gestión de hallazgos y un informe final coherente. Toda la información permanece en este navegador hasta que tú la exportes.</p><button class="button" data-go="engagement">Comenzar auditoría &rarr;</button></section>
-      <section class="stats">${metric("Equipos inventariados", "Hardware", state.assets.length)}${metric("Segmentos registrados", "Infraestructura", state.networks.length)}${metric("Controles evaluados", "Seguridad", state.controls.length)}${metric("Hallazgos", "Gestión de riesgos", state.findings.length)}</section>
-      <div class="grid-two"><section class="card"><h2>Distribución de severidades</h2><p class="subtle">Se calcula únicamente a partir de los hallazgos documentados.</p><div class="severity-line">${severity.map((s) => `<span class="sev-bar ${level(s)} ${counts[s] ? "with-count" : ""}" title="${html(s)}: ${counts[s]}"></span>`).join("")}</div><div class="severity-legend">${severity.map((s) => `<span><strong>${counts[s]}</strong> ${s}</span>`).join("")}</div></section>
-      <section class="card"><h2>Flujo recomendado</h2><div class="timeline"><div><b>01</b><span>Delimita objetivos, exclusiones y autorización<small>Cliente y alcance</small></span></div><div><b>02</b><span>Inventaría sistemas, aplicaciones y redes<small>Hardware · Redes · Software</small></span></div><div><b>03</b><span>Registra controles, evidencias y hallazgos<small>Pruebas verificadas y remediación</small></span></div><div><b>04</b><span>Revisa y entrega el informe final<small>Guardar JSON · Generar PDF</small></span></div></div></section></div>
-      <div class="notice warn"><strong>Confidencialidad operativa.</strong> No introduzcas contraseñas, tokens ni hashes de autenticación sin tratar. Almacena el expediente JSON y los PDF en un disco cifrado. Exporta frecuentemente una copia: el autoguardado del navegador no constituye una copia de seguridad.</div>`;
+    return workflowViews.renderOverview({state,quality,relations,docControl,html});
   }
   function renderRecords() {
     const search = (byId("record-filter")?.value || "").toLocaleLowerCase("es");

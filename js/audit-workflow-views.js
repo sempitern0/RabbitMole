@@ -51,7 +51,101 @@
     </div>`;
   }
 
+
+  // No record is edited: statistics are derived from the active expediente.
+  function summarizeOverview(audit,{quality,relations,docControl}){
+    const doc=docControl.normalize(audit.documentControl);
+    const review=quality.review(audit,relations,{mode:"final"});
+    const types=["assets","networks","software","controls","findings","evidence","cves"];
+    const rows=Object.fromEntries(types.map(k=>[k,Array.isArray(audit[k])?audit[k]:[]]));
+    const counts=Object.fromEntries(types.map(k=>[k,rows[k].length]));
+    const evaluated=rows.controls.filter(c=>["Conforme","No conforme","No aplica"].includes(c.status)).length;
+    const active=rows.findings.filter(f=>!["Cerrado","Mitigado"].includes(f.status));
+    const severities=["Crítica","Alta","Media","Baja","Informativa","Sin evaluar"]
+      .map(label=>({label,count:rows.findings.filter(f=>(f.severity||"Sin evaluar")===label).length}));
+    const sections=[
+      {key:"engagement",name:"Alcance",hasData:Boolean(audit.meta?.client?.trim()&&audit.meta?.project?.trim()&&audit.meta?.scope?.trim())},
+      ...[["assets","Activos"],["networks","Redes"],["software","Software"],["controls","Controles"],["evidence","Evidencias"]]
+        .map(([key,name])=>({key,name,hasData:counts[key]>0}))
+    ];
+    return {doc,review,counts,evaluated,pendingControls:counts.controls-evaluated,
+      openFindings:active.length,highFindings:active.filter(f=>["Crítica","Alta"].includes(f.severity)).length,
+      severities,sections,documented:sections.filter(item=>item.hasData).length,
+      amendments:doc.history.filter(event=>event.type==="emergency-amendment").length};
+  }
+  function renderOverview({state,quality,relations,docControl,html}){
+    const x=summarizeOverview(state,{quality,relations,docControl}),{doc,review,counts}=x;
+    const states={draft:["Borrador","Editable · sin confirmación"],
+      confirmed:["Confirmada","Los cambios requieren rectificación"],
+      amending:["Rectificación abierta","Los cambios aún no están confirmados"]};
+    const [status,description]=states[doc.status]||states.draft;
+    const date=doc.confirmed?.at&&Number.isFinite(Date.parse(doc.confirmed.at))
+      ?new Date(doc.confirmed.at).toLocaleDateString("es-ES",{year:"numeric",month:"short",day:"numeric"})
+      :"Sin confirmar";
+    const metrics=[["assets","Activos"],["networks","Redes"],["software","Software"],
+      ["controls","Controles"],["evidence","Evidencias"],["cves","CVE"]];
+    const palette={"Crítica":"critical","Alta":"high","Media":"medium",
+      "Baja":"low","Informativa":"info","Sin evaluar":"unknown"};
+    const severities=x.severities.filter(s=>s.count);
+    const highlights=review.issues.slice(0,3);
+    const next=review.issues[0]?.section||"delivery";
+    const nextText=review.issues.length?"Resolver primer pendiente":"Revisar informe y entrega";
+    return `<section class="audit-dashboard" aria-label="Resumen del expediente">
+      <header class="audit-dashboard-head">
+        <div class="audit-dashboard-title"><span class="eyebrow">AUDITORÍA / RESUMEN</span>
+          <h1 class="page-title">${html(state.meta?.project||"Auditoría sin título")}</h1>
+          <p>${html(state.meta?.client||"Cliente pendiente")} · ${html(state.meta?.reportId||"Sin referencia")}</p>
+        </div>
+        <div class="audit-dashboard-status is-${doc.status}">
+          <strong>${html(status)}</strong><small>${html(description)}</small>
+        </div>
+      </header>
+      <div class="audit-dashboard-document" aria-label="Control documental">
+        <span><strong>Revisión</strong> ${doc.revision||"Sin confirmar"}</span>
+        <span><strong>Rectificaciones finalizadas</strong> ${x.amendments}</span>
+        ${doc.status==="amending"?'<span class="amendment-open">1 rectificación abierta</span>':""}
+        <span><strong>Última confirmación</strong> ${html(date)}</span>
+      </div>
+      <nav class="audit-dashboard-metrics" aria-label="Accesos al inventario">
+        ${metrics.map(([key,label])=>`<button type="button" class="audit-dashboard-metric" data-go="${key}" aria-label="${label}: ${counts[key]}. Abrir">
+          <strong>${counts[key]}</strong><span>${label}</span><small aria-hidden="true">↗</small>
+        </button>`).join("")}
+      </nav>
+      <div class="audit-dashboard-panels">
+        <section class="audit-dashboard-panel" aria-labelledby="audit-quality-title">
+          <div class="audit-dashboard-panel-head"><h2 id="audit-quality-title">Revisión de calidad</h2><button type="button" class="button quiet small" data-go="quality">Ver todo →</button></div>
+          <div class="audit-dashboard-counters"><span class="${review.blockers.length?"needs-review":""}"><strong>${review.blockers.length}</strong> imprescindibles</span><span class="${review.warnings.length?"has-warning":""}"><strong>${review.warnings.length}</strong> avisos</span></div>
+          <p class="audit-dashboard-caption">Reglas automáticas previas a entrega; no certifican conformidad.</p>
+          ${highlights.length?`<ul class="audit-dashboard-issues">${highlights.map(issue=>`<li><button type="button" data-go="${html(issue.section)}"><span>${html(issue.message)}</span><span aria-hidden="true">↗</span></button></li>`).join("")}</ul>`:
+            '<p class="audit-dashboard-caption">No hay incidencias automáticas detectadas; revisa las evidencias.</p>'}
+        </section>
+        <section class="audit-dashboard-panel" aria-labelledby="audit-risk-title">
+          <div class="audit-dashboard-panel-head"><h2 id="audit-risk-title">Hallazgos y controles</h2><button type="button" class="button quiet small" data-go="findings">Ver todo →</button></div>
+          <div class="audit-dashboard-counters"><span><strong>${counts.findings}</strong> hallazgos</span><span><strong>${x.openFindings}</strong> sin cierre</span><span><strong>${x.highFindings}</strong> altos/críticos sin cierre</span></div>
+          ${counts.findings?`<div class="audit-dashboard-severity" role="img" aria-label="${html(x.severities.map(s=>s.label+": "+s.count).join(", "))}">${severities.map(s=>`<span class="is-${palette[s.label]}" style="flex:${s.count}"></span>`).join("")}</div>
+          <div class="audit-dashboard-severity-legend">${severities.map(s=>`<span><i class="is-${palette[s.label]}" aria-hidden="true"></i>${html(s.label)} ${s.count}</span>`).join("")}</div>`:
+            '<p class="audit-dashboard-caption">Sin hallazgos registrados; no supone ausencia de riesgos.</p>'}
+          <p class="audit-dashboard-caption">Controles con resultado: ${x.evaluated}/${counts.controls} · ${x.pendingControls} pendientes o sin verificar.</p>
+        </section>
+      </div>
+      <details class="audit-dashboard-coverage" data-ui-expand="dashboard-coverage">
+        <summary>Cobertura documental · ${x.documented}/${x.sections.length} apartados con datos <span aria-hidden="true">▾</span></summary>
+        <div class="audit-dashboard-coverage-items">${x.sections.map(s=>`<button type="button" data-go="${s.key}" class="${s.hasData?"has-data":"no-data"}"><span aria-hidden="true">${s.hasData?"●":"○"}</span>${html(s.name)}</button>`).join("")}</div>
+        <p>«Con datos» no significa revisión finalizada. Algunos apartados pueden quedar fuera de alcance.</p>
+      </details>
+      <div class="audit-dashboard-actions">
+        <button type="button" class="button accent" data-go="${html(next)}">${html(nextText)} →</button>
+        <button type="button" class="button quiet" data-go="engagement">Cliente y alcance</button>
+        <button type="button" class="button quiet" data-go="delivery">Informe y rectificaciones</button>
+      </div>
+      <details class="audit-dashboard-custody"><summary>Custodia y copias del expediente</summary>
+        <p>Almacenamiento local del navegador: conserva copias cifradas y evidencias originales. El autoguardado no es un backup.</p>
+      </details>
+    </section>`;
+  }
+
   globalThis.RabbitMoleWorkflowViews=Object.freeze({
-    renderResidualAssessment,renderMitigationDashboard,renderAppendixActions
+    renderResidualAssessment,renderMitigationDashboard,renderAppendixActions,
+    summarizeOverview,renderOverview
   });
 })();

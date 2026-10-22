@@ -2751,8 +2751,8 @@
     const list=wrapper?.querySelector(".software-picker-results");
     if(!list||!softwareCatalog)return;
     if(!show){list.hidden=true;input.setAttribute("aria-expanded","false");return;}
-    const found=softwareCatalog.searchApplications(input.value,24);
-    list.innerHTML=found.map(app=>`<button type="button" role="option" class="software-picker-option" data-software-choice="${html(app.name)}" data-software-index="${html(input.dataset.index)}" aria-label="Seleccionar ${html(app.name)}, ${html(app.vendor)}"><span class="software-picker-logo" aria-hidden="true">${html(app.mark)}</span><span class="software-picker-text"><strong>${html(app.name)}</strong><small>${html(app.vendor)} · ${html(app.category)}</small></span></button>`).join("");
+    const found=softwareCatalog.searchApplications(input.value,48);
+    list.innerHTML=`<div class="software-picker-banner" role="presentation">Catálogo offline · ${found.length} sugerencias · Desplázate para explorar</div>`+found.map(app=>`<button type="button" role="option" class="software-picker-option" data-software-choice="${html(app.name)}" data-software-index="${html(input.dataset.index)}" aria-label="Seleccionar ${html(app.name)}, ${html(app.vendor)}"><span class="software-picker-logo" aria-hidden="true">${html(app.mark)}</span><span class="software-picker-text"><strong>${html(app.name)}</strong><small>${html(app.vendor)} · ${html(app.category)}</small></span></button>`).join("");
     list.hidden=!found.length;
     input.setAttribute("aria-expanded",String(found.length>0));
   }
@@ -2780,25 +2780,44 @@
   workspace.addEventListener("focusin",event=>{
     if(event.target.matches("[data-software-search]"))softwareResults(event.target);
   });
-  // Clicking/dragging a native scrollbar may blur its search input and yield
-  // relatedTarget=null (or body). Closing on focusout destroys the scrollbar
-  // before the drag can start. Dismiss only on a real outside interaction.
-  function closeSoftwarePickersOutside(target){
+  // A native scrollbar can dispatch pointer events on the document or body,
+  // rather than its scroll container. Check the pointer coordinates too, and
+  // keep the menu open throughout an active scrollbar drag.
+  let softwarePointerWithin = false;
+  function softwarePointerIsInside(event,input){
+    const wrapper=input.closest(".software-picker");
+    if(!wrapper)return false;
+    if(wrapper.contains(event.target))return true;
+    const list=wrapper.querySelector(".software-picker-results:not([hidden])");
+    if(!list||!Number.isFinite(event.clientX)||!Number.isFinite(event.clientY))return false;
+    const rect=list.getBoundingClientRect();
+    return event.clientX>=rect.left-2&&event.clientX<=rect.right+2&&
+      event.clientY>=rect.top-2&&event.clientY<=rect.bottom+2;
+  }
+  function closeSoftwarePickersOutside(event){
     for(const input of workspace.querySelectorAll('[data-software-search][aria-expanded="true"]')){
-      if(!input.closest(".software-picker")?.contains(target))softwareResults(input,false);
+      if(!softwarePointerIsInside(event,input))softwareResults(input,false);
     }
   }
-  document.addEventListener("pointerdown",event=>closeSoftwarePickersOutside(event.target));
+  document.addEventListener("pointerdown",event=>{
+    softwarePointerWithin=[...workspace.querySelectorAll('[data-software-search][aria-expanded="true"]')]
+      .some(input=>softwarePointerIsInside(event,input));
+    if(!softwarePointerWithin)closeSoftwarePickersOutside(event);
+  });
+  document.addEventListener("pointerup",()=>{softwarePointerWithin=false;});
+  document.addEventListener("pointercancel",()=>{softwarePointerWithin=false;});
   document.addEventListener("focusin",event=>{
-    // Browser focus can fall back to body during a scrollbar drag. That is
-    // not an intentional keyboard departure from the combobox.
-    if(event.target===document.body||event.target===document.documentElement)return;
-    closeSoftwarePickersOutside(event.target);
+    // A scrollbar drag can shift focus to body (or an outside element).
+    if(softwarePointerWithin||event.target===document.body||
+      event.target===document.documentElement)return;
+    for(const input of workspace.querySelectorAll('[data-software-search][aria-expanded="true"]')){
+      if(!input.closest(".software-picker")?.contains(event.target))softwareResults(input,false);
+    }
   });
   workspace.addEventListener("keydown",event=>{
     const input=event.target;
     if(!input.matches("[data-software-search]"))return;
-    if(event.key==="Escape"){softwareResults(input,false);return;}
+    if(event.key==="Escape"){event.preventDefault();softwareResults(input,false);return;}
     if(event.key==="ArrowDown"){
       const button=input.closest(".software-picker")?.querySelector(".software-picker-results:not([hidden]) button");
       if(button){event.preventDefault();button.focus();}

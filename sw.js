@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v120-software-scrollbar";
+const CACHE_NAME = "rabbitmole-shell-v121-software-field-ready";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";

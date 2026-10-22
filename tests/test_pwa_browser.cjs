@@ -481,8 +481,14 @@ const {chromium}=require('playwright');
      scrollTop:el.scrollTop
    }));
    assert(softwareMetrics.overflow,'Software results must be scrollable');
+   assert.equal(await softwareList.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(23, 44, 67)');
    // Simulate a scrollbar grab even on systems with overlay scrollbars.
-   await softwareList.evaluate(el=>el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'mouse'})));
+   await softwareList.evaluate(el=>{
+     const rect=el.getBoundingClientRect();
+     document.body.dispatchEvent(new PointerEvent('pointerdown',{
+       bubbles:true,pointerType:'mouse',clientX:rect.right-2,clientY:rect.top+14
+     }));
+   });
    await softwareSearch.evaluate(el=>el.blur());
    assert.equal(await softwareList.isVisible(),true,'Input blur during a scrollbar drag must not close results');
    // On platforms exposing a track, exercise real mouse drag and scrolling.

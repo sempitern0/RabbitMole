@@ -2780,12 +2780,20 @@
   workspace.addEventListener("focusin",event=>{
     if(event.target.matches("[data-software-search]"))softwareResults(event.target);
   });
-  workspace.addEventListener("focusout",event=>{
-    if(!event.target.matches("[data-software-search]"))return;
-    const input=event.target;
-    // Deferral allows a pointer selection before dismissing its list.
-    if(input.closest(".software-picker")?.contains(event.relatedTarget))return;
-    softwareResults(input,false);
+  // Clicking/dragging a native scrollbar may blur its search input and yield
+  // relatedTarget=null (or body). Closing on focusout destroys the scrollbar
+  // before the drag can start. Dismiss only on a real outside interaction.
+  function closeSoftwarePickersOutside(target){
+    for(const input of workspace.querySelectorAll('[data-software-search][aria-expanded="true"]')){
+      if(!input.closest(".software-picker")?.contains(target))softwareResults(input,false);
+    }
+  }
+  document.addEventListener("pointerdown",event=>closeSoftwarePickersOutside(event.target));
+  document.addEventListener("focusin",event=>{
+    // Browser focus can fall back to body during a scrollbar drag. That is
+    // not an intentional keyboard departure from the combobox.
+    if(event.target===document.body||event.target===document.documentElement)return;
+    closeSoftwarePickersOutside(event.target);
   });
   workspace.addEventListener("keydown",event=>{
     const input=event.target;

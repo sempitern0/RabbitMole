@@ -39,9 +39,10 @@
       control = `<input id="${id}" type="text" ${attrs} list="${listId}" value="${html(value)}" maxlength="20000" autocomplete="off"><datalist id="${listId}">${known.map((x) => `<option value="${html(x)}"></option>`).join("")}</datalist>`;
     } else if(block==="software"&&name==="name"&&softwareCatalog?.APPLICATIONS){
       const options=softwareCatalog.searchApplications(value,24);
-      const listId="suggest-software-"+index+"-name";
       const selected=softwareCatalog.byName(value);
-      control=`<div class="software-picker"><input id="${id}" ${attrs} data-software-search="true" list="${listId}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="software-results-${index}" value="${html(value)}" maxlength="20000" placeholder="Buscar Chrome, Adobe, WinRAR…"><datalist id="${listId}">${softwareCatalog.APPLICATIONS.map(app=>`<option value="${html(app.name)}"></option>`).join("")}</datalist><div class="software-picker-results" id="software-results-${index}" role="listbox" hidden></div><small class="software-picker-help">${selected?"Catálogo: "+html(selected.category)+" · "+html(selected.vendor):"Selecciona una aplicación o escribe un nombre personalizado."} La versión, soporte y licencia real se verifican por separado.</small></div>`;
+      // One dropdown: combining a native datalist with our scrollable listbox
+      // produces competing menus and breaks pointer/scrollbar interactions.
+      control=`<div class="software-picker"><input id="${id}" ${attrs} data-software-search="true" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="software-results-${index}" value="${html(value)}" maxlength="20000" placeholder="Buscar Chrome, Adobe, WinRAR…"><div class="software-picker-results" id="software-results-${index}" role="listbox" hidden></div><small class="software-picker-help">${selected?"Catálogo: "+html(selected.category)+" · "+html(selected.vendor):"Selecciona una aplicación o escribe un nombre personalizado."} La versión, soporte y licencia real se verifican por separado.</small></div>`;
     } else if (
       type === "picker" &&
       // Large OS/software catalogues stay searchable; finite field presets

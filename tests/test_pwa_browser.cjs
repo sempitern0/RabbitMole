@@ -468,6 +468,44 @@ const {chromium}=require('playwright');
    // The top selector works without reaching the bottom of a long inventory.
    await page.locator('#wizard-step-top').selectOption('software');
    assert.equal(await page.locator('#wizard-step-select').inputValue(),'software');
+   // Software autocomplete: clicking and dragging its scrollbar must not blur
+   // the input into closing the list. Wheel, keyboard and outside click remain valid.
+   await page.locator('[data-add="software"]').first().click();
+   const softwareSearch=page.locator('#f-software-0-name');
+   await softwareSearch.focus();
+   const softwareList=page.locator('#software-results-0');
+   assert.equal(await softwareList.isVisible(),true,'Software picker should open on focus');
+   const softwareMetrics=await softwareList.evaluate(el=>({
+     overflow:el.scrollHeight>el.clientHeight,
+     gutter:el.offsetWidth-el.clientWidth,
+     scrollTop:el.scrollTop
+   }));
+   assert(softwareMetrics.overflow,'Software results must be scrollable');
+   // Simulate a scrollbar grab even on systems with overlay scrollbars.
+   await softwareList.evaluate(el=>el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'mouse'})));
+   await softwareSearch.evaluate(el=>el.blur());
+   assert.equal(await softwareList.isVisible(),true,'Input blur during a scrollbar drag must not close results');
+   // On platforms exposing a track, exercise real mouse drag and scrolling.
+   if(softwareMetrics.gutter>=6){
+     const rect=await softwareList.boundingBox();
+     await page.mouse.move(rect.x+rect.width-3,rect.y+10);
+     await page.mouse.down();
+     await page.mouse.move(rect.x+rect.width-3,rect.y+rect.height-10,{steps:8});
+     assert.equal(await softwareList.isVisible(),true,'Mouse scrollbar drag must keep the list open');
+     await page.mouse.up();
+   }
+   await softwareList.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+   assert((await softwareList.evaluate(el=>el.scrollTop))>0,'Scroll area must remain interactive');
+   await page.locator('#workspace h1').click();
+   assert.equal(await softwareList.isVisible(),false,'Outside click must close software results');
+   await softwareSearch.focus();
+   await page.keyboard.press('Escape');
+   assert.equal(await softwareList.isVisible(),false,'Escape must close software results');
+   await softwareSearch.focus();
+   await softwareList.locator('[data-software-choice="Google Chrome"]').click();
+   assert.equal(await softwareSearch.inputValue(),'Google Chrome');
+   assert.equal(await page.locator('#f-software-0-vendor').inputValue(),'Google LLC');
+
    await page.locator('#wizard-step-top').selectOption('networks');
    assert.equal(await page.locator('[data-network-kind="Wi-Fi"]').count(),1);
    await page.locator('[data-network-kind="Wi-Fi"]').click();

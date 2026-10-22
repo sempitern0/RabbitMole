@@ -19,11 +19,15 @@ const markup=renderer.RabbitMoleFieldRenderer.render({name:'WinRAR'},'software',
  softwareCatalog:c,glossary:null
 });
 assert(markup.includes('data-software-search="true"'));
-assert(markup.includes('data-software-search="true" list='));
+assert(markup.includes('role="combobox" aria-autocomplete="list"'));
+assert(!markup.includes("<datalist"),"Avoid competing native and custom autocomplete menus");
 assert(markup.includes('Catálogo: Compresión y archivos'));
 assert(markup.includes('value="WinRAR"'));
 const app=fs.readFileSync('js/app.js','utf8');
 assert(app.includes('if(!record.vendor)record.vendor=app.vendor'));
 assert(app.includes('state.documentControl?.status==="confirmed"'));
-assert(fs.readFileSync('sw.js','utf8').includes('v119-software-autocomplete'));
+assert(app.includes('document.addEventListener("pointerdown",event=>closeSoftwarePickersOutside(event.target))'));
+assert(app.includes('document.addEventListener("focusin",event=>'));
+assert(!app.includes('workspace.addEventListener("focusout",event=>'));
+assert(fs.readFileSync('sw.js','utf8').includes('v120-software-scrollbar'));
 console.log('PASS curated offline software, safe free text and selective publisher prefill');

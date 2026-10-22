@@ -1175,7 +1175,7 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 /* Offline software palette: text badges are local, not third-party brand assets. */
 .software-picker{position:relative;min-width:0}
 .software-picker>input{width:100%}
-.software-picker-results{position:relative;display:grid;gap:.3rem;max-height:235px;overflow-y:auto;margin-top:.35rem;padding:.35rem;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.software-picker-results{position:relative;display:grid;gap:.3rem;max-height:235px;overflow-y:auto;scrollbar-gutter:stable;margin-top:.35rem;padding:.35rem;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 .software-picker-results[hidden]{display:none}
 .software-picker-option{display:flex;align-items:center;gap:.7rem;min-height:46px;padding:.45rem .6rem;text-align:left;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--ink);width:100%}
 .software-picker-option:hover,.software-picker-option:focus-visible{background:var(--canvas);border-color:var(--line);outline:2px solid var(--sidebar-active,var(--teal));outline-offset:-2px}

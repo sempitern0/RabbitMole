@@ -587,6 +587,9 @@
   async function createAudit(audit = fresh(), options = {}) {
     try {
       await flush();
+      // Only fresh audits get provisional narrative scaffolding; importing or
+      // duplicating an existing audit never changes its historical content.
+      if(arguments.length===0)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
       if (options.copy || !audit.meta.reportId) {
         audit.meta.reportId = identifiers.generate(
           records,

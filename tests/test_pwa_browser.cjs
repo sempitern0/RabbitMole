@@ -511,6 +511,22 @@ const {chromium}=require('playwright');
    await softwareList.locator('[data-software-choice="Google Chrome"]').click();
    assert.equal(await softwareSearch.inputValue(),'Google Chrome');
    assert.equal(await page.locator('#f-software-0-vendor').inputValue(),'Google LLC');
+   await page.locator('#f-software-0-licenseProof').fill('Contrato de ejemplo');
+   await page.locator('#f-software-0-licenseKeySuffix').fill('A7K2');
+   assert.equal(await page.locator('#f-software-0-licenseKeySuffix').getAttribute('maxlength'),'4');
+   assert.equal(await page.locator('#f-software-0-licenseProof').inputValue(),'Contrato de ejemplo');
+   await page.locator('#wizard-step-top').selectOption('cves');
+   await page.locator('[data-add="cves"]').first().click();
+   const cvePanel=page.locator('.cve-identifier-panel').first();
+   assert.equal(await cvePanel.count(),1);
+   assert.equal(await cvePanel.locator('[data-field="id"][data-block="cves"]').count(),1);
+   assert.equal(await page.locator('.entry > .cve-tools').count(),0,
+     'CVE action buttons belong next to the identifier, not below all fields');
+   assert.equal(await cvePanel.locator('[data-cve-link]').count(),installed?1:0);
+   assert.equal(await cvePanel.locator('[data-cve-check]').count(),installed?1:0);
+   assert((await cvePanel.evaluate(el=>parseFloat(getComputedStyle(el).paddingLeft)))>=10,
+     'CVE ID panel must have readable inset');
+   await page.locator('#f-cves-0-id').fill('CVE-2025-12345');
 
    await page.locator('#wizard-step-top').selectOption('networks');
    assert.equal(await page.locator('[data-network-kind="Wi-Fi"]').count(),1);

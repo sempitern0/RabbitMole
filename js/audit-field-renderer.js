@@ -22,6 +22,9 @@
       control = `<input id="${id}" type="text" value="${html(value)}" readonly aria-readonly="true" class="identifier-readonly" title="Código generado por la aplicación; no editable" autocomplete="off"><small class="identifier-hint">Identificador asignado automáticamente · solo lectura</small>`;
     } else if (type === "textarea")
       control = `<textarea id="${id}" ${attrs} maxlength="20000">${html(value)}</textarea>`;
+    else if(block==="software"&&name==="licenseKeySuffix"){
+      control=`<input id="${id}" ${attrs} type="text" autocomplete="off" spellcheck="false" maxlength="4" pattern="[A-Za-z0-9]{1,4}" placeholder="Ej. A7K2" value="${html(value)}"><small class="field-hint">Introduce únicamente el sufijo; nunca una clave de producto completa. El sufijo no demuestra que la licencia sea válida.</small>`;
+    }
     else if(block==="assets"&&name==="os"&&/^(servidor\b|hypervisor\b|hipervisor\b)/i.test(String(obj.type||"").trim())){
       const groups=osCatalog?.SERVER_GROUPS||{};
       const options=Object.values(groups).flat();
@@ -82,7 +85,7 @@
       control = `<select id="${id}" ${attrs} data-preset="true" aria-label="${html(label)}"><option value="">${(block === "assets" && name === "model" && !obj.vendor) || (block === "networks" && name === "routerModel" && !obj.routerVendor) ? "Selecciona primero un fabricante…" : "Seleccionar…"}</option>${options.map((x) => `<option value="${html(x)}"${x === value ? " selected" : ""}>${html(x)}</option>`).join("")}<option value="__custom__"${custom ? " selected" : ""}>Otro / escribir…</option></select><input ${attrs} data-custom="true" aria-label="${html(label)} personalizado" placeholder="Especifica el valor" value="${custom ? html(value) : ""}" maxlength="20000" ${custom ? "" : "hidden"}>`;
     } else
       control = `<input id="${id}" type="${type === "date" ? "date" : type === "time" ? "time" : "text"}" ${attrs} value="${html(value)}" maxlength="20000"${key === "decimal" ? ' inputmode="decimal"' : ""}>`;
-    if (["controls", "findings"].includes(block) && name === "evidenceIds") {
+    if ((["controls", "findings"].includes(block) && name === "evidenceIds") || (block === "software" && name === "licenseEvidenceIds")) {
       const available = assist.candidates(state, "evidence", value);
       if (available.length)
         control += `<div class="field-assist"><label for="assist-${id}">Vincular evidencia existente</label><select id="assist-${id}" data-assist-ref="evidence" data-assist-block="${html(block)}" data-assist-index="${index}" aria-label="Selecciona una evidencia del expediente"><option value="">Seleccionar evidencia…</option>${available.map((ref) => `<option value="${html(ref.id)}">${html(ref.id + " · " + (ref.title || "Sin título"))}</option>`).join("")}</select><small>No crea ni verifica evidencias; solo reutiliza identificadores existentes.</small></div>`;

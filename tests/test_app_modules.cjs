@@ -46,6 +46,18 @@ const detailed={...initial,networks:[{
 const restored=model.validate(JSON.parse(JSON.stringify(detailed)));
 for(const key of ['networkDeviceType','routerVendor','routerModel','routerDevice','routerFirmware','routerBackups','routerMgmt'])
  assert.equal(restored.networks[0][key],detailed.networks[0][key],'Lost router detail on backup import: '+key);
+const licensing={...initial,software:[{
+ _key:'software-1',name:'Aplicación test',version:'3.0',licenseProof:'Factura interna',
+ licenseKeySuffix:'A7K2',licenseEvidenceIds:'EVD-002',licenseCheckedAt:'2026-10-21'
+}]};
+const licensingRoundtrip=model.validate(JSON.parse(JSON.stringify(licensing)));
+assert.equal(licensingRoundtrip.software[0].licenseKeySuffix,'A7K2');
+assert.equal(licensingRoundtrip.software[0].licenseProof,'Factura interna');
+assert.equal(licensingRoundtrip.software[0].licenseEvidenceIds,'EVD-002');
+const unsafe=JSON.parse(JSON.stringify(licensing));
+unsafe.software[0].licenseKeySuffix='AAAA-BBBB-CCCC-DDDD';
+assert.equal(model.validate(unsafe).software[0].licenseKeySuffix,'',
+ 'Full activation keys must never roundtrip through the suffix field');
 assert.throws(()=>model.validate({...initial,schemaVersion:2}),/Versión de expediente incompatible/);
 assert.throws(()=>model.validate({...initial,networks:{}}),/Datos no válidos/);
 for(const file of ['js/app.js','js/app-definitions.js','js/app-team.js','js/app-model.js'])new Function(read(file));

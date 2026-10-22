@@ -1222,3 +1222,67 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
  .software-picker-results,.software-picker-option,.software-picker-logo{forced-color-adjust:auto;border:1px solid CanvasText}
  .software-picker-option:focus-visible{outline:2px solid Highlight}
 }
+
+/* Direct accordion descriptions need their own inset, including muted text. */
+#workspace .inventory-baseline > p {
+  margin: .85rem 1.2rem;
+  padding: .7rem .85rem;
+  border-radius: .65rem;
+  background: var(--canvas);
+  color: var(--muted);
+  line-height: 1.6;
+}
+#workspace .inventory-baseline > .fields { padding: .2rem 1.2rem 1.2rem; }
+#workspace .license-audit-help {
+  margin: .85rem 0 1.1rem;
+  padding: .9rem 1.05rem;
+  border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--brand);
+  border-radius: .7rem;
+  background: var(--canvas);
+  color: var(--ink);
+  line-height: 1.6;
+}
+#workspace .cve-identifier-panel {
+  grid-column: 1/-1;
+  min-width: 0;
+  display: grid;
+  gap: .75rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--brand);
+  border-radius: .75rem;
+  background: var(--canvas);
+}
+#workspace .cve-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .55rem .7rem;
+  min-width: 0;
+}
+#workspace .cve-quick-actions .button { min-height: 42px; }
+#workspace .cve-quick-actions small {
+  flex: 1 1 100%;
+  margin: 0;
+  padding: .55rem .7rem;
+  border-radius: .5rem;
+  background: var(--paper);
+  color: var(--muted);
+  line-height: 1.55;
+}
+#workspace .field-hint {
+  display: block;
+  margin-top: .35rem;
+  padding: .45rem .55rem;
+  border-radius: .45rem;
+  color: var(--muted);
+  background: var(--canvas);
+  line-height: 1.55;
+}
+@media (max-width: 650px) {
+  #workspace .inventory-baseline > p { margin: .6rem .75rem; padding: .7rem; }
+  #workspace .inventory-baseline > .fields { padding: .2rem .75rem .8rem; }
+  #workspace .cve-identifier-panel { padding: .75rem; }
+  #workspace .cve-quick-actions .button { flex: 1 1 100%; min-height: 46px; }
+}

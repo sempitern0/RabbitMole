@@ -159,6 +159,8 @@
       !/^((0[1-9]|[1-4]\d|5[0-2])\d{3})$/.test(v)
     )
       return "Código postal español: 5 dígitos, provincia entre 01 y 52.";
+    if (block === "software" && field === "licenseKeySuffix" && !/^[A-Za-z0-9]{1,4}$/.test(v))
+      return "Solo los últimos 1–4 caracteres alfanuméricos, no la clave de activación completa.";
     if (field === "id" && block === "cves" && !CVE_PATTERN.test(v))
       return "Formato esperado: CVE-AAAA-NNNN.";
     if (field === "sha256" && !/^[a-fA-F0-9]{64}$/.test(v))
@@ -1508,6 +1510,18 @@
           .join("") +
         "</div></details>"
       );
+    if (section === "cves")
+      return '<div class="fields">' +
+        definitions.map(def => {
+          if (def[0] !== "id") return renderField(record,section,def,index);
+          const actions = PUBLIC_DEMO ? "" :
+            `<div class="cve-quick-actions" aria-label="Acciones del identificador CVE">
+              <button type="button" class="button quiet small" data-cve-check="${index}">Consultar CVE online</button>
+              <button type="button" class="button small" data-cve-link="${index}">Ver en CVE.org ↗</button>
+              <small>Consulta voluntaria: solo se envía el identificador CVE, no los datos del cliente.</small>
+            </div>`;
+          return `<div class="cve-identifier-panel">${renderField(record,section,def,index)}${actions}</div>`;
+        }).join("") + "</div>";
     const extra = baselineFieldSet[section];
     if (!extra)
       return (
@@ -1683,12 +1697,12 @@
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}>Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "software" ? `<p class="license-audit-help">Acreditación de licencias: documenta factura, contrato o evidencia saneada; si es imprescindible, solo el sufijo de cuatro caracteres. No introduzcas claves completas. Verifica por separado el derecho de uso y el soporte/EOL de la versión concreta.</p>` : ""}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}>Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
               (r, i) =>
-                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) + renderMitigationActions(r) + renderResidualAssessment(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${block === "cves" && !PUBLIC_DEMO ? `<div class="cve-tools"><button class="button quiet small" type="button" data-cve-check="${i}">Consultar CVE online (opcional)</button><button class="button small" type="button" data-cve-link="${i}">Ver en CVE.org ↗</button><span class="subtle">Solo se envía el identificador CVE, nunca los datos del cliente.</span></div>` : ""}${
+                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) + renderMitigationActions(r) + renderResidualAssessment(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${
                   block === "evidence"
                     ? `<div class="file-upload"><label for="evidence-upload-${i}"><strong>Añadir foto o captura</strong> (PNG, JPG o WebP, hasta 5 MiB)</label><p class="subtle">Se guarda una copia optimizada. El SHA-256 identifica el archivo original, que debes conservar por separado.</p>${r.fileSha256 ? `<p class="evidence-digest">Archivo: ${html(r.fileName || "Sin nombre")} · ${(r.fileBytes || 0).toLocaleString("es-ES")} bytes <span>SHA-256 ${html(r.fileSha256)}</span></p>` : ""}${renderCaptureControls(`evidence-upload-${i}`,`evidence-camera-${i}`,`data-image-index="${i}"`,`data-image-index="${i}"`)}<div class="evidence-image-grid">${evidenceImages
                         .list(r)
@@ -3010,14 +3024,15 @@
         block = target.dataset.assistBlock,
         index = Number(target.dataset.assistIndex);
       if (
-        !["controls", "findings"].includes(block) ||
+        !["controls", "findings", "software"].includes(block) ||
         !Number.isSafeInteger(index)
       )
         return;
       const record = state[block]?.[index],
         evidence = state.evidence.find((x) => x.id === target.value);
       if (!record || !evidence) return;
-      record.evidenceIds = assist.appendRef(record.evidenceIds, evidence.id);
+      const field = block === "software" ? "licenseEvidenceIds" : "evidenceIds";
+      record[field] = assist.appendRef(record[field], evidence.id);
       persist();
       render();
       return;

@@ -428,6 +428,11 @@
             "No aplica",
           ],
         ],
+        // Entitlement evidence must never contain complete activation keys.
+        ["licenseProof", "Referencia de factura o contrato (sin secretos)"],
+        ["licenseKeySuffix", "Últimos cuatro caracteres de licencia (opcional)"],
+        ["licenseEvidenceIds", "IDs de evidencias de licencia"],
+        ["licenseCheckedAt", "Fecha de comprobación de licencia", "date"],
         ["installedAt", "Fecha de instalación verificada", "date"],
         [
           "updateStatus",

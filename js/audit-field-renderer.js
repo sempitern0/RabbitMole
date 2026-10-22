@@ -3,7 +3,7 @@
  */
 "use strict";
 (()=>{
-  function render(obj,block,def,index,{html,str,identifiers,assist,state,osCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon}) {
+  function render(obj,block,def,index,{html,str,identifiers,assist,state,osCatalog,softwareCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon}) {
     const [name, label, type, choices] = def;
     const attrs =
       `data-block="${html(block)}" data-field="${html(name)}"` +
@@ -37,6 +37,11 @@
       const known = assist.suggestions(state, block, name);
       const listId = "suggest-" + block + "-" + index + "-" + name;
       control = `<input id="${id}" type="text" ${attrs} list="${listId}" value="${html(value)}" maxlength="20000" autocomplete="off"><datalist id="${listId}">${known.map((x) => `<option value="${html(x)}"></option>`).join("")}</datalist>`;
+    } else if(block==="software"&&name==="name"&&softwareCatalog?.APPLICATIONS){
+      const options=softwareCatalog.searchApplications(value,24);
+      const listId="suggest-software-"+index+"-name";
+      const selected=softwareCatalog.byName(value);
+      control=`<div class="software-picker"><input id="${id}" ${attrs} data-software-search="true" list="${listId}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="software-results-${index}" value="${html(value)}" maxlength="20000" placeholder="Buscar Chrome, Adobe, WinRAR…"><datalist id="${listId}">${softwareCatalog.APPLICATIONS.map(app=>`<option value="${html(app.name)}"></option>`).join("")}</datalist><div class="software-picker-results" id="software-results-${index}" role="listbox" hidden></div><small class="software-picker-help">${selected?"Catálogo: "+html(selected.category)+" · "+html(selected.vendor):"Selecciona una aplicación o escribe un nombre personalizado."} La versión, soporte y licencia real se verifican por separado.</small></div>`;
     } else if (
       type === "picker" &&
       // Large OS/software catalogues stay searchable; finite field presets

@@ -80,6 +80,7 @@
   const osCatalog = globalThis.AuditOSCatalog;
   const glossary = globalThis.AuditGlossary;
   const hardwareVendors = Object.keys(vendorModels);
+  const softwareCatalog = globalThis.AuditSoftwareCatalog;
   const softwareVendors =
     globalThis.AuditSoftwareCatalog?.PUBLISHERS || hardwareVendors;
   const hardwareModels = Object.values(vendorModels).flat();
@@ -691,7 +692,7 @@
   const glossaryHelpIcon = '<svg class="glossary-help-icon" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8"></circle><path d="M10 9v5"></path><circle cx="10" cy="6" r="1" fill="currentColor" stroke="none"></circle></svg>';
   function renderField(obj, block, def, index) {
     return fieldRenderer.render(obj,block,def,index,{
-      html,str,identifiers,assist,state,osCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon
+      html,str,identifiers,assist,state,osCatalog,softwareCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon
     });
   }
   function pill(v) {
@@ -2743,6 +2744,64 @@
       record, "networks", groups.networks.fields.find(([name])=>name==="routerModel"), index
     );
   }
+
+  // Software selection is an explicit user action; no installed/version/licence claims.
+  function softwareResults(input,show=true){
+    const wrapper=input.closest(".software-picker");
+    const list=wrapper?.querySelector(".software-picker-results");
+    if(!list||!softwareCatalog)return;
+    if(!show){list.hidden=true;input.setAttribute("aria-expanded","false");return;}
+    const found=softwareCatalog.searchApplications(input.value,24);
+    list.innerHTML=found.map(app=>`<button type="button" role="option" class="software-picker-option" data-software-choice="${html(app.name)}" data-software-index="${html(input.dataset.index)}" aria-label="Seleccionar ${html(app.name)}, ${html(app.vendor)}"><span class="software-picker-logo" aria-hidden="true">${html(app.mark)}</span><span class="software-picker-text"><strong>${html(app.name)}</strong><small>${html(app.vendor)} · ${html(app.category)}</small></span></button>`).join("");
+    list.hidden=!found.length;
+    input.setAttribute("aria-expanded",String(found.length>0));
+  }
+  function selectSoftware(record,index,name){
+    if(state.documentControl?.status==="confirmed")return;
+    const app=softwareCatalog?.byName(name);
+    if(!app)return;
+    record.name=app.name;
+    // Only update empty publisher; a manual value belongs to the auditor.
+    if(!record.vendor)record.vendor=app.vendor;
+    persist();
+    const entry=workspace.querySelectorAll(".entry")[index];
+    const input=workspace.querySelector(`#f-software-${index}-name`);
+    if(input)input.value=record.name;
+    const vendor=workspace.querySelector(`#f-software-${index}-vendor`);
+    if(vendor&&record.vendor){
+      const sibling=vendor.closest(".field");
+      if(sibling)sibling.outerHTML=renderField(record,"software",groups.software.fields.find(row=>row[0]==="vendor"),index);
+    }
+    const title=input?.closest(".entry")?.querySelector(".entry-head strong");
+    if(title)title.textContent=record.name;
+    if(input)softwareResults(input,false);
+    refreshRecordNavigator(false);
+  }
+  workspace.addEventListener("focusin",event=>{
+    if(event.target.matches("[data-software-search]"))softwareResults(event.target);
+  });
+  workspace.addEventListener("focusout",event=>{
+    if(!event.target.matches("[data-software-search]"))return;
+    const input=event.target;
+    // Deferral allows a pointer selection before dismissing its list.
+    if(input.closest(".software-picker")?.contains(event.relatedTarget))return;
+    softwareResults(input,false);
+  });
+  workspace.addEventListener("keydown",event=>{
+    const input=event.target;
+    if(!input.matches("[data-software-search]"))return;
+    if(event.key==="Escape"){softwareResults(input,false);return;}
+    if(event.key==="ArrowDown"){
+      const button=input.closest(".software-picker")?.querySelector(".software-picker-results:not([hidden]) button");
+      if(button){event.preventDefault();button.focus();}
+    }
+  });
+  workspace.addEventListener("keydown",event=>{
+    if(event.target.matches(".software-picker-option")&&event.key==="Escape"){
+      const input=event.target.closest(".software-picker")?.querySelector("[data-software-search]");
+      if(input){softwareResults(input,false);input.focus();}
+    }
+  });
   workspace.addEventListener("input", (e) => {
     if (e.target.id === "record-search") {
       refreshRecordNavigator();
@@ -2758,6 +2817,7 @@
       return;
     }
     const t = e.target;
+    if(t.matches("[data-software-search]"))softwareResults(t);
     if (t.id === "glossary-search") {
       filterGlossary(t.value);
       return;
@@ -2939,6 +2999,11 @@
       return;
     }
     const t = e.target;
+    if(t.matches("[data-software-search]")){
+      const obj=fieldTarget(t);
+      if(obj&&softwareCatalog?.byName(t.value))selectSoftware(obj,Number(t.dataset.index),t.value);
+      return;
+    }
     if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
     if (t.id === "intake-file" && t.files?.length) {
       try {
@@ -3388,6 +3453,13 @@
   workspace.addEventListener("click", async (e) => {
     const b = e.target.closest("button");
     if (!b) return;
+    if(b.dataset.softwareChoice!==undefined){
+      if(state.documentControl?.status==="confirmed")return;
+      const index=Number(b.dataset.softwareIndex);
+      const record=state.software[index];
+      if(record)selectSoftware(record,index,b.dataset.softwareChoice);
+      return;
+    }
     if (b.id === "record-nav-toggle") { recordNavigation.toggleCollapse(); return; }
     if (
       PUBLIC_DEMO &&

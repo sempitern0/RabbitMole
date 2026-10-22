@@ -28,6 +28,8 @@
   const workflowViews = globalThis.RabbitMoleWorkflowViews;
   const auditActions = globalThis.RabbitMoleAuditActions;
   const fieldRenderer = globalThis.RabbitMoleFieldRenderer;
+  const fieldDefaults = globalThis.RabbitMoleFieldDefaults;
+  if(!fieldDefaults)throw Error("Falta el módulo de borradores iniciales.");
   const rackAudit = globalThis.RabbitMoleRackAudit;
   const serverInstall = globalThis.RabbitMoleServerInstall;
   const recordNavigatorModule = globalThis.RabbitMoleRecordNavigator;
@@ -1678,7 +1680,7 @@
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}">Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -4281,6 +4283,15 @@
       focusAddedRecord(finding._key);
       return;
     }
+    if (b.dataset.fillPending) {
+      const block=b.dataset.fillPending;
+      if(!groups[block]||state.documentControl?.status==="confirmed")return;
+      let count=0;
+      for(const record of state[block])count+=fieldDefaults.fillEmpty(record,block,groups[block].fields,{extended:true});
+      if(count){persist();render();}
+      else alert("No hay campos pendientes compatibles con los borradores.");
+      return;
+    }
     if (b.dataset.add) {
       if (state[b.dataset.add].length >= LIMIT_ROWS)
         return alert("Límite de registros alcanzado.");
@@ -4301,6 +4312,7 @@
       if (type === "networks" && ["Wi-Fi","Segmento / VLAN"].includes(b.dataset.networkKind))
         row.networkKind = b.dataset.networkKind;
       if (type === "evidence") row.links = relations.normalizeLinks(null);
+      fieldDefaults.fillEmpty(row,type,groups[type].fields);
       state[type].unshift(row);
       persist();
       render();

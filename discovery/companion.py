@@ -28,8 +28,8 @@ class Companion:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("RabbitMole Companion · Estación auditora")
-        self.window.geometry("625x470")
-        self.window.minsize(545, 410)
+        self.window.geometry("680x575")
+        self.window.minsize(610, 510)
         self.server = None
         self.events = queue.Queue()
         self.pending_id = None

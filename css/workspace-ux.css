@@ -718,7 +718,7 @@
 .pdf-appendix-editor .button{margin:0 0 .75rem}
 
 /* Distinguish the sticky audit filters from editable records without masking them. */
-#workspace .record-navigator{background:var(--paper);border:2px solid var(--brand);border-inline-start:5px solid var(--brand);box-shadow:0 9px 25px #00000029,0 2px 6px #00000014;isolation:isolate;scroll-margin-block-start:1rem}
+#workspace .record-navigator{background:var(--paper);border:2px solid var(--brand);border-inline-start:5px solid var(--brand);box-shadow:0 5px 15px #00000019;isolation:isolate;scroll-margin-block-start:1rem}
 
 #workspace .record-navigator :is(input,select){background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:.55rem}
 #workspace .record-navigator :is(input,select):focus-visible{outline:3px solid var(--brand);outline-offset:2px}
@@ -1355,7 +1355,7 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 
 /* One compact sticky filter strip for desktop; touch remains non-sticky. */
 @media screen and (min-width:1001px){
- #workspace .record-navigator{padding:.55rem .75rem;top:.5rem;box-shadow:0 5px 15px #00000019}
+ #workspace .record-navigator{padding:.55rem .75rem;top:.5rem}
  #workspace .record-nav-header{gap:.35rem}
  #workspace .record-nav-heading{gap:0}
  #workspace .record-nav-heading span{display:none}

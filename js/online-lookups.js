@@ -10,6 +10,25 @@
  const validCve=/^CVE-(?:1999|2\d{3})-\d{4,}$/i;
  let lastMapCall=0;
  const clean=s=>String(s||"").trim();
+ // Structural checksum only: it cannot establish registration, activity or
+ // VAT validity. Always consult the relevant official register where needed.
+ function checkCif(input){
+  const value=clean(input).toUpperCase().replace(/[\s-]/g,"");
+  const match=/^([ABCDEFGHJNPQRSUVW])(\d{7})([0-9A-J])$/.exec(value);
+  if(!match)return {valid:false,message:"Formato CIF no reconocido. No acredita existencia."};
+  const [,letter,digits,control]=match;
+  let sum=0;
+  for(let i=0;i<7;i++){
+   const digit=Number(digits[i]);
+   if(i%2===0){const doubled=digit*2;sum+=Math.floor(doubled/10)+(doubled%10);}
+   else sum+=digit;
+  }
+  const n=(10-sum%10)%10,alphabet="JABCDEFGHI";
+  const allowed=/^[PQRSNW]$/.test(letter)?[alphabet[n]]:/^[ABEH]$/.test(letter)?[String(n)]:[String(n),alphabet[n]];
+  return {valid:allowed.includes(control),message:allowed.includes(control)?
+   "Formato y dígito de control coherentes. No acredita existencia, titularidad ni situación fiscal.":
+   "Dígito o letra de control no coincide; revisa el identificador."};
+ }
  function request(provider,value,{apiKey="",now=Date.now()}={}){
   if(!Object.hasOwn(PROVIDERS,provider))throw Error("Proveedor no permitido.");
   const query=clean(value);
@@ -70,5 +89,5 @@
    return {...summarize(provider,data),provider:PROVIDERS[provider].label};
   }finally{clearTimeout(timeout);}
  }
- globalThis.RabbitMoleOnlineLookups=Object.freeze({PROVIDERS,request,summarize,lookup});
+ globalThis.RabbitMoleOnlineLookups=Object.freeze({PROVIDERS,request,summarize,lookup,checkCif});
 })();

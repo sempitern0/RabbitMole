@@ -1999,6 +1999,10 @@
       <p id="lookup-status" class="online-lookup-status" role="status" aria-live="polite">Sin consultas iniciadas. Cada petición requiere pulsar «Probar consulta».</p>
       <div class="online-lookup-result" id="lookup-result" hidden></div>
       <details class="connection-advanced"><summary>Identificación fiscal (CIF/NIF) y privacidad</summary>
+        <div class="fields"><div class="field"><label for="lookup-cif">CIF español (validación formal local)</label>
+          <input id="lookup-cif" maxlength="18" autocomplete="off" placeholder="A12345674"></div>
+          <div class="field"><label>&nbsp;</label><button type="button" class="button quiet" id="lookup-check-cif">Verificar formato / control</button></div></div>
+        <p id="lookup-cif-status" role="status">Pendiente. La validación formal se realiza sin enviar el CIF por Internet.</p>
         <p>GLEIF permite encontrar entidades LEI, pero no acredita un CIF español. La comprobación oficial de NIF/IVA intracomunitario se realiza mediante <a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noopener noreferrer">VIES</a>, conforme a su alcance y disponibilidad. El navegador no dispone de una API pública universal de CIF con acceso anónimo y CORS garantizado.</p>
         <p>La geocodificación envía el texto introducido al servicio elegido: evita domicilios personales o ubicaciones sensibles; la cartografía es aproximada. Las APIs pueden limitar o bloquear consultas por CORS, cuota o políticas de uso.</p>
       </details>
@@ -3916,6 +3920,13 @@
       alert(
         "Instala desde el menú del navegador: Instalar aplicación / Añadir a pantalla de inicio. Requiere HTTPS o localhost y compatibilidad PWA.",
       );
+      return;
+    }
+    if(b.id==="lookup-check-cif"){
+      const raw=byId("lookup-cif")?.value||"";
+      const output=byId("lookup-cif-status");
+      const checked=onlineLookups.checkCif(raw);
+      if(output)output.textContent=checked.message;
       return;
     }
     if(b.id==="lookup-clear"){

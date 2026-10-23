@@ -97,12 +97,7 @@
  #pwa-install-card :is(button,select,summary){min-height:44px}
 }
 
-/* Desktop filters keep a readable width instead of stretching across the form. */
-@media screen and (min-width:1001px){
- .record-nav-inner>div{flex:0 1 15rem;max-width:15rem}
- .record-nav-inner{gap:.5rem .75rem}
- .record-nav-inner>p{font-size:.8rem}
-}
+/* Desktop filter widths and spacing are owned by workspace-ux.css. */
 
 .section-heading{display:flex;align-items:center;gap:.6rem}
 .section-icon{flex:none;color:var(--brand)}

@@ -1100,7 +1100,7 @@
         <label for="audit-start-file">Archivo de captura JSON (máximo 2 MiB)</label>
         <input id="audit-start-file" type="file" accept=".json,application/json">
         <a class="button accent audit-start-collector-download" href="./collect-local.ps1" download="collect-local.ps1">Descargar recolector Windows (.ps1) →</a>
-        <p class="subtle">Sin EXE, Python ni permisos de administrador. Descarga el script, ejecútalo localmente desde PowerShell con <code>powershell.exe -NoProfile -File .\\collect-local.ps1 -Output .\\captura.json</code> y carga arriba el JSON generado. No se omiten las políticas corporativas.</p>
+        <p class="subtle">Sin EXE, Python ni permisos de administrador. Descarga el script, ejecútalo localmente desde PowerShell con <code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1 -Output .\\captura.json</code> y carga arriba el JSON generado. El parámetro <code>-ExecutionPolicy Bypass</code> solo afecta al proceso y debe usarse con autorización; una GPO, AppLocker o WDAC pueden impedir la ejecución igualmente. Tras verificar el origen también puedes utilizar <code>Unblock-File .\\collect-local.ps1</code> cuando el problema sea la marca de descarga.</p>
         <div class="audit-start-actions">
           <button class="button quiet" type="button" id="audit-start-companion">Recopilar con Companion local</button>
           <button class="button quiet" type="button" id="audit-start-copy">Copiar comando PowerShell</button>
@@ -1436,7 +1436,7 @@
     doctor: "python3 discovery/discover.py doctor",
     scan: "python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output captura-lan.json",
     localsh: "bash collect-local.sh --output captura.json",
-    localps: "powershell.exe -NoProfile -File .\\collect-local.ps1 -Output captura.json",
+    localps: "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1 -Output captura.json",
     nativeDoctor: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 doctor",
     nativeScan: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 scan --cidr 192.168.10.0/26 --authorized --output hosts.json"
   });
@@ -3751,8 +3751,8 @@
       return;
     }
     if(b.id==="audit-start-copy"){
-      const command="powershell.exe -NoProfile -File .\\collect-local.ps1 -Output .\\captura.json";
-      try{await navigator.clipboard.writeText(command);startError="Comando copiado. Ejecútalo en PowerShell desde la carpeta extraída de RabbitMole.";}
+      const command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1 -Output .\\captura.json";
+      try{await navigator.clipboard.writeText(command);startStatusKind="info";startError="Comando temporal copiado. Ejecútalo solo si tienes autorización; no modifica políticas permanentes y una GPO puede prevalecer.";}
       catch(_){startError="No se pudo usar el portapapeles. Copia: "+command;}
       const status=byId("audit-start-status");if(status)status.textContent=startError;
       return;

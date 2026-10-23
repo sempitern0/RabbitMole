@@ -32,6 +32,6 @@ const checksums=JSON.parse(read('checksums.json')),crypto=require('node:crypto')
 for(const [name,digest] of Object.entries(checksums))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,name))).digest('hex'),digest,name);
 console.log('PASS browser/PWA matrix, fail-closed detection and published checksums');
 
-for(const file of ['discovery-kit.zip','discovery-android-termux.zip','discovery-ios-guide.txt'])
+for(const file of ['collect-local.ps1','discovery-kit.zip','discovery-android-termux.zip','discovery-ios-guide.txt'])
  assert(fs.existsSync(path.join(root,file)),file+' missing from Cloudflare release');
 assert(sw.includes('DISCOVERY_PACKAGES'),'Offline Discovery packages require worker cache support');

@@ -78,7 +78,7 @@ assert(!normalCheck.issues.some(x=>["BORRADOR_SIN_CONTRASTAR","HALLAZGO_SIN_CONT
 const appSource=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
 const themeCss=fs.readFileSync(path.join(root,'css/styles.css'),'utf8');
 assert(/addEventListener\(["']click["'],\s*\(\)\s*=>\s*exportJson\(\)\)/.test(appSource),'Export toolbar must not pass click event as audit data');
-assert(appSource.includes('anchor.hidden=true')&&appSource.includes('document.body.appendChild(anchor)'),'Download anchor must be attached before clicking');
+assert(/anchor\.hidden\s*=\s*true/.test(appSource)&&appSource.includes('document.body.appendChild(anchor)'),'Download anchor must be attached before clicking');
 assert(appSource.includes('showExportFeedback(message)'),'Successful preparation must display feedback');
 assert(appSource.includes('id="delivery-export-status"'),'Delivery page needs inline status');
 assert(appSource.includes('const reviewed=prepared.review'),'Draft cover must describe blockers for final release');

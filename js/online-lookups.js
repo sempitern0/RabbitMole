@@ -5,7 +5,7 @@
   cve:{label:"CVE Program",origin:"https://cveawg.mitre.org"},
   nvd:{label:"NVD (NIST)",origin:"https://services.nvd.nist.gov"},
   company:{label:"GLEIF / LEI",origin:"https://api.gleif.org"},
-  place:{label:"OpenStreetMap Nominatim",origin:"https://nominatim.openstreetmap.org"}
+  place:{label:"Geoapify Geocoding",origin:"https://api.geoapify.com"}
  });
  const validCve=/^CVE-(?:1999|2\d{3})-\d{4,}$/i;
  let lastMapCall=0;
@@ -29,20 +29,25 @@
    "Formato y dígito de control coherentes. No acredita existencia, titularidad ni situación fiscal.":
    "Dígito o letra de control no coincide; revisa el identificador."};
  }
- function request(provider,value,{apiKey="",now=Date.now()}={}){
+ function request(provider,value,{apiKey="",companyMode="name",now=Date.now()}={}){
   if(!Object.hasOwn(PROVIDERS,provider))throw Error("Proveedor no permitido.");
   const query=clean(value);
   if(query.length<3||query.length>160||/[\x00-\x1f]/.test(query))throw Error("Consulta no válida (3–160 caracteres).");
   if(["cve","nvd"].includes(provider)&&!validCve.test(query))throw Error("Identificador CVE no válido.");
-  if(provider==="place"&&query.length<4)throw Error("Indica una localidad o dirección.");
+  if(provider==="place"&&query.length<4)throw Error("Introduce una dirección o localidad de al menos cuatro caracteres.");
+  if(provider==="company"&&companyMode==="lei"&&!/^[A-Z0-9]{20}$/i.test(query))throw Error("El LEI requiere exactamente 20 caracteres alfanuméricos.");
+  if(provider==="company"&&!["lei","name"].includes(companyMode))throw Error("Modo de búsqueda LEI no permitido.");
   const url=new URL(provider==="cve"?"/api/cve/"+encodeURIComponent(query.toUpperCase()):
-   provider==="nvd"?"/rest/json/cves/2.0":provider==="company"?"/api/v1/lei-records":"/search",PROVIDERS[provider].origin);
+   provider==="nvd"?"/rest/json/cves/2.0":provider==="company"?companyMode==="lei"?"/api/v1/lei-records/"+query.toUpperCase():"/api/v1/lei-records":"/v1/geocode/search",PROVIDERS[provider].origin);
   if(provider==="nvd")url.searchParams.set("cveId",query.toUpperCase());
-  if(provider==="company")url.searchParams.set("filter[fulltext]",query);
+  if(provider==="company"&&companyMode==="name")url.searchParams.set("filter[fulltext]",query);
   if(provider==="place"){
+   const key=clean(apiKey);
+   if(!key)throw Error("Geoapify exige una clave API de MyProjects. Restringe su uso al origen de la PWA.");
+   if(key.length>150||/\s/.test(key))throw Error("Clave Geoapify inválida.");
    if(now-lastMapCall<1200)throw Error("Espera 1,2 segundos entre consultas cartográficas.");
    lastMapCall=now;
-   for(const [k,v] of [["q",query],["format","jsonv2"],["limit","3"],["addressdetails","0"]])url.searchParams.set(k,v);
+   for(const [k,v] of [["text",query],["format","json"],["limit","3"],["apiKey",key]])url.searchParams.set(k,v);
   }
   const headers={Accept:"application/json"};
   if(provider==="nvd"&&clean(apiKey)){
@@ -68,22 +73,24 @@
     "Fecha: "+brief(c?.published||"sin fecha")]};
   }
   if(provider==="company"){
-   const rows=Array.isArray(payload.data)?payload.data.slice(0,3):[];
-   return {title:rows.length+" coincidencia(s) LEI",details:rows.map(x=>brief(x.attributes?.entity?.legalName?.name||"Entidad")+" · LEI "+brief(x.id))};
+   const rows=Array.isArray(payload.data)?payload.data.slice(0,3):payload.data?[payload.data]:[];
+   return {title:rows.length+" registro(s) LEI",details:rows.map(x=>
+     brief(x.attributes?.entity?.legalName?.name||"Entidad")+" · LEI "+brief(x.id)+
+     " · Estado: "+brief(x.attributes?.entity?.status||"no especificado"))};
   }
-  const rows=Array.isArray(payload)?payload.slice(0,3):[];
+  const rows=Array.isArray(payload.results)?payload.results.slice(0,3):[];
   const lat=Number(rows[0]?.lat),lon=Number(rows[0]?.lon);
   return {title:rows.length+" coincidencia(s) geográficas",
-   details:rows.map(x=>brief(x.display_name)+" · "+brief(x.lat)+", "+brief(x.lon)),
+   details:rows.map(x=>brief(x.formatted||"Dirección sin formato")+" · "+brief(x.lat)+", "+brief(x.lon)),
    map:rows.length&&Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180
      ?{lat,lon}:null};
  }
- async function lookup(provider,value,{apiKey="",fetchImpl=fetch,timeoutMs=9000,now=Date.now()}={}){
-  const spec=request(provider,value,{apiKey,now});
+ async function lookup(provider,value,{apiKey="",companyMode="name",fetchImpl=fetch,timeoutMs=9000,now=Date.now()}={}){
+  const spec=request(provider,value,{apiKey,companyMode,now});
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),timeoutMs);
   try{
    const response=await fetchImpl(spec.url,{method:"GET",mode:"cors",credentials:"omit",cache:"no-store",
-    redirect:"error",referrerPolicy:"no-referrer",headers:spec.headers,signal:controller.signal});
+    redirect:"error",referrerPolicy:provider==="place"?"strict-origin-when-cross-origin":"no-referrer",headers:spec.headers,signal:controller.signal});
    if(!response.ok)throw Error("HTTP "+response.status+". Comprueba límites y disponibilidad.");
    const data=await response.json();
    return {...summarize(provider,data),provider:PROVIDERS[provider].label};

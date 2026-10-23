@@ -27,6 +27,8 @@ class NativeCollector(unittest.TestCase):
         cmd=(ROOT/'discovery/iniciar.cmd').read_text()
         runner=(ROOT/'discovery/run.ps1').read_text()
         self.assertIn('powershell.exe -NoProfile',cmd)
+        self.assertIn('-ExecutionPolicy Bypass -File',cmd)
+        self.assertIn('Get-ExecutionPolicy -List', (ROOT/'discovery/README_ES.md').read_text(encoding='utf-8'))
         self.assertIn('native.ps1',runner)
         self.assertIn("if($action -eq 'service')",runner)
         self.assertNotIn('Set-ExecutionPolicy',runner)

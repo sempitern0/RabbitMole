@@ -31,7 +31,7 @@ assert.equal(update.audit.assets[0].osLicense,'Verificada');
 assert.equal(update.audit.assets[0].notes,'Auditor revisó el activo');
 assert.equal(update.audit.findings.length,1);
 assert.equal(previous.assets[0].cpu,'Viejo CPU');
-assert.throws(()=>start.updateExisting({...linked,deviceId:'RM-WIN-FFFFFFFFFFFFFFFFFFFFFFFF'}, {assets:true}, previous,{groups:args.groups,uid:args.uid}),/coincide/);
+assert.throws(()=>start.updateExisting({...linked,deviceId:'RM-WIN-FFFFFFFFFFFFFFFFFFFFFFFF'}, {assets:true}, previous,{groups:{assets:{fields:[['id'],['serial']]},networks:{fields:[]},software:{fields:[]}},uid:()=> 'a2'}),/coincide/);
 
 assert.equal(preview.counts.networks,1);
 assert.equal(preview.counts.software,1);

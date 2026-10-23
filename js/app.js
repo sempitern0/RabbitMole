@@ -3235,6 +3235,7 @@
     }
     if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
     if(t.id==="audit-start-file"&&t.files?.length){
+      if(startBusy){startError="Hay una captura en curso. Espera a que finalice o vuelve a intentarlo.";const status=byId("audit-start-status");if(status)status.textContent=startError;return;}
       try{
         const file=t.files[0];
         if(file.size>auditStart.sizeLimit)throw Error("El archivo supera 2 MiB.");
@@ -3723,10 +3724,12 @@
     const b = e.target.closest("button");
     if (!b) return;
     if(b.id==="audit-start-manual"){
+      if(startBusy)return;
       resetAuditStart();await createAudit();
       return;
     }
     if(b.id==="audit-start-discard"){
+      if(startBusy)return;
       resetAuditStart();render();return;
     }
     if(b.id==="audit-start-confirm"){

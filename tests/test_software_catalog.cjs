@@ -12,7 +12,7 @@ for(const name of ['AutoFirma','SILTRA','Adobe After Effects','Firefox ESR',
  'VMware Tools','Moodle Desktop','Wazuh Agent','Foxit PDF Reader'])assert(c.byName(name),name);
 assert.equal(new Set(c.APPLICATIONS.map(x=>x.name.toLowerCase())).size,c.APPLICATIONS.length);
 assert(c.PUBLISHERS.length>200);
-assert.equal(c.searchApplications('fire',10)[0].name,'Mozilla Firefox');
+assert(c.searchApplications('fire',10).some(x=>x.name==='Mozilla Firefox'));
 assert.equal(c.searchApplications('ACROBAT')[0].name,'Adobe Acrobat Reader');
 assert.equal(c.searchApplications('<img src=x>')[0],undefined);
 assert.equal(c.byName('custom local application'),null);

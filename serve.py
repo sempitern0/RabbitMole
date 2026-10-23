@@ -29,9 +29,11 @@ ALLOWED = {
     ".png": "image/png",
     ".svg": "image/svg+xml",
     ".ps1": "text/plain; charset=utf-8",
+    ".py": "text/plain; charset=utf-8",
+    ".sh": "text/plain; charset=utf-8",
 }
 FOLDERS = {"css", "js", "fonts", "icons"}
-FILES = {"index.html", "sw.js", "manifest.webmanifest", "collect-local.ps1"}
+FILES = {"index.html", "sw.js", "manifest.webmanifest", "collect-local.ps1", "collect-local.sh", "collect-local.py"}
 DISCOVERY_KIT_PATH = "/discovery-kit.zip"
 DISCOVERY_KIT_FILES = (
     "service.py", "discover.py", "wizard.py", "pairing.py",
@@ -91,6 +93,12 @@ def discovery_kit_bytes(root=ROOT):
             entry = zipfile.ZipInfo("discovery/" + name, (2024, 1, 1, 0, 0, 0))
             entry.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(entry, path.read_bytes())
+        for name in ("collect-local.py", "collect-local.sh"):
+            optional = root / name
+            if optional.is_file() and not optional.is_symlink():
+                entry = zipfile.ZipInfo(name, (2024, 1, 1, 0, 0, 0))
+                entry.compress_type = zipfile.ZIP_DEFLATED
+                archive.writestr(entry, optional.read_bytes())
         path = root / "collect-local.ps1"
         if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
             raise FileNotFoundError("Falta collect-local.ps1 para crear el kit.")
@@ -219,7 +227,7 @@ class LocalHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Discovery kit incomplete" if package else "Not Found")
             return
         filename = "discovery-kit.zip" if package else asset.name
-        is_download = package or filename == "collect-local.ps1"
+        is_download = package or filename in ("collect-local.ps1", "collect-local.py", "collect-local.sh")
         self.send_response(200)
         self.send_header("Content-Type", "application/zip" if package else ALLOWED[asset.suffix.lower()])
         self.send_header("Content-Length", str(len(data)))

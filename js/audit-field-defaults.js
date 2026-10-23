@@ -52,7 +52,7 @@
   // proof, date, configured safeguard, compliance, or licence entitlement.
   const SELECT = Object.freeze({
     assets: Object.freeze({
-      criticality:"Sin valorar", state:"Por revisar",
+      criticality:"Sin valorar", state:"Por revisar",ipAssignment:"Sin verificar",
       osLicense:"Pendiente de verificar",osUpdates:"No verificadas",
       avRealtime:"No verificada",avUpdated:"No verificados",
       gpuType:"No verificada",ethernetPort:"No verificada",

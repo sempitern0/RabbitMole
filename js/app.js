@@ -3443,6 +3443,10 @@
       return;
     }
     obj[t.dataset.field] = t.value;
+    if(t.dataset.block==="assets"&&t.dataset.field==="ipAssignment"){
+      const field=workspace.querySelector(`#f-assets-${t.dataset.index}-ip`)?.closest(".field");
+      if(field)field.outerHTML=renderField(obj,"assets",groups.assets.fields.find(([key])=>key==="ip"),Number(t.dataset.index));
+    }
     if(t.dataset.block==="networks" && t.dataset.field==="networkDeviceType"){
       // Type selection can happen after recording device details. Never
       // clear vendor/model implicitly; show unmatched values as custom.

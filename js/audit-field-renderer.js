@@ -25,6 +25,14 @@
     else if(block==="software"&&name==="licenseKeySuffix"){
       control=`<input id="${id}" ${attrs} type="text" autocomplete="off" spellcheck="false" maxlength="4" pattern="[A-Za-z0-9]{1,4}" placeholder="Ej. A7K2" value="${html(value)}"><small class="field-hint">Introduce únicamente el sufijo; nunca una clave de producto completa. El sufijo no demuestra que la licencia sea válida.</small>`;
     }
+    else if(block==="assets"&&name==="ip"){
+      const assignment=String(obj.ipAssignment||"");
+      const dynamic=assignment==="DHCP / dinámica";
+      const hint=dynamic?"En DHCP la IP no es permanente; déjala vacía o anota únicamente una dirección observada, con su fecha.":
+        assignment==="Reserva DHCP"?"La reserva se valida en el servidor DHCP; la IP indicada es una observación, no prueba de la reserva.":
+        "Indica cómo se asigna la IP y conserva la fecha si anotas una dirección observada.";
+      control=`<input id="${id}" type="text" ${attrs} value="${html(value)}" maxlength="20000" autocomplete="off" placeholder="${dynamic?"Opcional · dirección temporal":"IPv4/IPv6 observada"}"><small class="field-hint">${html(hint)}</small>`;
+    }
     else if(block==="assets"&&name==="os"&&/^(servidor\b|hypervisor\b|hipervisor\b)/i.test(String(obj.type||"").trim())){
       const groups=osCatalog?.SERVER_GROUPS||{};
       const options=Object.values(groups).flat();

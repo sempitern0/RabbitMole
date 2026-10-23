@@ -30,7 +30,14 @@
       "serverBoot": "term-188",
       "serverRemoteMgmt": "term-185",
       "osLicense": "term-197",
-      "osUpdates": "term-196"
+      "osUpdates": "term-196",
+      "ipAssignment":"term-213",
+      "ip":"term-213",
+      "avRealtime":"term-214",
+      "avUpdated":"term-215",
+      "avSignaturesVersion":"term-215",
+      "avSignaturesCheckedAt":"term-215",
+      "avEngineVersion":"term-215"
     },
     "networks": {
       "cidr": "term-3",

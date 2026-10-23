@@ -108,8 +108,12 @@ def main():
             raise SystemExit("Stylesheet missing from bundle: " + src)
     (DIST / "index.html").write_text(html, encoding="utf-8")
     (DIST / "manifest.webmanifest").write_bytes((ROOT / "manifest.webmanifest").read_bytes())
-    (DIST / "js/deployment-profile.js").write_bytes(
-        (ROOT / "deploy/public-profile.js").read_bytes())
+    profile = (ROOT / "deploy/public-profile.js").read_text(encoding="utf-8")
+    if profile.count("companionAvailable: false") != 1:
+        raise SystemExit("Missing Companion availability marker in deployment profile")
+    if windows.is_file():
+        profile = profile.replace("companionAvailable: false", "companionAvailable: true", 1)
+    (DIST / "js/deployment-profile.js").write_text(profile, encoding="utf-8")
 
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
     if '"./js/deployment-profile.js"' not in sw:

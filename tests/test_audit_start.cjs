@@ -57,7 +57,7 @@ assert.throws(()=>start.inspect(data,{intake,size:3*1024*1024}),/2 MiB/);
   assert.equal(JSON.parse(result).items.assets[0].name,'PC-01');
   assert(steps.some(x=>x.path==='/inventory/request'&&x.headers['X-RabbitMole-Token']===token));
   assert(steps.every(x=>x.path.startsWith('/')));
-  assert.throws(()=>start.collectFromCompanion({origin:'file:///audit.html'}),/HTTPS/);
+  await assert.rejects(start.collectFromCompanion({origin:'file:///audit.html'}),/HTTPS/);
   const app=fs.readFileSync('js/app.js','utf8');
   const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
   assert(app.includes('renderAuditStart()')&&app.includes('id="audit-start-manual"'));

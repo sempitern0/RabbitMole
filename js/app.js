@@ -612,8 +612,10 @@
       records.push(record);
       setActive(record);
       move("engagement");
+      return true;
     } catch (error) {
       alert("No se ha creado la auditoría: " + error.message);
+      return false;
     }
   }
   // Local navigation preference only: never exported as audit evidence/progress.
@@ -3720,8 +3722,8 @@
       startBusy=true;
       try{
         const candidate=auditStart.prepare(startReview,startSelected,{fresh,groups,uid,defaults:fieldDefaults});
-        await createAudit(candidate,{scaffold:true});
-        resetAuditStart();
+        if(await createAudit(candidate,{scaffold:true}))resetAuditStart();
+        else { startBusy=false; render(); }
       }catch(error){startError="No se pudo crear la auditoría: "+error.message;startBusy=false;render();}
       return;
     }

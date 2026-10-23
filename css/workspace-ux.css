@@ -1464,7 +1464,7 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
  #workspace .audit-start-option{gap:.65rem}
  #workspace .audit-start-option h2{font-size:1.1rem}
  #workspace .audit-start-option input[type=file]{font-size:16px}
- #workspace .audit-start-actions,.audit-start-review>.action-row{width:100%}
+ #workspace .audit-start-actions,#workspace .audit-start-review>.action-row{width:100%}
  #workspace .audit-start-actions>.button,#workspace .audit-start-review>.action-row>.button{width:100%;flex:1 1 100%}
  #workspace .audit-start-selections label{padding:.65rem}
  #workspace .audit-start-preview details{padding:.55rem .65rem}

@@ -26,7 +26,8 @@ class BuildTest(unittest.TestCase):
                 subprocess.run([sys.executable,str(root/'deploy/build-pages-demo.py')],check=True,stdout=subprocess.DEVNULL,env={**os.environ,'GITHUB_SHA':'a'*40,'CF_PAGES_BRANCH':'main'})
                 return json.loads((root/'dist-pages/release.json').read_text())['version']
             first=build()
-            self.assertEqual((root/'dist-pages/collect-local.ps1').read_bytes(), (root/'collect-local.ps1').read_bytes())
+            for filename in ('collect-local.ps1','collect-local.py','collect-local.sh'):
+                self.assertEqual((root/'dist-pages'/filename).read_bytes(), (root/filename).read_bytes())
             profile=(root/'dist-pages/js/deployment-profile.js').read_text()
             self.assertIn('companionAvailable: false', profile)
             self.assertFalse((root/'dist-pages/discovery-windows.zip').exists())

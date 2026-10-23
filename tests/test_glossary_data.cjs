@@ -1,5 +1,5 @@
 'use strict';
-/* Contract for compact glossary records: 212 distinct IDs, 96 guides, no loss
+/* Contract for compact glossary records: 215 distinct IDs, 96 guides, no loss
  * of search, macOS diagnostics or external references. Does not need a browser. */
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..'),ctx={};ctx.globalThis=ctx;
@@ -64,4 +64,4 @@ for(const p of ['js/glossary-terms.js','js/glossary-guides.js','js/glossary.js']
 }
 assert(html.indexOf('src="js/glossary-terms.js"')<html.indexOf('src="js/glossary-guides.js"'));
 assert(html.indexOf('src="js/glossary-guides.js"')<html.indexOf('src="js/glossary.js"'));
-console.log('PASS compact glossary: 212 concepts, 96 runbooks, contracts, 221 references, search and offline packaging');
+console.log('PASS compact glossary: 215 concepts, 96 runbooks, search and offline packaging');

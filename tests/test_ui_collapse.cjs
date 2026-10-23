@@ -13,7 +13,7 @@ assert(sidebar.includes('body.inert')&&sidebar.includes('aria-expanded'));
 assert(nav.includes('rabbitmole:ui:record-filters-collapsed:v1'));
 assert(nav.includes('id="record-nav-toggle"')&&nav.includes('panel.inert'));
 assert(css.includes('prefers-reduced-motion')&&css.includes('grid-template-rows'));
-const compact=read('css/workspace-ux.css');
+const compact=read('css/layout-collapse.css');
 assert(compact.includes('top:.5rem')&&compact.includes('max-width:15rem'));
 assert(compact.includes('record-nav-toggle')&&compact.includes('background:var(--brand)'));
 new Function(sidebar);new Function(nav);

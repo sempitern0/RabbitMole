@@ -101,3 +101,22 @@
 
 .section-heading{display:flex;align-items:center;gap:.6rem}
 .section-icon{flex:none;color:var(--brand)}
+
+/* Consolidated owner for compact sticky navigation and contrast. */
+/* One compact sticky filter strip for desktop; touch remains non-sticky. */
+@media screen and (min-width:1001px){
+ #workspace .record-navigator{padding:.55rem .75rem;top:.5rem}
+ #workspace .record-nav-header{gap:.35rem}
+ #workspace .record-nav-heading{gap:0}
+ #workspace .record-nav-heading span{display:none}
+ #workspace .record-nav-inner{gap:.4rem .55rem;padding-top:.4rem}
+ #workspace .record-nav-inner :is(input,select){min-height:38px;padding:.4rem .6rem}
+}
+#workspace .record-nav-toggle{
+ background:var(--brand);border:2px solid var(--brand);color:#fff;
+ box-shadow:0 2px 8px color-mix(in srgb,var(--brand) 22%,transparent);
+ min-height:42px;min-width:120px;font-weight:800
+}
+#workspace .record-nav-toggle:hover{background:var(--brand-hover);border-color:var(--brand-hover);color:#fff}
+#workspace .record-nav-toggle:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+#workspace .record-nav-toggle svg{stroke-width:2.4}

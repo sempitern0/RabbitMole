@@ -76,6 +76,8 @@ class NativeCollector(unittest.TestCase):
         for filename in ('collect-local.ps1','collect-local.py','collect-local.sh'):
             self.assertIn(filename,device)
         self.assertIn('device-collector-setup',device)
+        self.assertIn('collector-permissions-guide',device)
+        self.assertIn('Ejecutar como administrador',device)
 
 if __name__=='__main__':
     unittest.main()

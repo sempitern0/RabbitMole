@@ -257,6 +257,11 @@ const {chromium}=require('playwright');
    const sticky=await page.locator('.record-navigator').evaluate(el=>({position:getComputedStyle(el).position,border:parseFloat(getComputedStyle(el).borderLeftWidth),background:getComputedStyle(el).backgroundColor}));
    assert.equal(sticky.position,'sticky');
    assert(sticky.border>=4,'The audit filter bar needs a visible separator');
+   const toggleStyle=await page.locator('#record-nav-toggle').evaluate(el=>{
+     const computed=getComputedStyle(el);return {background:computed.backgroundColor,visibility:computed.visibility};
+   });
+   assert.equal(toggleStyle.visibility,'visible');
+   assert.notEqual(toggleStyle.background,sticky.background,'Collapse toggle must contrast with the filter panel');
    await page.locator('#record-nav-toggle').click();
    assert.equal(await page.locator('#record-nav-toggle').getAttribute('aria-expanded'),'false');
    await page.locator('#wizard-step-select').selectOption('networks');

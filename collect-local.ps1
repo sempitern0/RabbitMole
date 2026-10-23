@@ -53,6 +53,21 @@ function Read-Cim([string]$class, [string]$label) {
     try { return @(Get-CimInstance -ClassName $class -ErrorAction Stop) }
     catch { Warn-Limited "${label}: consulta no disponible con estos permisos o políticas"; return @() }
 }
+function To-NetworkCidr([string]$address,[int]$length) {
+    try {
+        $bytes = [Net.IPAddress]::Parse($address).GetAddressBytes()
+        if ($bytes.Length -ne 4 -or $length -lt 0 -or $length -gt 32) { return '' }
+        for ($i=0; $i -lt 4; $i++) {
+            $bits = [Math]::Min([Math]::Max(($length-$i*8),0),8)
+            $mask = if ($bits -eq 0) { 0 } else { 256 - [Math]::Pow(2,8-$bits) }
+            $bytes[$i] = [byte]([int]$bytes[$i] -band [int]$mask)
+        }
+        return ((New-Object Net.IPAddress (,$bytes)).ToString()+'/'+$length)
+    } catch { return '' }
+}
+function Invariant-Number([double]$number,[int]$digits=1) {
+    return $number.ToString(('F'+$digits),[Globalization.CultureInfo]::InvariantCulture)
+}
 function To-Prefix([string]$mask) {
     $parts = $mask.Split('.')
     if ($parts.Count -ne 4) { return '' }
@@ -81,6 +96,41 @@ $bios = @(Read-Cim 'Win32_BIOS' 'BIOS') | Select-Object -First 1
 $disks = @(Read-Cim 'Win32_DiskDrive' 'Discos') | Select-Object -First 16
 $video = @(Read-Cim 'Win32_VideoController' 'Gráficos') | Select-Object -First 4
 $memory = @(Read-Cim 'Win32_PhysicalMemory' 'Módulos RAM') | Select-Object -First 32
+
+$memoryArrays = @(Read-Cim 'Win32_PhysicalMemoryArray' 'Ranuras RAM') | Select-Object -First 8
+$ramSlotCount = 0
+$ramMaxGiB = ''
+foreach ($bank in $memoryArrays) {
+    $slots = Get-OptionalValue $bank 'MemoryDevices'
+    if ($slots -and [int]$slots -gt 0) { $ramSlotCount += [int]$slots }
+    $capacity = Get-OptionalValue $bank 'MaxCapacityEx'
+    if (-not $capacity) { $capacity = Get-OptionalValue $bank 'MaxCapacity' }
+    if ($capacity -and [double]$capacity -gt 0 -and -not $ramMaxGiB) {
+        $ramMaxGiB = Invariant-Number ([double]$capacity / 1MB) 1
+    }
+}
+$diskTechnology = ''
+$diskDetails = ''
+try {
+    if (Get-Command Get-PhysicalDisk -ErrorAction SilentlyContinue) {
+        $physical = @(Get-PhysicalDisk -ErrorAction Stop | Select-Object -First 16)
+        $classes = New-Object 'System.Collections.Generic.List[string]'
+        $diskSummary = New-Object 'System.Collections.Generic.List[string]'
+        foreach ($drive in $physical) {
+            $media = Safe-Text (Get-OptionalValue $drive 'MediaType') 35
+            $bus = Safe-Text (Get-OptionalValue $drive 'BusType') 35
+            if ($bus -match 'NVMe') { [void]$classes.Add('SSD M.2 NVMe') }
+            elseif ($bus -match 'SATA' -and $media -match 'SSD') { [void]$classes.Add('SSD SATA') }
+            elseif ($media -eq 'HDD') { [void]$classes.Add('HDD') }
+            [void]$diskSummary.Add((Safe-Text (Get-OptionalValue $drive 'FriendlyName') 65)+': '+$media+', '+$bus)
+        }
+        $kinds = @($classes | Select-Object -Unique)
+        if ($kinds.Count -eq 1) { $diskTechnology = $kinds[0] }
+        elseif ($kinds.Count -gt 1) { $diskTechnology = 'Mixto' }
+        $diskDetails = Safe-Text ($diskSummary -join '; ') 450
+    }
+} catch { Warn-Limited 'No se pudo determinar la tecnología física de todas las unidades.' }
+
 $networkAdapters = @(Read-Cim 'Win32_NetworkAdapterConfiguration' 'Interfaces IP') |
     Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 16
 $captured = (Get-Date).ToUniversalTime().ToString('o')
@@ -172,6 +222,13 @@ try {
         Select-Object -First 25 | ForEach-Object { Safe-Text $_.Name 100 })
 } catch { Warn-Limited 'Servicios: listado parcial o acceso denegado.' }
 $assetNotes = 'Captura LOCAL de solo lectura realizada con permisos del usuario actual. Activación SO: '+$activation+'. La activación no demuestra titularidad o derecho de licencia. Datos declarados por Windows: contrastar con el equipo y la evidencia; no demuestra cumplimiento, derechos de licencia, EOL ni configuraciones administrativas.'
+$gpuNames = Safe-Text (($video | ForEach-Object { $_.Name }) -join '; ') 180
+if ($gpuNames) { $assetNotes += ' GPU observada: '+$gpuNames+' (tipo pendiente de comprobar).' }
+if ($diskDetails) { $assetNotes += ' Unidades físicas: '+$diskDetails+'.' }
+if ($processor) {
+    $assetNotes += (' CPU: {0} núcleos y {1} hilos declarados.' -f
+        (Get-OptionalValue $processor 'NumberOfCores'),(Get-OptionalValue $processor 'NumberOfLogicalProcessors'))
+}
 if ($limitations.Count) { $assetNotes += ' Limitaciones: '+($limitations -join '; ') }
 $asset = [ordered]@{
     name=$hostName
@@ -181,14 +238,16 @@ $asset = [ordered]@{
     serial=$(if ($bios) { Safe-Text $bios.SerialNumber 140 } else { '' })
     os=$(if ($os) { Safe-Text $os.Caption 180 } else { '' })
     cpu=$(if ($processor) { Safe-Text $processor.Name 160 } else { '' })
-    cpuSpeed=$(if ($processor -and $processor.MaxClockSpeed) { '{0:N2}' -f ($processor.MaxClockSpeed / 1000) } else { '' })
-    gpuType=$(Safe-Text (($video | ForEach-Object { $_.Name }) -join '; ') 220)
-    ramSlots=$(if ($memory.Count) { '{0} módulos observados' -f $memory.Count } else { '' })
+    cpuSpeed=$(if ($processor -and $processor.MaxClockSpeed) { Invariant-Number ([double]$processor.MaxClockSpeed / 1000) 2 } else { '' })
+    gpuType='No verificada'
+    ramSlots=$(if ($ramSlotCount -gt 0) { '{0} / {1}' -f $ramSlotCount,$memory.Count } else { '' })
+    ramMax=$ramMaxGiB
     ram=$(if ($computer -and $computer.TotalPhysicalMemory) {
         '{0:N1} GiB' -f ([double]$computer.TotalPhysicalMemory / 1GB)
     } else { '' })
     storage=Safe-Text ($drives -join '; ') 600
-    diskCapacity=$(if ($disks.Count) { '{0:N1}' -f ((@($disks | Measure-Object -Property Size -Sum)[0].Sum) / 1GB) } else { '' })
+    diskCapacity=$(if ($disks.Count) { Invariant-Number ((@($disks | Measure-Object -Property Size -Sum)[0].Sum) / 1GB) 1 } else { '' })
+    diskType=$diskTechnology
     ip=$observedIp
     ipAssignment=$assignment
     ipObservedAt=$(if ($observedIp) { $observedDate } else { '' })

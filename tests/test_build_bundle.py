@@ -25,6 +25,17 @@ class BuildTest(unittest.TestCase):
                 subprocess.run([sys.executable,str(root/'deploy/build-pages-demo.py')],check=True,stdout=subprocess.DEVNULL,env={**os.environ,'GITHUB_SHA':'a'*40,'CF_PAGES_BRANCH':'main'})
                 return json.loads((root/'dist-pages/release.json').read_text())['version']
             first=build()
+            profile=(root/'dist-pages/js/deployment-profile.js').read_text()
+            self.assertIn('companionAvailable: false', profile)
+            self.assertFalse((root/'dist-pages/discovery-windows.zip').exists())
+            (root/'artifacts').mkdir()
+            with zipfile.ZipFile(root/'artifacts/RabbitMole-Companion-Windows.zip','w') as binary:
+                binary.writestr('RabbitMole-Companion.exe',b'test fixture only')
+            build()
+            self.assertTrue((root/'dist-pages/discovery-windows.zip').is_file())
+            self.assertIn('companionAvailable: true',
+                          (root/'dist-pages/js/deployment-profile.js').read_text())
+            (root/'artifacts/RabbitMole-Companion-Windows.zip').unlink()
             with zipfile.ZipFile(root/'dist-pages/discovery-kit.zip') as kit:
                 for entry in ('discovery/companion.py', 'discovery/pairing.py', 'discovery/iniciar.cmd',
                               'discovery/setup.ps1', 'discovery/setup.sh', 'discovery/native.ps1', 'discovery/inventory.py', 'collect-local.ps1'):

@@ -2859,7 +2859,7 @@
     }
   }
   function applyDocumentLock() {
-    if (state.documentControl?.status !== "confirmed") return;
+    if (page === "audit-start" || state.documentControl?.status !== "confirmed") return;
     for (const element of workspace.querySelectorAll(
       "input,select,textarea,button",
     )) {

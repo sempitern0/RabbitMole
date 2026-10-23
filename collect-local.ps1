@@ -109,6 +109,12 @@ foreach ($bank in $memoryArrays) {
         $ramMaxGiB = Invariant-Number ([double]$capacity / 1MB) 1
     }
 }
+$gpuDedicatedGiB = ''
+$gpuReported = @($video | Where-Object { (Get-OptionalValue $_ 'AdapterRAM') -and [double](Get-OptionalValue $_ 'AdapterRAM') -gt 0 })
+if ($gpuReported.Count) {
+    $bytes=[double](Get-OptionalValue $gpuReported[0] 'AdapterRAM')
+    if ($bytes -gt 0 -and $bytes -lt 4GB) { $gpuDedicatedGiB=Invariant-Number ($bytes / 1GB) 2 }
+}
 $diskTechnology = ''
 $diskDetails = ''
 try {
@@ -261,6 +267,8 @@ try {
         Select-Object -First 25 | ForEach-Object { Safe-Text $_.Name 100 })
 } catch { Warn-Limited 'Servicios: listado parcial o acceso denegado.' }
 $assetNotes = 'Captura LOCAL de solo lectura realizada con permisos del usuario actual. Activación SO: '+$activation+'. La activación no demuestra titularidad o derecho de licencia. Datos declarados por Windows: contrastar con el equipo y la evidencia; no demuestra cumplimiento, derechos de licencia, EOL ni configuraciones administrativas.'
+$assetNotes += ' Discos detectados: '+(Safe-Text ($drives -join '; ') 430)+'.'
+if ($memory.Count) { $assetNotes += ' Módulos RAM: '+(Safe-Text (($memory | ForEach-Object { (Safe-Text (Get-OptionalValue $_ 'Manufacturer') 35)+' '+(Safe-Text (Get-OptionalValue $_ 'PartNumber') 50)+' '+(Invariant-Number ([double](Get-OptionalValue $_ 'Capacity') / 1GB) 1)+' GiB' }) -join '; ') 350)+'.' }
 $gpuNames = Safe-Text (($video | ForEach-Object { $_.Name }) -join '; ') 180
 if ($gpuNames) { $assetNotes += ' GPU observada: '+$gpuNames+' (tipo pendiente de comprobar).' }
 if ($diskDetails) { $assetNotes += ' Unidades físicas: '+$diskDetails+'.' }
@@ -281,11 +289,12 @@ $asset = [ordered]@{
     cpuSpeed=$(if ($processor -and $processor.MaxClockSpeed) { Invariant-Number ([double]$processor.MaxClockSpeed / 1000) 2 } else { '' })
     gpuType='No verificada'
     ramSlots=$(if ($ramSlotCount -gt 0) { '{0} / {1}' -f $ramSlotCount,$memory.Count } else { '' })
+    gpuMemory=$gpuDedicatedGiB
     ramMax=$ramMaxGiB
     ram=$(if ($computer -and $computer.TotalPhysicalMemory) {
         '{0:N1} GiB' -f ([double]$computer.TotalPhysicalMemory / 1GB)
     } else { '' })
-    storage=Safe-Text ($drives -join '; ') 600
+    storage=$(if ($diskTechnology) { $diskTechnology } else { 'No verificado' })
     diskCapacity=$(if ($disks.Count) { Invariant-Number ((@($disks | Measure-Object -Property Size -Sum)[0].Sum) / 1GB) 1 } else { '' })
     diskType=$diskTechnology
     wifiAdapter=$(if (@($linkAdapters | Where-Object { $_.InterfaceDescription -match '(?i)Wi-?Fi|Wireless|WLAN|802.11' }).Count) { 'Presente' } else { 'No verificada' })

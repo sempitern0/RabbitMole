@@ -68,22 +68,43 @@
  }
 
  async function collectFromCompanion({origin,fetchImpl=fetch,onProgress=()=>{},sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
-  // Only same-device loopback. Never enumerate the LAN or read the local filesystem.
-  if(!/^https:\/\/[^/]+$/i.test(String(origin||"")))
-    throw Error("La PWA debe estar en un origen HTTPS válido.");
+  // Same-device only. HTTPS origins and HTTP loopback origins may use Companion.
+  // file:// and remote HTTP origins must use the explicit JSON import path.
+  let page;
+  try{page=new URL(String(origin||""));}
+  catch(_){throw Error("Abre RabbitMole desde HTTPS o http://localhost. Si usas un HTML local, importa el JSON de PowerShell.");}
+  const loopback=["localhost","127.0.0.1","[::1]"].includes(page.hostname.toLowerCase());
+  if(page.origin!==origin||page.username||page.password||
+     (page.protocol!=="https:"&&!(page.protocol==="http:"&&loopback)))
+    throw Error("Para conectar con Companion utiliza HTTPS o HTTP local (http://localhost o http://127.0.0.1). Desde file:// o HTTP de red, importa el JSON de PowerShell.");
   const base="http://127.0.0.1:8766";
   const read=async (path,options={})=>{
-   const response=await fetchImpl(base+path,{
-    method:options.method||"GET",mode:"cors",cache:"no-store",
-    credentials:"omit",referrerPolicy:"no-referrer",
-    headers:options.token?{"X-RabbitMole-Token":options.token}:{},
-    signal:AbortSignal.timeout(options.timeout||12000)
-   });
-   const result=await response.json();
-   if(!response.ok)throw Error(result.error||"Companion no disponible.");
+   let response;
+   try{
+    response=await fetchImpl(base+path,{
+     method:options.method||"GET",mode:"cors",cache:"no-store",
+     credentials:"omit",referrerPolicy:"no-referrer",
+     targetAddressSpace:"loopback",
+     headers:options.token?{"X-RabbitMole-Token":options.token}:{},
+     signal:AbortSignal.timeout(options.timeout||12000)
+    });
+   }catch(_){
+    throw Error("No se puede contactar con Companion en este PC. Ábrelo, pulsa «Activar Discovery» y comprueba que el origen configurado coincide exactamente con RabbitMole. El navegador también puede solicitar permiso de acceso local.");
+   }
+   let result;
+   try{result=await response.json();}
+   catch(_){throw Error("La respuesta local no es de un Companion compatible. Comprueba qué aplicación usa el puerto 8766.");}
+   if(!response.ok){
+    if(response.status===403)throw Error("Companion rechazó el origen o la sesión. Revisa la dirección autorizada en su ventana y reinicia la conexión.");
+    throw Error(String(result.error||"Companion no disponible.").slice(0,240));
+   }
    return result;
   };
-  onProgress("Solicitando conexión con Companion. Apruébala en la ventana del mismo PC.");
+  onProgress("Comprobando si Companion está activo en este PC…");
+  const ready=await read("/ready",{timeout:4000});
+  if(ready.ready!==true||ready.pairing!==true||ready.inventory!==true)
+   throw Error("El servicio local no tiene habilitada la captura de inventario. Activa Discovery en RabbitMole Companion.");
+  onProgress("Companion conectado. Aprueba el emparejamiento en la ventana de Windows.");
   const pair=await read("/pair/request",{method:"POST"});
   if(!/^[A-Za-z0-9_-]{24,128}$/.test(pair.requestId||""))
    throw Error("Identificador de emparejamiento inválido.");
@@ -92,11 +113,11 @@
    await sleep(2000);
    const answer=await read("/pair/status?id="+encodeURIComponent(pair.requestId));
    if(answer.state==="denied"||answer.state==="expired")
-    throw Error("La conexión fue denegada o caducó.");
+    throw Error("La conexión fue denegada o caducó en Companion.");
    if(answer.state==="approved"){token=answer.token;break;}
   }
   if(!token||token.length>160)throw Error("No se aprobó la conexión con Companion.");
-  onProgress("Conectado. Solicitando autorización para recopilar hardware y software local.");
+  onProgress("Conexión aprobada. Autoriza ahora la lectura de hardware, red y software.");
   const job=await read("/inventory/request",{method:"POST",token});
   if(!/^[A-Za-z0-9_-]{24,128}$/.test(job.requestId||""))
    throw Error("Identificador de captura inválido.");
@@ -104,11 +125,12 @@
    await sleep(2500);
    const answer=await read("/inventory/status?id="+encodeURIComponent(job.requestId),{token});
    if(answer.state==="denied"||answer.state==="expired")
-    throw Error("La captura fue rechazada o caducó.");
+    throw Error("La captura fue rechazada o caducó en Companion.");
    if(answer.state==="error")throw Error(String(answer.error||"Falló la captura").slice(0,190));
    if(answer.state==="ready"){
     const json=JSON.stringify(answer.capture);
     if(new TextEncoder().encode(json).length>sizeLimit)throw Error("Captura demasiado grande.");
+    onProgress("Inventario recibido. Revisa las categorías antes de crear la auditoría.");
     return json;
    }
   }

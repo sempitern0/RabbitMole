@@ -3758,6 +3758,17 @@
       }catch(error){startError="No se pudo crear la auditoría: "+error.message;startBusy=false;render();}
       return;
     }
+    if(b.id==="device-collector-copy"){
+      const command=intakeCommands.localps;
+      const button=byId("device-collector-copy");
+      try{
+        await navigator.clipboard.writeText(command);
+        if(button)button.textContent="Copiado";
+      }catch(_){
+        if(button)button.textContent="Selecciona y copia el comando";
+      }
+      return;
+    }
     if(b.id==="audit-start-copy"){
       const command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1";
       try{await navigator.clipboard.writeText(command);startStatusKind="info";startError="Comando temporal copiado. Ejecútalo solo si tienes autorización; no modifica políticas permanentes y una GPO puede prevalecer.";}

@@ -70,9 +70,9 @@ foreach ($nic in $networkAdapters) {
         $observedMac = Safe-Text $nic.MACAddress 60
         $assignment = $mode
     }
-    $prefix = if ($nic.IPSubnet) { To-Prefix ([string]@($nic.IPSubnet)[0]) } else { '' }
+    $prefix = if ($nic.IPSubnet) { To-Prefix ([string]$nic.IPSubnet[0]) } else { '' }
     $networkNotes = "Interfaz observada: $mode; máscara/prefijo local, DHCP y gateway por contrastar con la configuración autorizada. No acredita VLAN ni segmentación."
-    if ($nic.DefaultIPGateway) { $gateway = Safe-Text ([string]@($nic.DefaultIPGateway)[0]) 80 }
+    if ($nic.DefaultIPGateway) { $gateway = Safe-Text ([string]$nic.DefaultIPGateway[0]) 80 }
     else { $gateway = '' }
     $name = Safe-Text $nic.Description 140
     if (-not $name) { $name = 'Interfaz '+$networks.Count }

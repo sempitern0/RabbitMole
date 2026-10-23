@@ -21,6 +21,26 @@ class NativeCollector(unittest.TestCase):
         for forbidden in ('Set-ExecutionPolicy','Win32_Product','ProductKey=','Password=',
                           'Invoke-Expression','-EncodedCommand','Start-Process -Verb RunAs'):
             self.assertNotIn(forbidden,script)
+    def test_python_collector_no_arguments_preserves_existing_capture(self):
+        import json
+        import subprocess
+        import sys
+        import tempfile
+        with tempfile.TemporaryDirectory() as folder:
+            for expected in ("captura.json", "captura-1.json"):
+                result=subprocess.run([sys.executable, str(ROOT/'collect-local.py')],
+                                      cwd=folder, capture_output=True, text=True, timeout=50)
+                if sys.platform.startswith('linux'):
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    output=Path(folder)/expected
+                    self.assertTrue(output.is_file())
+                    payload=json.loads(output.read_text(encoding='utf-8'))
+                    self.assertEqual(payload['kind'], 'rabbitmole-discovery-v1')
+                    self.assertIn('assets', payload['items'])
+                    self.assertIn('software', payload['items'])
+                else:
+                    self.assertIn('Windows', result.stderr + result.stdout)
+
     def test_network_scan_requires_auth_and_is_bounded(self):
         script=(ROOT/'discovery/native.ps1').read_text(encoding='utf-8')
         for expected in ('Check-Scope','-lt 24','-gt 30','RFC1918',

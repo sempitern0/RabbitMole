@@ -12,6 +12,8 @@ class NativeCollector(unittest.TestCase):
                          'HKCU:', 'HKLM:', 'licenseStatus=', 'ipAssignment=',
                          "schemaVersion=1", "FileMode]::CreateNew"):
             self.assertIn(expected,script)
+        for expected in ('Get-ChildItem -Path $root', 'Get-AppxPackage', 'Write-Host', 'Get-ItemProperty -LiteralPath'):
+            self.assertIn(expected,script)
         for forbidden in ('Set-ExecutionPolicy','Win32_Product','ProductKey=','Password=',
                           'Invoke-Expression','-EncodedCommand','Start-Process -Verb RunAs'):
             self.assertNotIn(forbidden,script)

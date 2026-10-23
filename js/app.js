@@ -1140,6 +1140,11 @@
         </details>`).join("")}
       </div>
       <div class="action-row"><button class="button accent" type="button" id="audit-start-confirm" ${auditStart.blocks.some(k=>startSelected[k]&&startReview.counts[k])&&!startBusy?"":"disabled"}>Crear borrador con selección</button>
+      ${startReview.deviceId?`<div class="audit-start-update-existing"><label for="audit-start-target">O actualizar una auditoría existente del mismo dispositivo</label>
+      <select id="audit-start-target"><option value="">Selecciona el expediente que deseas actualizar</option>
+      ${records.filter(r=>r.audit?.documentControl?.status!=="confirmed").map(r=>`<option value="${html(r.id)}">${html(r.audit?.meta?.reportId||r.id)} — ${html(r.audit?.meta?.project||r.audit?.meta?.client||"Sin título")}</option>`).join("")}</select>
+      <button type="button" class="button quiet" id="audit-start-update">Revisar y actualizar expediente seleccionado</button>
+      <small>Identificador de equipo: ${html(startReview.deviceId)}. No se sustituye el informe ni sus comprobaciones manuales.</small></div>`:""} 
       <button class="button quiet" type="button" id="audit-start-discard">Descartar captura</button></div>
       </section>`:""}
     <button type="button" class="button quiet small" data-go="records">← Volver a biblioteca</button>`;
@@ -3747,6 +3752,33 @@
     if(b.id==="audit-start-discard"){
       if(startBusy)return;
       resetAuditStart();render();return;
+    }
+    if(b.id==="audit-start-update"){
+      if(startBusy||!startReview)return;
+      const targetId=byId("audit-start-target")?.value;
+      const record=records.find(r=>r.id===targetId);
+      if(!record){alert("Selecciona una auditoría existente.");return;}
+      if(record.audit?.documentControl?.status==="confirmed"){alert("El expediente está confirmado y no puede alterarse.");return;}
+      let result;
+      try{
+        result=auditStart.updateExisting(startReview,startSelected,record.audit,{groups,uid});
+      }catch(error){alert(error.message);return;}
+      const stats=result.statistics;
+      if(!confirm("Actualizar "+(record.audit.meta?.reportId||record.id)+"?\n"+
+        stats.updated+" filas actualizadas, "+stats.added+" añadidas y "+stats.unchanged+" sin cambios.\n"+
+        "Solo se refrescan campos observados. Se conservan conclusiones y verificaciones manuales."))return;
+      startBusy=true;
+      try{
+        await flush();
+        const updated={...record,audit:result.audit,updatedAt:new Date().toISOString()};
+        await enqueue(()=>repository.put(updated));
+        const index=records.findIndex(r=>r.id===record.id);
+        records[index]=updated;
+        setActive(updated);
+        resetAuditStart();
+        move("assets");
+      }catch(error){startBusy=false;alert("No se pudo actualizar: "+error.message);}
+      return;
     }
     if(b.id==="audit-start-confirm"){
       if(startBusy||!startReview)return;

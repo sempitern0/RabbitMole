@@ -1068,6 +1068,13 @@
     startReview=null;startError="";startBusy=false;
     startSelected={assets:true,networks:true,software:true};
   }
+  function acceptStartCapture(text,size){
+    const reviewed=auditStart.inspect(text,{intake,size});
+    startReview=reviewed;
+    startSelected={assets:reviewed.counts.assets>0,networks:reviewed.counts.networks>0,software:reviewed.counts.software>0};
+    startError="Captura cargada. Revisa el origen, los permisos y las secciones antes de crear el expediente.";
+    render();
+  }
   function renderAuditStart(){
     return `<span class="eyebrow">BIBLIOTECA / NUEVO EXPEDIENTE</span>
     <h1 class="page-title">Iniciar una auditoría</h1>
@@ -3212,6 +3219,20 @@
       return;
     }
     if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
+    if(t.id==="audit-start-file"&&t.files?.length){
+      try{
+        const file=t.files[0];
+        if(file.size>auditStart.sizeLimit)throw Error("El archivo supera 2 MiB.");
+        acceptStartCapture(await file.text(),file.size);
+      }catch(error){startReview=null;startError="No se pudo preparar el inventario: "+error.message;render();}
+      return;
+    }
+    if(t.dataset.startSelect!==undefined){
+      startSelected[t.dataset.startSelect]=Boolean(t.checked);
+      const button=byId("audit-start-confirm");
+      if(button)button.disabled=!auditStart.blocks.some(k=>startSelected[k]&&startReview?.counts[k]);
+      return;
+    }
     if (t.id === "intake-file" && t.files?.length) {
       try {
         const file = t.files[0];
@@ -3686,6 +3707,44 @@
   workspace.addEventListener("click", async (e) => {
     const b = e.target.closest("button");
     if (!b) return;
+    if(b.id==="audit-start-manual"){
+      await createAudit();
+      return;
+    }
+    if(b.id==="audit-start-discard"){
+      resetAuditStart();render();return;
+    }
+    if(b.id==="audit-start-confirm"){
+      if(startBusy||!startReview)return;
+      startBusy=true;
+      try{
+        const candidate=auditStart.prepare(startReview,startSelected,{fresh,groups,uid,defaults:fieldDefaults});
+        await createAudit(candidate,{scaffold:true});
+        resetAuditStart();
+      }catch(error){startError="No se pudo crear la auditoría: "+error.message;startBusy=false;render();}
+      return;
+    }
+    if(b.id==="audit-start-copy"){
+      const command="powershell.exe -NoProfile -File .\\collect-local.ps1 -Output .\\captura.json";
+      try{await navigator.clipboard.writeText(command);startError="Comando copiado. Ejecútalo en PowerShell desde la carpeta extraída de RabbitMole.";}
+      catch(_){startError="No se pudo usar el portapapeles. Copia: "+command;}
+      const status=byId("audit-start-status");if(status)status.textContent=startError;
+      return;
+    }
+    if(b.id==="audit-start-companion"){
+      if(startBusy)return;
+      if(PUBLIC_DEMO){startError="La captura local solo está disponible en la PWA privada.";render();return;}
+      startBusy=true;startError="Conectando con Companion en este mismo ordenador…";
+      const setProgress=text=>{startError=text;const status=byId("audit-start-status");if(status)status.textContent=text;};
+      b.disabled=true;setProgress(startError);
+      try{
+        const content=await auditStart.collectFromCompanion({origin:location.origin,onProgress:setProgress});
+        if(page==="audit-start")acceptStartCapture(content);
+      }catch(error){
+        if(page==="audit-start"){startError="No se pudo capturar: "+error.message+". Utiliza el JSON de PowerShell como alternativa.";render();}
+      }finally{startBusy=false;const current=byId("audit-start-companion");if(current)current.disabled=false;}
+      return;
+    }
     if(b.dataset.softwareChoice!==undefined){
       if(state.documentControl?.status==="confirmed")return;
       const index=Number(b.dataset.softwareIndex);

@@ -56,6 +56,12 @@ def main():
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dst)
 
+    # Always publish the single-file Windows collector: no ZIP, Python or EXE required.
+    native_collector = ROOT / "collect-local.ps1"
+    if not native_collector.is_file() or native_collector.is_symlink():
+        raise SystemExit("Missing Windows native collector")
+    shutil.copyfile(native_collector, DIST / "collect-local.ps1")
+
     # Only the minimal Discovery helper, never audit data or credentials.
     with zipfile.ZipFile(DIST / "discovery-kit.zip", "w", zipfile.ZIP_DEFLATED) as archive:
         for name in ("service.py", "discover.py", "wizard.py", "pairing.py", "companion.py", "inventory.py", "native.ps1", "run.ps1",

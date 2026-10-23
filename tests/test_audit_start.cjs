@@ -73,6 +73,8 @@ assert.throws(()=>start.inspect(data,{intake,size:3*1024*1024}),/2 MiB/);
   assert(app.includes('renderFindingWorkspace(page)'));
   assert(app.includes('audit-start-inline-status'));
   assert(app.includes('audit-start-manual-guide'));
+  assert(app.includes('localps: "powershell.exe -NoProfile -ExecutionPolicy Bypass -File'));
+  assert(!app.includes('-Output .\\\\captura.json'));
   assert(app.includes('audit-start-command')&&app.includes('intakeCommands.localps'));
   assert(app.match(/id="audit-start-copy"/g).length===1);
   assert(app.includes('powershell.exe -NoProfile -ExecutionPolicy Bypass -File'));

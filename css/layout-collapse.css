@@ -110,6 +110,7 @@
  #workspace .record-nav-heading{gap:0}
  #workspace .record-nav-heading span{display:none}
  #workspace .record-nav-inner{gap:.4rem .55rem;padding-top:.4rem}
+ #workspace .record-nav-inner>div{flex:0 1 15rem;max-width:15rem;min-width:0}
  #workspace .record-nav-inner :is(input,select){min-height:38px;padding:.4rem .6rem}
 }
 #workspace .record-nav-toggle{

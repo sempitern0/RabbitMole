@@ -17,6 +17,22 @@ const capture={kind:intake.KIND,schemaVersion:1,capturedAt:'2026-10-23T13:00:00Z
 const data=JSON.stringify(capture);
 const preview=start.inspect(data,{intake,size:data.length});
 assert.equal(preview.counts.assets,1);
+const linkedCapture={...capture,source:{...capture.source,deviceId:'RM-WIN-1234567890ABCDEF12345678'},
+ items:{...capture.items,assets:[{...capture.items.assets[0],id:'RM-WIN-1234567890ABCDEF12345678',serial:'EXAMPLE-SN',cpu:'Nuevo CPU'}]}};
+const linked=start.inspect(JSON.stringify(linkedCapture),{intake});
+assert.equal(linked.deviceId,'RM-WIN-1234567890ABCDEF12345678');
+const previous={meta:{reportId:'AUD-001'},assets:[{_key:'a1',id:linked.deviceId,name:'PC-01',serial:'EXAMPLE-SN',cpu:'Viejo CPU',notes:'Auditor revisó el activo',osLicense:'Verificada'}],networks:[],software:[],findings:[{_key:'finding',status:'Abierto'}]};
+const update=start.updateExisting(linked,{assets:true,networks:false,software:false},previous,{groups:{
+ assets:{fields:[['id'],['name'],['serial'],['cpu'],['osLicense'],['notes']]},networks:{fields:[['name'],['cidr']]},
+ software:{fields:[['name'],['version'],['asset']]}},uid:()=>String(Date.now())});
+assert.equal(update.audit.assets.length,1);
+assert.equal(update.audit.assets[0].cpu,'Nuevo CPU');
+assert.equal(update.audit.assets[0].osLicense,'Verificada');
+assert.equal(update.audit.assets[0].notes,'Auditor revisó el activo');
+assert.equal(update.audit.findings.length,1);
+assert.equal(previous.assets[0].cpu,'Viejo CPU');
+assert.throws(()=>start.updateExisting({...linked,deviceId:'RM-WIN-FFFFFFFFFFFFFFFFFFFFFFFF'}, {assets:true}, previous,{groups:args.groups,uid:args.uid}),/coincide/);
+
 assert.equal(preview.counts.networks,1);
 assert.equal(preview.counts.software,1);
 assert.equal(preview.limitations[0],'Defender no disponible');

@@ -1105,7 +1105,7 @@
         </div>
         <div id="audit-start-status" class="audit-start-inline-status is-${html(startStatusKind)}" role="status" aria-live="polite" aria-atomic="true" ${startError?"":'hidden'}>${html(startError)}</div>
         <details class="audit-start-help"><summary>Cómo preparar Companion y solucionar problemas</summary>
-        <p class="subtle">Prepara primero el equipo: <a href="./discovery-windows.zip" download>Companion Windows autocontenido</a> (si está incluido en el despliegue), o <a href="./discovery-kit.zip" download>kit PowerShell nativo</a>. En Companion pulsa «Activar Discovery» y aprueba la conexión y la captura cuando lo solicite RabbitMole.</p>
+        <p class="subtle">Prepara primero el equipo: ${globalThis.RabbitMoleDeployment?.companionAvailable ? `<a href="./discovery-windows.zip" download>Descargar Companion Windows (ZIP)</a>` : `<strong>El Companion ejecutable no está incluido en este despliegue.</strong> El paquete necesita compilarse y publicarse primero.`} Puedes usar el <a href="./discovery-kit.zip" download>kit PowerShell nativo (sin EXE)</a>. En Companion pulsa «Activar Discovery» y aprueba la conexión y la captura cuando lo solicite RabbitMole.</p>
         <p class="subtle">El navegador no ejecuta PowerShell ni accede a dispositivos arbitrarios. La alternativa JSON funciona también abriendo el HTML directamente. El Companion solo puede capturar este mismo ordenador, sin Python instalado ni elevación.</p></details>
       </section>
     </div>

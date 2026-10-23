@@ -6,7 +6,7 @@
   const LIMIT_BYTES=2*1024*1024, LIMIT_ROWS=500, LIMIT_COLUMNS=48;
   const FIELDS=Object.freeze({
     assets:['id','name','type','vendor','model','serial','ip','ipAssignment','ipObservedAt','mac','os','cpu','ram','storage','site','owner','notes','osLicense','osUpdates','avProduct','avRealtime','avUpdated','avEngineVersion','avSignaturesVersion','avSignaturesCheckedAt','cpuSpeed','ramMax','ramSlots','diskCapacity','diskType','gpuType','gpuMemory','ethernetPort','cableCategory','ethernetSpeed','wifiAdapter','wifiSignal','processReview','localAccounts','adminAccounts'],
-    networks:['name','cidr','vlan','gateway','dns','purpose','firewall','exposure','notes','ssid','wifiSecurity','wifiSignal','wifiChannel','wifiStandard','wifiBand','contractedRate','measuredRate'],
+    networks:['name','networkKind','cidr','vlan','gateway','dns','purpose','firewall','exposure','notes','ssid','wifiSecurity','wifiSignal','wifiChannel','wifiStandard','wifiBand','contractedRate','measuredRate'],
     software:['name','version','vendor','asset','license','support','exposure','notes','licenseType','licenseStatus','installedAt','updateStatus','updatedAt']
   });
   const ALIASES={

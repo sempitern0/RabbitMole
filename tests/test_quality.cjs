@@ -77,7 +77,7 @@ const normalCheck=review({...pendingNarrative,meta:{...pendingNarrative.meta,obj
 assert(!normalCheck.issues.some(x=>["BORRADOR_SIN_CONTRASTAR","HALLAZGO_SIN_CONTRASTAR","OBSERVACIONES_SIN_CONTRASTAR"].includes(x.code)));
 const appSource=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
 const themeCss=fs.readFileSync(path.join(root,'css/styles.css'),'utf8');
-assert(appSource.includes("addEventListener('click',()=>exportJson())"),'Export toolbar must not pass click event as audit data');
+assert(/addEventListener\(["']click["'],\s*\(\)\s*=>\s*exportJson\(\)\)/.test(appSource),'Export toolbar must not pass click event as audit data');
 assert(appSource.includes('anchor.hidden=true')&&appSource.includes('document.body.appendChild(anchor)'),'Download anchor must be attached before clicking');
 assert(appSource.includes('showExportFeedback(message)'),'Successful preparation must display feedback');
 assert(appSource.includes('id="delivery-export-status"'),'Delivery page needs inline status');

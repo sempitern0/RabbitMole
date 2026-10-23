@@ -3829,6 +3829,7 @@
     if (
       state.documentControl?.status === "confirmed" &&
       ![
+        "audit-start",
         "records",
         "backups",
         "connections",

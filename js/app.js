@@ -1096,7 +1096,8 @@
           <button class="button quiet" type="button" id="audit-start-companion">Recopilar con Companion local</button>
           <button class="button quiet" type="button" id="audit-start-copy">Copiar comando PowerShell</button>
         </div>
-        <p class="subtle">El navegador no ejecuta PowerShell ni accede a dispositivos arbitrarios. En Windows se usa el recopilador sin Python ni elevación; la conexión con Companion exige aprobarla en ese equipo.</p>
+        <p class="subtle">Prepara primero el equipo: <a href="./discovery-windows.zip" download>Companion Windows autocontenido</a> (si está incluido en el despliegue), o <a href="./discovery-kit.zip" download>kit PowerShell nativo</a>. En Companion pulsa «Activar Discovery» y aprueba la conexión y la captura cuando lo solicite RabbitMole.</p>
+        <p class="subtle">El navegador no ejecuta PowerShell ni accede a dispositivos arbitrarios. La alternativa JSON funciona también abriendo el HTML directamente. El Companion solo puede capturar este mismo ordenador, sin Python instalado ni elevación.</p>
       </section>
     </div>
     ${startReview?`<section class="card audit-start-review"><h2>Vista previa antes de crear el expediente</h2>

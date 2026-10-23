@@ -15,6 +15,10 @@ class NativeCollector(unittest.TestCase):
                          "schemaVersion=1", "FileMode]::CreateNew"):
             self.assertIn(expected,script)
         self.assertIn('param([string]$Output = "captura.json")',script)
+        for field in ('Win32_PhysicalMemoryArray','Get-PhysicalDisk','To-NetworkCidr',"Invariant-Number",'Get-NetAdapter','netsh.exe wlan show interfaces'):
+            self.assertIn(field, script)
+        self.assertIn("gpuType='No verificada'",script)
+        self.assertNotIn('gpuType=$(Safe-Text',script)
         self.assertIn("New-CaptureTarget $full",script)
         for expected in ('Get-ChildItem -Path $root', 'Get-AppxPackage', 'Write-Host', 'Get-ItemProperty -LiteralPath',"Get-OptionalValue $app 'InstallDate'", "Get-OptionalValue $app 'PublisherDisplayName'"):
             self.assertIn(expected,script)
@@ -67,6 +71,11 @@ class NativeCollector(unittest.TestCase):
         app=(ROOT/'js/app.js').read_text()
         self.assertIn('nativeScan',app)
         self.assertIn('intakePreview.limitations',app)
+        self.assertIn('device-collector-copy',app)
+        device=(ROOT/'index.html').read_text()
+        for filename in ('collect-local.ps1','collect-local.py','collect-local.sh'):
+            self.assertIn(filename,device)
+        self.assertIn('device-collector-setup',device)
 
 if __name__=='__main__':
     unittest.main()

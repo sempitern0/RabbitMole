@@ -14,6 +14,8 @@ class NativeCollector(unittest.TestCase):
                          'HKCU:', 'HKLM:', 'licenseStatus=', 'ipAssignment=',
                          "schemaVersion=1", "FileMode]::CreateNew"):
             self.assertIn(expected,script)
+        self.assertIn('param([string]$Output = "captura.json")',script)
+        self.assertIn("New-CaptureTarget $full",script)
         for expected in ('Get-ChildItem -Path $root', 'Get-AppxPackage', 'Write-Host', 'Get-ItemProperty -LiteralPath',"Get-OptionalValue $app 'InstallDate'", "Get-OptionalValue $app 'PublisherDisplayName'"):
             self.assertIn(expected,script)
         for forbidden in ('Set-ExecutionPolicy','Win32_Product','ProductKey=','Password=',

@@ -74,10 +74,13 @@
   if(!review.deviceId)throw Error("La captura no tiene identificador de equipo fiable; crea un expediente o incorpora datos manualmente.");
   const selected=blocks.filter(block=>choices?.[block]!==false&&review.counts[block]);
   if(!selected.length)throw Error("Selecciona alguna categoría.");
-  const result=structuredClone(audit);
+  const result=JSON.parse(JSON.stringify(audit));
   const id=review.deviceId;
-  const hardware=(result.assets||[]).find(a=>a.id===id);
-  if(!hardware&&result.assets?.length)throw Error("Este equipo no coincide con el activo del expediente. Revisa el dispositivo seleccionado; no se mezclan equipos.");
+  const observed=review.rows.assets[0]||{};
+  const hardware=(result.assets||[]).find(a=>a.id===id||
+    (!a.id&&observed.serial&&a.serial&&String(a.serial).trim().toUpperCase()===String(observed.serial).trim().toUpperCase()));
+  if(!hardware&&result.assets?.length)throw Error("El identificador o número de serie no coincide con este expediente; no se mezclan equipos.");
+  if(hardware&&!hardware.id)hardware.id=id;
   const statistics={added:0,updated:0,unchanged:0};
   const clean=v=>String(v??"").trim().toLowerCase();
   for(const block of selected){

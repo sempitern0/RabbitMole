@@ -128,7 +128,7 @@ Descarga «Discovery kit» desde la PWA y extrae el ZIP. Abre `discovery/iniciar
 
 El botón **Capturar inventario de este Windows** utiliza `collect-local.ps1` incluido en el ZIP, solicita una ruta de salida JSON nueva y no sobrescribe archivos. Importa esa captura desde la PWA y revisa cada elemento. La captura local no obtiene información de equipos remotos; las licencias y el estado de Defender requieren validaciones adicionales específicas y no se afirman automáticamente.
 
-El Companion inicial no es un EXE autocontenido: requiere Python y Tkinter. Si faltan, usa `discovery/setup.ps1` (opcional `-InstallTools`) o el asistente de consola. El modo tablet sigue siendo HTTPS con certificado confiable, o transferencia de JSON. El token se mantiene en memoria y el botón copiar utiliza el portapapeles del propio Windows: evita dejar secretos en equipos compartidos.
+El Companion del kit de respaldo con interfaz gráfica requiere Python y Tkinter. Si faltan, **no instales Python solo para inventariar un Windows**: ejecuta `discovery/iniciar.cmd` o `discovery/run.ps1` para el modo PowerShell nativo. La conexión desde una tablet al puente HTTPS sí requiere el Companion autocontenido o Python. El modo tablet sigue siendo HTTPS con certificado confiable, o transferencia de JSON. El token se mantiene en memoria y el botón copiar utiliza el portapapeles del propio Windows: evita dejar secretos en equipos compartidos.
 
 
 ## Companion Windows portable: uso y retirada

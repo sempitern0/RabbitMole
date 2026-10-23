@@ -3821,6 +3821,8 @@
         }
         row.notes = [
           row.notes,
+          intakePreview.privilege ? "Permisos de origen: "+intakePreview.privilege : "",
+          intakePreview.limitations?.length ? "Limitaciones de lectura: "+intakePreview.limitations.join("; ") : "",
           "Captura importada (" +
             intakePreview.source +
             (intakePreview.platform ? " · " + intakePreview.platform : "") +

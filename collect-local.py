@@ -20,7 +20,7 @@ def main():
         engine=shutil.which("powershell.exe") or shutil.which("pwsh")
         if not engine:parser.error("PowerShell no disponible")
         print("[RabbitMole] Windows: delegando inventario CIM y registro a PowerShell",flush=True)
-        result=subprocess.run([engine,"-NoProfile","-NonInteractive","-File",str(pathlib.Path(__file__).with_suffix(".ps1")),"-Output",str(path)])
+        result=subprocess.run([engine,"-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-File",str(pathlib.Path(__file__).with_suffix(".ps1")),"-Output",str(path)])
         if result.returncode:parser.error("Falló el recolector de Windows")
         return
     if not sys.platform.startswith("linux"):parser.error("Sistema no soportado por este recolector")

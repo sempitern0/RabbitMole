@@ -48,3 +48,33 @@ jobs:
           name: rabbitmole-cloudflare-${{ github.sha }}
           path: dist-pages/
           include-hidden-files: true
+
+  windows-collector:
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse Windows PowerShell collectors
+        shell: powershell
+        run: |
+          $files = @('collect-local.ps1', 'discovery/native.ps1', 'discovery/run.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count) {
+              $errors | ForEach-Object { Write-Error ("{0}: {1}" -f $file, $_.Message) }
+              throw ("PowerShell parse failed: " + $file)
+            }
+          }
+      - name: Smoke test Windows inventory in standard process
+        shell: powershell
+        run: |
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1 -Output .\inventory-test.json
+          if ($LASTEXITCODE -ne 0) { throw 'Windows collector failed' }
+          $capture = Get-Content -Raw -Encoding UTF8 .\inventory-test.json | ConvertFrom-Json
+          if ($capture.kind -ne 'rabbitmole-discovery-v1') { throw 'Invalid capture kind' }
+          if (-not $capture.source.deviceId) { throw 'Missing stable device identifier' }
+          if (-not $capture.items.assets.Count) { throw 'Missing hardware inventory' }
+          powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1 -Output .\inventory-test.json
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path .\inventory-test-1.json)) { throw 'Repeat capture failed' }

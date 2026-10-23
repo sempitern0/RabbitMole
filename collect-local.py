@@ -11,10 +11,11 @@ def command(*args):
 
 def main():
     parser=argparse.ArgumentParser(description="RabbitMole: inventario local")
-    parser.add_argument("--output","-o",required=True)
+    parser.add_argument("--output","-o",default="captura.json")
     args=parser.parse_args()
     path=pathlib.Path(args.output).expanduser().absolute()
-    if path.exists() or not path.parent.is_dir():parser.error("El destino debe ser un archivo nuevo en una carpeta existente.")
+    if not path.parent.is_dir():parser.error("La carpeta de salida no existe.")
+    if path.suffix.lower() != ".json":parser.error("La captura debe tener extensión .json")
     print("[RabbitMole] Detectando sistema...",flush=True)
     if sys.platform=="win32":
         engine=shutil.which("powershell.exe") or shutil.which("pwsh")
@@ -73,7 +74,15 @@ def main():
          "items":{"assets":[asset],"networks":nets,"software":soft}}
     data=json.dumps(doc,ensure_ascii=False,indent=2).encode("utf-8")
     if len(data)>2*1024*1024:parser.error("El JSON supera los 2 MiB admitidos")
-    fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+    for number in range(10000):
+        candidate=path if number==0 else path.with_name(f"{path.stem}-{number}.json")
+        try:
+            fd=os.open(candidate,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+            path=candidate
+            break
+        except FileExistsError:
+            continue
+    else:parser.error("No se encontró un nombre de captura disponible")
     with os.fdopen(fd,"wb") as stream:stream.write(data)
     print(f"[RabbitMole] Guardado: {path} | redes: {len(nets)} | programas: {len(soft)}",flush=True)
     for note in limitations:print("[LIMITACIÓN] "+note,flush=True)

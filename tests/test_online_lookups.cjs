@@ -5,7 +5,7 @@ ctx.globalThis=ctx;
 vm.runInNewContext(fs.readFileSync('js/online-lookups.js','utf8'),ctx);
 const m=ctx.RabbitMoleOnlineLookups;
 assert.equal(Object.keys(m.PROVIDERS).length,4);
-assert.equal(m.checkCif('A58818501').valid,false);
+assert.equal(m.checkCif('A00000001').valid,false);
 assert.equal(m.checkCif('mal formateado').valid,false);
 assert(m.checkCif('A12345674').message.includes('control')||m.checkCif('A12345674').valid);
 assert(!m.checkCif('A12345674').message.includes('existencia confirmada'));

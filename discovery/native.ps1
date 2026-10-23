@@ -18,7 +18,8 @@ function Save-Json([object]$payload,[string]$name) {
     $json=ConvertTo-Json -InputObject $payload -Depth 9
     $stream=[IO.File]::Open($full,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
     try {
-        $writer=New-Object IO.StreamWriter($stream,(New-Object System.Text.UTF8Encoding($false)))
+        $utf8=New-Object System.Text.UTF8Encoding($false)
+        $writer=[IO.StreamWriter]::new($stream,$utf8)
         try { $writer.Write($json);$writer.Flush() } finally { $writer.Dispose() }
     } finally { $stream.Dispose() }
     Write-Host "Guardado: $full"

@@ -1,22 +1,17 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-where py >nul 2>nul
-if %errorlevel%==0 (
-  py -3 "%~dp0companion.py"
-  goto success
+where powershell.exe >nul 2>nul
+if not errorlevel 1 (
+  echo RabbitMole: inventario y descubrimiento local nativos sin Python.
+  powershell.exe -NoProfile -File "%~dp0run.ps1" wizard
+  if errorlevel 1 (
+    echo No se pudo iniciar PowerShell. Si la politica de la organizacion bloquea scripts, solicita autorizacion. No desactives controles de seguridad.
+    pause
+    exit /b 1
+  )
+  exit /b 0
 )
-where python >nul 2>nul
-if %errorlevel%==0 (
-  python "%~dp0companion.py"
-  goto success
-)
-echo RabbitMole Companion requiere Python 3.9 o superior con Tkinter.
-echo Ejecuta setup.ps1 para diagnosticar y, opcionalmente, instalar Python.
+echo Windows PowerShell no disponible. No se puede iniciar Discovery.
 pause
 exit /b 1
-:success
-if errorlevel 1 (
-  echo El Companion no pudo arrancar. Revisa Python y consulta README_ES.md.
-  pause
-)

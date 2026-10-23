@@ -1352,3 +1352,31 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 @media(max-width:430px){#workspace .audit-dashboard-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}#workspace .audit-dashboard-status{width:100%;max-width:none}#workspace .audit-dashboard-actions .button{flex:1 1 100%}}
 @media(forced-colors:active){#workspace .audit-dashboard-status,#workspace .audit-dashboard-metric,#workspace .audit-dashboard-panel,#workspace .audit-dashboard-issues button{forced-color-adjust:auto;border:1px solid CanvasText}}
 @media print{#workspace .audit-dashboard{display:none!important}}
+
+/* One compact sticky filter strip for desktop; touch remains non-sticky. */
+@media screen and (min-width:1001px){
+ #workspace .record-navigator{padding:.55rem .75rem;top:.5rem;box-shadow:0 5px 15px #00000019}
+ #workspace .record-nav-header{gap:.35rem}
+ #workspace .record-nav-heading{gap:0}
+ #workspace .record-nav-heading span{display:none}
+ #workspace .record-nav-inner{gap:.4rem .55rem;padding-top:.4rem}
+ #workspace .record-nav-inner>div{flex:0 1 15rem;max-width:15rem}
+ #workspace .record-nav-inner :is(input,select){min-height:38px;padding:.4rem .6rem}
+ #workspace .record-nav-inner>p{font-size:.73rem}
+}
+#workspace .record-navigator::before{display:none}
+#workspace .record-nav-toggle{
+ background:var(--brand);border:2px solid var(--brand);color:#fff;
+ box-shadow:0 2px 8px color-mix(in srgb,var(--brand) 22%,transparent);
+ min-height:42px;min-width:120px;font-weight:800
+}
+#workspace .record-nav-toggle:hover{background:var(--brand-hover);border-color:var(--brand-hover);color:#fff}
+#workspace .record-nav-toggle:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+#workspace .record-nav-toggle svg{stroke-width:2.4}
+#workspace .online-lookup-card{display:grid;gap:.65rem}
+#workspace .online-lookup-card .fields{margin:.5rem 0}
+#workspace .online-lookup-status{padding:.7rem .85rem;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas);color:var(--ink);line-height:1.5}
+#workspace .online-lookup-result{padding:.85rem;border:1px solid var(--line);border-inline-start:4px solid var(--brand);border-radius:.65rem;background:var(--paper)}
+#workspace .online-lookup-result p{margin:.5rem 0;overflow-wrap:anywhere;line-height:1.5}
+#workspace .online-lookup-card details>p{margin:.65rem .2rem;padding:.5rem .65rem;background:var(--canvas);border-radius:.5rem;line-height:1.6}
+@media(max-width:720px){#workspace .record-nav-toggle{min-width:44px}#workspace .online-lookup-card .action-row>.button{flex:1 1 100%}}

@@ -28,6 +28,7 @@
   const workflowViews = globalThis.RabbitMoleWorkflowViews;
   const auditActions = globalThis.RabbitMoleAuditActions;
   const fieldRenderer = globalThis.RabbitMoleFieldRenderer;
+  const onlineLookups = globalThis.RabbitMoleOnlineLookups;
   const fieldDefaults = globalThis.RabbitMoleFieldDefaults;
   if(!fieldDefaults)throw Error("Falta el módulo de borradores iniciales.");
   const rackAudit = globalThis.RabbitMoleRackAudit;
@@ -1973,7 +1974,35 @@
       <div id="connection-nextcloud-transfer" ${connectionChannel === "nextcloud" ? "" : "hidden"}>${globalThis.AuditSecureTransferUI.view(Boolean(currentId), verified)}</div><section class="card"><h2>Otros proveedores</h2><p class="subtle">Drive, OneDrive y Microsoft 365 requieren OAuth mediante PKCE, registro de aplicación y políticas CORS. No guardes <em>client secrets</em> de OAuth en una aplicación JavaScript distribuida: no pueden mantenerse secretos en un cliente público. Se añadirán integraciones específicas cuando tengan un flujo seguro verificado.</p></section>`;
   }
   function renderConnections() {
-    return connectionSettingsMarkup();
+    return connectionSettingsMarkup() + (PUBLIC_DEMO ? "" : `<section class="card online-lookup-card" aria-labelledby="lookups-heading">
+      <h2 id="lookups-heading">Consultas públicas de apoyo a la auditoría</h2>
+      <p class="subtle">Consultas manuales de solo lectura a proveedores conocidos. No se envía el expediente ni se guardan aquí claves, respuestas o datos consultados. Comprueba los resultados en origen antes de citarlos en un informe.</p>
+      <div class="fields">
+        <div class="field"><label for="lookup-provider">Proveedor y servicio</label>
+          <select id="lookup-provider">
+            <option value="cve">CVE Program · referencia CVE</option>
+            <option value="nvd">NIST NVD · referencia CVE</option>
+            <option value="company">GLEIF · buscar empresa por razón social / LEI</option>
+            <option value="place">OpenStreetMap · localizar una dirección</option>
+          </select>
+        </div>
+        <div class="field"><label for="lookup-term">Identificador, empresa o dirección</label>
+          <input id="lookup-term" autocomplete="off" maxlength="160" placeholder="CVE-2025-12345 · Empresa · Ciudad"></div>
+        <div class="field full"><label for="lookup-key">Clave API NVD (opcional, solo memoria de esta pantalla)</label>
+          <input id="lookup-key" type="password" autocomplete="off" spellcheck="false" maxlength="150" placeholder="No es necesario para la mayoría de consultas">
+          <small class="field-hint">Una clave API puede requerir CORS y restricciones del proveedor. Nunca se incluye en el expediente ni en un enlace.</small></div>
+      </div>
+      <div class="action-row">
+        <button type="button" class="button accent" id="lookup-test">Probar consulta</button>
+        <button type="button" class="button quiet" id="lookup-clear">Limpiar</button>
+      </div>
+      <p id="lookup-status" class="online-lookup-status" role="status" aria-live="polite">Sin consultas iniciadas. Cada petición requiere pulsar «Probar consulta».</p>
+      <div class="online-lookup-result" id="lookup-result" hidden></div>
+      <details class="connection-advanced"><summary>Identificación fiscal (CIF/NIF) y privacidad</summary>
+        <p>GLEIF permite encontrar entidades LEI, pero no acredita un CIF español. La comprobación oficial de NIF/IVA intracomunitario se realiza mediante <a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noopener noreferrer">VIES</a>, conforme a su alcance y disponibilidad. El navegador no dispone de una API pública universal de CIF con acceso anónimo y CORS garantizado.</p>
+        <p>La geocodificación envía el texto introducido al servicio elegido: evita domicilios personales o ubicaciones sensibles; la cartografía es aproximada. Las APIs pueden limitar o bloquear consultas por CORS, cuota o políticas de uso.</p>
+      </details>
+    </section>`);
   }
   async function uploadDav() {
     if (PUBLIC_DEMO)
@@ -3887,6 +3916,38 @@
       alert(
         "Instala desde el menú del navegador: Instalar aplicación / Añadir a pantalla de inicio. Requiere HTTPS o localhost y compatibilidad PWA.",
       );
+      return;
+    }
+    if(b.id==="lookup-clear"){
+      const term=byId("lookup-term"),key=byId("lookup-key"),result=byId("lookup-result"),status=byId("lookup-status");
+      if(term)term.value="";
+      if(key)key.value="";
+      if(result){result.textContent="";result.hidden=true;}
+      if(status)status.textContent="Consulta y clave temporal borradas de la pantalla.";
+      return;
+    }
+    if(b.id==="lookup-test"){
+      if(PUBLIC_DEMO)return;
+      const provider=byId("lookup-provider")?.value;
+      const term=byId("lookup-term")?.value||"";
+      const key=byId("lookup-key")?.value||"";
+      const result=byId("lookup-result"),status=byId("lookup-status");
+      if(result){result.textContent="";result.hidden=true;}
+      if(!confirm("Enviar únicamente la consulta escrita al servicio seleccionado. ¿Continuar?"))return;
+      b.disabled=true;
+      if(status)status.textContent="Consultando servicio externo…";
+      try{
+        const response=await onlineLookups.lookup(provider,term,{apiKey:key});
+        if(result){
+          const title=document.createElement("strong");title.textContent=response.provider+" · "+response.title;
+          result.append(title);
+          for(const detail of response.details){const line=document.createElement("p");line.textContent=detail;result.append(line);}
+          result.hidden=false;
+        }
+        if(status)status.textContent="Consulta completada. Resultado orientativo, no validado ni guardado.";
+      }catch(error){
+        if(status)status.textContent="No se pudo consultar: "+String(error?.message||error)+". Revisa CORS, cuota, conexión o consulta.";
+      }finally{if(b.isConnected)b.disabled=false;}
       return;
     }
     if (b.id === "check-connectivity") {

@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('js/audit-start.js','utf8');
-const ctx={TextEncoder,AbortSignal,URL,setTimeout};ctx.globalThis=ctx;
+const ctx={TextEncoder,AbortSignal,URL,fetch:async()=>{throw Error("not expected to call fetch");},setTimeout};ctx.globalThis=ctx;
 vm.runInNewContext(source,ctx);
 const start=ctx.RabbitMoleAuditStart;
 const intakeSource=fs.readFileSync('js/inventory-import.js','utf8');

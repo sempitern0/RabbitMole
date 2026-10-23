@@ -42,6 +42,20 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#pwa-install-card').isVisible(),false);
    await page.locator('#global-navigation [data-go="device"]').click();
    assert.equal(await page.locator('#pwa-install-card').isVisible(),true);
+   await page.locator('#device-collector-copy').click();
+   assert.equal(await page.locator('#device-collector-copy').textContent(),'Copiado');
+   assert.equal(await page.locator('.collector-download').count(),3);
+   await page.locator('[data-collector-download="collect-local.ps1"]').evaluate(link=>{
+     link.addEventListener('click',event=>event.preventDefault(),{once:true});
+   });
+   await page.locator('[data-collector-download="collect-local.ps1"]').click();
+   assert.match(await page.locator('#device-collector-download-status').textContent(),/Descarga solicitada: collect-local.ps1/);
+   assert.equal(await page.locator('[data-collector-download="collect-local.ps1"]').getAttribute('data-requested'),'true');
+   await page.locator('.collector-permissions-guide > summary').click();
+   assert.equal(await page.locator('.collector-permissions-guide').evaluate(el=>el.open),true);
+   await page.locator('.collector-permissions-guide > summary').click();
+
+
    assert.equal(await page.locator('#workspace').isVisible(),false);
    // Platform preparation stays in a separate, read-only accordion.
    await page.locator('#mobile-terminal-setup > summary').click();
@@ -208,6 +222,11 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#attachment-filter').count(),0);
    await page.locator('#global-navigation [data-go="records"]').click();
    await page.locator('[data-new]').first().click();
+   assert.equal(await page.locator('#audit-start-copy').isVisible(),true);
+   await page.locator('#audit-start-copy').click();
+   assert.equal(await page.locator('#audit-start-copy').textContent(),'Copiado');
+   await page.locator('#global-navigation [data-go="records"]').click();
+
    await page.locator('#audit-file-library-link').click();
    assert.equal(await page.locator('[data-library-select-audit]').count(),1);
    assert.equal(await page.locator('#attachment-filter').count(),0,

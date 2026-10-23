@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync('js/app.js','utf8');
 const data=new Map();
-const ctx=vm.createContext({localStorage:{getItem:key=>data.get(key),setItem:(key,value)=>data.set(key,value)},nav:[['dashboard'],['assets'],['networks']]});
+const ctx=vm.createContext({page:'assets',localStorage:{getItem:key=>data.get(key),setItem:(key,value)=>data.set(key,value)},nav:[['dashboard'],['assets'],['networks']]});
 const start=source.indexOf('  const auditStepKey =');
 vm.runInContext(source.slice(start,source.indexOf('  async function switchAudit',start)),ctx);
 assert.equal(ctx.savedAuditStep('a'),'dashboard');

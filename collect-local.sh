@@ -2,10 +2,14 @@
 # RabbitMole local collector. Explicit local execution, read-only, no network connections.
 set -Eeuo pipefail
 umask 077
-OUT=""
+OUT="captura.json"
 while (($#)); do case "$1" in --output) [[ $# -ge 2 ]] || exit 2; OUT="$2";shift 2;; --help|-h) echo "Usage: bash collect-local.sh --output inventory.json";exit 0;; *) echo "Unsupported argument" >&2;exit 2;; esac;done
-[[ -n "$OUT" ]] || { echo "Specify --output" >&2; exit 2; }
-command -v python3 >/dev/null || { echo "Python 3 is required for safe JSON serialization" >&2;exit 1; }
+[[ "$OUT" == *.json ]] || { echo "La salida debe terminar en .json" >&2; exit 2; }
+if command -v python3 >/dev/null 2>&1; then
+  echo "[RabbitMole] Python detectado: inventario Linux ampliado."
+  exec python3 "$(dirname "$0")/collect-local.py" --output "$OUT"
+fi
+echo "[RabbitMole] Python no encontrado. Usando herramientas Bash del sistema."
 export AW_HOST="$(hostname 2>/dev/null || true)"
 export AW_OS="$(uname -s 2>/dev/null || true)"
 export AW_ARCH="$(uname -m 2>/dev/null || true)"
@@ -17,50 +21,25 @@ if [[ -r /etc/os-release ]]; then . /etc/os-release; export AW_OS="${PRETTY_NAME
 export AW_IP=""
 if command -v ip >/dev/null;then AW_IP="$(ip -o -4 addr show scope global 2>/dev/null | awk 'NR==1{split($4,a,"/");print a[1]}')";elif command -v ipconfig >/dev/null;then AW_IP="$(ipconfig getifaddr en0 2>/dev/null || true)";fi
 export AW_IP
-python3 - "$OUT" <<'PY'
-import datetime,json,os,sys,subprocess,re,platform
-out=sys.argv[1]
-def run(*args):
- try:
-  r=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,timeout=4,check=False)
-  return r.stdout[:30000] if r.returncode==0 else ''
- except (OSError,subprocess.TimeoutExpired):return ''
-host=os.environ.get('AW_HOST','')
-asset={'name':host,'os':os.environ.get('AW_OS',''),'cpu':os.environ.get('AW_ARCH',''),'ram':os.environ.get('AW_RAM',''),'ip':os.environ.get('AW_IP',''),'notes':'Captura local declarativa; verificar datos antes de incorporar.'}
-disks=run('lsblk','-dn','-o','NAME,SIZE,TYPE') if sys.platform.startswith('linux') else run('diskutil','list')
-if disks:asset['storage']='; '.join(disks.splitlines()[:8])[:500]
-networks=[]
-if sys.platform.startswith('linux'):
- for line in run('ip','-o','-4','addr','show','scope','global').splitlines()[:24]:
-  match=re.match(r'^\d+:\s+([^ ]+)\s+inet\s+([^ ]+)',line)
-  if match:networks.append({'name':match.group(1),'cidr':match.group(2),'notes':'Interfaz local detectada; no demuestra segmentación ni ACL.'})
-else:
- for line in run('ifconfig').splitlines():
-  if line and not line[0].isspace():interface=line.split(':',1)[0]
-  match=re.search(r'\binet\s+([0-9.]+)',line)
-  if match and match.group(1)!='127.0.0.1':networks.append({'name':interface,'cidr':match.group(1),'notes':'Dirección detectada localmente, prefijo por verificar.'})
-networks=networks[:24]
-services=[]
-if sys.platform.startswith('linux'):
- for line in run('systemctl','list-units','--type=service','--state=running','--no-legend','--no-pager').splitlines()[:35]:
-  name=line.split()
-  if name and name[0].endswith('.service'):services.append({'name':name[0], 'asset':host,'notes':'Servicio activo detectado; versión y exposición no verificadas.'})
-elif sys.platform=='darwin':
- for line in run('launchctl','list').splitlines()[1:31]:
-  parts=line.split(None,2)
-  if len(parts)==3:services.append({'name':parts[2], 'asset':host,'notes':'Servicio launchd inventariado; revisar estado y exposición.'})
-software=services[:25]
-packages=''
-if sys.platform.startswith('linux'):
- packages=run('dpkg-query','-W','-f=${Package}\t${Version}\n') or run('rpm','-qa','--qf','%{NAME}\t%{VERSION}-%{RELEASE}\n')
-elif sys.platform=='darwin':
- packages=run('pkgutil','--pkgs')
-for line in packages.splitlines()[:30]:
- parts=line.split('\t',1)
- if parts and parts[0] and len(parts[0])<170:
-  software.append({'name':parts[0],'version':parts[1] if len(parts)>1 else '', 'asset':host,'notes':'Paquete local enumerado; relevancia y vulnerabilidad por verificar.'})
-software=software[:55]
-data={'kind':'rabbitmole-discovery-v1','schemaVersion':1,'capturedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'source':{'platform':platform.system(),'collector':'collect-local.sh','scope':'local','mode':'read-only'},'items':{'assets':[asset],'networks':networks,'software':software}}
-with open(out,'x',encoding='utf-8') as f:json.dump(data,f,indent=2,ensure_ascii=False)
-print('Saved',out)
-PY
+if ! command -v jq >/dev/null 2>&1; then
+  echo "[RabbitMole] Para serializar JSON sin Python necesitas jq. Instala Python 3 o jq." >&2
+  exit 1
+fi
+echo "[RabbitMole] Recopilando información básica..."
+HOST_NAME="$(hostname 2>/dev/null || echo desconocido)"
+SYS_NAME="$(uname -s 2>/dev/null || echo Linux)"
+SO_NAME="$(sed -n 's/^PRETTY_NAME=//p' /etc/os-release 2>/dev/null | head -1 | tr -d '"')"
+MEMORY="$(awk '/^MemTotal:/{printf "%.1f GiB",$2/1048576;exit}' /proc/meminfo 2>/dev/null)"
+IP_ADDRESS="$(ip -o -4 addr show scope global 2>/dev/null | awk 'NR==1{split($4,a,"/");print a[1]}')"
+BASE="${OUT%.json}"
+TARGET="$OUT"
+INDEX=0
+while [[ -e "$TARGET" ]]; do INDEX=$((INDEX+1)); TARGET="${BASE}-${INDEX}.json"; done
+jq -n --arg host "$HOST_NAME" --arg os "${SO_NAME:-$SYS_NAME}" --arg ram "$MEMORY" --arg ip "$IP_ADDRESS" \
+  '{kind:"rabbitmole-discovery-v1",schemaVersion:1,capturedAt:(now|todateiso8601),
+    source:{platform:"Linux",collector:"collect-local.sh",scope:"local",mode:"read-only",
+      limitations:["Python no disponible: captura Bash básica, revisar software y redes manualmente"]},
+    items:{assets:[{name:$host,os:$os,ram:$ram,ip:$ip,notes:"Recopilación limitada por dependencias"}],
+      networks:[],software:[]}}' > "$TARGET"
+echo "[RabbitMole] Guardado: $TARGET | captura básica sin Python."
+exit 0

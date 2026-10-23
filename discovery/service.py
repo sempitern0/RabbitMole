@@ -18,11 +18,12 @@ import threading
 from urllib.parse import urlsplit
 
 try:
-    from . import discover, wizard, pairing
+    from . import discover, wizard, pairing, inventory
 except ImportError:
     import discover
     import wizard
     import pairing
+    import inventory
 
 MAX_BODY = 512
 MAX_RESPONSE = discover.MAX_XML
@@ -30,12 +31,21 @@ API_VERSION = "rabbitmole-discovery-bridge-v1"
 
 
 def valid_origin(value):
+    """Authorize an exact web origin, allowing plaintext only for local pages."""
     parsed = urlsplit(value)
-    if (parsed.scheme != "https" or not parsed.hostname or parsed.username or
-            parsed.password or parsed.path not in ("", "/") or parsed.query or
-            parsed.fragment or not parsed.netloc):
-        raise ValueError("El origen de la PWA debe ser https://dominio[:puerto] sin rutas.")
-    return parsed.scheme + "://" + parsed.netloc
+    if (parsed.scheme not in ("https", "http") or not parsed.hostname or
+            parsed.username or parsed.password or parsed.path not in ("", "/") or
+            parsed.query or parsed.fragment or not parsed.netloc):
+        raise ValueError("Usa un origen HTTPS o HTTP local (localhost/127.0.0.1), sin rutas.")
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("Puerto de origen inválido.") from exc
+    if parsed.scheme == "http" and parsed.hostname.lower() not in ("localhost", "127.0.0.1", "::1"):
+        raise ValueError("HTTP solo está permitido para RabbitMole en este mismo equipo (localhost).")
+    if port is not None and not 1 <= port <= 65535:
+        raise ValueError("Puerto de origen inválido.")
+    return parsed.scheme + "://" + parsed.netloc.lower()
 
 
 def bind_address(value):
@@ -106,7 +116,7 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         if not self.allowed():
             return
-        if urlsplit(self.path).path not in ("/status", "/scan", "/pair/request", "/pair/status"):
+        if urlsplit(self.path).path not in ("/ready", "/status", "/scan", "/pair/request", "/pair/status", "/inventory/request", "/inventory/status"):
             return self.json_reply(404, {"error": "Ruta no disponible."})
         requested = self.headers.get("Access-Control-Request-Headers", "").lower()
         if self.headers.get("Access-Control-Request-Method", "").upper() not in ("GET", "POST"):
@@ -124,6 +134,23 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if not self.allowed():
             return
+        if urlsplit(self.path).path == "/ready":
+            return self.json_reply(200, {
+                "api": API_VERSION, "ready": True,
+                "pairing": bool(self.server.pairing_enabled),
+                "inventory": getattr(self.server, "inventory", None) is not None,
+            })
+        if urlsplit(self.path).path == "/inventory/status":
+            if not self.authenticated():
+                return
+            manager = getattr(self.server, "inventory", None)
+            if manager is None:
+                return self.json_reply(404, {"error": "La captura está disponible solo en Companion local."})
+            from urllib.parse import parse_qs
+            values = parse_qs(urlsplit(self.path).query).get("id", [])
+            if len(values) != 1 or len(values[0]) > 128:
+                return self.json_reply(400, {"error": "Identificador de solicitud inválido."})
+            return self.json_reply(200, manager.status(values[0]))
         if urlsplit(self.path).path == "/pair/status":
             # Pair requests are unguessable 192-bit capabilities, consumed once.
             from urllib.parse import parse_qs
@@ -151,6 +178,18 @@ class BridgeHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if not self.allowed():
             return
+        if urlsplit(self.path).path == "/inventory/request":
+            if not self.authenticated():
+                return
+            manager = getattr(self.server, "inventory", None)
+            if manager is None:
+                return self.json_reply(404, {"error": "La captura está disponible solo en Companion local."})
+            if self.headers.get("Content-Length") not in ("0", None):
+                return self.json_reply(400, {"error": "No se admite contenido de solicitud."})
+            try:
+                return self.json_reply(200, manager.begin())
+            except ValueError as exc:
+                return self.json_reply(409, {"error": str(exc)})
         if urlsplit(self.path).path == "/pair/request":
             if not self.server.pairing_enabled:
                 return self.json_reply(404, {"error": "Emparejamiento no disponible."})
@@ -215,6 +254,7 @@ def local_server(origin, port=8766):
     server.scan_lock = threading.Lock()
     server.pairing_enabled = True
     server.pairing = pairing.Pairing()
+    server.inventory = inventory.InventoryCapture()
     return server
 
 
@@ -228,7 +268,7 @@ def main(argv=None):
     parser.add_argument("--key", help="Clave privada TLS (PEM), obligatoria en modo LAN")
     parser.add_argument("--loopback-http", action="store_true",
                         help="Solo PWA y Discovery en el MISMO ordenador; escucha exclusivamente 127.0.0.1 sin TLS")
-    parser.add_argument("--origin", required=True, help="Origen HTTPS exacto de la PWA autorizada")
+    parser.add_argument("--origin", required=True, help="Origen web exacto; HTTPS o HTTP de localhost en modo loopback")
     parser.add_argument("--pairing", action="store_true", help="Permite aprobación explícita en Companion local")
     args = parser.parse_args(argv)
     try:
@@ -246,6 +286,8 @@ def main(argv=None):
             bind = host = "127.0.0.1"
             context = None
         else:
+            if origin.startswith("http://"):
+                raise ValueError("El servicio LAN exige una PWA HTTPS. HTTP solo sirve en loopback.")
             if not args.bind or not args.cert or not args.key:
                 raise ValueError("Modo LAN: se requieren --bind, --cert y --key; en el mismo PC utiliza --loopback-http.")
             bind = bind_address(args.bind)
@@ -268,6 +310,7 @@ def main(argv=None):
             server.access_token = secrets.token_urlsafe(32)
             server.pairing_enabled = bool(args.pairing)
             server.pairing = pairing.Pairing()
+            server.inventory = None
             server.scan_lock = threading.Lock()
             if context is not None:
                 server.socket = context.wrap_socket(server.socket, server_side=True)

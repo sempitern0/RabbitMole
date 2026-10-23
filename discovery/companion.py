@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Portable Windows Companion: only local listening, consent-controlled pairing."""
 import pathlib
+import json
+import tempfile
 import queue
 import secrets
 import shutil
@@ -26,19 +28,20 @@ class Companion:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("RabbitMole Companion · Estación auditora")
-        self.window.geometry("625x470")
-        self.window.minsize(545, 410)
+        self.window.geometry("680x575")
+        self.window.minsize(610, 510)
         self.server = None
         self.events = queue.Queue()
         self.pending_id = None
+        self.pending_inventory_id = None
         self.address = tk.StringVar(value=DEFAULT_ORIGIN)
         self.status = tk.StringVar(value="Detenido · Sin escaneos")
-        self.session = tk.StringVar(value="Inicia el Companion y solicita la conexión desde la PWA.")
+        self.session = tk.StringVar(value="Introduce la dirección exacta de RabbitMole, pulsa Activar Discovery y conecta desde el navegador.")
         panel = ttk.Frame(self.window, padding=20)
         panel.pack(fill="both", expand=True)
         ttk.Label(panel, text="RabbitMole Companion", font=("Segoe UI", 16, "bold")).pack(anchor="w")
         ttk.Label(panel, text="Solo este PC: 127.0.0.1:8766. Sin instalación de agentes ni puertos LAN.").pack(anchor="w", pady=(4, 14))
-        ttk.Label(panel, text="Origen HTTPS de la PWA").pack(anchor="w")
+        ttk.Label(panel, text="Origen de RabbitMole (HTTPS o HTTP local)").pack(anchor="w")
         ttk.Entry(panel, textvariable=self.address).pack(fill="x", pady=(4, 12))
         ttk.Label(panel, textvariable=self.status, wraplength=545).pack(anchor="w", pady=(0, 8))
         buttons = ttk.Frame(panel)
@@ -55,7 +58,17 @@ class Companion:
         self.approve_button.pack(side="left", padx=(0,8))
         self.deny_button = ttk.Button(approval, text="Denegar", command=lambda:self.decide(False),state="disabled")
         self.deny_button.pack(side="left")
-        ttk.Separator(panel).pack(fill="x", pady=16)
+        self.inventory_notice=ttk.Label(panel,text="Si la PWA solicita un inventario, deberás aprobarlo en este equipo.",wraplength=545)
+        self.inventory_notice.pack(anchor="w",pady=(9,0))
+        consent=ttk.Frame(panel)
+        consent.pack(fill="x",pady=(5,0))
+        self.allow_inventory=ttk.Button(consent,text="Autorizar recopilación",state="disabled",
+                                       command=lambda:self.decide_inventory(True))
+        self.allow_inventory.pack(side="left",padx=(0,8))
+        self.deny_inventory=ttk.Button(consent,text="Denegar",state="disabled",
+                                      command=lambda:self.decide_inventory(False))
+        self.deny_inventory.pack(side="left")
+        ttk.Separator(panel).pack(fill="x", pady=10)
         ttk.Button(panel, text="Capturar inventario de este Windows (JSON)…", command=self.capture).pack(anchor="w")
         ttk.Label(panel, text="La captura es de solo lectura. Cada escaneo de red requiere confirmar AUTORIZO y el CIDR en la PWA.",wraplength=545).pack(anchor="w",pady=(9,0))
         self.window.protocol("WM_DELETE_WINDOW",self.close)
@@ -84,6 +97,47 @@ class Companion:
         self.approve_button.config(state="disabled")
         self.deny_button.config(state="disabled")
 
+    def decide_inventory(self, allow):
+        if not self.server or not self.pending_inventory_id:
+            return
+        request_id=self.pending_inventory_id
+        if self.server.inventory.decide(request_id,allow):
+            if allow:
+                self.status.set("Recopilando inventario local autorizado…")
+                threading.Thread(target=self.collect_for_pwa,args=(request_id,),daemon=True).start()
+            else:
+                self.status.set("Solicitud de inventario denegada.")
+        self.pending_inventory_id=None
+        self.allow_inventory.config(state="disabled")
+        self.deny_inventory.config(state="disabled")
+
+    def collect_for_pwa(self,request_id):
+        collector=ROOT/"collect-local.ps1"
+        if not collector.is_file():
+            collector=ROOT.parent/"collect-local.ps1"
+        try:
+            engine=next((value for value in ("powershell.exe","pwsh") if shutil.which(value)),None)
+            if not engine or not collector.is_file():
+                raise RuntimeError("PowerShell o collect-local.ps1 no disponible.")
+            # Random local temporary path. Never accept paths or commands from the browser.
+            with tempfile.TemporaryDirectory(prefix="rabbitmole-inventory-") as directory:
+                output=pathlib.Path(directory)/"inventory.json"
+                process=subprocess.run([engine,"-NoProfile","-NonInteractive","-File",
+                    str(collector),"-Output",str(output)],capture_output=True,text=True,
+                    timeout=85,creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0))
+                if process.returncode:
+                    raise RuntimeError("No se pudo recopilar con los permisos/políticas de este Windows.")
+                if not output.is_file() or output.stat().st_size>2*1024*1024:
+                    raise RuntimeError("La captura falta o supera 2 MiB.")
+                document=json.loads(output.read_text(encoding="utf-8-sig"))
+            if self.server:
+                self.server.inventory.finish(request_id,document=document)
+            self.events.put(("inventory","Inventario capturado. Revisa el borrador en la PWA."))
+        except (OSError,ValueError,RuntimeError,subprocess.TimeoutExpired) as error:
+            if self.server:
+                self.server.inventory.finish(request_id,error=str(error))
+            self.events.put(("inventory","Captura no completada: "+str(error)[:130]))
+
     def poll(self):
         if self.server:
             pending=self.server.pairing.pending()
@@ -96,9 +150,22 @@ class Companion:
                 self.pending_id=None
                 self.approve_button.config(state="disabled")
                 self.deny_button.config(state="disabled")
+        if self.server:
+            pending=self.server.inventory.pending()
+            if pending and pending!=self.pending_inventory_id:
+                self.pending_inventory_id=pending
+                self.inventory_notice.config(text="La PWA solicita acceso a hardware, software, red y Defender de ESTE PC. ¿Autorizas la captura?")
+                self.allow_inventory.config(state="normal")
+                self.deny_inventory.config(state="normal")
+            elif self.pending_inventory_id and not pending:
+                self.pending_inventory_id=None
+                self.allow_inventory.config(state="disabled")
+                self.deny_inventory.config(state="disabled")
         try:
             while True:
                 kind,msg=self.events.get_nowait()
+                if kind=="inventory":
+                    self.status.set(msg)
                 if kind=="capture":
                     self.status.set(msg)
                     if msg.startswith("Guardado:"):
@@ -147,9 +214,13 @@ class Companion:
             server=self.server
             self.server=None
             server.pairing.revoke()
+            server.inventory.revoke()
             server.shutdown()
             server.server_close()
         self.pending_id=None
+        self.pending_inventory_id=None
+        self.allow_inventory.config(state="disabled")
+        self.deny_inventory.config(state="disabled")
         self.start_button.config(state="normal")
         self.stop_button.config(state="disabled")
         self.approve_button.config(state="disabled")

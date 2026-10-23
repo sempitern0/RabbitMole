@@ -5,8 +5,8 @@
   const BLOCKS=['assets','networks','software'];
   const LIMIT_BYTES=2*1024*1024, LIMIT_ROWS=500, LIMIT_COLUMNS=48;
   const FIELDS=Object.freeze({
-    assets:['id','name','type','vendor','model','serial','ip','os','cpu','ram','storage','site','owner','notes','osLicense','osUpdates','avProduct','avRealtime','avUpdated','cpuSpeed','ramMax','ramSlots','diskCapacity','diskType','gpuType','gpuMemory','ethernetPort','cableCategory','ethernetSpeed','wifiAdapter','wifiSignal','processReview','localAccounts','adminAccounts'],
-    networks:['name','cidr','vlan','gateway','dns','purpose','firewall','exposure','notes','ssid','wifiSecurity','wifiSignal','wifiChannel','wifiStandard','wifiBand','contractedRate','measuredRate'],
+    assets:['id','name','type','vendor','model','serial','ip','ipAssignment','ipObservedAt','mac','os','cpu','ram','storage','site','owner','notes','osLicense','osUpdates','avProduct','avRealtime','avUpdated','avEngineVersion','avSignaturesVersion','avSignaturesCheckedAt','cpuSpeed','ramMax','ramSlots','diskCapacity','diskType','gpuType','gpuMemory','ethernetPort','cableCategory','ethernetSpeed','wifiAdapter','wifiSignal','processReview','localAccounts','adminAccounts'],
+    networks:['name','networkKind','cidr','vlan','gateway','dns','purpose','firewall','exposure','notes','ssid','wifiSecurity','wifiSignal','wifiChannel','wifiStandard','wifiBand','contractedRate','measuredRate'],
     software:['name','version','vendor','asset','license','support','exposure','notes','licenseType','licenseStatus','installedAt','updateStatus','updatedAt']
   });
   const ALIASES={
@@ -16,6 +16,8 @@
       type:['category','role','tipo','categoria'],vendor:['manufacturer','fabricante','marca'],
       model:['modelo'],serial:['serialnumber','serial_number','serie','numero_de_serie'],
       ip:['ipaddress','ipv4','direccionip','direccion_ip','ip_address'],
+      ipAssignment:['ipmode','ip_type','asignacionip','dhcp'],ipObservedAt:['ipcapturedat','fechaobservacionip'],
+      mac:['macaddress','ethernetaddress','direccionmac','mac_address'],
       os:['operatingsystem','operating_system','sistemaoperativo','sistema_operativo','platform'],
       cpu:['processor','procesador'],ram:['memory','memoria','memoryram'],storage:['disk','disks','almacenamiento'],
       site:['location','ubicacion','sede'],owner:['responsable','propietario'],notes:['observaciones','description']
@@ -109,7 +111,9 @@
     const rows=isCSV?parseCSV(text):selectRows(payload,block);
     return Object.freeze({block,rows:normalizeRows(rows,block),source:isCSV?'CSV':payload?.kind===KIND?'Recopilador local':'JSON',
       capturedAt:typeof payload?.capturedAt==='string'?payload.capturedAt.slice(0,40):'',
-      platform:typeof payload?.source?.platform==='string'?payload.source.platform.slice(0,60):''});
+      platform:typeof payload?.source?.platform==='string'?payload.source.platform.slice(0,60):'',
+      privilege:typeof payload?.source?.privilege==='string'?payload.source.privilege.slice(0,100):'',
+      limitations:Array.isArray(payload?.source?.limitations)?payload.source.limitations.filter(x=>typeof x==='string').slice(0,12).map(x=>x.slice(0,180)):[]});
   }
   const same=(a,b)=>normalize(a)===normalize(b);
   function identityMatches(block,row,existing){

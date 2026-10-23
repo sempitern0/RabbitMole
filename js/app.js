@@ -29,6 +29,8 @@
   const auditActions = globalThis.RabbitMoleAuditActions;
   const fieldRenderer = globalThis.RabbitMoleFieldRenderer;
   const onlineLookups = globalThis.RabbitMoleOnlineLookups;
+  const auditStart=globalThis.RabbitMoleAuditStart;
+  if(!auditStart)throw Error('Falta el módulo de inicio de auditorías.');
   const fieldDefaults = globalThis.RabbitMoleFieldDefaults;
   if(!fieldDefaults)throw Error("Falta el módulo de borradores iniciales.");
   const rackAudit = globalThis.RabbitMoleRackAudit;
@@ -592,7 +594,7 @@
       await flush();
       // Only fresh audits get provisional narrative scaffolding; importing or
       // duplicating an existing audit never changes its historical content.
-      if(arguments.length===0)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
+      if(arguments.length===0 || options.scaffold===true)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
       if (options.copy || !audit.meta.reportId) {
         audit.meta.reportId = identifiers.generate(
           records,
@@ -610,8 +612,10 @@
       records.push(record);
       setActive(record);
       move("engagement");
+      return true;
     } catch (error) {
       alert("No se ha creado la auditoría: " + error.message);
+      return false;
     }
   }
   // Local navigation preference only: never exported as audit evidence/progress.
@@ -619,12 +623,12 @@
   function savedAuditStep(id) {
     try {
       const step = localStorage.getItem(auditStepKey(id));
-      if (nav.some(([key]) => key === step)) return step;
+      if (nav.some(([key]) => key === step) || step==="evidence") return step;
     } catch (_ignored) {}
     return "dashboard";
   }
   function rememberAuditStep(id, step) {
-    if (!id || !nav.some(([key]) => key === step)) return;
+    if (!id || !(nav.some(([key]) => key === step) || step==="evidence")) return;
     try { localStorage.setItem(auditStepKey(id), step); } catch (_ignored) {}
   }
   async function switchAudit(id) {
@@ -1060,6 +1064,104 @@
   function renderOverview() {
     return workflowViews.renderOverview({state,quality,relations,docControl,html});
   }
+  let startReview=null,startError="",startBusy=false,startStatusKind="info";
+  let startSelected={assets:true,networks:true,software:true};
+  function resetAuditStart(){
+    startReview=null;startError="";startBusy=false;startStatusKind="info";
+    startSelected={assets:true,networks:true,software:true};
+  }
+  function acceptStartCapture(text,size){
+    const reviewed=auditStart.inspect(text,{intake,size});
+    startReview=reviewed;
+    startSelected={assets:reviewed.counts.assets>0,networks:reviewed.counts.networks>0,software:reviewed.counts.software>0};
+    startStatusKind="success";startError="Captura cargada. Revisa el origen, los permisos y las secciones antes de crear el expediente.";
+    render();
+  }
+  function renderAuditStart(){
+    return `<span class="eyebrow">BIBLIOTECA / NUEVO EXPEDIENTE</span>
+    <h1 class="page-title">Iniciar una auditoría</h1>
+    <p class="lead">Elige un flujo. Puedes cambiar y editar cualquier dato después, sin otorgar conformidades automáticamente.</p>
+    <div class="audit-start-grid">
+      <section class="card audit-start-option">
+        <span class="eyebrow">01 · SIN RECOPILACIÓN</span>
+        <h2>Flujo manual</h2>
+        <p>Comienza con un expediente vacío, campos guiados y borradores editables. Introduce hardware, software, pruebas y conclusiones mientras auditas.</p>
+        <div class="audit-start-manual-guide">
+          <h3>Comenzar desde cero</h3>
+          <ol><li>Identifica al cliente y el alcance.</li><li>Registra equipos, redes y software.</li><li>Documenta controles, hallazgos y evidencias.</li></ol>
+          <p class="subtle">Ideal para tablets, auditorías presenciales o equipos sin Companion.</p>
+        </div>
+        <button class="button accent" type="button" id="audit-start-manual">Crear auditoría manual →</button>
+      </section>
+      <section class="card audit-start-option">
+        <span class="eyebrow">02 · CAPTURA LOCAL</span>
+        <h2>Flujo automático asistido</h2>
+        <p>Parte del inventario del equipo actual. La captura puede generarse con PowerShell o desde un Companion autorizado. Solo se importarán secciones que apruebes.</p>
+        <label for="audit-start-file">Archivo de captura JSON (máximo 2 MiB)</label>
+        <input id="audit-start-file" type="file" accept=".json,application/json">
+        <a class="button accent audit-start-collector-download" href="./collect-local.ps1" download="collect-local.ps1">Descargar recolector Windows (.ps1) →</a>
+        <p class="subtle">También disponibles: <a href="./collect-local.sh" download="collect-local.sh">Linux (Bash)</a> y <a href="./collect-local.py" download="collect-local.py">Python (Windows/Linux)</a>. Descarga el motor elegido y revisa su procedencia antes de ejecutarlo.</p>
+        <p class="subtle">Sin EXE, Python ni permisos de administrador. Descarga el script, ejecútalo localmente desde PowerShell con <code class="audit-start-command-inline">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1</code> y carga arriba el JSON generado. El parámetro <code>-ExecutionPolicy Bypass</code> solo afecta al proceso y debe usarse con autorización; una GPO, AppLocker o WDAC pueden impedir la ejecución igualmente. Tras verificar el origen también puedes utilizar <code>Unblock-File .\\collect-local.ps1</code> cuando el problema sea la marca de descarga.</p>
+        <div class="intake-command audit-start-command">
+          <div class="intake-command-head">
+            <strong class="glossary-command-platform">Windows · PowerShell 5.1+</strong>
+            <button type="button" class="glossary-copy" id="audit-start-copy" aria-label="Copiar comando PowerShell">Copiar comando</button>
+          </div>
+          <pre tabindex="0" aria-label="Comando de captura local para Windows"><code>${html(intakeCommands.localps)}</code></pre>
+          <p>Ejecuta el recolector desde la carpeta donde lo descargaste; después importa el JSON.</p>
+        </div>
+        <div class="audit-start-actions">
+          <button class="button quiet" type="button" id="audit-start-companion">Recopilar con Companion local</button>
+        </div>
+        <div id="audit-start-status" class="audit-start-inline-status is-${html(startStatusKind)}" role="status" aria-live="polite" aria-atomic="true" ${startError?"":'hidden'}>${html(startError)}</div>
+        <details class="audit-start-help"><summary>Cómo preparar Companion y solucionar problemas</summary>
+        <p class="subtle">Prepara primero el equipo: ${globalThis.RabbitMoleDeployment?.companionAvailable ? `<a href="./discovery-windows.zip" download>Descargar Companion Windows (ZIP)</a>` : `<strong>El Companion ejecutable no está incluido en este despliegue.</strong> El paquete necesita compilarse y publicarse primero.`} Puedes usar el <a href="./discovery-kit.zip" download>kit PowerShell nativo (sin EXE)</a>. En Companion pulsa «Activar Discovery» y aprueba la conexión y la captura cuando lo solicite RabbitMole.</p>
+        <p class="subtle">El navegador no ejecuta PowerShell ni accede a dispositivos arbitrarios. La alternativa JSON funciona también abriendo el HTML directamente. El Companion solo puede capturar este mismo ordenador, sin Python instalado ni elevación.</p></details>
+      </section>
+    </div>
+    ${startReview?`<section class="card audit-start-review"><h2>Vista previa antes de crear el expediente</h2>
+      <p>Captura: ${html(startReview.collector||"local")} · ${html(startReview.platform)} · Permisos: ${html(startReview.privilege)}</p>
+      <p>Fecha: ${html(startReview.capturedAt||"sin indicar")}. No se consideran comprobados los campos recogidos automáticamente.</p>
+      ${startReview.limitations.length?`<details open><summary>Limitaciones de acceso (${startReview.limitations.length})</summary><ul>${startReview.limitations.map(t=>`<li>${html(t)}</li>`).join("")}</ul></details>`:""}
+      <div class="audit-start-selections">
+      ${auditStart.blocks.map(block=>`<label><input type="checkbox" data-start-select="${block}" ${startSelected[block]?"checked":""} ${startReview.counts[block]?"":"disabled"}>
+       <strong>${html(auditStart.label[block])}</strong><span>${startReview.counts[block]} registros</span></label>`).join("")}
+      </div>
+      <div class="audit-start-preview">
+        ${auditStart.blocks.filter(block=>startReview.counts[block]).map(block=>`<details>
+          <summary>${html(auditStart.label[block])} · ver registros de muestra (${startReview.counts[block]})</summary>
+          <ul>${startReview.rows[block].slice(0,25).map(row=>`<li><strong>${html(row.name||row.id||"Sin nombre")}</strong>
+            ${row.version?`<span> · v${html(row.version)}</span>`:""}
+            ${row.vendor?`<span> · ${html(row.vendor)}</span>`:""}
+            ${row.ip?`<span> · ${html(row.ip)}</span>`:""}
+            ${row.ipAssignment?`<span> · ${html(row.ipAssignment)}</span>`:""}
+          </li>`).join("")}</ul>
+          ${startReview.counts[block]>25?`<p class="subtle">Se muestran los primeros 25 registros; el resto podrá editarse tras crear el borrador.</p>`:""}
+        </details>`).join("")}
+      </div>
+      <div class="action-row"><button class="button accent" type="button" id="audit-start-confirm" ${auditStart.blocks.some(k=>startSelected[k]&&startReview.counts[k])&&!startBusy?"":"disabled"}>Crear borrador con selección</button>
+      ${startReview.deviceId?`<div class="audit-start-update-existing"><label for="audit-start-target">O actualizar una auditoría existente del mismo dispositivo</label>
+      <select id="audit-start-target"><option value="">Selecciona el expediente que deseas actualizar</option>
+      ${records.filter(r=>r.audit?.documentControl?.status!=="confirmed").map(r=>`<option value="${html(r.id)}">${html(r.audit?.meta?.reportId||r.id)} — ${html(r.audit?.meta?.project||r.audit?.meta?.client||"Sin título")}</option>`).join("")}</select>
+      <button type="button" class="button quiet" id="audit-start-update">Revisar y actualizar expediente seleccionado</button>
+      <small>Identificador de equipo: ${html(startReview.deviceId)}. No se sustituye el informe ni sus comprobaciones manuales.</small></div>`:""} 
+      <button class="button quiet" type="button" id="audit-start-discard">Descartar captura</button></div>
+      </section>`:""}
+    <button type="button" class="button quiet small" data-go="records">← Volver a biblioteca</button>`;
+  }
+  function renderFindingWorkspace(block){
+    const finding=block==="findings";
+    return `<div class="audit-evidence-unified">
+      <span class="eyebrow">AUDITORÍA / COMPROBACIONES</span>
+      <h1 class="page-title">Hallazgos y evidencias</h1>
+      <p class="lead">Los hallazgos documentan problemas y riesgos. Las evidencias documentan observaciones y pueden respaldar varios hallazgos o controles. Se gestionan juntas sin perder trazabilidad.</p>
+      <div class="audit-finding-tabs" role="group" aria-label="Cambiar entre hallazgos y evidencias">
+        <button class="button ${finding?"accent":"quiet"}" type="button" ${finding?'aria-current="page"':'data-go="findings"'}>Hallazgos (${state.findings.length})</button>
+        <button class="button ${finding?"quiet":"accent"}" type="button" ${finding?'data-go="evidence"':'aria-current="page"'}>Evidencias (${state.evidence.length})</button>
+      </div>
+      <p class="subtle">${finding?"Puedes adjuntar fotos directamente en un hallazgo: se crean evidencias vinculadas.":"Aquí se conservan las pruebas independientes, archivos, custodia y relaciones con hallazgos."}</p>
+      ${renderGroup(block,true)}</div>`;
+  }
   function renderRecords() {
     const search = (byId("record-filter")?.value || "").toLocaleLowerCase("es");
     const items = [...records]
@@ -1346,8 +1448,66 @@
     sh: "bash discovery/run.sh",
     doctor: "python3 discovery/discover.py doctor",
     scan: "python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output captura-lan.json",
-    localsh: "bash collect-local.sh --output captura.json",
-    localps: "powershell -File collect-local.ps1 -Output captura.json"
+    localsh: "bash collect-local.sh",
+    localps: "powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1",
+    nativeDoctor: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 doctor",
+    nativeScan: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 scan --cidr 192.168.10.0/26 --authorized --output hosts.json"
+  });
+  async function copyCollectorCommand(button) {
+    const command=intakeCommands.localps;
+    let copied=false;
+    try {
+      if (!navigator.clipboard?.writeText) throw Error("Clipboard API no disponible");
+      await navigator.clipboard.writeText(command);
+      copied=true;
+    } catch (_) {
+      const area=document.createElement("textarea");
+      area.value=command;
+      area.setAttribute("readonly","");
+      area.style.position="fixed";
+      area.style.left="-9999px";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      try { copied=typeof document.execCommand==="function" && document.execCommand("copy"); }
+      catch (_) { copied=false; }
+      area.remove();
+    }
+    button.textContent=copied?"Copiado":"Selecciona el comando";
+    if(!copied) {
+      const code=button.closest(".intake-command")?.querySelector("pre code");
+      if(code) {
+        const range=document.createRange();
+        range.selectNodeContents(code);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+      }
+    }
+    const status=byId("audit-start-status");
+    if(status && button.id==="audit-start-copy"){
+      startStatusKind=copied?"success":"error";
+      startError=copied?"Comando copiado al portapapeles.":"El navegador no permite copiar automáticamente. Selecciona el comando y usa Ctrl+C.";
+      status.hidden=false;
+      status.className="audit-start-inline-status is-"+startStatusKind;
+      status.textContent=startError;
+    }
+    return copied;
+  }
+  byId("pwa-install-card")?.addEventListener("click", async event=>{
+    const button=event.target.closest("#device-collector-copy");
+    if(button){await copyCollectorCommand(button);return;}
+    const link=event.target.closest("a[data-collector-download]");
+    if(!link)return;
+    const filename=link.dataset.collectorDownload;
+    const status=byId("device-collector-download-status");
+    if(status){
+      status.hidden=false;
+      status.textContent="Descarga solicitada: "+filename+". Comprueba que el navegador ha guardado el archivo antes de ejecutarlo.";
+    }
+    for(const other of byId("pwa-install-card").querySelectorAll("a[data-collector-download]")){
+      other.removeAttribute("data-requested");
+    }
+    link.dataset.requested="true";
   });
   let intakeMode = "file";
   function renderIntakeCommand(key, label, explanation) {
@@ -1363,8 +1523,24 @@
       <h2 id="intake-guided-title">Herramientas del equipo auditor</h2>
       <p>Estos comandos se ejecutan en <strong>tu terminal, nunca dentro de la PWA</strong>. Trabaja únicamente con equipos y CIDR autorizados. Después importa el JSON resultante en la opción «Subir archivo».</p>
       <div class="intake-method">
+        <h3>Windows · captura sin Python ni administrador</h3>
+        <p>Con una cuenta estándar, PowerShell 5.1 puede recoger datos <strong>solo del PC actual</strong>: hardware, SO, interfaces, DHCP, aplicaciones registradas en equipo/usuario y Defender. La disponibilidad depende de los permisos y las políticas del cliente; no se obtienen contraseñas ni claves de producto.</p>
+        <div class="intake-command-grid">
+          ${renderIntakeCommand("localps","Windows · Hardware, SO y software","Recoge el inventario en un JSON compatible sin instalar Python ni modificar la política de ejecución.")}
+          ${renderIntakeCommand("nativeDoctor","Windows · Diagnóstico","Comprueba PowerShell y ping sin iniciar descubrimiento.")}
+        </div>
+        <p class="subtle">Una activación de Windows, una firma antivirus o una aplicación listada no acreditan licencia válida ni cumplimiento de seguridad. Revisa la evidencia antes de afirmarlo.</p>
+      </div>
+      <div class="intake-method">
+        <h3>Red autorizada · ICMP nativo</h3>
+        <p>Descubre hosts que respondan a ping, sin puertos ni lectura remota de software, dentro de un CIDR privado y autorizado. Es independiente del inventario local y requiere el consentimiento del operador.</p>
+        <div class="intake-command-grid">
+          ${renderIntakeCommand("nativeScan","Windows · CIDR privado autorizado","Sustituye el ejemplo por el CIDR aprobado (/24 a /30); no deduce dispositivos que bloquean ICMP.")}
+        </div>
+      </div>
+      <div class="intake-method">
         <h3>Asistente guiado</h3>
-        <p class="subtle">Detecta las interfaces, solicita el alcance aprobado y pide confirmación antes de realizar descubrimiento.</p>
+        <p class="subtle">En Windows usa el motor nativo; las utilidades Python permanecen disponibles como alternativa avanzada cuando están instaladas.</p>
         <div class="intake-command-grid">
           ${renderIntakeCommand("cmd","Windows · CMD","Abre el asistente desde el repositorio, sin configurar comandos manualmente.")}
           ${renderIntakeCommand("ps","Windows · PowerShell","Alternativa PowerShell al iniciador de Windows.")}
@@ -1387,7 +1563,7 @@
           ${renderIntakeCommand("localps","Windows · PowerShell","Recopilación local en Windows sin agentes remotos.")}
         </div>
       </details>
-      <p class="intake-help"><strong>Siguiente paso:</strong> conserva el JSON resultante y vuelve a «Subir archivo». Las capturas Discovery se pueden revisar en <strong>Hardware</strong> y después en <strong>Redes</strong>, sin aplicarlas automáticamente.</p>
+      <p class="intake-help"><strong>Siguiente paso:</strong> importa el mismo JSON desde <strong>Hardware, Redes o Software</strong>, selecciona solo los registros nuevos y comprueba las limitaciones de acceso. No se sobrescribe información existente.</p>
     </section>`;
   }
   function renderIntake() {
@@ -1449,7 +1625,8 @@
     const counts = { nuevo: 0, duplicado: 0, conflicto: 0 };
     for (const c of candidates) counts[c.status]++;
     return `<section class="card intake-card intake-preview" aria-labelledby="intake-preview-title"><span class="intake-kicker">04 · Revisión antes de incorporar</span><h2 id="intake-preview-title">Vista previa · ${candidates.length} registros</h2>
-      <p class="subtle">Origen: ${html(intakePreview.source)}${intakePreview.platform ? " · " + html(intakePreview.platform) : ""}. Nuevos: ${counts.nuevo} · Duplicados: ${counts.duplicado} · Conflictos: ${counts.conflicto}. Nunca se sobrescriben registros.</p>
+      <p class="subtle">Origen: ${html(intakePreview.source)}${intakePreview.platform ? " · " + html(intakePreview.platform) : ""}${intakePreview.privilege ? " · Acceso: "+html(intakePreview.privilege) : ""}. Nuevos: ${counts.nuevo} · Duplicados: ${counts.duplicado} · Conflictos: ${counts.conflicto}. Nunca se sobrescriben registros.</p>
+      ${intakePreview.limitations?.length ? `<details class="intake-limitations"><summary>Limitaciones de lectura (${intakePreview.limitations.length})</summary><ul>${intakePreview.limitations.map(value=>`<li>${html(value)}</li>`).join("")}</ul></details>` : ""}
       <div class="intake-toolbar"><button class="button quiet small" type="button" data-intake-select="new">Seleccionar solo nuevos</button><button class="button quiet small" type="button" data-intake-select="none">Deseleccionar</button></div>
       <div class="intake-records">${candidates
         .map(
@@ -1685,10 +1862,10 @@
         details + '</ul><p class="subtle">Relación orientativa, pendiente de comprobar mediante evidencias.</p></div></details>' : '') +
       '</section>';
   }
-  function renderGroup(block) {
+  function renderGroup(block,embedded=false) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "software" ? `<p class="license-audit-help">Acreditación de licencias: documenta factura, contrato o evidencia saneada; si es imprescindible, solo el sufijo de cuatro caracteres. No introduzcas claves completas. Verifica por separado el derecho de uso y el soporte/EOL de la versión concreta.</p>` : ""}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}>Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `${embedded?"":`<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>`}${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "software" ? `<p class="license-audit-help">Acreditación de licencias: documenta factura, contrato o evidencia saneada; si es imprescindible, solo el sufijo de cuatro caracteres. No introduzcas claves completas. Verifica por separado el derecho de uso y el soporte/EOL de la versión concreta.</p>` : ""}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}>Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -1849,7 +2026,7 @@
     return `<div class="wizard-top wizard-fast-nav" role="navigation" aria-label="Acceso rápido al asistente">
       <label class="wizard-jump" for="wizard-step-top">Ir al paso <select id="wizard-step-top">${options}</select></label>
       <span>Fase ${i + 1} / ${nav.length}</span>
-      <div class="action-row"><button type="button" class="button quiet small" data-go="evidence">Evidencias</button><button type="button" class="button quiet small" data-go="quality">Revisar pendientes</button>
+      <div class="action-row"><button type="button" class="button quiet small" data-go="findings">Hallazgos y evidencias</button><button type="button" class="button quiet small" data-go="quality">Revisar pendientes</button>
       ${nav[i + 1] ? `<button type="button" class="button accent small" data-go="${nav[i + 1][0]}">Siguiente →</button>` : ""}</div>
     </div>`;
   }
@@ -2541,6 +2718,7 @@
     closeQuickGlossary(false);
     const inLibrary =
       [
+        "audit-start",
         "records",
         "backups",
         "online",
@@ -2585,7 +2763,7 @@
       )
       .join("");
     byId("current-section").textContent =
-      page === "records"
+      page === "audit-start" ? "Nueva auditoría" : page === "records"
         ? "Auditorías"
         : page === "backups"
           ? "Copias de seguridad"
@@ -2614,7 +2792,9 @@
     byId("workspace").hidden = devicePage;
     byId("workspace").innerHTML =
       (inLibrary || page === "attachments" ? "" : renderWizardTop()) +
-      (page === "dashboard"
+      (page === "audit-start"
+        ? renderAuditStart()
+        : page === "dashboard"
         ? renderOverview()
         : page === "records"
           ? renderRecords()
@@ -2636,6 +2816,8 @@
                       )
                   : page === "intake"
                     ? renderIntake()
+                    : page === "findings" || page === "evidence"
+                      ? renderFindingWorkspace(page)
                     : page === "engagement"
                       ? renderEngagement()
                       : page === "legal"
@@ -2710,6 +2892,7 @@
     }
     if (
       ![
+        "audit-start",
         "records",
         "backups",
         "online",
@@ -2726,6 +2909,7 @@
     }
     if (
       [
+        "audit-start",
         "records",
         "backups",
         "online",
@@ -2735,7 +2919,7 @@
         "device",
         "attachments",
       ].includes(section) ||
-      section === "intake" ||
+      section === "intake" || section === "evidence" ||
       nav.some((n) => n[0] === section)
     ) {
       if(section==="attachments" && page!=="attachments"){
@@ -2767,7 +2951,7 @@
     }
   }
   function applyDocumentLock() {
-    if (state.documentControl?.status !== "confirmed") return;
+    if (page === "audit-start" || state.documentControl?.status !== "confirmed") return;
     for (const element of workspace.querySelectorAll(
       "input,select,textarea,button",
     )) {
@@ -3127,6 +3311,21 @@
       return;
     }
     if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
+    if(t.id==="audit-start-file"&&t.files?.length){
+      if(startBusy){startError="Hay una captura en curso. Espera a que finalice o vuelve a intentarlo.";const status=byId("audit-start-status");if(status){status.hidden=false;status.className="audit-start-inline-status is-"+startStatusKind;status.textContent=startError;}return;}
+      try{
+        const file=t.files[0];
+        if(file.size>auditStart.sizeLimit)throw Error("El archivo supera 2 MiB.");
+        acceptStartCapture(await file.text(),file.size);
+      }catch(error){startReview=null;startError="No se pudo preparar el inventario: "+error.message;render();}
+      return;
+    }
+    if(t.dataset.startSelect!==undefined){
+      startSelected[t.dataset.startSelect]=Boolean(t.checked);
+      const button=byId("audit-start-confirm");
+      if(button)button.disabled=!auditStart.blocks.some(k=>startSelected[k]&&startReview?.counts[k]);
+      return;
+    }
     if (t.id === "intake-file" && t.files?.length) {
       try {
         const file = t.files[0];
@@ -3601,6 +3800,75 @@
   workspace.addEventListener("click", async (e) => {
     const b = e.target.closest("button");
     if (!b) return;
+    if(b.id==="audit-start-manual"){
+      if(startBusy)return;
+      resetAuditStart();await createAudit();
+      return;
+    }
+    if(b.id==="audit-start-discard"){
+      if(startBusy)return;
+      resetAuditStart();render();return;
+    }
+    if(b.id==="audit-start-update"){
+      if(startBusy||!startReview)return;
+      const targetId=byId("audit-start-target")?.value;
+      const record=records.find(r=>r.id===targetId);
+      if(!record){alert("Selecciona una auditoría existente.");return;}
+      if(record.audit?.documentControl?.status==="confirmed"){alert("El expediente está confirmado y no puede alterarse.");return;}
+      let result;
+      try{
+        result=auditStart.updateExisting(startReview,startSelected,record.audit,{groups,uid});
+      }catch(error){alert(error.message);return;}
+      const stats=result.statistics;
+      if(!confirm("Actualizar "+(record.audit.meta?.reportId||record.id)+"?\n"+
+        stats.updated+" filas actualizadas, "+stats.added+" añadidas y "+stats.unchanged+" sin cambios.\n"+
+        "Solo se refrescan campos observados. Se conservan conclusiones y verificaciones manuales."))return;
+      startBusy=true;
+      try{
+        await flush();
+        const updated={...record,audit:result.audit,updatedAt:new Date().toISOString()};
+        await enqueue(()=>repository.put(updated));
+        const index=records.findIndex(r=>r.id===record.id);
+        records[index]=updated;
+        setActive(updated);
+        resetAuditStart();
+        move("assets");
+      }catch(error){startBusy=false;alert("No se pudo actualizar: "+error.message);}
+      return;
+    }
+    if(b.id==="audit-start-confirm"){
+      if(startBusy||!startReview)return;
+      startBusy=true;
+      try{
+        const candidate=auditStart.prepare(startReview,startSelected,{fresh,groups,uid,defaults:fieldDefaults});
+        if(await createAudit(candidate,{scaffold:true}))resetAuditStart();
+        else { startBusy=false; render(); }
+      }catch(error){startError="No se pudo crear la auditoría: "+error.message;startBusy=false;render();}
+      return;
+    }
+    if(b.id==="audit-start-copy"){
+      await copyCollectorCommand(b);
+      return;
+    }
+    if(b.id==="audit-start-companion"){
+      if(startBusy)return;
+      if(PUBLIC_DEMO){startStatusKind="error";startError="La captura local solo está disponible en RabbitMole privado.";render();return;}
+      startBusy=true;startStatusKind="progress";startError="Comprobando Companion en este ordenador…";
+      const setProgress=text=>{startError=text;startStatusKind="progress";const status=byId("audit-start-status");if(status){status.hidden=false;status.className="audit-start-inline-status is-progress";status.textContent=text;}};
+      b.disabled=true;setProgress(startError);
+      try{
+        const content=await auditStart.collectFromCompanion({origin:location.origin,onProgress:setProgress});
+        if(page==="audit-start")acceptStartCapture(content);
+      }catch(error){
+        if(page==="audit-start"){startStatusKind="error";startError="No se pudo capturar: "+error.message+" Puedes importar un JSON de PowerShell como alternativa.";render();}
+      }finally{
+        startBusy=false;
+        const current=byId("audit-start-companion");if(current)current.disabled=false;
+        const confirm=byId("audit-start-confirm");
+        if(confirm)confirm.disabled=!auditStart.blocks.some(k=>startSelected[k]&&startReview?.counts[k]);
+      }
+      return;
+    }
     if(b.dataset.softwareChoice!==undefined){
       if(state.documentControl?.status==="confirmed")return;
       const index=Number(b.dataset.softwareIndex);
@@ -3685,6 +3953,7 @@
     if (
       state.documentControl?.status === "confirmed" &&
       ![
+        "audit-start",
         "records",
         "backups",
         "connections",
@@ -3802,6 +4071,8 @@
         }
         row.notes = [
           row.notes,
+          intakePreview.privilege ? "Permisos de origen: "+intakePreview.privilege : "",
+          intakePreview.limitations?.length ? "Limitaciones de lectura: "+intakePreview.limitations.join("; ") : "",
           "Captura importada (" +
             intakePreview.source +
             (intakePreview.platform ? " · " + intakePreview.platform : "") +
@@ -4307,7 +4578,7 @@
       return;
     }
     if (b.dataset.new) {
-      await createAudit();
+      resetAuditStart();move("audit-start");
       return;
     }
     if (b.dataset.backupAll) {
@@ -4605,7 +4876,7 @@
       return;
     }
     if (b.id === "delivery-reset") {
-      await createAudit();
+      resetAuditStart();move("audit-start");
       return;
     }
   });

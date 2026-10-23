@@ -21,7 +21,7 @@ const rack={};mod.fillEmpty(rack,'assets',[def('rackAirflow','select',['','No ve
 assert.equal(rack.rackAirflow,'No verificado');
 const app=fs.readFileSync('js/app.js','utf8');
 assert(app.includes('fieldDefaults.fillEmpty(row,type,groups[type].fields)'));
-assert(app.includes('if(arguments.length===0)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields)'));
+assert(app.includes('if(arguments.length===0 || options.scaffold===true)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields)'));
 assert(app.includes('data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}'));assert(app.includes('data-fill-pending='));
 for(const path of ['index.html','sw.js','rabbitmole.sh','rabbitmole.ps1'])assert(fs.readFileSync(path,'utf8').includes('js/audit-field-defaults.js'));
 console.log('PASS defaults, no inferred compliance, no overwrite, offline bundling');

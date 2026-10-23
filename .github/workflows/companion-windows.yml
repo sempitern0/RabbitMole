@@ -14,10 +14,29 @@ jobs:
           python-version: '3.12'
       - name: Validate pairing and bridge
         run: python -m unittest discover -s tests -p "test_discovery*.py" -v
+      - name: Test capture consent
+        run: python -m unittest discover -s tests -p "test_inventory_capture.py" -v
+      - name: Validate and exercise Windows PowerShell 5.1 collector
+        shell: powershell
+        run: |
+          $files = @('collect-local.ps1', 'discovery/native.ps1', 'discovery/run.ps1')
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count) { throw "PowerShell syntax: $file -- $($errors | Out-String)" }
+          }
+          $output = Join-Path $env:RUNNER_TEMP 'rabbitmole-field-inventory.json'
+          & powershell.exe -NoProfile -NonInteractive -File .\collect-local.ps1 -Output $output
+          if ($LASTEXITCODE -ne 0) { throw 'Local collector exited with error' }
+          $document = Get-Content -LiteralPath $output -Raw | ConvertFrom-Json
+          if ($document.kind -ne 'rabbitmole-discovery-v1') { throw 'Invalid local inventory format' }
+          if (-not $document.items.assets) { throw 'Expected a local asset record' }
+          Remove-Item -LiteralPath $output -Force
       - name: Build standalone executable
         run: |
           python -m pip install pyinstaller==6.16.0
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name RabbitMole-Companion --paths discovery --add-data "collect-local.ps1;." discovery/companion.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name RabbitMole-Companion --paths discovery --hidden-import inventory --add-data "collect-local.ps1;." discovery/companion.py
       - name: Package portable ZIP
         shell: pwsh
         run: |

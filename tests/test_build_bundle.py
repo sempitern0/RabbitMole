@@ -20,16 +20,31 @@ class BuildTest(unittest.TestCase):
             for name in ('deploy/build-pages-demo.py','deploy/worker.js','deploy/public-profile.js','index.html','sw.js','manifest.webmanifest'):
                 shutil.copyfile(ROOT/name,root/name)
             shutil.copytree(ROOT/'discovery',root/'discovery')
-            shutil.copyfile(ROOT/'collect-local.ps1',root/'collect-local.ps1')
+            for filename in ('collect-local.ps1','collect-local.py','collect-local.sh'):
+                shutil.copyfile(ROOT/filename,root/filename)
             def build():
                 subprocess.run([sys.executable,str(root/'deploy/build-pages-demo.py')],check=True,stdout=subprocess.DEVNULL,env={**os.environ,'GITHUB_SHA':'a'*40,'CF_PAGES_BRANCH':'main'})
                 return json.loads((root/'dist-pages/release.json').read_text())['version']
             first=build()
+            for filename in ('collect-local.ps1','collect-local.py','collect-local.sh'):
+                self.assertEqual((root/'dist-pages'/filename).read_bytes(), (root/filename).read_bytes())
+            profile=(root/'dist-pages/js/deployment-profile.js').read_text()
+            self.assertIn('companionAvailable: false', profile)
+            self.assertFalse((root/'dist-pages/discovery-windows.zip').exists())
+            (root/'artifacts').mkdir()
+            with zipfile.ZipFile(root/'artifacts/RabbitMole-Companion-Windows.zip','w') as binary:
+                binary.writestr('RabbitMole-Companion.exe',b'test fixture only')
+            build()
+            self.assertTrue((root/'dist-pages/discovery-windows.zip').is_file())
+            self.assertIn('companionAvailable: true',
+                          (root/'dist-pages/js/deployment-profile.js').read_text())
+            (root/'artifacts/RabbitMole-Companion-Windows.zip').unlink()
             with zipfile.ZipFile(root/'dist-pages/discovery-kit.zip') as kit:
                 for entry in ('discovery/companion.py', 'discovery/pairing.py', 'discovery/iniciar.cmd',
-                              'discovery/setup.ps1', 'discovery/setup.sh', 'collect-local.ps1'):
+                              'discovery/setup.ps1', 'discovery/setup.sh', 'discovery/native.ps1', 'discovery/inventory.py', 'collect-local.ps1'):
                     self.assertIn(entry, kit.namelist())
-                self.assertIn(b'companion.py', kit.read('discovery/iniciar.cmd'))
+                self.assertIn(b'run.ps1', kit.read('discovery/iniciar.cmd'))
+                self.assertIn(b'collect-local.ps1', kit.read('discovery/native.ps1'))
             with zipfile.ZipFile(root/'dist-pages/discovery-android-termux.zip') as kit:
                 for entry in ('discover.py','wizard.py','INSTRUCCIONES.txt'):
                     self.assertIn(entry,kit.namelist())

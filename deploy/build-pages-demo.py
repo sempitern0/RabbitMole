@@ -56,14 +56,27 @@ def main():
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dst)
 
+    # Always publish the single-file Windows collector: no ZIP, Python or EXE required.
+    native_collector = ROOT / "collect-local.ps1"
+    if not native_collector.is_file() or native_collector.is_symlink():
+        raise SystemExit("Missing Windows native collector")
+    shutil.copyfile(native_collector, DIST / "collect-local.ps1")
+    shutil.copyfile(ROOT / "collect-local.py", DIST / "collect-local.py")
+    shutil.copyfile(ROOT / "collect-local.sh", DIST / "collect-local.sh")
+
     # Only the minimal Discovery helper, never audit data or credentials.
     with zipfile.ZipFile(DIST / "discovery-kit.zip", "w", zipfile.ZIP_DEFLATED) as archive:
-        for name in ("service.py", "discover.py", "wizard.py", "pairing.py", "companion.py", "run.ps1",
+        for name in ("service.py", "discover.py", "wizard.py", "pairing.py", "companion.py", "inventory.py", "native.ps1", "run.ps1",
                      "run.sh", "iniciar.cmd", "setup.ps1", "setup.sh", "README_ES.md", "README.md"):
             source = ROOT / "discovery" / name
             if not source.is_file() or source.is_symlink():
                 raise SystemExit("Missing Discovery kit source: " + str(source))
             info = zipfile.ZipInfo("discovery/" + name, (2024, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(info, source.read_bytes())
+        for name in ("collect-local.py", "collect-local.sh"):
+            source = ROOT / name
+            info = zipfile.ZipInfo(name, (2024, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, source.read_bytes())
         source = ROOT / "collect-local.ps1"
@@ -108,8 +121,12 @@ def main():
             raise SystemExit("Stylesheet missing from bundle: " + src)
     (DIST / "index.html").write_text(html, encoding="utf-8")
     (DIST / "manifest.webmanifest").write_bytes((ROOT / "manifest.webmanifest").read_bytes())
-    (DIST / "js/deployment-profile.js").write_bytes(
-        (ROOT / "deploy/public-profile.js").read_bytes())
+    profile = (ROOT / "deploy/public-profile.js").read_text(encoding="utf-8")
+    if profile.count("companionAvailable: false") != 1:
+        raise SystemExit("Missing Companion availability marker in deployment profile")
+    if windows.is_file():
+        profile = profile.replace("companionAvailable: false", "companionAvailable: true", 1)
+    (DIST / "js/deployment-profile.js").write_text(profile, encoding="utf-8")
 
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
     if '"./js/deployment-profile.js"' not in sw:

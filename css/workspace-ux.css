@@ -1388,3 +1388,160 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
  #workspace .online-lookup-heading,#workspace .online-lookup-service>section{padding:.75rem}
  #workspace .online-lookup-action-row>.button{width:100%}
 }
+
+/* A safe manual/assisted starting point, plus one workspace for findings/proof. */
+#workspace .audit-start-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+#workspace .audit-start-option{display:flex;flex-direction:column;gap:.8rem;min-width:0}
+#workspace .audit-start-option h2{margin:.1rem 0}
+#workspace .audit-start-option .button.accent{margin-top:auto}
+#workspace .audit-start-option input[type=file]{min-height:46px;width:100%;max-width:100%;border:1px dashed var(--line);padding:.6rem;border-radius:.6rem}
+#workspace .audit-start-option p,#workspace .audit-start-review p{line-height:1.6}
+#workspace .audit-start-actions{display:flex;flex-wrap:wrap;gap:.45rem}
+#workspace .audit-start-actions button{min-height:44px}
+#workspace .audit-start-selections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin:1rem 0}
+#workspace .audit-start-selections label{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.8rem;border:1px solid var(--line);border-radius:.6rem;background:var(--paper);cursor:pointer}
+#workspace .audit-start-selections label span{width:100%;padding-inline-start:1.4rem;color:var(--muted);font-size:.9rem}
+#workspace .audit-start-review details{padding:.65rem .8rem;margin:.6rem 0;border:1px solid var(--line);border-radius:.5rem;background:var(--canvas)}
+#workspace .audit-start-review details li{padding:.2rem;overflow-wrap:anywhere}
+#workspace .audit-start-status{color:var(--ink);padding:.6rem .8rem;min-height:2rem}
+#workspace .audit-finding-tabs{display:flex;gap:.5rem;flex-wrap:wrap;padding:.45rem 0 1rem}
+#workspace .audit-finding-tabs button{min-height:44px}
+#workspace .audit-evidence-unified>.eyebrow{display:block}
+#workspace .audit-evidence-unified>section.card{margin-top:1rem}
+@media(max-width:780px){
+ #workspace .audit-start-grid{grid-template-columns:minmax(0,1fr)}
+ #workspace .audit-start-selections{grid-template-columns:minmax(0,1fr)}
+ #workspace .audit-start-actions button{flex:1 1 100%}
+ #workspace .audit-finding-tabs button{flex:1 1 0}
+}
+
+#workspace .audit-start-preview{display:grid;gap:.5rem;margin:.75rem 0 1rem}
+#workspace .audit-start-preview details{padding:.6rem .8rem;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas)}
+#workspace .audit-start-preview summary{cursor:pointer;font-weight:700;min-height:34px;color:var(--ink)}
+#workspace .audit-start-preview ul{margin:.4rem 0;padding-inline-start:1.5rem;max-height:260px;overflow:auto}
+#workspace .audit-start-preview li{margin:.2rem 0;padding:.25rem 0;overflow-wrap:anywhere;color:var(--ink)}
+
+
+/* Audit intake and linked evidence: tablet, touch and narrow-screen hardening. */
+#workspace :is(.audit-start-grid,.audit-start-option,.audit-start-review,.audit-start-preview,.audit-evidence-unified){min-width:0;max-width:100%}
+#workspace .audit-start-option{overflow-wrap:anywhere}
+#workspace .audit-start-option :is(input[type=file],label,a),
+#workspace .audit-start-review :is(p,li,summary){overflow-wrap:anywhere}
+#workspace .audit-start-option input[type=file]::file-selector-button{
+  max-width:100%;min-height:44px;margin-inline-end:.7rem;
+  padding:.55rem .75rem;border:1px solid var(--line);
+  border-radius:.45rem;background:var(--canvas);color:var(--ink);cursor:pointer;
+}
+#workspace .audit-start-selections label{min-width:0;min-height:64px;align-content:center}
+#workspace .audit-start-selections input[type=checkbox]{flex:0 0 auto;min-width:20px;min-height:20px;accent-color:var(--brand)}
+#workspace .audit-start-selections strong{min-width:0;overflow-wrap:anywhere}
+#workspace .audit-start-preview details{min-width:0;max-width:100%}
+#workspace .audit-start-preview summary{min-height:44px;align-content:center;overflow-wrap:anywhere}
+#workspace .audit-start-review>.action-row{display:flex;gap:.6rem;flex-wrap:wrap}
+#workspace .audit-start-review>.action-row>.button{min-height:44px}
+#workspace .audit-finding-tabs{min-width:0}
+#workspace .audit-finding-tabs .button{min-width:0;overflow-wrap:anywhere;white-space:normal;text-align:center}
+#workspace .audit-start-grid :is(button,input,summary):focus-visible,
+#workspace .audit-start-review :is(button,input,summary):focus-visible,
+#workspace .audit-finding-tabs button:focus-visible{
+ outline:3px solid var(--brand);outline-offset:2px;
+}
+@media (min-width:781px) and (max-width:1100px){
+ #workspace .audit-start-grid{gap:.75rem}
+ #workspace .audit-start-option{padding:1rem}
+ #workspace .audit-start-selections{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #workspace .audit-start-actions>.button{flex:1 1 13rem}
+}
+@media (max-width:780px){
+ #workspace .audit-start-option{padding:clamp(.75rem,2.6vw,1rem)}
+ #workspace .audit-start-selections{gap:.5rem}
+ #workspace .audit-start-selections label{min-height:56px}
+ #workspace .audit-start-option .button.accent{min-height:46px}
+ #workspace .audit-start-review>.action-row>.button{flex:1 1 12rem}
+}
+@media (max-width:480px){
+ #workspace .audit-start-grid{gap:.7rem}
+ #workspace .audit-start-option{gap:.65rem}
+ #workspace .audit-start-option h2{font-size:1.1rem}
+ #workspace .audit-start-option input[type=file]{font-size:16px}
+ #workspace .audit-start-actions,#workspace .audit-start-review>.action-row{width:100%}
+ #workspace .audit-start-actions>.button,#workspace .audit-start-review>.action-row>.button{width:100%;flex:1 1 100%}
+ #workspace .audit-start-selections label{padding:.65rem}
+ #workspace .audit-start-preview details{padding:.55rem .65rem}
+ #workspace .audit-start-preview ul{padding-inline-start:1.25rem}
+ #workspace .audit-finding-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem}
+ #workspace .audit-finding-tabs>.button{width:100%;padding-inline:.4rem;font-size:.88rem}
+}
+@media (prefers-reduced-motion:reduce){
+ #workspace .audit-start-grid *,#workspace .audit-evidence-unified *{scroll-behavior:auto}
+}
+
+/* Intake cards: readable feedback at the interaction point, balanced routes. */
+#workspace .audit-start-option{height:100%}
+#workspace .audit-start-manual-guide{margin-top:auto;padding:1rem;border:1px solid var(--line);border-radius:.75rem;background:var(--canvas);min-width:0}
+#workspace .audit-start-manual-guide h3{font-size:1rem;margin:0 0 .6rem}
+#workspace .audit-start-manual-guide ol{margin:.35rem 0 .7rem;padding-inline-start:1.35rem;line-height:1.65}
+#workspace .audit-start-manual-guide li{padding-inline-start:.15rem}
+#workspace .audit-start-manual-guide p{margin:0}
+#workspace .audit-start-inline-status{margin:.2rem 0;padding:.85rem 1rem;border:1px solid var(--line);border-inline-start:4px solid var(--brand);border-radius:.65rem;background:var(--canvas);color:var(--ink);line-height:1.55;overflow-wrap:anywhere}
+#workspace .audit-start-inline-status[hidden]{display:none!important}
+#workspace .audit-start-inline-status.is-error{border-inline-start-color:#c0455c;background:var(--paper)}
+#workspace .audit-start-inline-status.is-success{border-inline-start-color:#408e79}
+#workspace .audit-start-inline-status.is-progress{border-inline-start-color:#548eb9}
+#workspace .audit-start-help{min-width:0;border:1px solid var(--line);border-radius:.65rem;padding:.6rem .8rem}
+#workspace .audit-start-help summary{cursor:pointer;min-height:44px;align-content:center;color:var(--ink);font-weight:700}
+#workspace .audit-start-help p{margin:.65rem 0;overflow-wrap:anywhere}
+@media(max-width:780px){#workspace .audit-start-manual-guide{margin-top:.4rem;padding:.8rem}}
+
+/* Audit's first-run command uses the same terminal treatment as Discovery/Glosario. */
+#workspace .audit-start-command{width:100%;min-width:0;margin:.35rem 0 .5rem}
+#workspace .audit-start-command .intake-command-head{gap:.7rem}
+#workspace .audit-start-command .glossary-copy{min-height:44px;white-space:normal}
+#workspace .audit-start-command pre{max-width:100%;min-width:0;overflow-x:auto;white-space:pre;scrollbar-width:thin}
+#workspace .audit-start-command pre code{font:inherit;color:inherit;background:transparent;border:0;padding:0}
+#workspace .audit-start-command-inline{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
+@media(max-width:560px){#workspace .audit-start-command .intake-command-head{align-items:stretch}#workspace .audit-start-command .glossary-copy{width:100%}}
+@media(forced-colors:active){#workspace .audit-start-command pre{background:Canvas;color:CanvasText;border:1px solid CanvasText}}
+
+/* Device Discovery: three-step layout; concise first, advanced guidance on demand. */
+#pwa-install-card .device-collector-setup{display:grid;gap:1rem;min-width:0;margin:1rem 0;padding:clamp(1rem,2vw,1.35rem);border:1px solid var(--line);border-radius:.85rem;background:var(--paper)}
+#pwa-install-card .device-collector-header{display:grid;gap:.45rem;min-width:0}
+#pwa-install-card .device-collector-header h3{margin:0;font-size:clamp(1.12rem,2vw,1.4rem);color:var(--ink)}
+#pwa-install-card .device-collector-header p{max-width:74ch;margin:0;line-height:1.55}
+#pwa-install-card .device-collector-step{display:grid;gap:.65rem;min-width:0}
+#pwa-install-card .device-collector-step-heading{display:flex;align-items:center;gap:.55rem}
+#pwa-install-card .device-collector-step-heading h4{font-size:1rem;margin:0;color:var(--ink)}
+#pwa-install-card .collector-step-number{display:grid;place-items:center;flex:0 0 1.75rem;height:1.75rem;border:1px solid var(--line);border-radius:50%;background:var(--canvas);font-weight:750}
+#pwa-install-card .device-collector-downloads{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem}
+#pwa-install-card .collector-download{display:flex;align-items:center;justify-content:initial;gap:.6rem;min-width:0;min-height:64px;padding:.7rem .8rem;margin:0;text-align:left;white-space:normal;transition:box-shadow .15s ease,border-color .15s ease}
+#pwa-install-card .collector-download:hover{box-shadow:0 3px 12px rgba(0,0,0,.09)}
+#pwa-install-card .collector-download-icon,#pwa-install-card .collector-download-arrow{display:inline-flex;flex:none;align-items:center}
+#pwa-install-card .collector-download-name{display:grid;min-width:0;gap:.2rem;flex:1}
+#pwa-install-card .collector-download-name strong{font-size:.93rem;line-height:1.2}
+#pwa-install-card .collector-download-name small{font-size:.73rem;line-height:1.3;opacity:.82}
+#pwa-install-card .collector-download-arrow{opacity:.65}
+#pwa-install-card .collector-download[data-requested="true"]{outline:2px solid var(--brand);outline-offset:1px}
+#pwa-install-card .device-collector-status{margin:0;padding:.55rem .75rem;border-inline-start:3px solid var(--brand);background:var(--canvas);border-radius:.4rem;font-size:.88rem;overflow-wrap:anywhere}
+#pwa-install-card .device-collector-status[hidden]{display:none}
+#pwa-install-card .device-collector-command{margin:0;min-width:0;width:100%}
+#pwa-install-card .device-collector-command .intake-command-head{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+#pwa-install-card .device-collector-command pre{max-width:100%;min-width:0;overflow-x:auto;white-space:pre}
+#pwa-install-card .device-collector-command pre code{font:inherit;color:inherit;background:none;border:0;padding:0}
+#pwa-install-card .device-collector-command .glossary-copy{min-height:44px;flex:none}
+#pwa-install-card .device-collector-command p{margin:.4rem 0 0;line-height:1.5}
+#pwa-install-card .device-collector-finish{padding:.75rem .9rem;border:1px solid var(--line);border-radius:.65rem;background:var(--canvas)}
+#pwa-install-card .device-collector-finish p{margin:0;line-height:1.5}
+#pwa-install-card .collector-permissions-guide{min-width:0;border-top:1px solid var(--line);padding-top:.65rem}
+#pwa-install-card .collector-permissions-guide summary{cursor:pointer;min-height:44px;align-content:center;font-weight:700}
+#pwa-install-card .collector-summary-hint{font-size:.78rem;font-weight:400;color:var(--muted);margin-left:.5rem}
+#pwa-install-card .collector-permissions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin:.7rem 0}
+#pwa-install-card .collector-permissions-grid>div{min-width:0;padding:.8rem;background:var(--canvas);border:1px solid var(--line);border-radius:.55rem}
+#pwa-install-card .collector-permissions-grid h4{margin:0;font-size:.94rem}
+#pwa-install-card .collector-permissions-grid p{margin:.45rem 0 0;line-height:1.5}
+#pwa-install-card .collector-permissions-tag{font-size:.74rem;font-weight:500;white-space:normal;color:var(--muted)}
+#pwa-install-card .collector-permissions-extra{display:grid;gap:.5rem}
+#pwa-install-card .collector-permissions-extra p{margin:0;line-height:1.5;overflow-wrap:anywhere}
+#pwa-install-card .collector-download:focus-visible,#pwa-install-card .collector-permissions-guide summary:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+@media(max-width:950px){#pwa-install-card .device-collector-downloads{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){#pwa-install-card .device-collector-downloads,#pwa-install-card .collector-permissions-grid{grid-template-columns:minmax(0,1fr)}#pwa-install-card .device-collector-command .intake-command-head{align-items:stretch;flex-direction:column}#pwa-install-card .device-collector-command .glossary-copy{width:100%}}
+@media(prefers-reduced-motion:reduce){#pwa-install-card .collector-download{transition:none}}

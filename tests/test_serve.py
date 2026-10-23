@@ -39,6 +39,42 @@ class ServeTests(unittest.TestCase):
                      '/backup.json', '/js/hardware-catalog.js/extra'):
             self.assertIsNone(resolve_asset(name), name)
 
+    def test_native_collector_and_dynamic_discovery_kit(self):
+        from serve import discovery_kit_bytes
+        from io import BytesIO
+        import zipfile
+        self.assertEqual(resolve_asset("/collect-local.ps1"), ROOT / "collect-local.ps1")
+        self.assertIsNone(resolve_asset("/discovery/service.py"))
+        self.assertIsNone(resolve_asset("/rabbitmole.ps1"))
+        with zipfile.ZipFile(BytesIO(discovery_kit_bytes())) as archive:
+            self.assertIsNone(archive.testzip())
+            self.assertIn("collect-local.ps1", archive.namelist())
+            self.assertIn("discovery/run.ps1", archive.namelist())
+            self.assertIn("discovery/native.ps1", archive.namelist())
+
+    def test_local_http_downloads(self):
+        from http.server import ThreadingHTTPServer
+        from serve import LocalHandler
+        from urllib.request import urlopen
+        import threading
+        server = ThreadingHTTPServer(("127.0.0.1", 0), LocalHandler)
+        server.root = ROOT
+        server.discovery_enabled = False
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            for name, content_type in (("collect-local.ps1", "text/plain"),
+                                       ("discovery-kit.zip", "application/zip")):
+                with urlopen(f"http://127.0.0.1:{server.server_port}/{name}") as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertIn(content_type, response.headers["Content-Type"])
+                    self.assertIn("attachment", response.headers["Content-Disposition"])
+                    self.assertGreater(len(response.read()), 100)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
     def test_only_loopback_and_explicit_discovery_switch(self):
         from serve import LocalHandler
         self.assertTrue(callable(LocalHandler.do_POST))

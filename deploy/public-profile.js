@@ -15,6 +15,7 @@
   }
   globalThis.RabbitMoleDeployment = Object.freeze({
     channel: "cloudflare",
+    companionAvailable: false, // Replaced only by the release bundler when the signed-off ZIP exists.
     get installed() { return installed(); },
     get profile() { return installed() ? "private-full" : "public-web"; }
   });

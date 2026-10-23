@@ -36,7 +36,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1 -Out
 powershell.exe -NoProfile -File .\discovery\run.ps1 doctor
 ```
 
-El JSON se importa por separado en Hardware, Redes y Software desde «Captura asistida». Incluye solo información visible para el usuario: CIM para equipo, sistema operativo y adaptadores; aplicaciones del registro HKLM/HKCU accesible; servicios visibles y Microsoft Defender si sus cmdlets permiten lectura. La detección de una aplicación **no valida licencia, EOL, seguridad o actualizaciones**. La activación Windows, si es consultable, se describe solo en notas y sin obtener claves ni identificadores personales. Se consignan las restricciones de acceso detectadas para que el auditor no confunda «sin datos» con «sin software».
+El recolector muestra etapas y recuentos por raíz del registro; si una entrada de HKLM está restringida, sigue con las demás. También consulta aplicaciones Store accesibles. El JSON se importa por separado en Hardware, Redes y Software desde «Captura asistida». Incluye solo información visible para el usuario: CIM para equipo, sistema operativo y adaptadores; aplicaciones del registro HKLM/HKCU accesible; servicios visibles y Microsoft Defender si sus cmdlets permiten lectura. La detección de una aplicación **no valida licencia, EOL, seguridad o actualizaciones**. La activación Windows, si es consultable, se describe solo en notas y sin obtener claves ni identificadores personales. Se consignan las restricciones de acceso detectadas para que el auditor no confunda «sin datos» con «sin software».
 
 Para detectar hosts dentro de un CIDR privado con permiso expreso (no recopila software remoto):
 

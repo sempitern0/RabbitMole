@@ -42,7 +42,7 @@ const deps={docControl:{normalize:d=>d||{status:'draft',revision:0,confirmed:nul
  }}};
 let s=v.summarizeOverview(audit,deps);
 assert.equal(s.amendments,0);assert.equal(s.evaluated,1);assert.equal(s.pendingControls,1);
-assert.equal(s.openFindings,1);assert.equal(s.highFindings,1);assert.equal(s.documented,3);
+assert.equal(s.openFindings,1);assert.equal(s.highFindings,1);assert.equal(s.documented,4);
 let dashboard=v.renderOverview({state:audit,...deps,html});
 assert(dashboard.includes('Borrador'));assert(dashboard.includes('data-go="quality"'));
 assert(dashboard.includes('Auditoría &lt;script&gt;'));assert(!dashboard.includes('Auditoría <script>'));

@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v118-terminal-contrast";
+const CACHE_NAME = "rabbitmole-shell-v127-api-guides";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -15,7 +15,9 @@ const CORE = [
   "./",
   "./index.html",
   "./css/styles.css",
+  "./css/brand-motion.css",
   "./js/app.js",
+  "./js/online-lookups.js",
   "./js/palette-preferences.js",
   "./js/app-definitions.js",
   "./js/app-team.js",
@@ -44,6 +46,7 @@ const CORE = [
   "./js/audit-record-navigation.js",
   "./js/ui-layout.js",
   "./js/audit-field-renderer.js",
+  "./js/audit-field-defaults.js",
   "./js/audit-rack.js",
   "./js/audit-server-install.js",
   "./js/audit-infrastructure-quality.js",

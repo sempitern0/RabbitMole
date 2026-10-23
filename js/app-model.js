@@ -102,6 +102,12 @@
           throw Error("Registro no válido en " + block);
         const record = { _key: str(item._key) || uid() };
         for (const [name] of definition.fields) record[name] = str(item[name]);
+        if (block === "software") {
+          // Do not import or store a complete key through the suffix field.
+          // A suffix only identifies a licence; it cannot prove entitlement.
+          if (!/^[A-Za-z0-9]{1,4}$/.test(record.licenseKeySuffix || ""))
+            record.licenseKeySuffix = "";
+        }
         if (block === "controls") {
           record.templateKey =
             templates.safeKey(str(item.templateKey).split("/")[0]) &&

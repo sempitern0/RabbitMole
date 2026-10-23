@@ -58,6 +58,32 @@ const {chromium}=require('playwright');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
    assert.equal(await page.locator('#pwa-install-card').evaluate(el=>el.classList.contains('is-installed')),installed);
    if(installed)assert.equal(await page.locator('#pwa-install-status').textContent(),'Aplicación instalada · Funciones locales disponibles sin conexión.');
+   if(installed){
+     await page.locator('#global-navigation [data-go="connections"]').click();
+     assert.equal(await page.locator('#lookup-provider').count(),1);
+     assert.equal(await page.locator('#lookup-test').count(),1);
+     assert.equal(await page.locator('#lookup-key').getAttribute('type'),'password');
+     assert.equal(await page.locator('[data-lookup-service="cve"]').isVisible(),true);
+     assert.equal(await page.locator('[data-lookup-service="nvd"]').isVisible(),false);
+     await page.locator('#lookup-provider').selectOption('nvd');
+     assert.equal(await page.locator('[data-lookup-service="nvd"]').isVisible(),true);
+     assert.equal(await page.locator('#lookup-key').isVisible(),true);
+     await page.locator('#lookup-provider').selectOption('company');
+     await page.locator('#lookup-company-mode').selectOption('lei');
+     assert.match(await page.locator('#lookup-term-label').textContent(),/Código LEI/);
+     await page.locator('#lookup-provider').selectOption('place');
+     assert.equal(await page.locator('#lookup-map-key').isVisible(),true);
+     assert.equal(await page.locator('#lookup-key').isVisible(),false);
+     assert.match(await page.locator('#lookup-test').textContent(),/Geoapify/);
+     await page.locator('#lookup-provider').selectOption('cve');
+     await page.locator('.online-lookup-card details > summary').click();
+     await page.locator('#lookup-cif').fill('A00000001');
+     await page.locator('#lookup-check-cif').click();
+     assert.match(await page.locator('#lookup-cif-status').textContent(),/control no coincide/);
+     await page.locator('#lookup-clear').click();
+     assert.equal(await page.locator('#lookup-term').inputValue(),'');
+     await page.locator('#global-navigation [data-go="device"]').click();
+   }
    if(!installed){
     assert.equal(await page.locator('#global-navigation [data-go="connections"]').isVisible(),false);
     const rejected=await page.evaluate(async()=>{try{await AuditSecureTransfer.upload({url:'https://example.com/',user:'test',secret:'test'},'test.json','{}','application/json');return false;}catch{return true;}});
@@ -257,6 +283,11 @@ const {chromium}=require('playwright');
    const sticky=await page.locator('.record-navigator').evaluate(el=>({position:getComputedStyle(el).position,border:parseFloat(getComputedStyle(el).borderLeftWidth),background:getComputedStyle(el).backgroundColor}));
    assert.equal(sticky.position,'sticky');
    assert(sticky.border>=4,'The audit filter bar needs a visible separator');
+   const toggleStyle=await page.locator('#record-nav-toggle').evaluate(el=>{
+     const computed=getComputedStyle(el);return {background:computed.backgroundColor,visibility:computed.visibility};
+   });
+   assert.equal(toggleStyle.visibility,'visible');
+   assert.notEqual(toggleStyle.background,sticky.background,'Collapse toggle must contrast with the filter panel');
    await page.locator('#record-nav-toggle').click();
    assert.equal(await page.locator('#record-nav-toggle').getAttribute('aria-expanded'),'false');
    await page.locator('#wizard-step-select').selectOption('networks');
@@ -321,6 +352,16 @@ const {chromium}=require('playwright');
    assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
    // Switching away and back must retain both values even when custom.
    await page.locator('#wizard-step-top').selectOption('assets');
+   const assignment=page.locator('#f-assets-0-ipAssignment');
+   if(await assignment.count()){
+     await assignment.selectOption('DHCP / dinámica');
+     const ip=page.locator('#f-assets-0-ip');
+     assert.equal(await ip.inputValue(),'');
+     assert.match(await ip.locator('xpath=following-sibling::small').textContent(),/no es permanente/);
+     await ip.fill('192.0.2.25');
+     await assignment.selectOption('Reserva DHCP');
+     assert.equal(await ip.inputValue(),'192.0.2.25','Changing assignment must not delete observed IP');
+   }
    await page.locator('#wizard-step-top').selectOption('networks');
    await page.locator('.router-security-review').first().locator('summary').click();
    assert.equal(await page.locator('#f-networks-0-networkDeviceType').inputValue(),'Firewall');
@@ -468,6 +509,66 @@ const {chromium}=require('playwright');
    // The top selector works without reaching the bottom of a long inventory.
    await page.locator('#wizard-step-top').selectOption('software');
    assert.equal(await page.locator('#wizard-step-select').inputValue(),'software');
+   // Software autocomplete: clicking and dragging its scrollbar must not blur
+   // the input into closing the list. Wheel, keyboard and outside click remain valid.
+   await page.locator('[data-add="software"]').first().click();
+   const softwareSearch=page.locator('#f-software-0-name');
+   await softwareSearch.focus();
+   const softwareList=page.locator('#software-results-0');
+   assert.equal(await softwareList.isVisible(),true,'Software picker should open on focus');
+   const softwareMetrics=await softwareList.evaluate(el=>({
+     overflow:el.scrollHeight>el.clientHeight,
+     gutter:el.offsetWidth-el.clientWidth,
+     scrollTop:el.scrollTop
+   }));
+   assert(softwareMetrics.overflow,'Software results must be scrollable');
+   assert.equal(await softwareList.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(23, 44, 67)');
+   // Simulate a scrollbar grab even on systems with overlay scrollbars.
+   await softwareList.evaluate(el=>{
+     const rect=el.getBoundingClientRect();
+     document.body.dispatchEvent(new PointerEvent('pointerdown',{
+       bubbles:true,pointerType:'mouse',clientX:rect.right-2,clientY:rect.top+14
+     }));
+   });
+   await softwareSearch.evaluate(el=>el.blur());
+   assert.equal(await softwareList.isVisible(),true,'Input blur during a scrollbar drag must not close results');
+   // On platforms exposing a track, exercise real mouse drag and scrolling.
+   if(softwareMetrics.gutter>=6){
+     const rect=await softwareList.boundingBox();
+     await page.mouse.move(rect.x+rect.width-3,rect.y+10);
+     await page.mouse.down();
+     await page.mouse.move(rect.x+rect.width-3,rect.y+rect.height-10,{steps:8});
+     assert.equal(await softwareList.isVisible(),true,'Mouse scrollbar drag must keep the list open');
+     await page.mouse.up();
+   }
+   await softwareList.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+   assert((await softwareList.evaluate(el=>el.scrollTop))>0,'Scroll area must remain interactive');
+   await page.locator('#workspace h1').click();
+   assert.equal(await softwareList.isVisible(),false,'Outside click must close software results');
+   await softwareSearch.focus();
+   await page.keyboard.press('Escape');
+   assert.equal(await softwareList.isVisible(),false,'Escape must close software results');
+   await softwareSearch.focus();
+   await softwareList.locator('[data-software-choice="Google Chrome"]').click();
+   assert.equal(await softwareSearch.inputValue(),'Google Chrome');
+   assert.equal(await page.locator('#f-software-0-vendor').inputValue(),'Google LLC');
+   await page.locator('#f-software-0-licenseProof').fill('Contrato de ejemplo');
+   await page.locator('#f-software-0-licenseKeySuffix').fill('A7K2');
+   assert.equal(await page.locator('#f-software-0-licenseKeySuffix').getAttribute('maxlength'),'4');
+   assert.equal(await page.locator('#f-software-0-licenseProof').inputValue(),'Contrato de ejemplo');
+   await page.locator('#wizard-step-top').selectOption('cves');
+   await page.locator('[data-add="cves"]').first().click();
+   const cvePanel=page.locator('.cve-identifier-panel').first();
+   assert.equal(await cvePanel.count(),1);
+   assert.equal(await cvePanel.locator('[data-field="id"][data-block="cves"]').count(),1);
+   assert.equal(await page.locator('.entry > .cve-tools').count(),0,
+     'CVE action buttons belong next to the identifier, not below all fields');
+   assert.equal(await cvePanel.locator('[data-cve-link]').count(),installed?1:0);
+   assert.equal(await cvePanel.locator('[data-cve-check]').count(),installed?1:0);
+   assert((await cvePanel.evaluate(el=>parseFloat(getComputedStyle(el).paddingLeft)))>=10,
+     'CVE ID panel must have readable inset');
+   await page.locator('#f-cves-0-id').fill('CVE-2025-12345');
+
    await page.locator('#wizard-step-top').selectOption('networks');
    assert.equal(await page.locator('[data-network-kind="Wi-Fi"]').count(),1);
    await page.locator('[data-network-kind="Wi-Fi"]').click();
@@ -515,6 +616,20 @@ const {chromium}=require('playwright');
    assert.match(await page.locator('[data-open]').first().textContent(),/Reanudar.*Hardware/);
    await page.locator('[data-new]').first().click();
    assert.equal(await page.locator('#wizard-step-top').inputValue(),'engagement','A new audit starts at client and scope');
+   await page.locator('#wizard-step-top').selectOption('dashboard');
+   const dash=page.locator('.audit-dashboard');
+   assert.equal(await dash.count(),1);
+   assert.match(await dash.locator('.audit-dashboard-status').textContent(),/Borrador/);
+   assert.match(await dash.locator('.audit-dashboard-document').textContent(),/Rectificaciones finalizadas/);
+   assert.equal(await dash.locator('.audit-dashboard-metric').count(),6);
+   assert.equal(await dash.locator('.audit-dashboard-panel').count(),2);
+   assert.equal(await dash.locator('.audit-dashboard-coverage').evaluate(el=>el.open),false);
+   await page.setViewportSize({width:390,height:844});
+   assert.equal(await dash.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),true,
+     'Mobile overview must not overflow horizontally');
+   assert.equal(await dash.locator('.audit-dashboard-metrics').evaluate(el=>
+     getComputedStyle(el).gridTemplateColumns.split(' ').length),2);
+   await page.setViewportSize({width:1280,height:900});
    await page.locator('#wizard-step-top').selectOption('networks');
    await page.locator('#audit-file-library-link').click();
    assert.equal(await page.locator('[data-library-select-audit]').count(),2,

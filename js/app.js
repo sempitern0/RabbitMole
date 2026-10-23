@@ -28,6 +28,9 @@
   const workflowViews = globalThis.RabbitMoleWorkflowViews;
   const auditActions = globalThis.RabbitMoleAuditActions;
   const fieldRenderer = globalThis.RabbitMoleFieldRenderer;
+  const onlineLookups = globalThis.RabbitMoleOnlineLookups;
+  const fieldDefaults = globalThis.RabbitMoleFieldDefaults;
+  if(!fieldDefaults)throw Error("Falta el módulo de borradores iniciales.");
   const rackAudit = globalThis.RabbitMoleRackAudit;
   const serverInstall = globalThis.RabbitMoleServerInstall;
   const recordNavigatorModule = globalThis.RabbitMoleRecordNavigator;
@@ -80,6 +83,7 @@
   const osCatalog = globalThis.AuditOSCatalog;
   const glossary = globalThis.AuditGlossary;
   const hardwareVendors = Object.keys(vendorModels);
+  const softwareCatalog = globalThis.AuditSoftwareCatalog;
   const softwareVendors =
     globalThis.AuditSoftwareCatalog?.PUBLISHERS || hardwareVendors;
   const hardwareModels = Object.values(vendorModels).flat();
@@ -156,6 +160,8 @@
       !/^((0[1-9]|[1-4]\d|5[0-2])\d{3})$/.test(v)
     )
       return "Código postal español: 5 dígitos, provincia entre 01 y 52.";
+    if (block === "software" && field === "licenseKeySuffix" && !/^[A-Za-z0-9]{1,4}$/.test(v))
+      return "Solo los últimos 1–4 caracteres alfanuméricos, no la clave de activación completa.";
     if (field === "id" && block === "cves" && !CVE_PATTERN.test(v))
       return "Formato esperado: CVE-AAAA-NNNN.";
     if (field === "sha256" && !/^[a-fA-F0-9]{64}$/.test(v))
@@ -584,6 +590,9 @@
   async function createAudit(audit = fresh(), options = {}) {
     try {
       await flush();
+      // Only fresh audits get provisional narrative scaffolding; importing or
+      // duplicating an existing audit never changes its historical content.
+      if(arguments.length===0)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
       if (options.copy || !audit.meta.reportId) {
         audit.meta.reportId = identifiers.generate(
           records,
@@ -691,7 +700,7 @@
   const glossaryHelpIcon = '<svg class="glossary-help-icon" viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8"></circle><path d="M10 9v5"></path><circle cx="10" cy="6" r="1" fill="currentColor" stroke="none"></circle></svg>';
   function renderField(obj, block, def, index) {
     return fieldRenderer.render(obj,block,def,index,{
-      html,str,identifiers,assist,state,osCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon
+      html,str,identifiers,assist,state,osCatalog,softwareCatalog,vendorModels,routerModels,networkDevices,glossary,glossaryHelpIcon
     });
   }
   function pill(v) {
@@ -1049,17 +1058,7 @@
         terms.length + " de " + glossary.TERMS.length + " conceptos";
   }
   function renderOverview() {
-    const counts = Object.fromEntries(
-      severity.map((s) => [
-        s,
-        state.findings.filter((x) => x.severity === s).length,
-      ]),
-    );
-    return `<section class="hero"><span class="eyebrow">AUDIT / WORKSPACE</span><h2>${html(state.meta.project || "Tu próxima auditoría, bien documentada.")}</h2><p>Inventario técnico, evaluación de controles, gestión de hallazgos y un informe final coherente. Toda la información permanece en este navegador hasta que tú la exportes.</p><button class="button" data-go="engagement">Comenzar auditoría &rarr;</button></section>
-      <section class="stats">${metric("Equipos inventariados", "Hardware", state.assets.length)}${metric("Segmentos registrados", "Infraestructura", state.networks.length)}${metric("Controles evaluados", "Seguridad", state.controls.length)}${metric("Hallazgos", "Gestión de riesgos", state.findings.length)}</section>
-      <div class="grid-two"><section class="card"><h2>Distribución de severidades</h2><p class="subtle">Se calcula únicamente a partir de los hallazgos documentados.</p><div class="severity-line">${severity.map((s) => `<span class="sev-bar ${level(s)} ${counts[s] ? "with-count" : ""}" title="${html(s)}: ${counts[s]}"></span>`).join("")}</div><div class="severity-legend">${severity.map((s) => `<span><strong>${counts[s]}</strong> ${s}</span>`).join("")}</div></section>
-      <section class="card"><h2>Flujo recomendado</h2><div class="timeline"><div><b>01</b><span>Delimita objetivos, exclusiones y autorización<small>Cliente y alcance</small></span></div><div><b>02</b><span>Inventaría sistemas, aplicaciones y redes<small>Hardware · Redes · Software</small></span></div><div><b>03</b><span>Registra controles, evidencias y hallazgos<small>Pruebas verificadas y remediación</small></span></div><div><b>04</b><span>Revisa y entrega el informe final<small>Guardar JSON · Generar PDF</small></span></div></div></section></div>
-      <div class="notice warn"><strong>Confidencialidad operativa.</strong> No introduzcas contraseñas, tokens ni hashes de autenticación sin tratar. Almacena el expediente JSON y los PDF en un disco cifrado. Exporta frecuentemente una copia: el autoguardado del navegador no constituye una copia de seguridad.</div>`;
+    return workflowViews.renderOverview({state,quality,relations,docControl,html});
   }
   function renderRecords() {
     const search = (byId("record-filter")?.value || "").toLocaleLowerCase("es");
@@ -1502,6 +1501,18 @@
           .join("") +
         "</div></details>"
       );
+    if (section === "cves")
+      return '<div class="fields">' +
+        definitions.map(def => {
+          if (def[0] !== "id") return renderField(record,section,def,index);
+          const actions = PUBLIC_DEMO ? "" :
+            `<div class="cve-quick-actions" aria-label="Acciones del identificador CVE">
+              <button type="button" class="button quiet small" data-cve-check="${index}">Consultar CVE online</button>
+              <button type="button" class="button small" data-cve-link="${index}">Ver en CVE.org ↗</button>
+              <small>Consulta voluntaria: solo se envía el identificador CVE, no los datos del cliente.</small>
+            </div>`;
+          return `<div class="cve-identifier-panel">${renderField(record,section,def,index)}${actions}</div>`;
+        }).join("") + "</div>";
     const extra = baselineFieldSet[section];
     if (!extra)
       return (
@@ -1677,12 +1688,12 @@
   function renderGroup(block) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "software" ? `<p class="license-audit-help">Acreditación de licencias: documenta factura, contrato o evidencia saneada; si es imprescindible, solo el sufijo de cuatro caracteres. No introduzcas claves completas. Verifica por separado el derecho de uso y el soporte/EOL de la versión concreta.</p>` : ""}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}>Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
               (r, i) =>
-                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) + renderMitigationActions(r) + renderResidualAssessment(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${block === "cves" && !PUBLIC_DEMO ? `<div class="cve-tools"><button class="button quiet small" type="button" data-cve-check="${i}">Consultar CVE online (opcional)</button><button class="button small" type="button" data-cve-link="${i}">Ver en CVE.org ↗</button><span class="subtle">Solo se envía el identificador CVE, nunca los datos del cliente.</span></div>` : ""}${
+                `<div class="entry" data-entry-key="${html(r._key || "")}" tabindex="-1"><div class="entry-head"><div><strong>${html(r.title || r.name || r.id || "Registro " + (i + 1))}</strong> ${block === "findings" ? pill(r.severity) : ""}</div><button class="button danger small" data-remove="${block}" data-index="${i}">Eliminar</button></div><div class="inventory-fields">${renderInventoryFieldGroups(r, block, i)}</div>${block === "findings" ? renderFindingAttachments(r, i) : ""}${["assets", "controls", "findings"].includes(block) ? renderLinkedEvidence(block, r) : ""}${block === "controls" ? renderControlExtras(r) : ""}${block === "findings" ? renderFindingOrigin(r) + renderMitigationActions(r) + renderResidualAssessment(r) : ""}${block === "evidence" ? renderEvidenceRelations(r) : ""}${
                   block === "evidence"
                     ? `<div class="file-upload"><label for="evidence-upload-${i}"><strong>Añadir foto o captura</strong> (PNG, JPG o WebP, hasta 5 MiB)</label><p class="subtle">Se guarda una copia optimizada. El SHA-256 identifica el archivo original, que debes conservar por separado.</p>${r.fileSha256 ? `<p class="evidence-digest">Archivo: ${html(r.fileName || "Sin nombre")} · ${(r.fileBytes || 0).toLocaleString("es-ES")} bytes <span>SHA-256 ${html(r.fileSha256)}</span></p>` : ""}${renderCaptureControls(`evidence-upload-${i}`,`evidence-camera-${i}`,`data-image-index="${i}"`,`data-image-index="${i}"`)}<div class="evidence-image-grid">${evidenceImages
                         .list(r)
@@ -1963,7 +1974,91 @@
       <div id="connection-nextcloud-transfer" ${connectionChannel === "nextcloud" ? "" : "hidden"}>${globalThis.AuditSecureTransferUI.view(Boolean(currentId), verified)}</div><section class="card"><h2>Otros proveedores</h2><p class="subtle">Drive, OneDrive y Microsoft 365 requieren OAuth mediante PKCE, registro de aplicación y políticas CORS. No guardes <em>client secrets</em> de OAuth en una aplicación JavaScript distribuida: no pueden mantenerse secretos en un cliente público. Se añadirán integraciones específicas cuando tengan un flujo seguro verificado.</p></section>`;
   }
   function renderConnections() {
-    return connectionSettingsMarkup();
+    return connectionSettingsMarkup() + (PUBLIC_DEMO ? "" : `<section class="card online-lookup-card" aria-labelledby="lookups-heading">
+      <div class="online-lookup-heading">
+        <div><span class="eyebrow">DATOS EXTERNOS / CONSULTA VOLUNTARIA</span>
+          <h2 id="lookups-heading">Servicios de verificación y consulta</h2>
+          <p>Selecciona un proveedor para ver únicamente los campos, la documentación y las credenciales que necesita. No se envía el expediente.</p>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lookup-provider">1 · ¿Qué servicio quieres consultar?</label>
+        <select id="lookup-provider" aria-controls="lookup-service-details">
+          <option value="cve">CVE Program · ficha oficial de vulnerabilidad</option>
+          <option value="nvd">NVD de NIST · CVE, fechas y descripción</option>
+          <option value="company">GLEIF · identificar empresa mediante LEI</option>
+          <option value="place">Geoapify · dirección y localización en mapa</option>
+        </select>
+      </div>
+      <div class="online-lookup-service" id="lookup-service-details">
+        <section data-lookup-service="cve" aria-labelledby="lookup-cve-heading">
+          <h3 id="lookup-cve-heading">CVE Program · ficha publicada</h3>
+          <p>Servicio público: <strong>no necesitas cuenta, contraseña ni API key</strong> para leer un registro CVE. Introduce el identificador completo publicado, no el nombre del producto.</p>
+          <p class="online-lookup-example">Ejemplo de entrada: <code>CVE-2025-12345</code> · Ruta: <code>GET /api/cve/{id}</code></p>
+          <p><a href="https://cveawg.mitre.org/api-docs/" target="_blank" rel="noopener noreferrer">Documentación de CVE Services ↗</a></p>
+        </section>
+        <section data-lookup-service="nvd" hidden aria-labelledby="lookup-nvd-heading">
+          <h3 id="lookup-nvd-heading">NVD · API de vulnerabilidades 2.0</h3>
+          <p><strong>Identificador CVE obligatorio.</strong> La consulta puntual puede hacerse sin cuenta o clave. Una API key de NVD es <strong>opcional</strong> y permite cuotas superiores; no sustituye la comprobación de afectación del producto.</p>
+          <ol>
+            <li>Solicita tu clave mediante el formulario oficial de NVD, usando un correo al que puedas acceder.</li>
+            <li>Activa la clave siguiendo las indicaciones que recibas por correo.</li>
+            <li>Pégala en el campo temporal de abajo. RabbitMole la manda en la cabecera <code>apiKey</code>, nunca en la URL ni en el expediente.</li>
+          </ol>
+          <p class="online-lookup-example">Ruta: <code>GET /rest/json/cves/2.0?cveId=CVE-...</code></p>
+          <p><a href="https://nvd.nist.gov/developers/request-an-api-key" target="_blank" rel="noopener noreferrer">Solicitar API key NVD ↗</a> · <a href="https://nvd.nist.gov/developers/vulnerabilities" target="_blank" rel="noopener noreferrer">Documentación API 2.0 ↗</a></p>
+          <div class="field"><label for="lookup-key">API key NVD (opcional)</label>
+            <input id="lookup-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="150" placeholder="Pegar clave activada de NVD">
+            <small>Se utiliza solo para esta petición y permanece en el campo hasta que lo borres o salgas de la pantalla. Si el navegador bloquea la cabecera por CORS, la petición puede fallar aunque la clave sea correcta.</small>
+          </div>
+        </section>
+        <section data-lookup-service="company" hidden aria-labelledby="lookup-company-heading">
+          <h3 id="lookup-company-heading">GLEIF · registro internacional de entidades</h3>
+          <p>Consulta pública de registros LEI: <strong>no necesita API key, usuario ni contraseña</strong>. Elige si tienes la razón social o un LEI de 20 caracteres.</p>
+          <div class="field"><label for="lookup-company-mode">Tipo de búsqueda</label>
+            <select id="lookup-company-mode"><option value="name">Razón social · búsqueda de coincidencias</option><option value="lei">Código LEI exacto · 20 caracteres</option></select>
+          </div>
+          <p class="online-lookup-example">No valida CIF/NIF, existencia fiscal española ni que la empresa consultada coincida con el cliente auditado.</p>
+          <p><a href="https://www.gleif.org/en/lei-data/gleif-api/" target="_blank" rel="noopener noreferrer">Documentación GLEIF API ↗</a> · <a href="https://search.gleif.org/" target="_blank" rel="noopener noreferrer">Búsqueda oficial LEI ↗</a></p>
+        </section>
+        <section data-lookup-service="place" hidden aria-labelledby="lookup-place-heading">
+          <h3 id="lookup-place-heading">Geoapify · geocodificación de direcciones</h3>
+          <p>Necesitas una <strong>API key de Geoapify</strong>. El servicio consulta direcciones y devuelve coordenadas para mostrarlas en OpenStreetMap. No existe una clave de OpenStreetMap que sustituya a la de Geoapify.</p>
+          <ol>
+            <li>Crea una cuenta gratuita en Geoapify MyProjects y abre un proyecto.</li>
+            <li>En «API Keys», copia una clave habilitada para <strong>Geocoding API</strong>.</li>
+            <li>Restringe la clave al origen/dominio donde ejecutas RabbitMole (HTTPS o localhost, según corresponda) y limita cuotas.</li>
+          </ol>
+          <p class="online-lookup-example">Ruta: <code>GET /v1/geocode/search</code> · Parámetros: <code>text</code>, <code>format=json</code>, <code>apiKey</code>.</p>
+          <p><strong>Importante:</strong> Geoapify recibe la clave en el parámetro de URL <code>apiKey</code>. En una PWA pública esa clave es visible para el navegador y para el proveedor; úsala exclusivamente con restricciones de uso. No introduzcas domicilios personales ni instalaciones sensibles sin autorización.</p>
+          <p><a href="https://myprojects.geoapify.com/" target="_blank" rel="noopener noreferrer">Crear proyecto / obtener clave ↗</a> · <a href="https://apidocs.geoapify.com/docs/geocoding/forward-geocoding/" target="_blank" rel="noopener noreferrer">Documentación Geoapify ↗</a></p>
+          <div class="field"><label for="lookup-map-key">Clave de API Geoapify (obligatoria)</label>
+            <input id="lookup-map-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="150" placeholder="Clave restringida al dominio de la PWA" required>
+            <small>La clave no se persiste en RabbitMole, pero viaja como parámetro de la URL al servicio de Geoapify. No es un secreto protegido en el frontend.</small>
+          </div>
+        </section>
+        <div class="field">
+          <label for="lookup-term" id="lookup-term-label">2 · Identificador CVE</label>
+          <input id="lookup-term" autocomplete="off" spellcheck="false" maxlength="160" aria-describedby="lookup-term-help" placeholder="CVE-2025-12345">
+          <small id="lookup-term-help">Escribe un identificador publicado con formato CVE-AAAA-NNNN.</small>
+        </div>
+      </div>
+      <div class="online-lookup-action-row">
+        <button type="button" class="button accent" id="lookup-test">Consultar CVE Program</button>
+        <button type="button" class="button quiet" id="lookup-clear">Borrar campos y resultado</button>
+      </div>
+      <p id="lookup-status" class="online-lookup-status" role="status" aria-live="polite">Sin consultas realizadas. Pulsa el botón para iniciar una petición explícita.</p>
+      <div class="online-lookup-result" id="lookup-result" hidden></div>
+      <details class="online-lookup-legal">
+        <summary>Comprobar CIF español (offline, sin cuenta ni API)</summary>
+        <p>Esta función solo valida estructura y dígito de control de un CIF español. No consulta AEAT, VIES ni ningún registro, y no prueba vigencia, titularidad, alta fiscal o pertenencia al cliente.</p>
+        <div class="fields"><div class="field"><label for="lookup-cif">CIF que deseas comprobar localmente</label>
+          <input id="lookup-cif" maxlength="18" autocomplete="off" placeholder="Ejemplo: A12345674"></div>
+          <div class="field"><label for="lookup-check-cif">Comprobación sin red</label><button type="button" class="button quiet" id="lookup-check-cif">Comprobar formato del CIF</button></div></div>
+        <p id="lookup-cif-status" role="status">Sin verificar. Esta comprobación no envía el CIF por Internet.</p>
+        <p>Para números IVA intracomunitarios utiliza <a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noopener noreferrer">VIES (Comisión Europea) ↗</a>, conforme a su cobertura y condiciones.</p>
+      </details>
+    </section>`);
   }
   async function uploadDav() {
     if (PUBLIC_DEMO)
@@ -2743,6 +2838,91 @@
       record, "networks", groups.networks.fields.find(([name])=>name==="routerModel"), index
     );
   }
+
+  // Software selection is an explicit user action; no installed/version/licence claims.
+  function softwareResults(input,show=true){
+    const wrapper=input.closest(".software-picker");
+    const list=wrapper?.querySelector(".software-picker-results");
+    if(!list||!softwareCatalog)return;
+    if(!show){list.hidden=true;input.setAttribute("aria-expanded","false");return;}
+    const found=softwareCatalog.searchApplications(input.value,48);
+    list.innerHTML=`<div class="software-picker-banner" role="presentation">Catálogo offline · ${found.length} sugerencias · Desplázate para explorar</div>`+found.map(app=>`<button type="button" role="option" class="software-picker-option" data-software-choice="${html(app.name)}" data-software-index="${html(input.dataset.index)}" aria-label="Seleccionar ${html(app.name)}, ${html(app.vendor)}"><span class="software-picker-logo" aria-hidden="true">${html(app.mark)}</span><span class="software-picker-text"><strong>${html(app.name)}</strong><small>${html(app.vendor)} · ${html(app.category)}</small></span></button>`).join("");
+    list.hidden=!found.length;
+    input.setAttribute("aria-expanded",String(found.length>0));
+  }
+  function selectSoftware(record,index,name){
+    if(state.documentControl?.status==="confirmed")return;
+    const app=softwareCatalog?.byName(name);
+    if(!app)return;
+    record.name=app.name;
+    // Only update empty publisher; a manual value belongs to the auditor.
+    if(!record.vendor)record.vendor=app.vendor;
+    persist();
+    const entry=workspace.querySelectorAll(".entry")[index];
+    const input=workspace.querySelector(`#f-software-${index}-name`);
+    if(input)input.value=record.name;
+    const vendor=workspace.querySelector(`#f-software-${index}-vendor`);
+    if(vendor&&record.vendor){
+      const sibling=vendor.closest(".field");
+      if(sibling)sibling.outerHTML=renderField(record,"software",groups.software.fields.find(row=>row[0]==="vendor"),index);
+    }
+    const title=input?.closest(".entry")?.querySelector(".entry-head strong");
+    if(title)title.textContent=record.name;
+    if(input)softwareResults(input,false);
+    refreshRecordNavigator(false);
+  }
+  workspace.addEventListener("focusin",event=>{
+    if(event.target.matches("[data-software-search]"))softwareResults(event.target);
+  });
+  // A native scrollbar can dispatch pointer events on the document or body,
+  // rather than its scroll container. Check the pointer coordinates too, and
+  // keep the menu open throughout an active scrollbar drag.
+  let softwarePointerWithin = false;
+  function softwarePointerIsInside(event,input){
+    const wrapper=input.closest(".software-picker");
+    if(!wrapper)return false;
+    if(wrapper.contains(event.target))return true;
+    const list=wrapper.querySelector(".software-picker-results:not([hidden])");
+    if(!list||!Number.isFinite(event.clientX)||!Number.isFinite(event.clientY))return false;
+    const rect=list.getBoundingClientRect();
+    return event.clientX>=rect.left-2&&event.clientX<=rect.right+2&&
+      event.clientY>=rect.top-2&&event.clientY<=rect.bottom+2;
+  }
+  function closeSoftwarePickersOutside(event){
+    for(const input of workspace.querySelectorAll('[data-software-search][aria-expanded="true"]')){
+      if(!softwarePointerIsInside(event,input))softwareResults(input,false);
+    }
+  }
+  document.addEventListener("pointerdown",event=>{
+    softwarePointerWithin=[...workspace.querySelectorAll('[data-software-search][aria-expanded="true"]')]
+      .some(input=>softwarePointerIsInside(event,input));
+    if(!softwarePointerWithin)closeSoftwarePickersOutside(event);
+  });
+  document.addEventListener("pointerup",()=>{softwarePointerWithin=false;});
+  document.addEventListener("pointercancel",()=>{softwarePointerWithin=false;});
+  document.addEventListener("focusin",event=>{
+    // A scrollbar drag can shift focus to body (or an outside element).
+    if(softwarePointerWithin||event.target===document.body||
+      event.target===document.documentElement)return;
+    for(const input of workspace.querySelectorAll('[data-software-search][aria-expanded="true"]')){
+      if(!input.closest(".software-picker")?.contains(event.target))softwareResults(input,false);
+    }
+  });
+  workspace.addEventListener("keydown",event=>{
+    const input=event.target;
+    if(!input.matches("[data-software-search]"))return;
+    if(event.key==="Escape"){event.preventDefault();softwareResults(input,false);return;}
+    if(event.key==="ArrowDown"){
+      const button=input.closest(".software-picker")?.querySelector(".software-picker-results:not([hidden]) button");
+      if(button){event.preventDefault();button.focus();}
+    }
+  });
+  workspace.addEventListener("keydown",event=>{
+    if(event.target.matches(".software-picker-option")&&event.key==="Escape"){
+      const input=event.target.closest(".software-picker")?.querySelector("[data-software-search]");
+      if(input){softwareResults(input,false);input.focus();}
+    }
+  });
   workspace.addEventListener("input", (e) => {
     if (e.target.id === "record-search") {
       refreshRecordNavigator();
@@ -2758,6 +2938,7 @@
       return;
     }
     const t = e.target;
+    if(t.matches("[data-software-search]"))softwareResults(t);
     if (t.id === "glossary-search") {
       filterGlossary(t.value);
       return;
@@ -2918,14 +3099,15 @@
         block = target.dataset.assistBlock,
         index = Number(target.dataset.assistIndex);
       if (
-        !["controls", "findings"].includes(block) ||
+        !["controls", "findings", "software"].includes(block) ||
         !Number.isSafeInteger(index)
       )
         return;
       const record = state[block]?.[index],
         evidence = state.evidence.find((x) => x.id === target.value);
       if (!record || !evidence) return;
-      record.evidenceIds = assist.appendRef(record.evidenceIds, evidence.id);
+      const field = block === "software" ? "licenseEvidenceIds" : "evidenceIds";
+      record[field] = assist.appendRef(record[field], evidence.id);
       persist();
       render();
       return;
@@ -2939,6 +3121,11 @@
       return;
     }
     const t = e.target;
+    if(t.matches("[data-software-search]")){
+      const obj=fieldTarget(t);
+      if(obj&&softwareCatalog?.byName(t.value))selectSoftware(obj,Number(t.dataset.index),t.value);
+      return;
+    }
     if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
     if (t.id === "intake-file" && t.files?.length) {
       try {
@@ -3341,6 +3528,10 @@
       return;
     }
     obj[t.dataset.field] = t.value;
+    if(t.dataset.block==="assets"&&t.dataset.field==="ipAssignment"){
+      const field=workspace.querySelector(`#f-assets-${t.dataset.index}-ip`)?.closest(".field");
+      if(field)field.outerHTML=renderField(obj,"assets",groups.assets.fields.find(([key])=>key==="ip"),Number(t.dataset.index));
+    }
     if(t.dataset.block==="networks" && t.dataset.field==="networkDeviceType"){
       // Type selection can happen after recording device details. Never
       // clear vendor/model implicitly; show unmatched values as custom.
@@ -3385,9 +3576,38 @@
     persist();
     updateValidation(t);
   });
+  workspace.addEventListener("change",event=>{
+    if(event.target?.id==="lookup-provider"||event.target?.id==="lookup-company-mode"){
+      const provider=byId("lookup-provider")?.value||"cve";
+      const specs={
+        cve:{label:"2 · Identificador CVE",help:"CVE-AAAA-NNNN publicado; sin cuenta ni clave.",placeholder:"CVE-2025-12345",action:"Consultar CVE Program"},
+        nvd:{label:"2 · Identificador CVE",help:"CVE-AAAA-NNNN. La API key es opcional y solo corresponde a NVD.",placeholder:"CVE-2025-12345",action:"Consultar NVD"},
+        company:{label:byId("lookup-company-mode")?.value==="lei"?"2 · Código LEI":"2 · Razón social",help:byId("lookup-company-mode")?.value==="lei"?"LEI exacto de 20 caracteres alfanuméricos.":"Nombre legal o razón social, no CIF/NIF.",placeholder:byId("lookup-company-mode")?.value==="lei"?"5493001KJTIIGC8Y1R12":"Nombre legal de la empresa",action:"Buscar en GLEIF"},
+        place:{label:"2 · Dirección o localidad",help:"Dirección pública o localidad autorizada; evita instalaciones sensibles.",placeholder:"Las Palmas de Gran Canaria, España",action:"Localizar con Geoapify"}
+      };
+      for(const section of workspace.querySelectorAll("[data-lookup-service]"))
+        section.hidden=section.dataset.lookupService!==provider;
+      const spec=specs[provider]||specs.cve;
+      if(byId("lookup-term-label"))byId("lookup-term-label").textContent=spec.label;
+      if(byId("lookup-term-help"))byId("lookup-term-help").textContent=spec.help;
+      const term=byId("lookup-term");
+      if(term){term.placeholder=spec.placeholder;term.value="";}
+      if(byId("lookup-test"))byId("lookup-test").textContent=spec.action;
+      const result=byId("lookup-result");
+      if(result){result.hidden=true;result.textContent="";}
+      if(byId("lookup-status"))byId("lookup-status").textContent="Campos y requisitos de "+(onlineLookups.PROVIDERS[provider]?.label||"servicio")+" cargados. Ninguna consulta realizada.";
+    }
+  });
   workspace.addEventListener("click", async (e) => {
     const b = e.target.closest("button");
     if (!b) return;
+    if(b.dataset.softwareChoice!==undefined){
+      if(state.documentControl?.status==="confirmed")return;
+      const index=Number(b.dataset.softwareIndex);
+      const record=state.software[index];
+      if(record)selectSoftware(record,index,b.dataset.softwareChoice);
+      return;
+    }
     if (b.id === "record-nav-toggle") { recordNavigation.toggleCollapse(); return; }
     if (
       PUBLIC_DEMO &&
@@ -3774,6 +3994,60 @@
       alert(
         "Instala desde el menú del navegador: Instalar aplicación / Añadir a pantalla de inicio. Requiere HTTPS o localhost y compatibilidad PWA.",
       );
+      return;
+    }
+    if(b.id==="lookup-check-cif"){
+      const raw=byId("lookup-cif")?.value||"";
+      const output=byId("lookup-cif-status");
+      const checked=onlineLookups.checkCif(raw);
+      if(output)output.textContent=checked.message;
+      return;
+    }
+    if(b.id==="lookup-clear"){
+      const term=byId("lookup-term"),key=byId("lookup-key"),mapKey=byId("lookup-map-key"),result=byId("lookup-result"),status=byId("lookup-status");
+      if(term)term.value="";
+      if(key)key.value="";
+      if(mapKey)mapKey.value="";
+      if(result){result.textContent="";result.hidden=true;}
+      if(status)status.textContent="Consulta y clave temporal borradas de la pantalla.";
+      return;
+    }
+    if(b.id==="lookup-test"){
+      if(PUBLIC_DEMO)return;
+      const provider=byId("lookup-provider")?.value;
+      const term=byId("lookup-term")?.value||"";
+      const key=provider==="nvd"?byId("lookup-key")?.value||"":provider==="place"?byId("lookup-map-key")?.value||"":"";
+      const companyMode=byId("lookup-company-mode")?.value||"name";
+      const result=byId("lookup-result"),status=byId("lookup-status");
+      if(result){result.textContent="";result.hidden=true;}
+      if(!onlineLookups)throw Error("Módulo de consultas no cargado.");
+      if(!term.trim()){if(status)status.textContent="Rellena el dato solicitado para el proveedor elegido.";return;}
+      const service=onlineLookups.PROVIDERS[provider]?.label||"servicio externo";
+      if(!confirm("Enviar al proveedor "+service+" la consulta indicada. "+(provider==="place"?"Geoapify también recibirá la clave API en la URL. ":"")+"¿Continuar?"))return;
+      b.disabled=true;
+      if(status)status.textContent="Consultando servicio externo…";
+      try{
+        const response=await onlineLookups.lookup(provider,term,{apiKey:key,companyMode});
+        if(result){
+          const title=document.createElement("strong");title.textContent=response.provider+" · "+response.title;
+          result.append(title);
+          for(const detail of response.details){const line=document.createElement("p");line.textContent=detail;result.append(line);}
+          if(response.map){
+            const link=document.createElement("a");
+            link.href="https://www.openstreetmap.org/?mlat="+encodeURIComponent(response.map.lat)+
+              "&mlon="+encodeURIComponent(response.map.lon)+
+              "#map=15/"+encodeURIComponent(response.map.lat)+"/"+encodeURIComponent(response.map.lon);
+            link.target="_blank";link.rel="noopener noreferrer";
+            link.textContent="Ver ubicación aproximada en OpenStreetMap ↗";
+            result.append(link);
+          }
+          result.hidden=false;
+        }
+        if(status)status.textContent="Consulta completada. Resultado orientativo, no validado ni guardado.";
+      }catch(error){
+        if(status)status.textContent="Consulta no completada: "+String(error?.message||error)+
+          ". Si falló CORS, es una limitación del navegador/proveedor; revisa el servicio y su documentación.";
+      }finally{if(b.isConnected)b.disabled=false;}
       return;
     }
     if (b.id === "check-connectivity") {
@@ -4182,6 +4456,15 @@
       focusAddedRecord(finding._key);
       return;
     }
+    if (b.dataset.fillPending) {
+      const block=b.dataset.fillPending;
+      if(!groups[block]||state.documentControl?.status==="confirmed")return;
+      let count=0;
+      for(const record of state[block])count+=fieldDefaults.fillEmpty(record,block,groups[block].fields,{extended:true});
+      if(count){persist();render();}
+      else alert("No hay campos pendientes compatibles con los borradores.");
+      return;
+    }
     if (b.dataset.add) {
       if (state[b.dataset.add].length >= LIMIT_ROWS)
         return alert("Límite de registros alcanzado.");
@@ -4202,6 +4485,7 @@
       if (type === "networks" && ["Wi-Fi","Segmento / VLAN"].includes(b.dataset.networkKind))
         row.networkKind = b.dataset.networkKind;
       if (type === "evidence") row.links = relations.normalizeLinks(null);
+      fieldDefaults.fillEmpty(row,type,groups[type].fields);
       state[type].unshift(row);
       persist();
       render();

@@ -48,7 +48,7 @@
   }
   function renderRecordNavigator(block) {
     return `<div class="record-navigator" id="record-navigator" aria-label="Buscar y navegar por registros">
-      <div class="record-nav-header"><div class="record-nav-heading"><strong>Filtros y navegación</strong><span>Buscar, saltar o añadir registros</span></div>
+      <div class="record-nav-header"><div class="record-nav-heading"><strong>Filtrar registros</strong><span>Buscar y acceder al inventario</span></div>
       <button type="button" id="record-nav-toggle" class="button quiet small record-nav-toggle"
         aria-controls="record-nav-body" aria-expanded="true" aria-label="Ocultar filtros">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"

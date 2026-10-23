@@ -1,0 +1,40 @@
+/* RabbitMole visual identity: restrained, offline and accessible.
+   Keep motion transform/opacity-only and honor user preferences. */
+:root {
+  --rm-motion-fast: 110ms;
+  --rm-motion-normal: 170ms;
+  --rm-motion-ease: cubic-bezier(.2,.7,.2,1);
+  --rm-radius-control: .6rem;
+  --rm-radius-panel: .8rem;
+}
+body,button,input,select,textarea{font-family:"Atkinson Hyperlegible",system-ui,"Segoe UI",Arial,sans-serif}
+#workspace :is(.page-title,.section-heading),.brand strong{font-family:"Atkinson Hyperlegible",system-ui,"Segoe UI",Arial,sans-serif;letter-spacing:-.018em}
+#workspace :is(.metric,.audit-dashboard-metric strong,.audit-dashboard-counters strong),
+#workspace :is(.quality-counts,.mitigation-stat-grid) strong{font-variant-numeric:tabular-nums}
+.brand-mark{overflow:hidden;isolation:isolate}
+.brand-mark img{object-fit:contain;transition:transform var(--rm-motion-normal) var(--rm-motion-ease)}
+@media(hover:hover){.brand:hover .brand-mark img{transform:scale(1.045)}}
+#workspace :is(.card,.audit-dashboard-panel,.audit-dashboard-metric){border-radius:var(--rm-radius-panel)}
+#workspace :is(button,.button,input,select,textarea){border-radius:var(--rm-radius-control)}
+#workspace :is(.button,.audit-dashboard-metric,.audit-dashboard-issues button),
+.sidebar :is(nav button,.sidebar-toggle){transition:background-color var(--rm-motion-fast) ease,border-color var(--rm-motion-fast) ease,color var(--rm-motion-fast) ease,transform var(--rm-motion-fast) var(--rm-motion-ease)}
+@media(hover:hover) and (pointer:fine){
+ #workspace :is(.audit-dashboard-metric,.audit-dashboard-issues button):hover{transform:translateY(-1px)}
+ #workspace .button:not(:disabled):active{transform:translateY(1px)}
+}
+#workspace :is(button,.button,summary,input,textarea,select):focus-visible,
+.sidebar :is(button,select):focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+#workspace :is(button,.button):disabled{cursor:not-allowed;opacity:.65}
+#workspace .audit-dashboard-status{position:relative}
+#workspace .audit-dashboard-status::before{content:"";position:absolute;inset-inline-start:-4px;top:0;bottom:0;width:4px;border-radius:3px}
+#workspace .audit-dashboard-status.is-confirmed::before{background:#398b67}
+#workspace .audit-dashboard-status.is-amending::before{background:#b98232}
+#workspace .audit-dashboard-severity span{transition:flex-grow var(--rm-motion-normal) var(--rm-motion-ease)}
+#workspace :is(.audit-dashboard-coverage,.audit-dashboard-custody) summary{scroll-margin-top:1rem}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+@media(forced-colors:active){
+ #workspace :is(button,.button,summary):focus-visible{outline-color:Highlight}
+ #workspace .audit-dashboard-status::before{display:none}
+}

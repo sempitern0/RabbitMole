@@ -63,6 +63,11 @@ assert.throws(()=>start.inspect(data,{intake,size:3*1024*1024}),/2 MiB/);
   assert(app.includes('renderAuditStart()')&&app.includes('id="audit-start-manual"'));
   assert(app.includes('id="audit-start-confirm"')&&app.includes('startSelected'));
   assert(app.includes('renderFindingWorkspace(page)'));
+  assert(app.includes('if(startBusy){startError="Hay una captura en curso.'));
+  assert(app.includes('if(b.id==="audit-start-discard"){\\n      if(startBusy)return;'.replace('\\n','\\n'))===false || app.includes('if(b.id==="audit-start-discard"){\n      if(startBusy)return;'));
+  const responsive=fs.readFileSync('css/workspace-ux.css','utf8');
+  assert(responsive.includes('max-width:480px')&&responsive.includes('audit-finding-tabs'));
+  assert(responsive.includes('audit-start-selections')&&responsive.includes('focus-visible'));
   assert(app.includes('if (page === "audit-start" || state.documentControl?.status !== "confirmed") return;'));
   assert(app.includes('if(arguments.length===0 || options.scaffold===true)'));
   for(const file of ['js/audit-start.js']){

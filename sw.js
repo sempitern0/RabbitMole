@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v124-audit-overview";
+const CACHE_NAME = "rabbitmole-shell-v125-brand-polish";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -15,6 +15,7 @@ const CORE = [
   "./",
   "./index.html",
   "./css/styles.css",
+  "./css/brand-motion.css",
   "./js/app.js",
   "./js/palette-preferences.js",
   "./js/app-definitions.js",

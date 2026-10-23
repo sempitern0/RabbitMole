@@ -29,6 +29,8 @@
   const auditActions = globalThis.RabbitMoleAuditActions;
   const fieldRenderer = globalThis.RabbitMoleFieldRenderer;
   const onlineLookups = globalThis.RabbitMoleOnlineLookups;
+  const auditStart=globalThis.RabbitMoleAuditStart;
+  if(!auditStart)throw Error('Falta el módulo de inicio de auditorías.');
   const fieldDefaults = globalThis.RabbitMoleFieldDefaults;
   if(!fieldDefaults)throw Error("Falta el módulo de borradores iniciales.");
   const rackAudit = globalThis.RabbitMoleRackAudit;
@@ -592,7 +594,7 @@
       await flush();
       // Only fresh audits get provisional narrative scaffolding; importing or
       // duplicating an existing audit never changes its historical content.
-      if(arguments.length===0)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
+      if(!options.copy && options.scaffold!==false)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
       if (options.copy || !audit.meta.reportId) {
         audit.meta.reportId = identifiers.generate(
           records,
@@ -1059,6 +1061,63 @@
   }
   function renderOverview() {
     return workflowViews.renderOverview({state,quality,relations,docControl,html});
+  }
+  let startReview=null,startError="",startBusy=false;
+  let startSelected={assets:true,networks:true,software:true};
+  function resetAuditStart(){
+    startReview=null;startError="";startBusy=false;
+    startSelected={assets:true,networks:true,software:true};
+  }
+  function renderAuditStart(){
+    return `<span class="eyebrow">BIBLIOTECA / NUEVO EXPEDIENTE</span>
+    <h1 class="page-title">Iniciar una auditoría</h1>
+    <p class="lead">Elige un flujo. Puedes cambiar y editar cualquier dato después, sin otorgar conformidades automáticamente.</p>
+    <div class="audit-start-grid">
+      <section class="card audit-start-option">
+        <span class="eyebrow">01 · SIN RECOPILACIÓN</span>
+        <h2>Flujo manual</h2>
+        <p>Comienza con un expediente vacío, campos guiados y borradores editables. Introduce hardware, software, pruebas y conclusiones mientras auditas.</p>
+        <button class="button accent" type="button" id="audit-start-manual">Crear auditoría manual →</button>
+      </section>
+      <section class="card audit-start-option">
+        <span class="eyebrow">02 · CAPTURA LOCAL</span>
+        <h2>Flujo automático asistido</h2>
+        <p>Parte del inventario del equipo actual. La captura puede generarse con PowerShell o desde un Companion autorizado. Solo se importarán secciones que apruebes.</p>
+        <label for="audit-start-file">Archivo de captura JSON (máximo 2 MiB)</label>
+        <input id="audit-start-file" type="file" accept=".json,application/json">
+        <div class="audit-start-actions">
+          <button class="button quiet" type="button" id="audit-start-companion">Recopilar con Companion local</button>
+          <button class="button quiet" type="button" id="audit-start-copy">Copiar comando PowerShell</button>
+        </div>
+        <p class="subtle">El navegador no ejecuta PowerShell ni accede a dispositivos arbitrarios. En Windows se usa el recopilador sin Python ni elevación; la conexión con Companion exige aprobarla en ese equipo.</p>
+      </section>
+    </div>
+    ${startReview?`<section class="card audit-start-review"><h2>Vista previa antes de crear el expediente</h2>
+      <p>Captura: ${html(startReview.collector||"local")} · ${html(startReview.platform)} · Permisos: ${html(startReview.privilege)}</p>
+      <p>Fecha: ${html(startReview.capturedAt||"sin indicar")}. No se consideran comprobados los campos recogidos automáticamente.</p>
+      ${startReview.limitations.length?`<details open><summary>Limitaciones de acceso (${startReview.limitations.length})</summary><ul>${startReview.limitations.map(t=>`<li>${html(t)}</li>`).join("")}</ul></details>`:""}
+      <div class="audit-start-selections">
+      ${auditStart.blocks.map(block=>`<label><input type="checkbox" data-start-select="${block}" ${startSelected[block]?"checked":""} ${startReview.counts[block]?"":"disabled"}>
+       <strong>${html(auditStart.label[block])}</strong><span>${startReview.counts[block]} registros</span></label>`).join("")}
+      </div>
+      <div class="action-row"><button class="button accent" type="button" id="audit-start-confirm" ${auditStart.blocks.some(k=>startSelected[k]&&startReview.counts[k])&&!startBusy?"":"disabled"}>Crear borrador con selección</button>
+      <button class="button quiet" type="button" id="audit-start-discard">Descartar captura</button></div>
+      </section>`:""}
+    <p id="audit-start-status" role="status" class="audit-start-status">${html(startError)}</p>
+    <button type="button" class="button quiet small" data-go="records">← Volver a biblioteca</button>`;
+  }
+  function renderFindingWorkspace(block){
+    const finding=block==="findings";
+    return `<div class="audit-evidence-unified">
+      <span class="eyebrow">AUDITORÍA / COMPROBACIONES</span>
+      <h1 class="page-title">Hallazgos y evidencias</h1>
+      <p class="lead">Los hallazgos documentan problemas y riesgos. Las evidencias documentan observaciones y pueden respaldar varios hallazgos o controles. Se gestionan juntas sin perder trazabilidad.</p>
+      <div class="audit-finding-tabs" role="group" aria-label="Cambiar entre hallazgos y evidencias">
+        <button class="button ${finding?"accent":"quiet"}" type="button" ${finding?'aria-current="page"':'data-go="findings"'}>Hallazgos (${state.findings.length})</button>
+        <button class="button ${finding?"quiet":"accent"}" type="button" ${finding?'data-go="evidence"':'aria-current="page"'}>Evidencias (${state.evidence.length})</button>
+      </div>
+      <p class="subtle">${finding?"Puedes adjuntar fotos directamente en un hallazgo: se crean evidencias vinculadas.":"Aquí se conservan las pruebas independientes, archivos, custodia y relaciones con hallazgos."}</p>
+      ${renderGroup(block)}</div>`;
   }
   function renderRecords() {
     const search = (byId("record-filter")?.value || "").toLocaleLowerCase("es");
@@ -1868,7 +1927,7 @@
     return `<div class="wizard-top wizard-fast-nav" role="navigation" aria-label="Acceso rápido al asistente">
       <label class="wizard-jump" for="wizard-step-top">Ir al paso <select id="wizard-step-top">${options}</select></label>
       <span>Fase ${i + 1} / ${nav.length}</span>
-      <div class="action-row"><button type="button" class="button quiet small" data-go="evidence">Evidencias</button><button type="button" class="button quiet small" data-go="quality">Revisar pendientes</button>
+      <div class="action-row"><button type="button" class="button quiet small" data-go="findings">Hallazgos y evidencias</button><button type="button" class="button quiet small" data-go="quality">Revisar pendientes</button>
       ${nav[i + 1] ? `<button type="button" class="button accent small" data-go="${nav[i + 1][0]}">Siguiente →</button>` : ""}</div>
     </div>`;
   }
@@ -2560,6 +2619,7 @@
     closeQuickGlossary(false);
     const inLibrary =
       [
+        "audit-start",
         "records",
         "backups",
         "online",
@@ -2604,7 +2664,7 @@
       )
       .join("");
     byId("current-section").textContent =
-      page === "records"
+      page === "audit-start" ? "Nueva auditoría" : page === "records"
         ? "Auditorías"
         : page === "backups"
           ? "Copias de seguridad"
@@ -2633,7 +2693,9 @@
     byId("workspace").hidden = devicePage;
     byId("workspace").innerHTML =
       (inLibrary || page === "attachments" ? "" : renderWizardTop()) +
-      (page === "dashboard"
+      (page === "audit-start"
+        ? renderAuditStart()
+        : page === "dashboard"
         ? renderOverview()
         : page === "records"
           ? renderRecords()
@@ -2655,6 +2717,8 @@
                       )
                   : page === "intake"
                     ? renderIntake()
+                    : page === "findings" || page === "evidence"
+                      ? renderFindingWorkspace(page)
                     : page === "engagement"
                       ? renderEngagement()
                       : page === "legal"
@@ -2729,6 +2793,7 @@
     }
     if (
       ![
+        "audit-start",
         "records",
         "backups",
         "online",
@@ -2745,6 +2810,7 @@
     }
     if (
       [
+        "audit-start",
         "records",
         "backups",
         "online",
@@ -4328,7 +4394,7 @@
       return;
     }
     if (b.dataset.new) {
-      await createAudit();
+      resetAuditStart();move("audit-start");
       return;
     }
     if (b.dataset.backupAll) {
@@ -4626,7 +4692,7 @@
       return;
     }
     if (b.id === "delivery-reset") {
-      await createAudit();
+      resetAuditStart();move("audit-start");
       return;
     }
   });

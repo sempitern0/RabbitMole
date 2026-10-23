@@ -36,5 +36,5 @@ assert(app.includes('softwarePointerWithin'));
 assert(app.includes('event.clientX>=rect.left-2'));
 assert(app.includes('document.addEventListener("focusin",event=>'));
 assert(!app.includes('workspace.addEventListener("focusout",event=>'));
-assert(fs.readFileSync('sw.js','utf8').includes('v121-software-field-ready'));
+assert(fs.readFileSync('sw.js','utf8').includes('./js/software-catalog.js'));
 console.log('PASS curated offline software, safe free text and selective publisher prefill');

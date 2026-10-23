@@ -24,6 +24,16 @@ El flujo no crea hallazgos automáticamente ni valida licencias, firmware o esta
 
 **Hallazgos y evidencias** comparten una sola opción de navegación con dos vistas internas conectadas. Cada estructura conserva sus claves históricas para que la documentación existente, los informes y las relaciones sigan siendo compatibles.
 
+## PowerShell o Python: cuentas estándar y administradores
+
+En Windows, **PowerShell obtiene el mismo inventario o más directamente que la entrada Python**, porque `collect-local.py` invoca `collect-local.ps1` con el mismo token de seguridad. Python no añade fuentes a la captura de Windows. Descarga ambos archivos en la misma carpeta si usas Python.
+
+- **Cuenta estándar:** abre PowerShell normalmente en la carpeta del script y ejecuta `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1`. O bien `python .\collect-local.py` si tienes los dos archivos. No necesita administrador y no modifica la configuración de Windows.
+- **Cuenta administradora con elevación autorizada:** abre PowerShell mediante «Ejecutar como administrador» y confirma UAC; cambia a la carpeta del script y ejecuta el mismo comando. Puede permitir consultar algunas propiedades de CIM, Defender o seguridad antes inaccesibles, pero no implica que se recolecte automáticamente todo el equipo.
+- **Linux:** ejecuta `bash collect-local.sh` (delegará en Python si está disponible) o `python3 collect-local.py`. Solo cuando exista autorización y necesidad real, usa `sudo python3 collect-local.py`; la salida podría quedar con propietario root.
+
+El nivel efectivo de permisos y las limitaciones de lectura quedan reflejados en el JSON. `-ExecutionPolicy Bypass` afecta a ese proceso, pero no anula restricciones de GPO, AppLocker o WDAC; no intentes eludir controles de la organización. Ningún modo permite afirmar automáticamente conformidad, licencia válida o seguridad sin evidencia.
+
 ## Inventario desde una cuenta estándar sin Python
 
 Los recolectores pueden ejecutarse sin argumentos y guardan `captura.json` en la carpeta actual. Si ese archivo existe, crean `captura-1.json`, `captura-2.json`, etc., sin sustituir capturas anteriores. `-Output` (PowerShell) y `--output` (Python/Bash) siguen disponibles para elegir otra ruta.

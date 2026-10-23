@@ -8,7 +8,7 @@ Discovery is a separate Python utility that runs **on an authorized auditor work
 
 The interactive wizard checks available tools and local network interfaces **without actively scanning**. The auditor must confirm the proposed private CIDR and type `AUTORIZO` before discovery starts.
 
-- Windows: run `discovery/iniciar.cmd` or `powershell -File discovery/run.ps1` from a local checkout.
+- Windows: run `discovery/iniciar.cmd` or `powershell -File discovery/run.ps1` for native inventory/authorized ICMP without Python. The HTTP bridge requires the standalone Companion or Python service.
 - Linux/macOS: `bash discovery/run.sh`.
 - Python entry point: `python3 discovery/discover.py wizard`.
 

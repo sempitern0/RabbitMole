@@ -623,12 +623,12 @@
   function savedAuditStep(id) {
     try {
       const step = localStorage.getItem(auditStepKey(id));
-      if (nav.some(([key]) => key === step)) return step;
+      if (nav.some(([key]) => key === step) || step==="evidence") return step;
     } catch (_ignored) {}
     return "dashboard";
   }
   function rememberAuditStep(id, step) {
-    if (!id || !nav.some(([key]) => key === step)) return;
+    if (!id || !(nav.some(([key]) => key === step) || step==="evidence")) return;
     try { localStorage.setItem(auditStepKey(id), step); } catch (_ignored) {}
   }
   async function switchAudit(id) {

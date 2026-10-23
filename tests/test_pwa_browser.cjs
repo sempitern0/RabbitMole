@@ -58,6 +58,19 @@ const {chromium}=require('playwright');
    assert.equal(await page.evaluate(()=>RabbitMoleDeployment.profile),installed?'private-full':'public-web');
    assert.equal(await page.locator('#pwa-install-card').evaluate(el=>el.classList.contains('is-installed')),installed);
    if(installed)assert.equal(await page.locator('#pwa-install-status').textContent(),'Aplicación instalada · Funciones locales disponibles sin conexión.');
+   if(installed){
+     await page.locator('#global-navigation [data-go="connections"]').click();
+     assert.equal(await page.locator('#lookup-provider').count(),1);
+     assert.equal(await page.locator('#lookup-test').count(),1);
+     assert.equal(await page.locator('#lookup-key').getAttribute('type'),'password');
+     await page.locator('.online-lookup-card details > summary').click();
+     await page.locator('#lookup-cif').fill('A00000001');
+     await page.locator('#lookup-check-cif').click();
+     assert.match(await page.locator('#lookup-cif-status').textContent(),/control no coincide/);
+     await page.locator('#lookup-clear').click();
+     assert.equal(await page.locator('#lookup-term').inputValue(),'');
+     await page.locator('#global-navigation [data-go="device"]').click();
+   }
    if(!installed){
     assert.equal(await page.locator('#global-navigation [data-go="connections"]').isVisible(),false);
     const rejected=await page.evaluate(async()=>{try{await AuditSecureTransfer.upload({url:'https://example.com/',user:'test',secret:'test'},'test.json','{}','application/json');return false;}catch{return true;}});
@@ -326,6 +339,16 @@ const {chromium}=require('playwright');
    assert.equal(await routerReview.locator('[data-field="routerModel"][data-custom]').inputValue(),'Modelo no catalogado');
    // Switching away and back must retain both values even when custom.
    await page.locator('#wizard-step-top').selectOption('assets');
+   const assignment=page.locator('#f-assets-0-ipAssignment');
+   if(await assignment.count()){
+     await assignment.selectOption('DHCP / dinámica');
+     const ip=page.locator('#f-assets-0-ip');
+     assert.equal(await ip.inputValue(),'');
+     assert.match(await ip.locator('xpath=following-sibling::small').textContent(),/no es permanente/);
+     await ip.fill('192.0.2.25');
+     await assignment.selectOption('Reserva DHCP');
+     assert.equal(await ip.inputValue(),'192.0.2.25','Changing assignment must not delete observed IP');
+   }
    await page.locator('#wizard-step-top').selectOption('networks');
    await page.locator('.router-security-review').first().locator('summary').click();
    assert.equal(await page.locator('#f-networks-0-networkDeviceType').inputValue(),'Firewall');

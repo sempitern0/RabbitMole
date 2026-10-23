@@ -41,6 +41,7 @@
   if(provider==="company")url.searchParams.set("filter[fulltext]",query);
   if(provider==="place"){
    if(now-lastMapCall<1200)throw Error("Espera 1,2 segundos entre consultas cartográficas.");
+   lastMapCall=now;
    for(const [k,v] of [["q",query],["format","jsonv2"],["limit","3"],["addressdetails","0"]])url.searchParams.set(k,v);
   }
   const headers={Accept:"application/json"};
@@ -85,7 +86,6 @@
     redirect:"error",referrerPolicy:"no-referrer",headers:spec.headers,signal:controller.signal});
    if(!response.ok)throw Error("HTTP "+response.status+". Comprueba límites y disponibilidad.");
    const data=await response.json();
-   if(provider==="place")lastMapCall=now;
    return {...summarize(provider,data),provider:PROVIDERS[provider].label};
   }finally{clearTimeout(timeout);}
  }

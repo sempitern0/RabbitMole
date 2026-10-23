@@ -36,7 +36,7 @@ const server=http.createServer((req,res)=>{
    const external=[];
    page.on('request',req=>{if(!req.url().startsWith(origin))external.push(req.url());});
    await page.goto(origin,{waitUntil:'load'});
-   await page.waitForSelector('#workspace',{timeout:15000});
+   await page.waitForSelector('#workspace',{state:'attached',timeout:15000});
    await page.evaluate(()=>document.fonts.ready);
    const data=await page.evaluate(()=>{
     const nav=performance.getEntriesByType('navigation')[0];

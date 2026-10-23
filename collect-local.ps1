@@ -150,8 +150,13 @@ $wifiRadio = ''
 $wifiAuth = ''
 try {
     $wifiText = (netsh.exe wlan show interfaces 2>$null) -join [Environment]::NewLine
-    foreach ($pair in @(@('SSID','wifiSsid'),@('Radio type|Tipo de radio','wifiRadio'),@('Authentication|Autenticaci[oó]n','wifiAuth'))) {
-        $matched = [regex]::Match($wifiText,('(?im)^\s*(?:'+$pair[0]+')\s*:\s*(.+?)\s*
+    $ssidMatch = [regex]::Match($wifiText,'(?im)^\s*SSID\s*:\s*(.+?)\s*$')
+    if ($ssidMatch.Success) { $wifiSsid = Safe-Text $ssidMatch.Groups[1].Value 80 }
+    $radioMatch = [regex]::Match($wifiText,'(?im)^\s*(?:Radio type|Tipo de radio)\s*:\s*(.+?)\s*$')
+    if ($radioMatch.Success) { $wifiRadio = Safe-Text $radioMatch.Groups[1].Value 45 }
+    $authMatch = [regex]::Match($wifiText,'(?im)^\s*(?:Authentication|Autenticaci[oó]n)\s*:\s*(.+?)\s*$')
+    if ($authMatch.Success) { $wifiAuth = Safe-Text $authMatch.Groups[1].Value 80 }
+} catch { Warn-Limited 'Detalles Wi-Fi no disponibles.' }
 $observedIp = ''
 $observedMac = ''
 $assignment = 'Sin verificar'

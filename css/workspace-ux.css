@@ -1492,3 +1492,13 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 #workspace .audit-start-help summary{cursor:pointer;min-height:44px;align-content:center;color:var(--ink);font-weight:700}
 #workspace .audit-start-help p{margin:.65rem 0;overflow-wrap:anywhere}
 @media(max-width:780px){#workspace .audit-start-manual-guide{margin-top:.4rem;padding:.8rem}}
+
+/* Audit's first-run command uses the same terminal treatment as Discovery/Glosario. */
+#workspace .audit-start-command{width:100%;min-width:0;margin:.35rem 0 .5rem}
+#workspace .audit-start-command .intake-command-head{gap:.7rem}
+#workspace .audit-start-command .glossary-copy{min-height:44px;white-space:normal}
+#workspace .audit-start-command pre{max-width:100%;min-width:0;overflow-x:auto;white-space:pre;scrollbar-width:thin}
+#workspace .audit-start-command pre code{font:inherit;color:inherit;background:transparent;border:0;padding:0}
+#workspace .audit-start-command-inline{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
+@media(max-width:560px){#workspace .audit-start-command .intake-command-head{align-items:stretch}#workspace .audit-start-command .glossary-copy{width:100%}}
+@media(forced-colors:active){#workspace .audit-start-command pre{background:Canvas;color:CanvasText;border:1px solid CanvasText}}

@@ -147,7 +147,16 @@ try {
     $systemUuid = @(Read-Cim 'Win32_ComputerSystemProduct' 'Identificador SMBIOS') | Select-Object -First 1
     $uuid = if ($systemUuid) { Safe-Text (Get-OptionalValue $systemUuid 'UUID') 90 } else { '' }
     $serial = if ($bios) { Safe-Text (Get-OptionalValue $bios 'SerialNumber') 140 } else { '' }
-    $identity = if ($uuid -and $uuid -notmatch '^(0{8}-|F{8}-)' -and $uuid -notmatch '^0+
+    $identity = if ($uuid -and $uuid.Length -eq 36) { $uuid }
+                elseif ($serial -and $serial.Length -gt 3) { $serial }
+                else { '' }
+    if ($identity) {
+        $material = [Text.Encoding]::UTF8.GetBytes(('RabbitMole:v1:Windows:' + $identity.Trim().ToUpperInvariant()))
+        $sha = [Security.Cryptography.SHA256]::Create()
+        try { $deviceId = 'RM-WIN-'+([BitConverter]::ToString($sha.ComputeHash($material))).Replace('-','').Substring(0,24) }
+        finally { $sha.Dispose() }
+    } else { Warn-Limited 'Identidad SMBIOS no disponible.' }
+} catch { Warn-Limited 'Identificador físico no accesible.' }
 $networks = New-Object 'System.Collections.Generic.List[object]'
 $linkAdapters = @()
 try { if (Get-Command Get-NetAdapter -ErrorAction SilentlyContinue) { $linkAdapters = @(Get-NetAdapter -ErrorAction Stop | Select-Object -First 64) } }

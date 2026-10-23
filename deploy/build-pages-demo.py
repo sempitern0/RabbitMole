@@ -61,6 +61,8 @@ def main():
     if not native_collector.is_file() or native_collector.is_symlink():
         raise SystemExit("Missing Windows native collector")
     shutil.copyfile(native_collector, DIST / "collect-local.ps1")
+    shutil.copyfile(ROOT / "collect-local.py", DIST / "collect-local.py")
+    shutil.copyfile(ROOT / "collect-local.sh", DIST / "collect-local.sh")
 
     # Only the minimal Discovery helper, never audit data or credentials.
     with zipfile.ZipFile(DIST / "discovery-kit.zip", "w", zipfile.ZIP_DEFLATED) as archive:
@@ -70,6 +72,11 @@ def main():
             if not source.is_file() or source.is_symlink():
                 raise SystemExit("Missing Discovery kit source: " + str(source))
             info = zipfile.ZipInfo("discovery/" + name, (2024, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(info, source.read_bytes())
+        for name in ("collect-local.py", "collect-local.sh"):
+            source = ROOT / name
+            info = zipfile.ZipInfo(name, (2024, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             archive.writestr(info, source.read_bytes())
         source = ROOT / "collect-local.ps1"

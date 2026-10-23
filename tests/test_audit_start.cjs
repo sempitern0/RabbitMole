@@ -64,7 +64,7 @@ assert.throws(()=>start.inspect(data,{intake,size:3*1024*1024}),/2 MiB/);
   assert(app.includes('id="audit-start-confirm"')&&app.includes('startSelected'));
   assert(app.includes('renderFindingWorkspace(page)'));
   assert(app.includes('if(startBusy){startError="Hay una captura en curso.'));
-  assert(app.includes('if(b.id==="audit-start-discard"){\\n      if(startBusy)return;'.replace('\\n','\\n'))===false || app.includes('if(b.id==="audit-start-discard"){\n      if(startBusy)return;'));
+  assert(/if\(b\.id===\"audit-start-discard\"\)\{\s*if\(startBusy\)return;/.test(app));
   const responsive=fs.readFileSync('css/workspace-ux.css','utf8');
   assert(responsive.includes('max-width:480px')&&responsive.includes('audit-finding-tabs'));
   assert(responsive.includes('audit-start-selections')&&responsive.includes('focus-visible'));

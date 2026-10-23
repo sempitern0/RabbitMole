@@ -1502,3 +1502,16 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 #workspace .audit-start-command-inline{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
 @media(max-width:560px){#workspace .audit-start-command .intake-command-head{align-items:stretch}#workspace .audit-start-command .glossary-copy{width:100%}}
 @media(forced-colors:active){#workspace .audit-start-command pre{background:Canvas;color:CanvasText;border:1px solid CanvasText}}
+
+/* Device / installation: primary, reusable entry point for local audit collectors. */
+#pwa-install-card .device-collector-setup{display:grid;gap:.8rem;margin:1rem 0;padding:clamp(.85rem,2vw,1.2rem);border:1px solid var(--line);border-radius:.8rem;background:var(--paper);min-width:0}
+#pwa-install-card .device-collector-setup h3{color:var(--ink);font-size:1.15rem;margin:0}
+#pwa-install-card .device-collector-setup p{margin:0;line-height:1.6;overflow-wrap:anywhere}
+#pwa-install-card .device-collector-downloads{display:flex;flex-wrap:wrap;gap:.6rem}
+#pwa-install-card .device-collector-downloads .button{margin:0;flex:1 1 11rem;min-height:46px;white-space:normal;text-align:center}
+#pwa-install-card .device-collector-command{width:100%;min-width:0}
+#pwa-install-card .device-collector-command .intake-command-head{gap:.6rem}
+#pwa-install-card .device-collector-command pre{max-width:100%;overflow-x:auto;min-width:0}
+#pwa-install-card .device-collector-command pre code{font:inherit;background:none;color:inherit;padding:0;border:none}
+#pwa-install-card .device-collector-command .glossary-copy{min-height:44px}
+@media(max-width:580px){#pwa-install-card .device-collector-downloads .button{flex:1 1 100%}#pwa-install-card .device-collector-command .glossary-copy{width:100%}}

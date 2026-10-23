@@ -211,6 +211,11 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#attachment-filter').count(),0);
    await page.locator('#global-navigation [data-go="records"]').click();
    await page.locator('[data-new]').first().click();
+   assert.equal(await page.locator('#audit-start-copy').isVisible(),true);
+   await page.locator('#audit-start-copy').click();
+   assert.equal(await page.locator('#audit-start-copy').textContent(),'Copiado');
+   await page.locator('#global-navigation [data-go="records"]').click();
+
    await page.locator('#audit-file-library-link').click();
    assert.equal(await page.locator('[data-library-select-audit]').count(),1);
    assert.equal(await page.locator('#attachment-filter').count(),0,

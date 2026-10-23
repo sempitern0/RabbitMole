@@ -1347,7 +1347,9 @@
     doctor: "python3 discovery/discover.py doctor",
     scan: "python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output captura-lan.json",
     localsh: "bash collect-local.sh --output captura.json",
-    localps: "powershell -File collect-local.ps1 -Output captura.json"
+    localps: "powershell.exe -NoProfile -File .\\collect-local.ps1 -Output captura.json",
+    nativeDoctor: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 doctor",
+    nativeScan: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 scan --cidr 192.168.10.0/26 --authorized --output hosts.json"
   });
   let intakeMode = "file";
   function renderIntakeCommand(key, label, explanation) {
@@ -1363,8 +1365,24 @@
       <h2 id="intake-guided-title">Herramientas del equipo auditor</h2>
       <p>Estos comandos se ejecutan en <strong>tu terminal, nunca dentro de la PWA</strong>. Trabaja únicamente con equipos y CIDR autorizados. Después importa el JSON resultante en la opción «Subir archivo».</p>
       <div class="intake-method">
+        <h3>Windows · captura sin Python ni administrador</h3>
+        <p>Con una cuenta estándar, PowerShell 5.1 puede recoger datos <strong>solo del PC actual</strong>: hardware, SO, interfaces, DHCP, aplicaciones registradas en equipo/usuario y Defender. La disponibilidad depende de los permisos y las políticas del cliente; no se obtienen contraseñas ni claves de producto.</p>
+        <div class="intake-command-grid">
+          ${renderIntakeCommand("localps","Windows · Hardware, SO y software","Recoge el inventario en un JSON compatible sin instalar Python ni modificar la política de ejecución.")}
+          ${renderIntakeCommand("nativeDoctor","Windows · Diagnóstico","Comprueba PowerShell y ping sin iniciar descubrimiento.")}
+        </div>
+        <p class="subtle">Una activación de Windows, una firma antivirus o una aplicación listada no acreditan licencia válida ni cumplimiento de seguridad. Revisa la evidencia antes de afirmarlo.</p>
+      </div>
+      <div class="intake-method">
+        <h3>Red autorizada · ICMP nativo</h3>
+        <p>Descubre hosts que respondan a ping, sin puertos ni lectura remota de software, dentro de un CIDR privado y autorizado. Es independiente del inventario local y requiere el consentimiento del operador.</p>
+        <div class="intake-command-grid">
+          ${renderIntakeCommand("nativeScan","Windows · CIDR privado autorizado","Sustituye el ejemplo por el CIDR aprobado (/24 a /30); no deduce dispositivos que bloquean ICMP.")}
+        </div>
+      </div>
+      <div class="intake-method">
         <h3>Asistente guiado</h3>
-        <p class="subtle">Detecta las interfaces, solicita el alcance aprobado y pide confirmación antes de realizar descubrimiento.</p>
+        <p class="subtle">En Windows usa el motor nativo; las utilidades Python permanecen disponibles como alternativa avanzada cuando están instaladas.</p>
         <div class="intake-command-grid">
           ${renderIntakeCommand("cmd","Windows · CMD","Abre el asistente desde el repositorio, sin configurar comandos manualmente.")}
           ${renderIntakeCommand("ps","Windows · PowerShell","Alternativa PowerShell al iniciador de Windows.")}
@@ -1387,7 +1405,7 @@
           ${renderIntakeCommand("localps","Windows · PowerShell","Recopilación local en Windows sin agentes remotos.")}
         </div>
       </details>
-      <p class="intake-help"><strong>Siguiente paso:</strong> conserva el JSON resultante y vuelve a «Subir archivo». Las capturas Discovery se pueden revisar en <strong>Hardware</strong> y después en <strong>Redes</strong>, sin aplicarlas automáticamente.</p>
+      <p class="intake-help"><strong>Siguiente paso:</strong> importa el mismo JSON desde <strong>Hardware, Redes o Software</strong>, selecciona solo los registros nuevos y comprueba las limitaciones de acceso. No se sobrescribe información existente.</p>
     </section>`;
   }
   function renderIntake() {
@@ -1449,7 +1467,8 @@
     const counts = { nuevo: 0, duplicado: 0, conflicto: 0 };
     for (const c of candidates) counts[c.status]++;
     return `<section class="card intake-card intake-preview" aria-labelledby="intake-preview-title"><span class="intake-kicker">04 · Revisión antes de incorporar</span><h2 id="intake-preview-title">Vista previa · ${candidates.length} registros</h2>
-      <p class="subtle">Origen: ${html(intakePreview.source)}${intakePreview.platform ? " · " + html(intakePreview.platform) : ""}. Nuevos: ${counts.nuevo} · Duplicados: ${counts.duplicado} · Conflictos: ${counts.conflicto}. Nunca se sobrescriben registros.</p>
+      <p class="subtle">Origen: ${html(intakePreview.source)}${intakePreview.platform ? " · " + html(intakePreview.platform) : ""}${intakePreview.privilege ? " · Acceso: "+html(intakePreview.privilege) : ""}. Nuevos: ${counts.nuevo} · Duplicados: ${counts.duplicado} · Conflictos: ${counts.conflicto}. Nunca se sobrescriben registros.</p>
+      ${intakePreview.limitations?.length ? `<details class="intake-limitations"><summary>Limitaciones de lectura (${intakePreview.limitations.length})</summary><ul>${intakePreview.limitations.map(value=>`<li>${html(value)}</li>`).join("")}</ul></details>` : ""}
       <div class="intake-toolbar"><button class="button quiet small" type="button" data-intake-select="new">Seleccionar solo nuevos</button><button class="button quiet small" type="button" data-intake-select="none">Deseleccionar</button></div>
       <div class="intake-records">${candidates
         .map(

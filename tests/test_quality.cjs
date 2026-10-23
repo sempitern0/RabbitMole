@@ -57,6 +57,24 @@ assert(!preflight.blockers.some(x=>x.code==='CONTROLES_PENDIENTES'));
 assert(preflight.warnings.some(x=>x.code==='CONTROL_NO_CONFORME')===false);
 assert(preflight.blockers.some(x=>x.code==='EVIDENCIA_REFERENCIADA_INEXISTENTE'));
 assert(preflight.blockers.some(x=>x.code==='SIN_VALIDACION')===false);
+const pendingNarrative={
+ meta:{client:"Organización",project:"Trabajo",scope:"PC autorizados",rules:"Permiso firmado",
+   auditTeam:[{name:"Profesional"}],objectives:"PENDIENTE DE CONTRASTAR — objetivos",
+   methodology:"PENDIENTE DE CONTRASTAR — método",limitations:"PENDIENTE DE CONTRASTAR — límites"},
+ final:{executive:"Resumen contrastado",signoff:"Responsable"},
+ controls:[],findings:[{id:"FND-001",title:"Prueba",severity:"Alta",status:"Abierto",
+   description:"PENDIENTE DE CONTRASTAR — observación",
+   recommendation:"PENDIENTE DE CONTRASTAR — acciones",verification:"Método comprobado"}],
+ assets:[{notes:"PENDIENTE DE CONTRASTAR — inventario"}],networks:[],software:[],cves:[],evidence:[]
+};
+const pendingCheck=review(pendingNarrative,relations,{mode:"final"});
+assert(pendingCheck.blockers.some(x=>x.code==="BORRADOR_SIN_CONTRASTAR"));
+assert(pendingCheck.blockers.some(x=>x.code==="HALLAZGO_SIN_CONTRASTAR"));
+assert(pendingCheck.warnings.some(x=>x.code==="OBSERVACIONES_SIN_CONTRASTAR"));
+const normalCheck=review({...pendingNarrative,meta:{...pendingNarrative.meta,objectives:"Objetivos verificados",methodology:"Método documentado",limitations:"Sin acceso a switch"},
+ findings:[{...pendingNarrative.findings[0],description:"Observación comprobada",recommendation:"Cambiar configuración"}],
+ assets:[{notes:"Datos efectivamente observados"}]},relations,{mode:"final"});
+assert(!normalCheck.issues.some(x=>["BORRADOR_SIN_CONTRASTAR","HALLAZGO_SIN_CONTRASTAR","OBSERVACIONES_SIN_CONTRASTAR"].includes(x.code)));
 const appSource=fs.readFileSync(path.join(root,'js/app.js'),'utf8');
 const themeCss=fs.readFileSync(path.join(root,'css/styles.css'),'utf8');
 assert(appSource.includes("addEventListener('click',()=>exportJson())"),'Export toolbar must not pass click event as audit data');

@@ -6,6 +6,7 @@
   const CLOSED = new Set(['Cerrado','Mitigado']);
   const makeIssue = (severity, code, section, message, key = '') => ({severity,code,section,message,key});
   const notEmpty = value => clean(value).length > 0;
+  const isProvisional = value => clean(value).startsWith("PENDIENTE DE CONTRASTAR —");
   const isRelated = (evidence, finding, relations) => {
     const key=clean(finding?._key), code=clean(finding?.id);
     if (key && relations?.normalizeLinks?.(evidence?.links)?.findings?.includes(key)) return true;
@@ -109,6 +110,30 @@
       if(unavailable.length)add('warning','TRAZABILIDAD_EVIDENCIA_NO_DISPONIBLE','evidence',
         `${name}: ${unavailable.length} referencia(s) de mitigación o seguimiento apuntan a evidencias retiradas.`,key);
       if(f.status==='Riesgo aceptado'&&!notEmpty(f.residual))add('warning','ACEPTACION_SIN_JUSTIFICAR','findings',`${name}: documenta justificación, responsable y condiciones de aceptación del riesgo.`,key);
+    }
+    // Provisional prose is useful during fieldwork but is NOT a verified
+    // assessment or a completed final report. Never classify it as compliant.
+    if(finalMode){
+      for(const [field,label] of [["objectives","objetivos"],["methodology","metodología"],["limitations","limitaciones"]]){
+        if(isProvisional(meta[field]))add("blocker","BORRADOR_SIN_CONTRASTAR","engagement",
+          "Revisa y sustituye el texto provisional de "+label+" antes de confirmar el informe.");
+      }
+      for(const finding of findings){
+        const name=clean(finding.id)||clean(finding.title)||"Hallazgo";
+        for(const field of ["description","recommendation","verification"]){
+          if(isProvisional(finding[field]))add("blocker","HALLAZGO_SIN_CONTRASTAR","findings",
+            name+": sustituye el borrador de "+field+" por una observación verificada.",clean(finding._key));
+        }
+      }
+      if(isProvisional(audit?.final?.executive))add("blocker","RESUMEN_SIN_CONTRASTAR","delivery",
+        "El resumen ejecutivo conserva texto provisional: comprueba su contenido antes de entrega.");
+      for(const category of ["assets","networks","software","cves","controls","evidence"]){
+        const rows=Array.isArray(audit?.[category])?audit[category]:[];
+        const count=rows.reduce((sum,row)=>sum+
+          Object.values(row).filter(value=>isProvisional(value)).length,0);
+        if(count)add("warning","OBSERVACIONES_SIN_CONTRASTAR",category,
+          count+" texto(s) provisionales pendientes de revisar. No se considerarán evidencias verificadas.");
+      }
     }
     if(!notEmpty(audit?.final?.executive))add(finalMode?'blocker':'warning','SIN_RESUMEN','delivery','Completa el resumen ejecutivo para dirección.');
     if(!notEmpty(audit?.final?.signoff))add(finalMode?'blocker':'warning','SIN_VALIDACION','delivery','Identifica quién revisa o autoriza la entrega.');

@@ -44,6 +44,17 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#pwa-install-card').isVisible(),true);
    await page.locator('#device-collector-copy').click();
    assert.equal(await page.locator('#device-collector-copy').textContent(),'Copiado');
+   assert.equal(await page.locator('.collector-download').count(),3);
+   await page.locator('[data-collector-download="collect-local.ps1"]').evaluate(link=>{
+     link.addEventListener('click',event=>event.preventDefault(),{once:true});
+   });
+   await page.locator('[data-collector-download="collect-local.ps1"]').click();
+   assert.match(await page.locator('#device-collector-download-status').textContent(),/Descarga solicitada: collect-local.ps1/);
+   assert.equal(await page.locator('[data-collector-download="collect-local.ps1"]').getAttribute('data-requested'),'true');
+   await page.locator('.collector-permissions-guide > summary').click();
+   assert.equal(await page.locator('.collector-permissions-guide').evaluate(el=>el.open),true);
+   await page.locator('.collector-permissions-guide > summary').click();
+
 
    assert.equal(await page.locator('#workspace').isVisible(),false);
    // Platform preparation stays in a separate, read-only accordion.

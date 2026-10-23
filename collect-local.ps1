@@ -1,9 +1,35 @@
 ﻿# RabbitMole · Inventario LOCAL de Windows. PowerShell 5.1+, sin Python ni administrador.
 # Solo lectura, sin escaneo remoto, sin recopilar contraseñas ni claves de licencia.
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][string]$Output)
+param([string]$Output = "captura.json")
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Default and repeated captures must never overwrite the audit trail.
+# Reserve the final filename atomically AFTER a successful inventory.
+function New-CaptureTarget([string]$requested) {
+    $path = [IO.Path]::GetFullPath($requested)
+    $directory = [IO.Path]::GetDirectoryName($path)
+    if (-not [IO.Directory]::Exists($directory)) {
+        throw "La carpeta de salida no existe: $directory"
+    }
+    if ([IO.Path]::GetExtension($path) -ne '.json') {
+        throw "El archivo de salida debe tener extensión .json"
+    }
+    $base = [IO.Path]::GetFileNameWithoutExtension($path)
+    for ($number = 0; $number -le 9999; $number++) {
+        $candidate = if ($number -eq 0) { $path } else {
+            [IO.Path]::Combine($directory, ('{0}-{1}.json' -f $base,$number))
+        }
+        try {
+            $stream = [IO.File]::Open($candidate,[IO.FileMode]::CreateNew,
+                [IO.FileAccess]::Write,[IO.FileShare]::None)
+            return @{ Path=$candidate; Stream=$stream }
+        } catch [System.IO.IOException] {
+            if (-not [IO.File]::Exists($candidate)) { throw }
+        }
+    }
+    throw "Hay demasiadas capturas en $directory. Selecciona otra carpeta."
+}
 Write-Host "[RabbitMole] 1/5 · Preparando inventario de solo lectura..." -ForegroundColor Cyan
 $limitations = New-Object 'System.Collections.Generic.List[string]'
 function Warn-Limited([string]$area) {
@@ -44,8 +70,9 @@ function To-Prefix([string]$mask) {
 }
 $full = [IO.Path]::GetFullPath($Output)
 $folder = [IO.Path]::GetDirectoryName($full)
-if (-not [IO.Directory]::Exists($folder)) { throw 'La carpeta de destino no existe.' }
-if ([IO.File]::Exists($full)) { throw 'El JSON ya existe. Elige una ruta nueva: no se sobrescriben capturas.' }
+if (-not [IO.Directory]::Exists($folder)) { throw "La carpeta de salida no existe: $folder" }
+if ([IO.Path]::GetExtension($full) -ne '.json') { throw 'La captura debe guardarse como .json' }
+Write-Host ("[RabbitMole] Destino solicitado: {0}" -f $full)
 Write-Host '[RabbitMole] 2/5 · Hardware, Windows, discos e interfaces…' -ForegroundColor Cyan
 $computer = @(Read-Cim 'Win32_ComputerSystem' 'Equipo') | Select-Object -First 1
 $os = @(Read-Cim 'Win32_OperatingSystem' 'Sistema operativo') | Select-Object -First 1
@@ -271,12 +298,16 @@ Write-Host "[RabbitMole] 5/5 · Serializando y validando JSON de auditoría…" 
 $json = ConvertTo-Json -InputObject $data -Depth 9
 if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 2MB) { throw "Captura mayor de 2 MiB. Reduce el inventario antes de importarla." }
 $encoding = New-Object System.Text.UTF8Encoding($false)
-$stream = [IO.File]::Open($full,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+$destination = New-CaptureTarget $full
 try {
-    $writer = New-Object System.IO.StreamWriter($stream,$encoding)
-    try { $writer.Write($json); $writer.Flush() } finally { $writer.Dispose() }
-} finally { $stream.Dispose() }
-Write-Host "[RabbitMole] [OK] JSON local guardado en $full" -ForegroundColor Green
+    $writer = New-Object System.IO.StreamWriter($destination.Stream,$encoding)
+    try { $writer.Write($json); $writer.Flush() }
+    finally { $writer.Dispose() }
+} finally { $destination.Stream.Dispose() }
+if ($destination.Path -ne $full) {
+    Write-Host "[RabbitMole] Ya existía el archivo; se ha elegido un nombre nuevo sin sobrescribir." -ForegroundColor Yellow
+}
+Write-Host ("[RabbitMole] [OK] JSON local guardado en {0}" -f $destination.Path) -ForegroundColor Green
 Write-Host ("Equipos: 1 | Interfaces: {0} | Aplicaciones: {1}" -f $networks.Count,$software.Count)
 if ($limitations.Count) { foreach ($message in $limitations) { Write-Warning $message } }
 Write-Host "[RabbitMole] Listo para importar en Nueva auditoría → Flujo automático asistido." -ForegroundColor Green

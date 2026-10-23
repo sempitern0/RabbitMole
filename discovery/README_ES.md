@@ -26,10 +26,13 @@ El flujo no crea hallazgos automáticamente ni valida licencias, firmware o esta
 
 ## Inventario desde una cuenta estándar sin Python
 
+Si PowerShell indica que el archivo descargado no está firmado, comprueba primero su procedencia. En un equipo donde esté autorizado ejecutar el recolector, puedes utilizar `Unblock-File -LiteralPath .\collect-local.ps1` si solo lo bloquea la marca de Internet, o la opción `-ExecutionPolicy Bypass` incluida abajo, que afecta únicamente al proceso iniciado. **No se cambian políticas permanentes ni se solicita elevación.** Las GPO (`MachinePolicy`/`UserPolicy`), AppLocker y WDAC pueden impedir la ejecución igualmente: solicita autorización al responsable, no intentes eludir esas restricciones. Puedes consultar el estado con `Get-ExecutionPolicy -List`.
+
+
 En Windows 10/11, RabbitMole ofrece **captura local nativa PowerShell 5.1+**. No requiere Python, Nmap, una cuenta de administrador ni instalación. No modifica la política de ejecución: si GPO o AppLocker bloquean scripts, solicita permiso al responsable del equipo.
 
 ```powershell
-powershell.exe -NoProfile -File .\collect-local.ps1 -Output .\captura-equipo.json
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1 -Output .\captura-equipo.json
 powershell.exe -NoProfile -File .\discovery\run.ps1 doctor
 ```
 

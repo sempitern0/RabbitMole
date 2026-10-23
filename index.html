@@ -413,6 +413,24 @@
               <pre tabindex="0" aria-label="Comando de inventario Windows"><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
               <p>La captura se guarda como captura.json, con nombres nuevos si ya existe. No altera la directiva permanente: respeta las restricciones de la organización.</p>
             </div>
+            <details class="collector-permissions-guide">
+              <summary>¿Ejecutar como usuario estándar o administrador?</summary>
+              <div class="collector-permissions-grid">
+                <div>
+                  <h4>Usuario estándar · recomendado</h4>
+                  <p>Abre PowerShell normalmente y sitúate en la carpeta de descarga. Recolecta información de hardware, red y software visible para tu cuenta. No requiere UAC.</p>
+                  <pre><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
+                </div>
+                <div>
+                  <h4>Administrador · solo si está autorizado</h4>
+                  <p>Abre PowerShell con «Ejecutar como administrador», aprueba UAC y accede a la carpeta que contiene el script. Utiliza el mismo comando. Puede desbloquear ciertas consultas de CIM, seguridad y configuración, pero no añade por sí solo nuevas categorías al recolector.</p>
+                  <pre><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
+                </div>
+              </div>
+              <p><strong>¿Y con Python?</strong> En Windows, <code>python .\collect-local.py</code> ejecuta internamente PowerShell; no obtiene más información. Descarga <strong>ambos archivos .py y .ps1 en la misma carpeta</strong>. Usa una terminal normal o elevada según la autorización.</p>
+              <p><strong>Linux:</strong> <code>bash collect-local.sh</code> o <code>python3 collect-local.py</code> como usuario normal. Si una prueba autorizada requiere privilegios, utiliza <code>sudo python3 collect-local.py</code> y conserva el JSON fuera de carpetas públicas; podría quedar propiedad de root.</p>
+              <p><strong>Antes de ejecutar:</strong> revisa la procedencia del script. <code>-ExecutionPolicy Bypass</code> afecta solo a ese proceso de PowerShell; no supera GPO, AppLocker ni WDAC. Si existen restricciones de la organización, solicita autorización. Las licencias, políticas y configuraciones de seguridad siguen pendientes de contrastar.</p>
+            </details>
           </section>
           <details><summary>Instalación y funcionamiento sin conexión</summary>
             <ol class="pwa-steps">

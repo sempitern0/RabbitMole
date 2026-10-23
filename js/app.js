@@ -1064,17 +1064,17 @@
   function renderOverview() {
     return workflowViews.renderOverview({state,quality,relations,docControl,html});
   }
-  let startReview=null,startError="",startBusy=false;
+  let startReview=null,startError="",startBusy=false,startStatusKind="info";
   let startSelected={assets:true,networks:true,software:true};
   function resetAuditStart(){
-    startReview=null;startError="";startBusy=false;
+    startReview=null;startError="";startBusy=false;startStatusKind="info";
     startSelected={assets:true,networks:true,software:true};
   }
   function acceptStartCapture(text,size){
     const reviewed=auditStart.inspect(text,{intake,size});
     startReview=reviewed;
     startSelected={assets:reviewed.counts.assets>0,networks:reviewed.counts.networks>0,software:reviewed.counts.software>0};
-    startError="Captura cargada. Revisa el origen, los permisos y las secciones antes de crear el expediente.";
+    startStatusKind="success";startError="Captura cargada. Revisa el origen, los permisos y las secciones antes de crear el expediente.";
     render();
   }
   function renderAuditStart(){
@@ -1086,6 +1086,11 @@
         <span class="eyebrow">01 · SIN RECOPILACIÓN</span>
         <h2>Flujo manual</h2>
         <p>Comienza con un expediente vacío, campos guiados y borradores editables. Introduce hardware, software, pruebas y conclusiones mientras auditas.</p>
+        <div class="audit-start-manual-guide">
+          <h3>Comenzar desde cero</h3>
+          <ol><li>Identifica al cliente y el alcance.</li><li>Registra equipos, redes y software.</li><li>Documenta controles, hallazgos y evidencias.</li></ol>
+          <p class="subtle">Ideal para tablets, auditorías presenciales o equipos sin Companion.</p>
+        </div>
         <button class="button accent" type="button" id="audit-start-manual">Crear auditoría manual →</button>
       </section>
       <section class="card audit-start-option">
@@ -1098,8 +1103,10 @@
           <button class="button quiet" type="button" id="audit-start-companion">Recopilar con Companion local</button>
           <button class="button quiet" type="button" id="audit-start-copy">Copiar comando PowerShell</button>
         </div>
+        <div id="audit-start-status" class="audit-start-inline-status is-${html(startStatusKind)}" role="status" aria-live="polite" aria-atomic="true" ${startError?"":'hidden'}>${html(startError)}</div>
+        <details class="audit-start-help"><summary>Cómo preparar Companion y solucionar problemas</summary>
         <p class="subtle">Prepara primero el equipo: <a href="./discovery-windows.zip" download>Companion Windows autocontenido</a> (si está incluido en el despliegue), o <a href="./discovery-kit.zip" download>kit PowerShell nativo</a>. En Companion pulsa «Activar Discovery» y aprueba la conexión y la captura cuando lo solicite RabbitMole.</p>
-        <p class="subtle">El navegador no ejecuta PowerShell ni accede a dispositivos arbitrarios. La alternativa JSON funciona también abriendo el HTML directamente. El Companion solo puede capturar este mismo ordenador, sin Python instalado ni elevación.</p>
+        <p class="subtle">El navegador no ejecuta PowerShell ni accede a dispositivos arbitrarios. La alternativa JSON funciona también abriendo el HTML directamente. El Companion solo puede capturar este mismo ordenador, sin Python instalado ni elevación.</p></details>
       </section>
     </div>
     ${startReview?`<section class="card audit-start-review"><h2>Vista previa antes de crear el expediente</h2>
@@ -1125,7 +1132,6 @@
       <div class="action-row"><button class="button accent" type="button" id="audit-start-confirm" ${auditStart.blocks.some(k=>startSelected[k]&&startReview.counts[k])&&!startBusy?"":"disabled"}>Crear borrador con selección</button>
       <button class="button quiet" type="button" id="audit-start-discard">Descartar captura</button></div>
       </section>`:""}
-    <p id="audit-start-status" role="status" class="audit-start-status">${html(startError)}</p>
     <button type="button" class="button quiet small" data-go="records">← Volver a biblioteca</button>`;
   }
   function renderFindingWorkspace(block){
@@ -3235,7 +3241,7 @@
     }
     if(await auditActions.handleChange(t,{state,pdfAppendices,externalNetwork,getCurrentId:()=>currentId,byId,persist,render,alert,confirm}))return;
     if(t.id==="audit-start-file"&&t.files?.length){
-      if(startBusy){startError="Hay una captura en curso. Espera a que finalice o vuelve a intentarlo.";const status=byId("audit-start-status");if(status)status.textContent=startError;return;}
+      if(startBusy){startError="Hay una captura en curso. Espera a que finalice o vuelve a intentarlo.";const status=byId("audit-start-status");if(status){status.hidden=false;status.className="audit-start-inline-status is-"+startStatusKind;status.textContent=startError;}return;}
       try{
         const file=t.files[0];
         if(file.size>auditStart.sizeLimit)throw Error("El archivo supera 2 MiB.");
@@ -3751,15 +3757,15 @@
     }
     if(b.id==="audit-start-companion"){
       if(startBusy)return;
-      if(PUBLIC_DEMO){startError="La captura local solo está disponible en la PWA privada.";render();return;}
-      startBusy=true;startError="Conectando con Companion en este mismo ordenador…";
-      const setProgress=text=>{startError=text;const status=byId("audit-start-status");if(status)status.textContent=text;};
+      if(PUBLIC_DEMO){startStatusKind="error";startError="La captura local solo está disponible en RabbitMole privado.";render();return;}
+      startBusy=true;startStatusKind="progress";startError="Comprobando Companion en este ordenador…";
+      const setProgress=text=>{startError=text;startStatusKind="progress";const status=byId("audit-start-status");if(status){status.hidden=false;status.className="audit-start-inline-status is-progress";status.textContent=text;}};
       b.disabled=true;setProgress(startError);
       try{
         const content=await auditStart.collectFromCompanion({origin:location.origin,onProgress:setProgress});
         if(page==="audit-start")acceptStartCapture(content);
       }catch(error){
-        if(page==="audit-start"){startError="No se pudo capturar: "+error.message+". Utiliza el JSON de PowerShell como alternativa.";render();}
+        if(page==="audit-start"){startStatusKind="error";startError="No se pudo capturar: "+error.message+" Puedes importar un JSON de PowerShell como alternativa.";render();}
       }finally{
         startBusy=false;
         const current=byId("audit-start-companion");if(current)current.disabled=false;

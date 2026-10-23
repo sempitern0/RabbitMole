@@ -1975,36 +1975,88 @@
   }
   function renderConnections() {
     return connectionSettingsMarkup() + (PUBLIC_DEMO ? "" : `<section class="card online-lookup-card" aria-labelledby="lookups-heading">
-      <h2 id="lookups-heading">Consultas públicas de apoyo a la auditoría</h2>
-      <p class="subtle">Consultas manuales de solo lectura a proveedores conocidos. No se envía el expediente ni se guardan aquí claves, respuestas o datos consultados. Comprueba los resultados en origen antes de citarlos en un informe.</p>
-      <div class="fields">
-        <div class="field"><label for="lookup-provider">Proveedor y servicio</label>
-          <select id="lookup-provider">
-            <option value="cve">CVE Program · referencia CVE</option>
-            <option value="nvd">NIST NVD · referencia CVE</option>
-            <option value="company">GLEIF · buscar empresa por razón social / LEI</option>
-            <option value="place">OpenStreetMap · localizar una dirección</option>
-          </select>
+      <div class="online-lookup-heading">
+        <div><span class="eyebrow">DATOS EXTERNOS / CONSULTA VOLUNTARIA</span>
+          <h2 id="lookups-heading">Servicios de verificación y consulta</h2>
+          <p>Selecciona un proveedor para ver únicamente los campos, la documentación y las credenciales que necesita. No se envía el expediente.</p>
         </div>
-        <div class="field"><label for="lookup-term">Identificador, empresa o dirección</label>
-          <input id="lookup-term" autocomplete="off" maxlength="160" placeholder="CVE-2025-12345 · Empresa · Ciudad"></div>
-        <div class="field full"><label for="lookup-key">Clave API NVD (opcional, solo memoria de esta pantalla)</label>
-          <input id="lookup-key" type="password" autocomplete="off" spellcheck="false" maxlength="150" placeholder="No es necesario para la mayoría de consultas">
-          <small class="field-hint">Una clave API puede requerir CORS y restricciones del proveedor. Nunca se incluye en el expediente ni en un enlace.</small></div>
       </div>
-      <div class="action-row">
-        <button type="button" class="button accent" id="lookup-test">Probar consulta</button>
-        <button type="button" class="button quiet" id="lookup-clear">Limpiar</button>
+      <div class="field">
+        <label for="lookup-provider">1 · ¿Qué servicio quieres consultar?</label>
+        <select id="lookup-provider" aria-controls="lookup-service-details">
+          <option value="cve">CVE Program · ficha oficial de vulnerabilidad</option>
+          <option value="nvd">NVD de NIST · CVE, fechas y descripción</option>
+          <option value="company">GLEIF · identificar empresa mediante LEI</option>
+          <option value="place">Geoapify · dirección y localización en mapa</option>
+        </select>
       </div>
-      <p id="lookup-status" class="online-lookup-status" role="status" aria-live="polite">Sin consultas iniciadas. Cada petición requiere pulsar «Probar consulta».</p>
+      <div class="online-lookup-service" id="lookup-service-details">
+        <section data-lookup-service="cve" aria-labelledby="lookup-cve-heading">
+          <h3 id="lookup-cve-heading">CVE Program · ficha publicada</h3>
+          <p>Servicio público: <strong>no necesitas cuenta, contraseña ni API key</strong> para leer un registro CVE. Introduce el identificador completo publicado, no el nombre del producto.</p>
+          <p class="online-lookup-example">Ejemplo de entrada: <code>CVE-2025-12345</code> · Ruta: <code>GET /api/cve/{id}</code></p>
+          <p><a href="https://cveawg.mitre.org/api-docs/" target="_blank" rel="noopener noreferrer">Documentación de CVE Services ↗</a></p>
+        </section>
+        <section data-lookup-service="nvd" hidden aria-labelledby="lookup-nvd-heading">
+          <h3 id="lookup-nvd-heading">NVD · API de vulnerabilidades 2.0</h3>
+          <p><strong>Identificador CVE obligatorio.</strong> La consulta puntual puede hacerse sin cuenta o clave. Una API key de NVD es <strong>opcional</strong> y permite cuotas superiores; no sustituye la comprobación de afectación del producto.</p>
+          <ol>
+            <li>Solicita tu clave mediante el formulario oficial de NVD, usando un correo al que puedas acceder.</li>
+            <li>Activa la clave siguiendo las indicaciones que recibas por correo.</li>
+            <li>Pégala en el campo temporal de abajo. RabbitMole la manda en la cabecera <code>apiKey</code>, nunca en la URL ni en el expediente.</li>
+          </ol>
+          <p class="online-lookup-example">Ruta: <code>GET /rest/json/cves/2.0?cveId=CVE-...</code></p>
+          <p><a href="https://nvd.nist.gov/developers/request-an-api-key" target="_blank" rel="noopener noreferrer">Solicitar API key NVD ↗</a> · <a href="https://nvd.nist.gov/developers/vulnerabilities" target="_blank" rel="noopener noreferrer">Documentación API 2.0 ↗</a></p>
+          <div class="field"><label for="lookup-key">API key NVD (opcional)</label>
+            <input id="lookup-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="150" placeholder="Pegar clave activada de NVD">
+            <small>Se utiliza solo para esta petición y permanece en el campo hasta que lo borres o salgas de la pantalla. Si el navegador bloquea la cabecera por CORS, la petición puede fallar aunque la clave sea correcta.</small>
+          </div>
+        </section>
+        <section data-lookup-service="company" hidden aria-labelledby="lookup-company-heading">
+          <h3 id="lookup-company-heading">GLEIF · registro internacional de entidades</h3>
+          <p>Consulta pública de registros LEI: <strong>no necesita API key, usuario ni contraseña</strong>. Elige si tienes la razón social o un LEI de 20 caracteres.</p>
+          <div class="field"><label for="lookup-company-mode">Tipo de búsqueda</label>
+            <select id="lookup-company-mode"><option value="name">Razón social · búsqueda de coincidencias</option><option value="lei">Código LEI exacto · 20 caracteres</option></select>
+          </div>
+          <p class="online-lookup-example">No valida CIF/NIF, existencia fiscal española ni que la empresa consultada coincida con el cliente auditado.</p>
+          <p><a href="https://www.gleif.org/en/lei-data/gleif-api/" target="_blank" rel="noopener noreferrer">Documentación GLEIF API ↗</a> · <a href="https://search.gleif.org/" target="_blank" rel="noopener noreferrer">Búsqueda oficial LEI ↗</a></p>
+        </section>
+        <section data-lookup-service="place" hidden aria-labelledby="lookup-place-heading">
+          <h3 id="lookup-place-heading">Geoapify · geocodificación de direcciones</h3>
+          <p>Necesitas una <strong>API key de Geoapify</strong>. El servicio consulta direcciones y devuelve coordenadas para mostrarlas en OpenStreetMap. No existe una clave de OpenStreetMap que sustituya a la de Geoapify.</p>
+          <ol>
+            <li>Crea una cuenta gratuita en Geoapify MyProjects y abre un proyecto.</li>
+            <li>En «API Keys», copia una clave habilitada para <strong>Geocoding API</strong>.</li>
+            <li>Restringe la clave al origen/dominio donde ejecutas RabbitMole (HTTPS o localhost, según corresponda) y limita cuotas.</li>
+          </ol>
+          <p class="online-lookup-example">Ruta: <code>GET /v1/geocode/search</code> · Parámetros: <code>text</code>, <code>format=json</code>, <code>apiKey</code>.</p>
+          <p><strong>Importante:</strong> Geoapify recibe la clave en el parámetro de URL <code>apiKey</code>. En una PWA pública esa clave es visible para el navegador y para el proveedor; úsala exclusivamente con restricciones de uso. No introduzcas domicilios personales ni instalaciones sensibles sin autorización.</p>
+          <p><a href="https://myprojects.geoapify.com/" target="_blank" rel="noopener noreferrer">Crear proyecto / obtener clave ↗</a> · <a href="https://apidocs.geoapify.com/docs/geocoding/forward-geocoding/" target="_blank" rel="noopener noreferrer">Documentación Geoapify ↗</a></p>
+          <div class="field"><label for="lookup-map-key">Clave de API Geoapify (obligatoria)</label>
+            <input id="lookup-map-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="150" placeholder="Clave restringida al dominio de la PWA" required>
+            <small>La clave no se persiste en RabbitMole, pero viaja como parámetro de la URL al servicio de Geoapify. No es un secreto protegido en el frontend.</small>
+          </div>
+        </section>
+        <div class="field">
+          <label for="lookup-term" id="lookup-term-label">2 · Identificador CVE</label>
+          <input id="lookup-term" autocomplete="off" spellcheck="false" maxlength="160" aria-describedby="lookup-term-help" placeholder="CVE-2025-12345">
+          <small id="lookup-term-help">Escribe un identificador publicado con formato CVE-AAAA-NNNN.</small>
+        </div>
+      </div>
+      <div class="online-lookup-action-row">
+        <button type="button" class="button accent" id="lookup-test">Consultar CVE Program</button>
+        <button type="button" class="button quiet" id="lookup-clear">Borrar campos y resultado</button>
+      </div>
+      <p id="lookup-status" class="online-lookup-status" role="status" aria-live="polite">Sin consultas realizadas. Pulsa el botón para iniciar una petición explícita.</p>
       <div class="online-lookup-result" id="lookup-result" hidden></div>
-      <details class="connection-advanced"><summary>Identificación fiscal (CIF/NIF) y privacidad</summary>
-        <div class="fields"><div class="field"><label for="lookup-cif">CIF español (validación formal local)</label>
-          <input id="lookup-cif" maxlength="18" autocomplete="off" placeholder="A12345674"></div>
-          <div class="field"><label>&nbsp;</label><button type="button" class="button quiet" id="lookup-check-cif">Verificar formato / control</button></div></div>
-        <p id="lookup-cif-status" role="status">Pendiente. La validación formal se realiza sin enviar el CIF por Internet.</p>
-        <p>GLEIF permite encontrar entidades LEI, pero no acredita un CIF español. La comprobación oficial de NIF/IVA intracomunitario se realiza mediante <a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noopener noreferrer">VIES</a>, conforme a su alcance y disponibilidad. El navegador no dispone de una API pública universal de CIF con acceso anónimo y CORS garantizado.</p>
-        <p>La geocodificación envía el texto introducido al servicio elegido: evita domicilios personales o ubicaciones sensibles; la cartografía es aproximada. Las APIs pueden limitar o bloquear consultas por CORS, cuota o políticas de uso.</p>
+      <details class="online-lookup-legal">
+        <summary>Comprobar CIF español (offline, sin cuenta ni API)</summary>
+        <p>Esta función solo valida estructura y dígito de control de un CIF español. No consulta AEAT, VIES ni ningún registro, y no prueba vigencia, titularidad, alta fiscal o pertenencia al cliente.</p>
+        <div class="fields"><div class="field"><label for="lookup-cif">CIF que deseas comprobar localmente</label>
+          <input id="lookup-cif" maxlength="18" autocomplete="off" placeholder="Ejemplo: A12345674"></div>
+          <div class="field"><label for="lookup-check-cif">Comprobación sin red</label><button type="button" class="button quiet" id="lookup-check-cif">Comprobar formato del CIF</button></div></div>
+        <p id="lookup-cif-status" role="status">Sin verificar. Esta comprobación no envía el CIF por Internet.</p>
+        <p>Para números IVA intracomunitarios utiliza <a href="https://ec.europa.eu/taxation_customs/vies/" target="_blank" rel="noopener noreferrer">VIES (Comisión Europea) ↗</a>, conforme a su cobertura y condiciones.</p>
       </details>
     </section>`);
   }
@@ -3524,6 +3576,28 @@
     persist();
     updateValidation(t);
   });
+  workspace.addEventListener("change",event=>{
+    if(event.target?.id==="lookup-provider"||event.target?.id==="lookup-company-mode"){
+      const provider=byId("lookup-provider")?.value||"cve";
+      const specs={
+        cve:{label:"2 · Identificador CVE",help:"CVE-AAAA-NNNN publicado; sin cuenta ni clave.",placeholder:"CVE-2025-12345",action:"Consultar CVE Program"},
+        nvd:{label:"2 · Identificador CVE",help:"CVE-AAAA-NNNN. La API key es opcional y solo corresponde a NVD.",placeholder:"CVE-2025-12345",action:"Consultar NVD"},
+        company:{label:byId("lookup-company-mode")?.value==="lei"?"2 · Código LEI":"2 · Razón social",help:byId("lookup-company-mode")?.value==="lei"?"LEI exacto de 20 caracteres alfanuméricos.":"Nombre legal o razón social, no CIF/NIF.",placeholder:byId("lookup-company-mode")?.value==="lei"?"5493001KJTIIGC8Y1R12":"Nombre legal de la empresa",action:"Buscar en GLEIF"},
+        place:{label:"2 · Dirección o localidad",help:"Dirección pública o localidad autorizada; evita instalaciones sensibles.",placeholder:"Las Palmas de Gran Canaria, España",action:"Localizar con Geoapify"}
+      };
+      for(const section of workspace.querySelectorAll("[data-lookup-service]"))
+        section.hidden=section.dataset.lookupService!==provider;
+      const spec=specs[provider]||specs.cve;
+      if(byId("lookup-term-label"))byId("lookup-term-label").textContent=spec.label;
+      if(byId("lookup-term-help"))byId("lookup-term-help").textContent=spec.help;
+      const term=byId("lookup-term");
+      if(term){term.placeholder=spec.placeholder;term.value="";}
+      if(byId("lookup-test"))byId("lookup-test").textContent=spec.action;
+      const result=byId("lookup-result");
+      if(result){result.hidden=true;result.textContent="";}
+      if(byId("lookup-status"))byId("lookup-status").textContent="Campos y requisitos de "+(onlineLookups.PROVIDERS[provider]?.label||"servicio")+" cargados. Ninguna consulta realizada.";
+    }
+  });
   workspace.addEventListener("click", async (e) => {
     const b = e.target.closest("button");
     if (!b) return;
@@ -3930,9 +4004,10 @@
       return;
     }
     if(b.id==="lookup-clear"){
-      const term=byId("lookup-term"),key=byId("lookup-key"),result=byId("lookup-result"),status=byId("lookup-status");
+      const term=byId("lookup-term"),key=byId("lookup-key"),mapKey=byId("lookup-map-key"),result=byId("lookup-result"),status=byId("lookup-status");
       if(term)term.value="";
       if(key)key.value="";
+      if(mapKey)mapKey.value="";
       if(result){result.textContent="";result.hidden=true;}
       if(status)status.textContent="Consulta y clave temporal borradas de la pantalla.";
       return;
@@ -3941,14 +4016,18 @@
       if(PUBLIC_DEMO)return;
       const provider=byId("lookup-provider")?.value;
       const term=byId("lookup-term")?.value||"";
-      const key=byId("lookup-key")?.value||"";
+      const key=provider==="nvd"?byId("lookup-key")?.value||"":provider==="place"?byId("lookup-map-key")?.value||"":"";
+      const companyMode=byId("lookup-company-mode")?.value||"name";
       const result=byId("lookup-result"),status=byId("lookup-status");
       if(result){result.textContent="";result.hidden=true;}
-      if(!confirm("Enviar únicamente la consulta escrita al servicio seleccionado. ¿Continuar?"))return;
+      if(!onlineLookups)throw Error("Módulo de consultas no cargado.");
+      if(!term.trim()){if(status)status.textContent="Rellena el dato solicitado para el proveedor elegido.";return;}
+      const service=onlineLookups.PROVIDERS[provider]?.label||"servicio externo";
+      if(!confirm("Enviar al proveedor "+service+" la consulta indicada. "+(provider==="place"?"Geoapify también recibirá la clave API en la URL. ":"")+"¿Continuar?"))return;
       b.disabled=true;
       if(status)status.textContent="Consultando servicio externo…";
       try{
-        const response=await onlineLookups.lookup(provider,term,{apiKey:key});
+        const response=await onlineLookups.lookup(provider,term,{apiKey:key,companyMode});
         if(result){
           const title=document.createElement("strong");title.textContent=response.provider+" · "+response.title;
           result.append(title);
@@ -3966,7 +4045,8 @@
         }
         if(status)status.textContent="Consulta completada. Resultado orientativo, no validado ni guardado.";
       }catch(error){
-        if(status)status.textContent="No se pudo consultar: "+String(error?.message||error)+". Revisa CORS, cuota, conexión o consulta.";
+        if(status)status.textContent="Consulta no completada: "+String(error?.message||error)+
+          ". Si falló CORS, es una limitación del navegador/proveedor; revisa el servicio y su documentación.";
       }finally{if(b.isConnected)b.disabled=false;}
       return;
     }

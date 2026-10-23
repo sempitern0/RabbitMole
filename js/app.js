@@ -594,7 +594,7 @@
       await flush();
       // Only fresh audits get provisional narrative scaffolding; importing or
       // duplicating an existing audit never changes its historical content.
-      if(!options.copy && options.scaffold!==false)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
+      if(arguments.length===0 || options.scaffold===true)fieldDefaults.fillEmpty(audit.meta,"meta",metaFields);
       if (options.copy || !audit.meta.reportId) {
         audit.meta.reportId = identifiers.generate(
           records,
@@ -1124,7 +1124,7 @@
         <button class="button ${finding?"quiet":"accent"}" type="button" ${finding?'data-go="evidence"':'aria-current="page"'}>Evidencias (${state.evidence.length})</button>
       </div>
       <p class="subtle">${finding?"Puedes adjuntar fotos directamente en un hallazgo: se crean evidencias vinculadas.":"Aquí se conservan las pruebas independientes, archivos, custodia y relaciones con hallazgos."}</p>
-      ${renderGroup(block)}</div>`;
+      ${renderGroup(block,true)}</div>`;
   }
   function renderRecords() {
     const search = (byId("record-filter")?.value || "").toLocaleLowerCase("es");
@@ -1770,10 +1770,10 @@
         details + '</ul><p class="subtle">Relación orientativa, pendiente de comprobar mediante evidencias.</p></div></details>' : '') +
       '</section>';
   }
-  function renderGroup(block) {
+  function renderGroup(block,embedded=false) {
     const def = groups[block],
       rows = state[block];
-    return `<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "software" ? `<p class="license-audit-help">Acreditación de licencias: documenta factura, contrato o evidencia saneada; si es imprescindible, solo el sufijo de cuatro caracteres. No introduzcas claves completas. Verifica por separado el derecho de uso y el soporte/EOL de la versión concreta.</p>` : ""}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}>Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
+    return `${embedded?"":`<span class="eyebrow">INVENTARIO / EVIDENCIAS</span><h1 class="page-title">${def.title}</h1><p class="lead">${def.intro}</p>`}${["assets", "software"].includes(block) ? '<button type="button" class="button quiet small" data-go="intake">Captura asistida / Importar inventario ↗</button>' : ""}${glossaryStageHint(block)}${block === "software" ? `<p class="license-audit-help">Acreditación de licencias: documenta factura, contrato o evidencia saneada; si es imprescindible, solo el sufijo de cuatro caracteres. No introduzcas claves completas. Verifica por separado el derecho de uso y el soporte/EOL de la versión concreta.</p>` : ""}${rows.length ? `<div class="action-row"><button type="button" class="button quiet small" data-fill-pending="${block}" ${state.documentControl?.status==="confirmed" ? "disabled" : ""}>Completar campos pendientes con borradores revisables</button><small class="subtle">No modifica valores existentes ni confirma verificaciones.</small></div>` : ""}${block === "networks" ? `${renderNetworkOverview()}<section class="discovery-entry" aria-labelledby="discovery-entry-title"><div><span class="eyebrow">HERRAMIENTA OPCIONAL</span><h2 id="discovery-entry-title">Discovery de red</h2><p>Descubre equipos en una red autorizada y revisa los resultados antes de incorporarlos al expediente.</p></div><button type="button" class="button accent" data-go="intake">Abrir Discovery →</button></section>${renderExternalNetworkAnalysis()}` : ""}${block === "controls" ? renderTemplateLibrary() : ""}<section class="card"><div class="card-head"><div><h2>${rows.length} registros</h2><p class="subtle">Los registros se guardan y puedes incluirlos en el informe.</p></div>${block === "evidence" ? '<button class="button quiet" data-export-manifest="true">Manifiesto SHA-256 (JSON)</button>' : ""}<button class="button accent" data-add="${block}">+ Añadir registro</button></div>${renderRecordNavigator(block)}${
       rows.length
         ? rows
             .map(
@@ -3708,7 +3708,7 @@
     const b = e.target.closest("button");
     if (!b) return;
     if(b.id==="audit-start-manual"){
-      await createAudit();
+      resetAuditStart();await createAudit();
       return;
     }
     if(b.id==="audit-start-discard"){

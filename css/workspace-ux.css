@@ -1420,3 +1420,58 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 #workspace .audit-start-preview summary{cursor:pointer;font-weight:700;min-height:34px;color:var(--ink)}
 #workspace .audit-start-preview ul{margin:.4rem 0;padding-inline-start:1.5rem;max-height:260px;overflow:auto}
 #workspace .audit-start-preview li{margin:.2rem 0;padding:.25rem 0;overflow-wrap:anywhere;color:var(--ink)}
+
+
+/* Audit intake and linked evidence: tablet, touch and narrow-screen hardening. */
+#workspace :is(.audit-start-grid,.audit-start-option,.audit-start-review,.audit-start-preview,.audit-evidence-unified){min-width:0;max-width:100%}
+#workspace .audit-start-option{overflow-wrap:anywhere}
+#workspace .audit-start-option :is(input[type=file],label,a),
+#workspace .audit-start-review :is(p,li,summary){overflow-wrap:anywhere}
+#workspace .audit-start-option input[type=file]::file-selector-button{
+  max-width:100%;min-height:44px;margin-inline-end:.7rem;
+  padding:.55rem .75rem;border:1px solid var(--line);
+  border-radius:.45rem;background:var(--canvas);color:var(--ink);cursor:pointer;
+}
+#workspace .audit-start-selections label{min-width:0;min-height:64px;align-content:center}
+#workspace .audit-start-selections input[type=checkbox]{flex:0 0 auto;min-width:20px;min-height:20px;accent-color:var(--brand)}
+#workspace .audit-start-selections strong{min-width:0;overflow-wrap:anywhere}
+#workspace .audit-start-preview details{min-width:0;max-width:100%}
+#workspace .audit-start-preview summary{min-height:44px;align-content:center;overflow-wrap:anywhere}
+#workspace .audit-start-review>.action-row{display:flex;gap:.6rem;flex-wrap:wrap}
+#workspace .audit-start-review>.action-row>.button{min-height:44px}
+#workspace .audit-finding-tabs{min-width:0}
+#workspace .audit-finding-tabs .button{min-width:0;overflow-wrap:anywhere;white-space:normal;text-align:center}
+#workspace .audit-start-grid :is(button,input,summary):focus-visible,
+#workspace .audit-start-review :is(button,input,summary):focus-visible,
+#workspace .audit-finding-tabs button:focus-visible{
+ outline:3px solid var(--brand);outline-offset:2px;
+}
+@media (min-width:781px) and (max-width:1100px){
+ #workspace .audit-start-grid{gap:.75rem}
+ #workspace .audit-start-option{padding:1rem}
+ #workspace .audit-start-selections{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #workspace .audit-start-actions>.button{flex:1 1 13rem}
+}
+@media (max-width:780px){
+ #workspace .audit-start-option{padding:clamp(.75rem,2.6vw,1rem)}
+ #workspace .audit-start-selections{gap:.5rem}
+ #workspace .audit-start-selections label{min-height:56px}
+ #workspace .audit-start-option .button.accent{min-height:46px}
+ #workspace .audit-start-review>.action-row>.button{flex:1 1 12rem}
+}
+@media (max-width:480px){
+ #workspace .audit-start-grid{gap:.7rem}
+ #workspace .audit-start-option{gap:.65rem}
+ #workspace .audit-start-option h2{font-size:1.1rem}
+ #workspace .audit-start-option input[type=file]{font-size:16px}
+ #workspace .audit-start-actions,.audit-start-review>.action-row{width:100%}
+ #workspace .audit-start-actions>.button,#workspace .audit-start-review>.action-row>.button{width:100%;flex:1 1 100%}
+ #workspace .audit-start-selections label{padding:.65rem}
+ #workspace .audit-start-preview details{padding:.55rem .65rem}
+ #workspace .audit-start-preview ul{padding-inline-start:1.25rem}
+ #workspace .audit-finding-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4rem}
+ #workspace .audit-finding-tabs>.button{width:100%;padding-inline:.4rem;font-size:.88rem}
+}
+@media (prefers-reduced-motion:reduce){
+ #workspace .audit-start-grid *,#workspace .audit-evidence-unified *{scroll-behavior:auto}
+}

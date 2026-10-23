@@ -29,7 +29,8 @@ function To-Prefix([string]$mask) {
             $bits += [Convert]::ToString($n,2).PadLeft(8,'0')
         }
         if ($bits -notmatch '^1*0*$') { return '' }
-        return [string]($bits.ToCharArray() | Where-Object { $_ -eq '1' }).Count
+        $ones = ($bits.ToCharArray() | Where-Object { $_ -eq '1' } | Measure-Object).Count
+        return [string]$ones
     } catch { return '' }
 }
 $full = [IO.Path]::GetFullPath($Output)
@@ -44,6 +45,11 @@ $disks = @(Read-Cim 'Win32_DiskDrive' 'Discos') | Select-Object -First 16
 $networkAdapters = @(Read-Cim 'Win32_NetworkAdapterConfiguration' 'Interfaces IP') |
     Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 16
 $captured = (Get-Date).ToUniversalTime().ToString('o')
+$accessRole = 'Estándar o limitado'
+try {
+    $principal = New-Object System.Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    if ($principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { $accessRole = 'Administrador (token actual)' }
+} catch { Warn-Limited 'No pudo determinarse el nivel de privilegios.' }
 $observedDate = (Get-Date).ToString('yyyy-MM-dd')
 $hostName = Safe-Text $env:COMPUTERNAME 140
 $networks = New-Object 'System.Collections.Generic.List[object]'
@@ -66,7 +72,7 @@ foreach ($nic in $networkAdapters) {
     }
     $prefix = if ($nic.IPSubnet) { To-Prefix ([string]@($nic.IPSubnet)[0]) } else { '' }
     $networkNotes = "Interfaz observada: $mode; máscara/prefijo local, DHCP y gateway por contrastar con la configuración autorizada. No acredita VLAN ni segmentación."
-    if ($nic.DefaultIPGateway) { $gateway = Safe-Text @($nic.DefaultIPGateway)[0] 80 }
+    if ($nic.DefaultIPGateway) { $gateway = Safe-Text ([string]@($nic.DefaultIPGateway)[0]) 80 }
     else { $gateway = '' }
     $name = Safe-Text $nic.Description 140
     if (-not $name) { $name = 'Interfaz '+$networks.Count }
@@ -83,6 +89,18 @@ $drives = @($disks | ForEach-Object {
     $size = if ($_.Size) { ' ({0:N1} GiB)' -f ([double]$_.Size / 1GB) } else { '' }
     Safe-Text ((Safe-Text $_.Model 100)+$size) 160
 } | Where-Object { $_ })
+$activation = 'No comprobada'
+try {
+    $licenseObjects = @(Read-Cim 'SoftwareLicensingProduct' 'Activación del sistema') |
+        Where-Object { $_.Name -match 'Windows' -and $_.PartialProductKey } | Select-Object -First 1
+    if ($licenseObjects) {
+        switch ([int]$licenseObjects.LicenseStatus) {
+            1 { $activation = 'Windows informa: activado (no acredita derecho de uso)' }
+            0 { $activation = 'Windows informa: no activado' }
+            default { $activation = 'Windows informa: estado no confirmado o temporal' }
+        }
+    }
+} catch { Warn-Limited 'No pudo consultarse el estado de activación de Windows.' }
 $security = [ordered]@{
     product=''
     realtime='No verificada'
@@ -113,7 +131,7 @@ try {
     $services = @(Get-Service -ErrorAction Stop | Where-Object { $_.Status -eq 'Running' } |
         Select-Object -First 25 | ForEach-Object { Safe-Text $_.Name 100 })
 } catch { Warn-Limited 'Servicios: listado parcial o acceso denegado.' }
-$assetNotes = 'Captura LOCAL de solo lectura realizada con permisos del usuario actual. Datos declarados por Windows: contrastar con el equipo y la evidencia; no demuestra cumplimiento, derechos de licencia, EOL ni configuraciones administrativas.'
+$assetNotes = 'Captura LOCAL de solo lectura realizada con permisos del usuario actual. Activación SO: '+$activation+'. La activación no demuestra titularidad o derecho de licencia. Datos declarados por Windows: contrastar con el equipo y la evidencia; no demuestra cumplimiento, derechos de licencia, EOL ni configuraciones administrativas.'
 if ($limitations.Count) { $assetNotes += ' Limitaciones: '+($limitations -join '; ') }
 $asset = [ordered]@{
     name=$hostName
@@ -176,7 +194,7 @@ $data = [ordered]@{
     capturedAt=$captured
     source=[ordered]@{
         platform='Windows';collector='collect-local.ps1';scope='local';mode='read-only'
-        privilege='usuario actual (sin elevación requerida)'
+        privilege=$accessRole
         tools='PowerShell 5.1+; CIM; Registro de Windows; cmdlets disponibles'
         limitations=@($limitations)
     }

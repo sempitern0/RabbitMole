@@ -21,9 +21,13 @@ python3 discovery/discover.py scan --cidr 192.168.10.0/24 --authorized --output 
 
 Import the file through **Hardware → Assisted capture** and review the new rows before applying them. Import the same capture under **Networks → Assisted capture** to review the observed network range. Neither inventory is modified automatically.
 
+## Standard-user Windows, no Python required
+
+Run `powershell.exe -NoProfile -File .\\collect-local.ps1 -Output .\\inventory.json` from the repository directory. This PowerShell 5.1+ collector reads local device properties, available software registry entries, network interfaces and accessible Defender state, without admin escalation. Import the JSON separately into Hardware, Networks and Software; inspect declared access restrictions and verify licensing independently. For explicitly authorized private-IPv4 ICMP discovery use `powershell.exe -NoProfile -File .\\discovery\\run.ps1 scan --cidr 192.168.10.0/26 --authorized --output .\\hosts.json`. Network ping does not identify remote software or operating systems.
+
 ## Prerequisites
 
-Python **3.9+** and its standard library are required; no pip packages or local service are needed. Nmap can be used for host discovery (`-sn`), with bounded native ICMP ping as a fallback. Windows support uses PowerShell; on Linux/macOS use the provided shell scripts.
+Python **3.9+** is required for the advanced Python scanner, HTTPS bridge and fallback Companion scripts, but not for native Windows PowerShell inventory or authorized ICMP discovery. Nmap can be used for host discovery (`-sn`), with bounded native ICMP ping as a fallback. Windows support uses PowerShell; on Linux/macOS use the provided shell scripts.
 
 To check dependencies and optionally install tools:
 

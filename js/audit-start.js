@@ -66,5 +66,53 @@
   }
   return audit;
  }
- globalThis.RabbitMoleAuditStart=Object.freeze({blocks,label,inspect,prepare,sizeLimit});
+
+ async function collectFromCompanion({origin,fetchImpl=fetch,onProgress=()=>{},sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
+  // Only same-device loopback. Never enumerate the LAN or read the local filesystem.
+  if(!/^https:\/\/[^/]+$/i.test(String(origin||"")))
+    throw Error("La PWA debe estar en un origen HTTPS válido.");
+  const base="http://127.0.0.1:8766";
+  const read=async (path,options={})=>{
+   const response=await fetchImpl(base+path,{
+    method:options.method||"GET",mode:"cors",cache:"no-store",
+    credentials:"omit",referrerPolicy:"no-referrer",
+    headers:options.token?{"X-RabbitMole-Token":options.token}:{},
+    signal:AbortSignal.timeout(options.timeout||12000)
+   });
+   const result=await response.json();
+   if(!response.ok)throw Error(result.error||"Companion no disponible.");
+   return result;
+  };
+  onProgress("Solicitando conexión con Companion. Apruébala en la ventana del mismo PC.");
+  const pair=await read("/pair/request",{method:"POST"});
+  if(!/^[A-Za-z0-9_-]{24,128}$/.test(pair.requestId||""))
+   throw Error("Identificador de emparejamiento inválido.");
+  let token="";
+  for(let i=0;i<35;i++){
+   await sleep(2000);
+   const answer=await read("/pair/status?id="+encodeURIComponent(pair.requestId));
+   if(answer.state==="denied"||answer.state==="expired")
+    throw Error("La conexión fue denegada o caducó.");
+   if(answer.state==="approved"){token=answer.token;break;}
+  }
+  if(!token||token.length>160)throw Error("No se aprobó la conexión con Companion.");
+  onProgress("Conectado. Solicitando autorización para recopilar hardware y software local.");
+  const job=await read("/inventory/request",{method:"POST",token});
+  if(!/^[A-Za-z0-9_-]{24,128}$/.test(job.requestId||""))
+   throw Error("Identificador de captura inválido.");
+  for(let i=0;i<48;i++){
+   await sleep(2500);
+   const answer=await read("/inventory/status?id="+encodeURIComponent(job.requestId),{token});
+   if(answer.state==="denied"||answer.state==="expired")
+    throw Error("La captura fue rechazada o caducó.");
+   if(answer.state==="error")throw Error(String(answer.error||"Falló la captura").slice(0,190));
+   if(answer.state==="ready"){
+    const json=JSON.stringify(answer.capture);
+    if(new TextEncoder().encode(json).length>sizeLimit)throw Error("Captura demasiado grande.");
+    return json;
+   }
+  }
+  throw Error("Tiempo agotado esperando la captura local.");
+ }
+ globalThis.RabbitMoleAuditStart=Object.freeze({blocks,label,inspect,prepare,sizeLimit,collectFromCompanion});
 })();

@@ -1495,7 +1495,19 @@
   }
   byId("pwa-install-card")?.addEventListener("click", async event=>{
     const button=event.target.closest("#device-collector-copy");
-    if(button)await copyCollectorCommand(button);
+    if(button){await copyCollectorCommand(button);return;}
+    const link=event.target.closest("a[data-collector-download]");
+    if(!link)return;
+    const filename=link.dataset.collectorDownload;
+    const status=byId("device-collector-download-status");
+    if(status){
+      status.hidden=false;
+      status.textContent="Descarga solicitada: "+filename+". Comprueba que el navegador ha guardado el archivo antes de ejecutarlo.";
+    }
+    for(const other of byId("pwa-install-card").querySelectorAll("a[data-collector-download]")){
+      other.removeAttribute("data-requested");
+    }
+    link.dataset.requested="true";
   });
   let intakeMode = "file";
   function renderIntakeCommand(key, label, explanation) {

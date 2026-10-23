@@ -1,4 +1,4 @@
-# RabbitMole · Inventario LOCAL de Windows. PowerShell 5.1+, sin Python ni administrador.
+﻿# RabbitMole · Inventario LOCAL de Windows. PowerShell 5.1+, sin Python ni administrador.
 # Solo lectura, sin escaneo remoto, sin recopilar contraseñas ni claves de licencia.
 [CmdletBinding()]
 param([Parameter(Mandatory=$true)][string]$Output)
@@ -14,6 +14,14 @@ function Safe-Text($value, [int]$max=600) {
     $result = ([string]$value).Trim()
     if ($result.Length -gt $max) { return $result.Substring(0,$max) }
     return $result
+}
+# Some uninstall/AppX records omit DisplayName, Version, Publisher or InstallDate.
+# In StrictMode those omissions are not ordinary nulls unless read explicitly.
+function Get-OptionalValue([object]$item, [string]$property) {
+    if ($null -eq $item) { return $null }
+    $entry = $item.PSObject.Properties[$property]
+    if ($null -eq $entry) { return $null }
+    return $entry.Value
 }
 function Read-Cim([string]$class, [string]$label) {
     try { return @(Get-CimInstance -ClassName $class -ErrorAction Stop) }
@@ -195,15 +203,15 @@ foreach ($root in $uninstallRoots) {
             $denied++
             continue
         }
-        $name = Safe-Text $app.DisplayName 190
+        $name = Safe-Text (Get-OptionalValue $app 'DisplayName') 190
         if (-not $name) { continue }
-        $version = Safe-Text $app.DisplayVersion 100
-        $vendor = Safe-Text $app.Publisher 150
+        $version = Safe-Text (Get-OptionalValue $app 'DisplayVersion') 100
+        $vendor = Safe-Text (Get-OptionalValue $app 'Publisher') 150
         $key = $name+'|'+$version+'|'+$vendor
         if (-not $seen.Add($key)) { continue }
         if ($software.Count -ge $limit) { continue }
         $scope = if ($root.StartsWith('HKCU:')) { 'Usuario (HKCU)' } else { 'Equipo (HKLM)' }
-        $installed = Safe-Text $app.InstallDate 30
+        $installed = Safe-Text (Get-OptionalValue $app 'InstallDate') 30
         $details = "Instalación declarada por registro de Windows ($scope); licencia y soporte pendientes de verificar."
         if ($installed -match '^\d{8}$') {
             $details += (' Fecha declarada: '+$installed.Substring(0,4)+'-'+$installed.Substring(4,2)+'-'+$installed.Substring(6,2)+'.')
@@ -223,16 +231,16 @@ Write-Host '[RabbitMole] 4/5 · Aplicaciones Microsoft Store accesibles…' -For
 if (Get-Command Get-AppxPackage -ErrorAction SilentlyContinue) {
     try {
         $store = @(Get-AppxPackage -ErrorAction Stop | Where-Object {
-            -not $_.IsFramework -and -not $_.IsResourcePackage -and $_.Name -notmatch '^(Microsoft\.VCLibs|Microsoft\.NET\.Native|Microsoft\.UI\.Xaml)'
+            -not (Get-OptionalValue $_ 'IsFramework') -and -not (Get-OptionalValue $_ 'IsResourcePackage') -and (Get-OptionalValue $_ 'Name') -notmatch '^(Microsoft\.VCLibs|Microsoft\.NET\.Native|Microsoft\.UI\.Xaml)'
         } | Select-Object -First 150)
         $addedStore=0
         foreach ($app in $store) {
-            $name = Safe-Text $app.Name 190
-            $version = Safe-Text $app.Version 100
+            $name = Safe-Text (Get-OptionalValue $app 'Name') 190
+            $version = Safe-Text (Get-OptionalValue $app 'Version') 100
             if (-not $name -or -not $seen.Add($name+'|'+$version+'|Store')) { continue }
             if ($software.Count -ge $limit) { continue }
             [void]$software.Add([ordered]@{
-                name=$name;version=$version;vendor=Safe-Text $app.PublisherDisplayName 150;asset=$hostName
+                name=$name;version=$version;vendor=Safe-Text (Get-OptionalValue $app 'PublisherDisplayName') 150;asset=$hostName
                 licenseStatus='Pendiente de verificar';support='Pendiente de verificar'
                 updateStatus='No verificado'
                 notes='Aplicación AppX/MSIX visible para usuario actual. Instalación, versión y licencia pendientes de contrastar.'

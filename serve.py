@@ -5,6 +5,8 @@ This is a local development/auditor server, not an HTTPS or multi-user deploymen
 Python 3.9+ standard library, Windows/Linux/macOS compatible.
 """
 import argparse
+import io
+import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
 from pathlib import Path
@@ -26,9 +28,17 @@ ALLOWED = {
     ".woff2": "font/woff2",
     ".png": "image/png",
     ".svg": "image/svg+xml",
+    ".ps1": "text/plain; charset=utf-8",
 }
 FOLDERS = {"css", "js", "fonts", "icons"}
-FILES = {"index.html", "sw.js", "manifest.webmanifest"}
+FILES = {"index.html", "sw.js", "manifest.webmanifest", "collect-local.ps1"}
+DISCOVERY_KIT_PATH = "/discovery-kit.zip"
+DISCOVERY_KIT_FILES = (
+    "service.py", "discover.py", "wizard.py", "pairing.py",
+    "companion.py", "inventory.py", "native.ps1", "run.ps1",
+    "run.sh", "iniciar.cmd", "setup.ps1", "setup.sh",
+    "README_ES.md", "README.md",
+)
 DISCOVERY_PATH = "/_local/discovery/"
 
 CSP = (
@@ -69,6 +79,27 @@ def resolve_asset(raw_path, root=ROOT):
     return candidate
 
 
+def discovery_kit_bytes(root=ROOT):
+    """Generate the allowlisted Discovery kit for the local HTTP distribution."""
+    root = Path(root).resolve()
+    result = io.BytesIO()
+    with zipfile.ZipFile(result, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name in DISCOVERY_KIT_FILES:
+            path = root / "discovery" / name
+            if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
+                raise FileNotFoundError(f"Falta un archivo requerido del kit: {name}")
+            entry = zipfile.ZipInfo("discovery/" + name, (2024, 1, 1, 0, 0, 0))
+            entry.compress_type = zipfile.ZIP_DEFLATED
+            archive.writestr(entry, path.read_bytes())
+        path = root / "collect-local.ps1"
+        if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root):
+            raise FileNotFoundError("Falta collect-local.ps1 para crear el kit.")
+        entry = zipfile.ZipInfo("collect-local.ps1", (2024, 1, 1, 0, 0, 0))
+        entry.compress_type = zipfile.ZIP_DEFLATED
+        archive.writestr(entry, path.read_bytes())
+    return result.getvalue()
+
+
 class LocalHandler(BaseHTTPRequestHandler):
     server_version = "RabbitMoleLocal/1"
     sys_version = ""
@@ -100,7 +131,7 @@ class LocalHandler(BaseHTTPRequestHandler):
         self.end_headers()
         try:
             self.wfile.write(data)
-        except (BrokenPipeError, ConnectionResetError):
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
             pass
 
     def do_GET(self):
@@ -176,24 +207,31 @@ class LocalHandler(BaseHTTPRequestHandler):
         super().end_headers()
 
     def _serve(self, send_body):
-        asset = resolve_asset(self.path, self.server.root)
-        if asset is None:
+        path = urlsplit(self.path).path
+        package = path == DISCOVERY_KIT_PATH
+        asset = None if package else resolve_asset(self.path, self.server.root)
+        if not package and asset is None:
             self.send_error(404, "Not Found")
             return
         try:
-            data = asset.read_bytes()
+            data = discovery_kit_bytes(self.server.root) if package else asset.read_bytes()
         except OSError:
-            self.send_error(404, "Not Found")
+            self.send_error(404, "Discovery kit incomplete" if package else "Not Found")
             return
+        filename = "discovery-kit.zip" if package else asset.name
+        is_download = package or filename == "collect-local.ps1"
         self.send_response(200)
-        self.send_header("Content-Type", ALLOWED[asset.suffix.lower()])
+        self.send_header("Content-Type", "application/zip" if package else ALLOWED[asset.suffix.lower()])
         self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store" if asset.name in FILES else "no-cache")
+        self.send_header("Cache-Control", "no-store" if is_download or filename in FILES else "no-cache")
+        if is_download:
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
         self.end_headers()
         if send_body:
             try:
                 self.wfile.write(data)
-            except (BrokenPipeError, ConnectionResetError):
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                # The browser may cancel downloads, prefetches or offline updates.
                 pass
 
 

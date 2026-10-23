@@ -399,6 +399,21 @@
           <p id="pwa-device-status" class="subtle" role="status"></p>
           <p id="pwa-install-status" role="status" aria-live="polite"></p>
           <button type="button" class="button accent" id="pwa-install-button" hidden>Instalar RabbitMole</button>
+          <section class="device-collector-setup" aria-labelledby="device-collector-title">
+            <span class="eyebrow">RECOGIDA LOCAL · SOLO LECTURA</span>
+            <h3 id="device-collector-title">Recolectores para el equipo auditado</h3>
+            <p>Descarga el script adecuado, ejecútalo en el mismo equipo con autorización y carga el JSON en «Nueva auditoría». No requiere Companion ni acceso a Internet para la captura.</p>
+            <div class="device-collector-downloads">
+              <a class="button accent" href="./collect-local.ps1" download="collect-local.ps1">Windows · PowerShell</a>
+              <a class="button quiet" href="./collect-local.sh" download="collect-local.sh">Linux · Bash</a>
+              <a class="button quiet" href="./collect-local.py" download="collect-local.py">Python · Windows / Linux</a>
+            </div>
+            <div class="intake-command device-collector-command">
+              <div class="intake-command-head"><strong>Windows · PowerShell 5.1+</strong><button type="button" class="glossary-copy" id="device-collector-copy" aria-label="Copiar comando del recolector Windows">Copiar comando</button></div>
+              <pre tabindex="0" aria-label="Comando de inventario Windows"><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
+              <p>La captura se guarda como captura.json, con nombres nuevos si ya existe. No altera la directiva permanente: respeta las restricciones de la organización.</p>
+            </div>
+          </section>
           <details><summary>Instalación y funcionamiento sin conexión</summary>
             <ol class="pwa-steps">
               <li><span class="pwa-step-icon" aria-hidden="true">▣</span><span><strong>Chrome, Edge o Brave:</strong> utiliza «Instalar RabbitMole» en el menú del navegador y <em>abre desde su icono</em>.</span></li>

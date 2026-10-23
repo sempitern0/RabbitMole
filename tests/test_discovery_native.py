@@ -6,13 +6,15 @@ ROOT=Path(__file__).resolve().parents[1]
 
 class NativeCollector(unittest.TestCase):
     def test_windows_collector_is_local_and_read_only(self):
-        script=(ROOT/'collect-local.ps1').read_text(encoding='utf-8')
+        script_path=ROOT/'collect-local.ps1'
+        self.assertEqual(script_path.read_bytes()[:3],b'\xef\xbb\xbf')
+        script=script_path.read_text(encoding='utf-8-sig')
         for expected in ('Win32_ComputerSystem','Win32_OperatingSystem','Win32_DiskDrive',
                          'Win32_NetworkAdapterConfiguration','Get-MpComputerStatus',
                          'HKCU:', 'HKLM:', 'licenseStatus=', 'ipAssignment=',
                          "schemaVersion=1", "FileMode]::CreateNew"):
             self.assertIn(expected,script)
-        for expected in ('Get-ChildItem -Path $root', 'Get-AppxPackage', 'Write-Host', 'Get-ItemProperty -LiteralPath'):
+        for expected in ('Get-ChildItem -Path $root', 'Get-AppxPackage', 'Write-Host', 'Get-ItemProperty -LiteralPath',"Get-OptionalValue $app 'InstallDate'", "Get-OptionalValue $app 'PublisherDisplayName'"):
             self.assertIn(expected,script)
         for forbidden in ('Set-ExecutionPolicy','Win32_Product','ProductKey=','Password=',
                           'Invoke-Expression','-EncodedCommand','Start-Process -Verb RunAs'):

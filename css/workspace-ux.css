@@ -1475,3 +1475,20 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 @media (prefers-reduced-motion:reduce){
  #workspace .audit-start-grid *,#workspace .audit-evidence-unified *{scroll-behavior:auto}
 }
+
+/* Intake cards: readable feedback at the interaction point, balanced routes. */
+#workspace .audit-start-option{height:100%}
+#workspace .audit-start-manual-guide{margin-top:auto;padding:1rem;border:1px solid var(--line);border-radius:.75rem;background:var(--canvas);min-width:0}
+#workspace .audit-start-manual-guide h3{font-size:1rem;margin:0 0 .6rem}
+#workspace .audit-start-manual-guide ol{margin:.35rem 0 .7rem;padding-inline-start:1.35rem;line-height:1.65}
+#workspace .audit-start-manual-guide li{padding-inline-start:.15rem}
+#workspace .audit-start-manual-guide p{margin:0}
+#workspace .audit-start-inline-status{margin:.2rem 0;padding:.85rem 1rem;border:1px solid var(--line);border-inline-start:4px solid var(--brand);border-radius:.65rem;background:var(--canvas);color:var(--ink);line-height:1.55;overflow-wrap:anywhere}
+#workspace .audit-start-inline-status[hidden]{display:none!important}
+#workspace .audit-start-inline-status.is-error{border-inline-start-color:#c0455c;background:var(--paper)}
+#workspace .audit-start-inline-status.is-success{border-inline-start-color:#408e79}
+#workspace .audit-start-inline-status.is-progress{border-inline-start-color:#548eb9}
+#workspace .audit-start-help{min-width:0;border:1px solid var(--line);border-radius:.65rem;padding:.6rem .8rem}
+#workspace .audit-start-help summary{cursor:pointer;min-height:44px;align-content:center;color:var(--ink);font-weight:700}
+#workspace .audit-start-help p{margin:.65rem 0;overflow-wrap:anywhere}
+@media(max-width:780px){#workspace .audit-start-manual-guide{margin-top:.4rem;padding:.8rem}}

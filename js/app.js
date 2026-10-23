@@ -1100,7 +1100,7 @@
         <label for="audit-start-file">Archivo de captura JSON (máximo 2 MiB)</label>
         <input id="audit-start-file" type="file" accept=".json,application/json">
         <a class="button accent audit-start-collector-download" href="./collect-local.ps1" download="collect-local.ps1">Descargar recolector Windows (.ps1) →</a>
-        <p class="subtle">Sin EXE, Python ni permisos de administrador. Descarga el script, ejecútalo localmente desde PowerShell con <code>powershell.exe -NoProfile -File .\collect-local.ps1 -Output .\captura.json</code> y carga arriba el JSON generado. No se omiten las políticas corporativas.</p>
+        <p class="subtle">Sin EXE, Python ni permisos de administrador. Descarga el script, ejecútalo localmente desde PowerShell con <code>powershell.exe -NoProfile -File .\\collect-local.ps1 -Output .\\captura.json</code> y carga arriba el JSON generado. No se omiten las políticas corporativas.</p>
         <div class="audit-start-actions">
           <button class="button quiet" type="button" id="audit-start-companion">Recopilar con Companion local</button>
           <button class="button quiet" type="button" id="audit-start-copy">Copiar comando PowerShell</button>

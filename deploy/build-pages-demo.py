@@ -58,7 +58,7 @@ def main():
 
     # Only the minimal Discovery helper, never audit data or credentials.
     with zipfile.ZipFile(DIST / "discovery-kit.zip", "w", zipfile.ZIP_DEFLATED) as archive:
-        for name in ("service.py", "discover.py", "wizard.py", "pairing.py", "companion.py", "run.ps1",
+        for name in ("service.py", "discover.py", "wizard.py", "pairing.py", "companion.py", "native.ps1", "run.ps1",
                      "run.sh", "iniciar.cmd", "setup.ps1", "setup.sh", "README_ES.md", "README.md"):
             source = ROOT / "discovery" / name
             if not source.is_file() or source.is_symlink():

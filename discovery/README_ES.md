@@ -2,13 +2,13 @@
 
 [English](README.md) · **Español**
 
-El motor funciona **desde un dispositivo externo conectado a la red del cliente**, sin instalar agentes en cada activo. No se integra como un escáner dentro del navegador: la PWA importa su JSON local.
+El sistema dispone de dos rutas complementarias: **inventario local** de Windows con PowerShell 5.1 sin Python ni elevación y **descubrimiento autorizado de red** mediante ICMP (Windows nativo) o Python/Nmap cuando está disponible. La PWA importa el JSON tras revisión; no ejecuta scripts dentro del navegador.
 
 ## Inicio rápido, sin servicios ni cambios de permisos
 
 El asistente guía al operador para elegir el alcance, el motor disponible y el archivo de salida. Detecta interfaces **sin tráfico de descubrimiento**, propone subredes locales compatibles y **nunca comienza a escanear automáticamente**. Es necesario escribir `AUTORIZO` después de revisar el CIDR.
 
-- **Windows:** doble clic en `discovery/iniciar.cmd` desde la instalación, o `.\\discovery\\run.ps1` desde PowerShell.
+- **Windows:** doble clic en `discovery/iniciar.cmd` desde la instalación, o `.\\discovery\\run.ps1` desde PowerShell. El modo nativo funciona sin Python.
 - **Linux/macOS:** `bash discovery/run.sh`.
 - También puedes ejecutar `python3 discovery/discover.py wizard` directamente.
 
@@ -16,11 +16,30 @@ Al finalizar, abre **Hardware → Captura asistida** en la PWA, importa la captu
 
 Si la herramienta no detecta interfaces compatibles (o tienes varias subredes), introduce manualmente el CIDR aprobado. No hace falta modificar políticas del navegador, ejecutar servidores locales, desactivar firewalls ni elevar privilegios para abrir el asistente.
 
+## Inventario desde una cuenta estándar sin Python
+
+En Windows 10/11, RabbitMole ofrece **captura local nativa PowerShell 5.1+**. No requiere Python, Nmap, una cuenta de administrador ni instalación. No modifica la política de ejecución: si GPO o AppLocker bloquean scripts, solicita permiso al responsable del equipo.
+
+```powershell
+powershell.exe -NoProfile -File .\collect-local.ps1 -Output .\captura-equipo.json
+powershell.exe -NoProfile -File .\discovery\run.ps1 doctor
+```
+
+El JSON se importa por separado en Hardware, Redes y Software desde «Captura asistida». Incluye solo información visible para el usuario: CIM para equipo, sistema operativo y adaptadores; aplicaciones del registro HKLM/HKCU accesible; servicios visibles y Microsoft Defender si sus cmdlets permiten lectura. La detección de una aplicación **no valida licencia, EOL, seguridad o actualizaciones**. La activación Windows, si es consultable, se describe solo en notas y sin obtener claves ni identificadores personales. Se consignan las restricciones de acceso detectadas para que el auditor no confunda «sin datos» con «sin software».
+
+Para detectar hosts dentro de un CIDR privado con permiso expreso (no recopila software remoto):
+
+```powershell
+powershell.exe -NoProfile -File .\discovery\run.ps1 scan --cidr 192.168.10.0/26 --authorized --output .\hosts.json
+```
+
+El ping nativo acepta /24–/30 alineados dentro de RFC1918 y puede no ver equipos que bloquean ICMP. **No** enumera sistemas o programas de otros hosts. La PWA no ejecuta comandos del equipo y no puede elevar permisos; el usuario debe lanzar la captura local y revisar el JSON antes de incorporarlo.
+
 ## Preparar el equipo auditor
 
 - Windows: PowerShell 5.1+; ejecuta `./discovery/setup.ps1` para diagnosticar. Instala herramientas opcionales con `./discovery/setup.ps1 -InstallTools` (winget). Reinicia la consola para actualizar PATH.
 - Linux y macOS: `bash discovery/setup.sh --check`, o `bash discovery/setup.sh --install` para instalar Python 3 y Nmap faltantes con el gestor disponible.
-- Python **3.9+** es imprescindible para este motor, pero no requiere paquetes de pip ni entorno virtual: solo biblioteca estándar. `ping` nativo puede sustituir a Nmap para el descubrimiento básico.
+- Python **3.9+** se necesita para el motor avanzado, los servicios de puente HTTPS y el kit Companion de respaldo; **no** para el inventario nativo de Windows ni el descubrimiento ICMP de PowerShell.
 
 ```bash
 python3 discovery/discover.py doctor
@@ -109,7 +128,7 @@ Descarga «Discovery kit» desde la PWA y extrae el ZIP. Abre `discovery/iniciar
 
 El botón **Capturar inventario de este Windows** utiliza `collect-local.ps1` incluido en el ZIP, solicita una ruta de salida JSON nueva y no sobrescribe archivos. Importa esa captura desde la PWA y revisa cada elemento. La captura local no obtiene información de equipos remotos; las licencias y el estado de Defender requieren validaciones adicionales específicas y no se afirman automáticamente.
 
-El Companion inicial no es un EXE autocontenido: requiere Python y Tkinter. Si faltan, usa `discovery/setup.ps1` (opcional `-InstallTools`) o el asistente de consola. El modo tablet sigue siendo HTTPS con certificado confiable, o transferencia de JSON. El token se mantiene en memoria y el botón copiar utiliza el portapapeles del propio Windows: evita dejar secretos en equipos compartidos.
+El Companion del kit de respaldo con interfaz gráfica requiere Python y Tkinter. Si faltan, **no instales Python solo para inventariar un Windows**: ejecuta `discovery/iniciar.cmd` o `discovery/run.ps1` para el modo PowerShell nativo. La conexión desde una tablet al puente HTTPS sí requiere el Companion autocontenido o Python. El modo tablet sigue siendo HTTPS con certificado confiable, o transferencia de JSON. El token se mantiene en memoria y el botón copiar utiliza el portapapeles del propio Windows: evita dejar secretos en equipos compartidos.
 
 
 ## Companion Windows portable: uso y retirada

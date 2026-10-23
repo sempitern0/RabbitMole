@@ -19,10 +19,20 @@ const company=m.request('company','Empresa de Prueba');
 assert.equal(new URL(company.url).origin,'https://api.gleif.org');
 assert(company.url.includes('fulltext'));
 assert.throws(()=>m.request('nvd','CVE-2025-12345',{apiKey:'aa bb'}),/inválida/);
-const location=m.summarize('place',[{display_name:'Las Palmas',lat:'28.13',lon:'-15.43'}]);
+assert.throws(()=>m.request('place','Las Palmas de Gran Canaria'),/clave API/i);
+const geo=m.request('place','Las Palmas de Gran Canaria',{apiKey:'geo-test-123'});
+assert.equal(new URL(geo.url).origin,'https://api.geoapify.com');
+assert.equal(new URL(geo.url).searchParams.get('apiKey'),'geo-test-123');
+assert.equal(new URL(geo.url).searchParams.get('format'),'json');
+assert.throws(()=>m.request('company','short',{companyMode:'lei'}),/20 caracteres/);
+const exact=m.request('company','5493001KJTIIGC8Y1R12',{companyMode:'lei'});
+assert(new URL(exact.url).pathname.endsWith('/5493001KJTIIGC8Y1R12'));
+assert(!new URL(exact.url).searchParams.has('filter[fulltext]'));
+const location=m.summarize('place',{results:[{formatted:'Las Palmas',lat:'28.13',lon:'-15.43'}]});
 assert(location.map&&location.map.lat===28.13);
 assert.equal(location.map.lon,-15.43);
-assert.equal(m.summarize('company',{data:[]}).title,'0 coincidencia(s) LEI');
+assert.equal(m.summarize('company',{data:[]}).title,'0 registro(s) LEI');
+assert.equal(m.summarize('company',{data:{id:'5493001KJTIIGC8Y1R12',attributes:{entity:{legalName:{name:'Empresa'}}}}}).title,'1 registro(s) LEI');
 assert.equal(m.summarize('cve',{cveMetadata:{cveId:'CVE-2025-12345'}}).title,'CVE-2025-12345');
 (async()=>{
  let url='',options={};
@@ -34,6 +44,7 @@ assert.equal(m.summarize('cve',{cveMetadata:{cveId:'CVE-2025-12345'}}).title,'CV
  assert.equal(options.referrerPolicy,'no-referrer');
  assert.equal(options.headers.apiKey,'memory-only');
  assert(!url.includes('memory-only'));
+ assert.equal(options.referrerPolicy,'no-referrer');
  const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
  for(const file of ['js/online-lookups.js']){
   assert(html.includes('src="'+file+'"'));assert(sw.includes('./'+file));

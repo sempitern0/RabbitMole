@@ -1360,3 +1360,31 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 #workspace .online-lookup-result p{margin:.5rem 0;overflow-wrap:anywhere;line-height:1.5}
 #workspace .online-lookup-card details>p{margin:.65rem .2rem;padding:.5rem .65rem;background:var(--canvas);border-radius:.5rem;line-height:1.6}
 @media(max-width:720px){#workspace .record-nav-toggle{min-width:44px}#workspace .online-lookup-card .action-row>.button{flex:1 1 100%}}
+
+/* Service-specific API instructions: no irrelevant credentials shown. */
+#workspace .online-lookup-card{gap:1rem}
+#workspace .online-lookup-heading{padding:.9rem 1rem;border-radius:.7rem;background:var(--canvas);border:1px solid var(--line)}
+#workspace .online-lookup-heading h2{margin:.2rem 0 .5rem;color:var(--ink)}
+#workspace .online-lookup-heading p{margin:0;color:var(--muted);line-height:1.5}
+#workspace .online-lookup-service{display:grid;gap:1rem}
+#workspace .online-lookup-service>section{display:grid;gap:.6rem;padding:1rem;border:1px solid var(--line);border-inline-start:4px solid var(--brand);border-radius:.7rem;background:var(--canvas);min-width:0}
+#workspace .online-lookup-service>section[hidden]{display:none!important}
+#workspace .online-lookup-service>section h3{margin:0;color:var(--ink);font-size:1.08rem}
+#workspace .online-lookup-service>section p,#workspace .online-lookup-service>section ol{margin:0;color:var(--ink);line-height:1.6}
+#workspace .online-lookup-service>section ol{padding-inline-start:1.6rem}
+#workspace .online-lookup-service>section li+li{margin-top:.3rem}
+#workspace .online-lookup-example{padding:.65rem .8rem;background:var(--paper);border:1px solid var(--line);border-radius:.5rem;overflow-wrap:anywhere}
+#workspace .online-lookup-service code{overflow-wrap:anywhere}
+#workspace .online-lookup-service>section a,#workspace .online-lookup-legal a{color:var(--brand);text-decoration:underline;text-underline-offset:2px;font-weight:700}
+#workspace .online-lookup-service>.field{max-width:46rem}
+#workspace .online-lookup-service .field small{padding:.45rem .6rem;background:var(--canvas);border-radius:.45rem;color:var(--muted);line-height:1.5}
+#workspace .online-lookup-action-row{display:flex;gap:.5rem;flex-wrap:wrap}
+#workspace .online-lookup-action-row .button{min-height:44px}
+#workspace .online-lookup-legal{border:1px solid var(--line);border-radius:.7rem;background:var(--paper);padding:.35rem .85rem}
+#workspace .online-lookup-legal summary{cursor:pointer;color:var(--ink);min-height:44px;padding:.65rem .2rem;font-weight:750}
+#workspace .online-lookup-legal>p{padding:.6rem .75rem;margin:.6rem 0;color:var(--ink);background:var(--canvas);border-radius:.5rem;line-height:1.55}
+#workspace .online-lookup-legal .fields{margin:.75rem 0}
+@media(max-width:650px){
+ #workspace .online-lookup-heading,#workspace .online-lookup-service>section{padding:.75rem}
+ #workspace .online-lookup-action-row>.button{width:100%}
+}

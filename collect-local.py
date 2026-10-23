@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Cross-platform RabbitMole inventory entrypoint: no third-party modules."""
-import argparse,datetime,json,os,pathlib,platform,re,shutil,socket,subprocess,sys
+import argparse,datetime,json,os,pathlib,platform,re,shutil,socket,subprocess,sys,hashlib
 
 def command(*args):
     try:
@@ -27,7 +27,16 @@ def main():
     if not sys.platform.startswith("linux"):parser.error("Sistema no soportado por este recolector")
     print("[RabbitMole] Linux: consultando hardware, interfaces y paquetes...",flush=True)
     host=socket.gethostname()
-    asset={"name":host,"type":"PC / portátil","os":platform.platform(),
+    device_id=""
+    for identifier in ("/etc/machine-id", "/var/lib/dbus/machine-id"):
+        try:
+            machine_id=pathlib.Path(identifier).read_text(encoding="utf-8").strip()
+            if re.fullmatch(r"[0-9a-fA-F]{32}",machine_id):
+                device_id="RM-LIN-"+hashlib.sha256(("RabbitMole:v1:Linux:"+machine_id.lower()).encode("utf-8")).hexdigest()[:24].upper()
+                break
+        except OSError:
+            continue
+    asset={"id":device_id,"name":host,"type":"PC / portátil","os":platform.platform(),
            "cpu":platform.processor(),"osLicense":"Pendiente de verificar",
            "avRealtime":"No verificada","notes":"Observación local pendiente de contrastar."}
     limitations=[]
@@ -69,7 +78,7 @@ def main():
     if not soft:limitations.append("Gestor de paquetes no accesible")
     doc={"kind":"rabbitmole-discovery-v1","schemaVersion":1,
          "capturedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
-         "source":{"platform":"Linux","collector":"collect-local.py","scope":"local",
+         "source":{"deviceId":device_id,"platform":"Linux","collector":"collect-local.py","scope":"local",
                    "mode":"read-only","privilege":"usuario actual","limitations":limitations},
          "items":{"assets":[asset],"networks":nets,"software":soft}}
     data=json.dumps(doc,ensure_ascii=False,indent=2).encode("utf-8")

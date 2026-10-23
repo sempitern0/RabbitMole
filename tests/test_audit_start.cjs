@@ -96,12 +96,13 @@ assert.throws(()=>start.inspect(data,{intake,size:3*1024*1024}),/2 MiB/);
   const device=fs.readFileSync('index.html','utf8');
   assert(device.includes('device-collector-setup'));
   for(const filename of ['collect-local.ps1','collect-local.py','collect-local.sh'])assert(device.includes('href="./'+filename+'"'));
-  assert(responsive.includes('device-collector-downloads'));
+
   assert(app.match(/id="audit-start-copy"/g).length===1);
   assert(app.includes('powershell.exe -NoProfile -ExecutionPolicy Bypass -File'));
   assert(app.includes('if(startBusy){startError="Hay una captura en curso.'));
   assert(/if\(b\.id===\"audit-start-discard\"\)\{\s*if\(startBusy\)return;/.test(app));
   const responsive=fs.readFileSync('css/workspace-ux.css','utf8');
+  assert(responsive.includes('device-collector-downloads'));
   assert(responsive.includes('max-width:480px')&&responsive.includes('audit-finding-tabs'));
   assert(responsive.includes('audit-start-selections')&&responsive.includes('focus-visible'));
   assert(app.includes('if (page === "audit-start" || state.documentControl?.status !== "confirmed") return;'));

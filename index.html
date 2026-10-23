@@ -400,36 +400,68 @@
           <p id="pwa-install-status" role="status" aria-live="polite"></p>
           <button type="button" class="button accent" id="pwa-install-button" hidden>Instalar RabbitMole</button>
           <section class="device-collector-setup" aria-labelledby="device-collector-title">
-            <span class="eyebrow">RECOGIDA LOCAL · SOLO LECTURA</span>
-            <h3 id="device-collector-title">Recolectores para el equipo auditado</h3>
-            <p>Descarga el script adecuado, ejecútalo en el mismo equipo con autorización y carga el JSON en «Nueva auditoría». No requiere Companion ni acceso a Internet para la captura.</p>
-            <div class="device-collector-downloads">
-              <a class="button accent" href="./collect-local.ps1" download="collect-local.ps1">Windows · PowerShell</a>
-              <a class="button quiet" href="./collect-local.sh" download="collect-local.sh">Linux · Bash</a>
-              <a class="button quiet" href="./collect-local.py" download="collect-local.py">Python · Windows / Linux</a>
+            <header class="device-collector-header">
+              <span class="eyebrow">DISCOVERY · INVENTARIO LOCAL</span>
+              <h3 id="device-collector-title">Recopilar datos de este equipo</h3>
+              <p>Descarga un recolector, ejecútalo con autorización e importa el JSON en <strong>Nueva auditoría</strong>. La captura es local y de solo lectura.</p>
+            </header>
+
+            <div class="device-collector-step" aria-labelledby="device-collector-download-title">
+              <div class="device-collector-step-heading"><span class="collector-step-number" aria-hidden="true">1</span><h4 id="device-collector-download-title">Descargar recolector</h4></div>
+              <div class="device-collector-downloads">
+                <a class="button accent collector-download" href="./collect-local.ps1" download="collect-local.ps1" data-collector-download="collect-local.ps1" aria-label="Descargar Windows (collect-local.ps1)">
+                  <span class="collector-download-icon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></svg></span>
+                  <span class="collector-download-name"><strong>Windows</strong><small>PowerShell 5.1+ · recomendado</small></span>
+                  <span class="collector-download-arrow"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></span>
+                </a>
+                <a class="button quiet collector-download" href="./collect-local.sh" download="collect-local.sh" data-collector-download="collect-local.sh" aria-label="Descargar Linux (collect-local.sh)">
+                  <span class="collector-download-icon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m7 8 4 4-4 4m7 0h4"/></svg></span>
+                  <span class="collector-download-name"><strong>Linux</strong><small>Bash · detecta Python</small></span>
+                  <span class="collector-download-arrow"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></span>
+                </a>
+                <a class="button quiet collector-download" href="./collect-local.py" download="collect-local.py" data-collector-download="collect-local.py" aria-label="Descargar Python (collect-local.py)">
+                  <span class="collector-download-icon"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 8-4 4 4 4m8-8 4 4-4 4m-3-13-2 18"/></svg></span>
+                  <span class="collector-download-name"><strong>Python</strong><small>Windows y Linux · motor alternativo</small></span>
+                  <span class="collector-download-arrow"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></span>
+                </a>
+              </div>
+              <p id="device-collector-download-status" class="device-collector-status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
             </div>
-            <div class="intake-command device-collector-command">
-              <div class="intake-command-head"><strong>Windows · PowerShell 5.1+</strong><button type="button" class="glossary-copy" id="device-collector-copy" aria-label="Copiar comando del recolector Windows">Copiar comando</button></div>
-              <pre tabindex="0" aria-label="Comando de inventario Windows"><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
-              <p>La captura se guarda como captura.json, con nombres nuevos si ya existe. No altera la directiva permanente: respeta las restricciones de la organización.</p>
+
+            <div class="device-collector-step" aria-labelledby="device-collector-command-title">
+              <div class="device-collector-step-heading"><span class="collector-step-number" aria-hidden="true">2</span><h4 id="device-collector-command-title">Ejecutar en el equipo</h4></div>
+              <div class="intake-command device-collector-command">
+                <div class="intake-command-head">
+                  <strong class="glossary-command-platform">Windows · PowerShell</strong>
+                  <button type="button" class="glossary-copy" id="device-collector-copy" aria-label="Copiar comando del recolector Windows">Copiar comando</button>
+                </div>
+                <pre tabindex="0" aria-label="Comando para inventario local Windows"><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
+                <p>Abre PowerShell en la carpeta de descarga. El script crea <code>captura.json</code> y no sobrescribe las capturas anteriores.</p>
+              </div>
             </div>
+
+            <div class="device-collector-step device-collector-finish">
+              <div class="device-collector-step-heading"><span class="collector-step-number" aria-hidden="true">3</span><h4>Importar y revisar</h4></div>
+              <p>En <strong>Nueva auditoría → Flujo automático asistido</strong>, selecciona el JSON y revisa Hardware, Redes y Software antes de incorporar los datos.</p>
+            </div>
+
             <details class="collector-permissions-guide">
-              <summary>¿Ejecutar como usuario estándar o administrador?</summary>
+              <summary>Permisos y otras plataformas <span class="collector-summary-hint">Guía de ejecución</span></summary>
               <div class="collector-permissions-grid">
                 <div>
-                  <h4>Usuario estándar · recomendado</h4>
-                  <p>Abre PowerShell normalmente y sitúate en la carpeta de descarga. Recolecta información de hardware, red y software visible para tu cuenta. No requiere UAC.</p>
-                  <pre><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
+                  <h4>Cuenta estándar <span class="collector-permissions-tag">Recomendado</span></h4>
+                  <p>Abre PowerShell normalmente. Obtendrás el inventario visible para tu usuario, sin UAC ni elevación.</p>
                 </div>
                 <div>
-                  <h4>Administrador · solo si está autorizado</h4>
-                  <p>Abre PowerShell con «Ejecutar como administrador», aprueba UAC y accede a la carpeta que contiene el script. Utiliza el mismo comando. Puede desbloquear ciertas consultas de CIM, seguridad y configuración, pero no añade por sí solo nuevas categorías al recolector.</p>
-                  <pre><code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\collect-local.ps1</code></pre>
+                  <h4>Administrador <span class="collector-permissions-tag">Si está autorizado</span></h4>
+                  <p>Abre PowerShell con «Ejecutar como administrador» y utiliza el mismo comando. Algunas consultas restringidas pueden aportar más datos; no se verifican licencias ni cumplimiento automáticamente.</p>
                 </div>
               </div>
-              <p><strong>¿Y con Python?</strong> En Windows, <code>python .\collect-local.py</code> ejecuta internamente PowerShell; no obtiene más información. Descarga <strong>ambos archivos .py y .ps1 en la misma carpeta</strong>. Usa una terminal normal o elevada según la autorización.</p>
-              <p><strong>Linux:</strong> <code>bash collect-local.sh</code> o <code>python3 collect-local.py</code> como usuario normal. Si una prueba autorizada requiere privilegios, utiliza <code>sudo python3 collect-local.py</code> y conserva el JSON fuera de carpetas públicas; podría quedar propiedad de root.</p>
-              <p><strong>Antes de ejecutar:</strong> revisa la procedencia del script. <code>-ExecutionPolicy Bypass</code> afecta solo a ese proceso de PowerShell; no supera GPO, AppLocker ni WDAC. Si existen restricciones de la organización, solicita autorización. Las licencias, políticas y configuraciones de seguridad siguen pendientes de contrastar.</p>
+              <div class="collector-permissions-extra">
+                <p><strong>Python en Windows:</strong> <code>python .\collect-local.py</code> utiliza el recolector PowerShell; guarda ambos archivos juntos.</p>
+                <p><strong>Linux:</strong> <code>bash collect-local.sh</code> o <code>python3 collect-local.py</code>. Usa <code>sudo</code> únicamente cuando tengas autorización y sea necesario.</p>
+                <p><strong>Políticas:</strong> <code>-ExecutionPolicy Bypass</code> solo afecta al proceso. No supera restricciones corporativas de GPO, AppLocker o WDAC.</p>
+              </div>
             </details>
           </section>
           <details><summary>Instalación y funcionamiento sin conexión</summary>

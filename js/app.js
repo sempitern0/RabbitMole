@@ -3742,7 +3742,12 @@
         if(page==="audit-start")acceptStartCapture(content);
       }catch(error){
         if(page==="audit-start"){startError="No se pudo capturar: "+error.message+". Utiliza el JSON de PowerShell como alternativa.";render();}
-      }finally{startBusy=false;const current=byId("audit-start-companion");if(current)current.disabled=false;}
+      }finally{
+        startBusy=false;
+        const current=byId("audit-start-companion");if(current)current.disabled=false;
+        const confirm=byId("audit-start-confirm");
+        if(confirm)confirm.disabled=!auditStart.blocks.some(k=>startSelected[k]&&startReview?.counts[k]);
+      }
       return;
     }
     if(b.dataset.softwareChoice!==undefined){

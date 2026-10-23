@@ -93,11 +93,11 @@ $computer = @(Read-Cim 'Win32_ComputerSystem' 'Equipo') | Select-Object -First 1
 $os = @(Read-Cim 'Win32_OperatingSystem' 'Sistema operativo') | Select-Object -First 1
 $processor = @(Read-Cim 'Win32_Processor' 'Procesador') | Select-Object -First 1
 $bios = @(Read-Cim 'Win32_BIOS' 'BIOS') | Select-Object -First 1
-$disks = @(Read-Cim 'Win32_DiskDrive' 'Discos') | Select-Object -First 16
-$video = @(Read-Cim 'Win32_VideoController' 'Gráficos') | Select-Object -First 4
-$memory = @(Read-Cim 'Win32_PhysicalMemory' 'Módulos RAM') | Select-Object -First 32
+$disks = @(Read-Cim 'Win32_DiskDrive' 'Discos' | Select-Object -First 16)
+$video = @(Read-Cim 'Win32_VideoController' 'Gráficos' | Select-Object -First 4)
+$memory = @(Read-Cim 'Win32_PhysicalMemory' 'Módulos RAM' | Select-Object -First 32)
 
-$memoryArrays = @(Read-Cim 'Win32_PhysicalMemoryArray' 'Ranuras RAM') | Select-Object -First 8
+$memoryArrays = @(Read-Cim 'Win32_PhysicalMemoryArray' 'Ranuras RAM' | Select-Object -First 8)
 $ramSlotCount = 0
 $ramMaxGiB = ''
 foreach ($bank in $memoryArrays) {

@@ -2827,7 +2827,7 @@
         "device",
         "attachments",
       ].includes(section) ||
-      section === "intake" ||
+      section === "intake" || section === "evidence" ||
       nav.some((n) => n[0] === section)
     ) {
       if(section==="attachments" && page!=="attachments"){

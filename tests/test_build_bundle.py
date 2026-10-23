@@ -27,7 +27,7 @@ class BuildTest(unittest.TestCase):
             first=build()
             with zipfile.ZipFile(root/'dist-pages/discovery-kit.zip') as kit:
                 for entry in ('discovery/companion.py', 'discovery/pairing.py', 'discovery/iniciar.cmd',
-                              'discovery/setup.ps1', 'discovery/setup.sh', 'discovery/native.ps1', 'collect-local.ps1'):
+                              'discovery/setup.ps1', 'discovery/setup.sh', 'discovery/native.ps1', 'discovery/inventory.py', 'collect-local.ps1'):
                     self.assertIn(entry, kit.namelist())
                 self.assertIn(b'run.ps1', kit.read('discovery/iniciar.cmd'))
                 self.assertIn(b'collect-local.ps1', kit.read('discovery/native.ps1'))

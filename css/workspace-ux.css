@@ -1388,3 +1388,29 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
  #workspace .online-lookup-heading,#workspace .online-lookup-service>section{padding:.75rem}
  #workspace .online-lookup-action-row>.button{width:100%}
 }
+
+/* A safe manual/assisted starting point, plus one workspace for findings/proof. */
+#workspace .audit-start-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+#workspace .audit-start-option{display:flex;flex-direction:column;gap:.8rem;min-width:0}
+#workspace .audit-start-option h2{margin:.1rem 0}
+#workspace .audit-start-option .button.accent{margin-top:auto}
+#workspace .audit-start-option input[type=file]{min-height:46px;width:100%;max-width:100%;border:1px dashed var(--line);padding:.6rem;border-radius:.6rem}
+#workspace .audit-start-option p,#workspace .audit-start-review p{line-height:1.6}
+#workspace .audit-start-actions{display:flex;flex-wrap:wrap;gap:.45rem}
+#workspace .audit-start-actions button{min-height:44px}
+#workspace .audit-start-selections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin:1rem 0}
+#workspace .audit-start-selections label{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;padding:.8rem;border:1px solid var(--line);border-radius:.6rem;background:var(--paper);cursor:pointer}
+#workspace .audit-start-selections label span{width:100%;padding-inline-start:1.4rem;color:var(--muted);font-size:.9rem}
+#workspace .audit-start-review details{padding:.65rem .8rem;margin:.6rem 0;border:1px solid var(--line);border-radius:.5rem;background:var(--canvas)}
+#workspace .audit-start-review details li{padding:.2rem;overflow-wrap:anywhere}
+#workspace .audit-start-status{color:var(--ink);padding:.6rem .8rem;min-height:2rem}
+#workspace .audit-finding-tabs{display:flex;gap:.5rem;flex-wrap:wrap;padding:.45rem 0 1rem}
+#workspace .audit-finding-tabs button{min-height:44px}
+#workspace .audit-evidence-unified>.eyebrow{display:block}
+#workspace .audit-evidence-unified>section.card{margin-top:1rem}
+@media(max-width:780px){
+ #workspace .audit-start-grid{grid-template-columns:minmax(0,1fr)}
+ #workspace .audit-start-selections{grid-template-columns:minmax(0,1fr)}
+ #workspace .audit-start-actions button{flex:1 1 100%}
+ #workspace .audit-finding-tabs button{flex:1 1 0}
+}

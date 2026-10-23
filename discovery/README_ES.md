@@ -16,6 +16,14 @@ Al finalizar, abre **Hardware → Captura asistida** en la PWA, importa la captu
 
 Si la herramienta no detecta interfaces compatibles (o tienes varias subredes), introduce manualmente el CIDR aprobado. No hace falta modificar políticas del navegador, ejecutar servidores locales, desactivar firewalls ni elevar privilegios para abrir el asistente.
 
+## Inicio asistido de una nueva auditoría
+
+Al pulsar **Nueva auditoría**, RabbitMole ofrece **Flujo manual** o **Flujo automático asistido**. El segundo permite cargar un JSON local v1 creado con PowerShell, o solicitar una captura a `RabbitMole-Companion.exe` abierto **en el mismo Windows**. La PWA pide un emparejamiento y, después, una **aprobación independiente para leer inventario** en la ventana del Companion. Se recopila con `collect-local.ps1` sin permisos de administrador, en un JSON temporal que se elimina tras leerlo. El resultado vuelve a la PWA y se presenta por secciones: Hardware, Redes y Software. El auditor selecciona cuáles incorporar antes de que exista el nuevo expediente.
+
+El flujo no crea hallazgos automáticamente ni valida licencias, firmware o estado de protección por deducción. Si la PWA se abre como archivo HTML o no existe Companion, utiliza el archivo JSON creado localmente. La PWA nunca ejecuta scripts arbitrarios ni lee el sistema del equipo a través del navegador.
+
+**Hallazgos y evidencias** comparten una sola opción de navegación con dos vistas internas conectadas. Cada estructura conserva sus claves históricas para que la documentación existente, los informes y las relaciones sigan siendo compatibles.
+
 ## Inventario desde una cuenta estándar sin Python
 
 En Windows 10/11, RabbitMole ofrece **captura local nativa PowerShell 5.1+**. No requiere Python, Nmap, una cuenta de administrador ni instalación. No modifica la política de ejecución: si GPO o AppLocker bloquean scripts, solicita permiso al responsable del equipo.

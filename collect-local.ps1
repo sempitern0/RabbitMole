@@ -131,8 +131,8 @@ try {
     }
 } catch { Warn-Limited 'No se pudo determinar la tecnología física de todas las unidades.' }
 
-$networkAdapters = @(Read-Cim 'Win32_NetworkAdapterConfiguration' 'Interfaces IP') |
-    Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 16
+$networkAdapters = @(Read-Cim 'Win32_NetworkAdapterConfiguration' 'Interfaces IP' |
+    Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 16)
 $captured = (Get-Date).ToUniversalTime().ToString('o')
 $accessRole = 'Estándar o limitado'
 try {

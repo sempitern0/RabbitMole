@@ -16,7 +16,7 @@ function Safe-Text($value, [int]$max=600) {
 }
 function Read-Cim([string]$class, [string]$label) {
     try { return @(Get-CimInstance -ClassName $class -ErrorAction Stop) }
-    catch { Warn-Limited "$label: consulta no disponible con estos permisos o políticas"; return @() }
+    catch { Warn-Limited "${label}: consulta no disponible con estos permisos o políticas"; return @() }
 }
 function To-Prefix([string]$mask) {
     $parts = $mask.Split('.')

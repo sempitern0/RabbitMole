@@ -1,6 +1,6 @@
 /* RabbitMole: versioned, offline-first app shell. No audit data is stored in CacheStorage. */
 "use strict";
-const CACHE_NAME = "rabbitmole-shell-v128-windows-native-discovery";
+const CACHE_NAME = "rabbitmole-shell-v129-audit-start";
 const CACHE_PREFIX = "rabbitmole-shell-";
 const VERSION = "1.0.0";
 const READY_KEY = "./.rabbitmole-shell-ready";
@@ -17,6 +17,7 @@ const CORE = [
   "./css/styles.css",
   "./css/brand-motion.css",
   "./js/app.js",
+  "./js/audit-start.js",
   "./js/online-lookups.js",
   "./js/palette-preferences.js",
   "./js/app-definitions.js",

@@ -20,7 +20,8 @@ class BuildTest(unittest.TestCase):
             for name in ('deploy/build-pages-demo.py','deploy/worker.js','deploy/public-profile.js','index.html','sw.js','manifest.webmanifest'):
                 shutil.copyfile(ROOT/name,root/name)
             shutil.copytree(ROOT/'discovery',root/'discovery')
-            shutil.copyfile(ROOT/'collect-local.ps1',root/'collect-local.ps1')
+            for filename in ('collect-local.ps1','collect-local.py','collect-local.sh'):
+                shutil.copyfile(ROOT/filename,root/filename)
             def build():
                 subprocess.run([sys.executable,str(root/'deploy/build-pages-demo.py')],check=True,stdout=subprocess.DEVNULL,env={**os.environ,'GITHUB_SHA':'a'*40,'CF_PAGES_BRANCH':'main'})
                 return json.loads((root/'dist-pages/release.json').read_text())['version']

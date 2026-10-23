@@ -42,6 +42,9 @@ const {chromium}=require('playwright');
    assert.equal(await page.locator('#pwa-install-card').isVisible(),false);
    await page.locator('#global-navigation [data-go="device"]').click();
    assert.equal(await page.locator('#pwa-install-card').isVisible(),true);
+   await page.locator('#device-collector-copy').click();
+   assert.equal(await page.locator('#device-collector-copy').textContent(),'Copiado');
+
    assert.equal(await page.locator('#workspace').isVisible(),false);
    // Platform preparation stays in a separate, read-only accordion.
    await page.locator('#mobile-terminal-setup > summary').click();

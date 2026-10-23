@@ -1453,6 +1453,50 @@
     nativeDoctor: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 doctor",
     nativeScan: "powershell.exe -NoProfile -File .\\discovery\\run.ps1 scan --cidr 192.168.10.0/26 --authorized --output hosts.json"
   });
+  async function copyCollectorCommand(button) {
+    const command=intakeCommands.localps;
+    let copied=false;
+    try {
+      if (!navigator.clipboard?.writeText) throw Error("Clipboard API no disponible");
+      await navigator.clipboard.writeText(command);
+      copied=true;
+    } catch (_) {
+      const area=document.createElement("textarea");
+      area.value=command;
+      area.setAttribute("readonly","");
+      area.style.position="fixed";
+      area.style.left="-9999px";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+      try { copied=typeof document.execCommand==="function" && document.execCommand("copy"); }
+      catch (_) { copied=false; }
+      area.remove();
+    }
+    button.textContent=copied?"Copiado":"Selecciona el comando";
+    if(!copied) {
+      const code=button.closest(".intake-command")?.querySelector("pre code");
+      if(code) {
+        const range=document.createRange();
+        range.selectNodeContents(code);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+      }
+    }
+    const status=byId("audit-start-status");
+    if(status && button.id==="audit-start-copy"){
+      startStatusKind=copied?"success":"error";
+      startError=copied?"Comando copiado al portapapeles.":"El navegador no permite copiar automáticamente. Selecciona el comando y usa Ctrl+C.";
+      status.hidden=false;
+      status.className="audit-start-inline-status is-"+startStatusKind;
+      status.textContent=startError;
+    }
+    return copied;
+  }
+  byId("pwa-install-card")?.addEventListener("click", async event=>{
+    const button=event.target.closest("#device-collector-copy");
+    if(button)await copyCollectorCommand(button);
+  });
   let intakeMode = "file";
   function renderIntakeCommand(key, label, explanation) {
     const command = intakeCommands[key];
@@ -3790,22 +3834,8 @@
       }catch(error){startError="No se pudo crear la auditoría: "+error.message;startBusy=false;render();}
       return;
     }
-    if(b.id==="device-collector-copy"){
-      const command=intakeCommands.localps;
-      const button=byId("device-collector-copy");
-      try{
-        await navigator.clipboard.writeText(command);
-        if(button)button.textContent="Copiado";
-      }catch(_){
-        if(button)button.textContent="Selecciona y copia el comando";
-      }
-      return;
-    }
     if(b.id==="audit-start-copy"){
-      const command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1";
-      try{await navigator.clipboard.writeText(command);startStatusKind="info";startError="Comando temporal copiado. Ejecútalo solo si tienes autorización; no modifica políticas permanentes y una GPO puede prevalecer.";}
-      catch(_){startError="No se pudo usar el portapapeles. Copia: "+command;}
-      const status=byId("audit-start-status");if(status)status.textContent=startError;
+      await copyCollectorCommand(b);
       return;
     }
     if(b.id==="audit-start-companion"){

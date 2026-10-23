@@ -4,6 +4,7 @@
 param([Parameter(Mandatory=$true)][string]$Output)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+Write-Host "[RabbitMole] 1/5 · Preparando inventario de solo lectura..." -ForegroundColor Cyan
 $limitations = New-Object 'System.Collections.Generic.List[string]'
 function Warn-Limited([string]$area) {
     if (-not $limitations.Contains($area)) { [void]$limitations.Add($area) }
@@ -37,11 +38,14 @@ $full = [IO.Path]::GetFullPath($Output)
 $folder = [IO.Path]::GetDirectoryName($full)
 if (-not [IO.Directory]::Exists($folder)) { throw 'La carpeta de destino no existe.' }
 if ([IO.File]::Exists($full)) { throw 'El JSON ya existe. Elige una ruta nueva: no se sobrescriben capturas.' }
+Write-Host '[RabbitMole] 2/5 · Hardware, Windows, discos e interfaces…' -ForegroundColor Cyan
 $computer = @(Read-Cim 'Win32_ComputerSystem' 'Equipo') | Select-Object -First 1
 $os = @(Read-Cim 'Win32_OperatingSystem' 'Sistema operativo') | Select-Object -First 1
 $processor = @(Read-Cim 'Win32_Processor' 'Procesador') | Select-Object -First 1
 $bios = @(Read-Cim 'Win32_BIOS' 'BIOS') | Select-Object -First 1
 $disks = @(Read-Cim 'Win32_DiskDrive' 'Discos') | Select-Object -First 16
+$video = @(Read-Cim 'Win32_VideoController' 'Gráficos') | Select-Object -First 4
+$memory = @(Read-Cim 'Win32_PhysicalMemory' 'Módulos RAM') | Select-Object -First 32
 $networkAdapters = @(Read-Cim 'Win32_NetworkAdapterConfiguration' 'Interfaces IP') |
     Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 16
 $captured = (Get-Date).ToUniversalTime().ToString('o')
@@ -80,6 +84,7 @@ foreach ($nic in $networkAdapters) {
         name=$name
         cidr=$(if ($prefix) { "$ip/$prefix" } else { '' })
         gateway=$gateway
+        dns=$(if ($nic.DNSServerSearchOrder) { Safe-Text ($nic.DNSServerSearchOrder -join ", ") 240 } else { "" })
         notes=$networkNotes
     }
     [void]$networks.Add($row)
@@ -141,10 +146,14 @@ $asset = [ordered]@{
     serial=$(if ($bios) { Safe-Text $bios.SerialNumber 140 } else { '' })
     os=$(if ($os) { Safe-Text $os.Caption 180 } else { '' })
     cpu=$(if ($processor) { Safe-Text $processor.Name 160 } else { '' })
+    cpuSpeed=$(if ($processor -and $processor.MaxClockSpeed) { '{0:N2}' -f ($processor.MaxClockSpeed / 1000) } else { '' })
+    gpuType=$(Safe-Text (($video | ForEach-Object { $_.Name }) -join '; ') 220)
+    ramSlots=$(if ($memory.Count) { '{0} módulos observados' -f $memory.Count } else { '' })
     ram=$(if ($computer -and $computer.TotalPhysicalMemory) {
         '{0:N1} GiB' -f ([double]$computer.TotalPhysicalMemory / 1GB)
     } else { '' })
     storage=Safe-Text ($drives -join '; ') 600
+    diskCapacity=$(if ($disks.Count) { '{0:N1}' -f ((@($disks | Measure-Object -Property Size -Sum)[0].Sum) / 1GB) } else { '' })
     ip=$observedIp
     ipAssignment=$assignment
     ipObservedAt=$(if ($observedIp) { $observedDate } else { '' })
@@ -159,35 +168,85 @@ $asset = [ordered]@{
     processReview=$(if ($services.Count) { 'Servicios locales observados (máx. 25): '+($services -join ', ')+'. No implica revisión de exposición.' } else { '' })
     notes=Safe-Text ($assetNotes+' '+$security.notes) 1800
 }
+Write-Host '[RabbitMole] 3/5 · Programas instalados: HKLM/HKCU y ambas arquitecturas…' -ForegroundColor Cyan
 $software = New-Object 'System.Collections.Generic.List[object]'
 $seen = New-Object 'System.Collections.Generic.HashSet[string]' -ArgumentList ([StringComparer]::OrdinalIgnoreCase)
+$rootCounts = New-Object 'System.Collections.Generic.List[string]'
 $uninstallRoots = @(
-    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
-    'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*',
-    'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*',
-    'HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
+    'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall',
+    'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
+    'HKCU:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
 )
+$limit = 480
 foreach ($root in $uninstallRoots) {
+    $added = 0
+    $denied = 0
     try {
-        $records = @(Get-ItemProperty -Path $root -ErrorAction Stop)
-        foreach ($app in $records) {
-            $name = Safe-Text $app.DisplayName 190
-            if (-not $name -or $software.Count -ge 250) { continue }
-            $version = Safe-Text $app.DisplayVersion 100
-            $vendor = Safe-Text $app.Publisher 150
-            $key = $name+'|'+$version+'|'+$vendor
-            if (-not $seen.Add($key)) { continue }
-            $sourceScope = if ($root.StartsWith('HKCU:')) { 'usuario actual' } else { 'equipo / HKLM' }
-            [void]$software.Add([ordered]@{
-                name=$name;version=$version;vendor=$vendor;asset=$hostName
-                licenseStatus='Pendiente de verificar'
-                support='Pendiente de verificar'
-                notes="Instalación declarada en registro ($sourceScope). No demuestra licencia, uso efectivo ni fin de soporte; puede faltar software portable, Store o de otros perfiles."
-            })
+        $children = @(Get-ChildItem -Path $root -ErrorAction Stop)
+    } catch {
+        Warn-Limited ('No se pudo enumerar '+$root+': '+$_.Exception.Message)
+        continue
+    }
+    foreach ($child in $children) {
+        try {
+            $app = Get-ItemProperty -LiteralPath $child.PSPath -ErrorAction Stop
+        } catch {
+            $denied++
+            continue
         }
-    } catch { Warn-Limited ('Registro de programas no accesible: '+$root.Split('\')[0]) }
+        $name = Safe-Text $app.DisplayName 190
+        if (-not $name) { continue }
+        $version = Safe-Text $app.DisplayVersion 100
+        $vendor = Safe-Text $app.Publisher 150
+        $key = $name+'|'+$version+'|'+$vendor
+        if (-not $seen.Add($key)) { continue }
+        if ($software.Count -ge $limit) { continue }
+        $scope = if ($root.StartsWith('HKCU:')) { 'Usuario (HKCU)' } else { 'Equipo (HKLM)' }
+        $installed = Safe-Text $app.InstallDate 30
+        $details = "Instalación declarada por registro de Windows ($scope); licencia y soporte pendientes de verificar."
+        if ($installed -match '^\d{8}$') {
+            $details += (' Fecha declarada: '+$installed.Substring(0,4)+'-'+$installed.Substring(4,2)+'-'+$installed.Substring(6,2)+'.')
+        }
+        [void]$software.Add([ordered]@{
+            name=$name;version=$version;vendor=$vendor;asset=$hostName
+            licenseStatus='Pendiente de verificar';support='Pendiente de verificar'
+            updateStatus='No verificado';notes=$details
+        })
+        $added++
+    }
+    [void]$rootCounts.Add("$root = $added programas")
+    Write-Host ("  [OK] {0}: {1} nuevos; {2} claves inaccesibles" -f $root,$added,$denied)
+    if ($denied) { Warn-Limited ("$root - $denied claves sin lectura; el resto sí se ha importado") }
 }
-if (-not $software.Count) { Warn-Limited 'No hay aplicaciones enumerables en las claves Uninstall accesibles.' }
+Write-Host '[RabbitMole] 4/5 · Aplicaciones Microsoft Store accesibles…' -ForegroundColor Cyan
+if (Get-Command Get-AppxPackage -ErrorAction SilentlyContinue) {
+    try {
+        $store = @(Get-AppxPackage -ErrorAction Stop | Where-Object {
+            -not $_.IsFramework -and -not $_.IsResourcePackage -and $_.Name -notmatch '^(Microsoft\.VCLibs|Microsoft\.NET\.Native|Microsoft\.UI\.Xaml)'
+        } | Select-Object -First 150)
+        $addedStore=0
+        foreach ($app in $store) {
+            $name = Safe-Text $app.Name 190
+            $version = Safe-Text $app.Version 100
+            if (-not $name -or -not $seen.Add($name+'|'+$version+'|Store')) { continue }
+            if ($software.Count -ge $limit) { continue }
+            [void]$software.Add([ordered]@{
+                name=$name;version=$version;vendor=Safe-Text $app.PublisherDisplayName 150;asset=$hostName
+                licenseStatus='Pendiente de verificar';support='Pendiente de verificar'
+                updateStatus='No verificado'
+                notes='Aplicación AppX/MSIX visible para usuario actual. Instalación, versión y licencia pendientes de contrastar.'
+            })
+            $addedStore++
+        }
+        Write-Host ("  [OK] Store: {0} aplicaciones adicionales" -f $addedStore)
+    } catch {
+        Warn-Limited ('Microsoft Store: inventario no accesible: '+$_.Exception.Message)
+    }
+}
+if (-not $software.Count) { Warn-Limited 'No se encontraron programas en las fuentes accesibles.' }
+if ($seen.Count -gt $limit) { Warn-Limited ("Se observaron $($seen.Count) programas; se limitó el JSON a $limit para respetar el importador.") }
+
 $data = [ordered]@{
     kind='rabbitmole-discovery-v1'
     schemaVersion=1
@@ -200,13 +259,16 @@ $data = [ordered]@{
     }
     items=[ordered]@{assets=@($asset);networks=@($networks.ToArray());software=@($software.ToArray())}
 }
+Write-Host "[RabbitMole] 5/5 · Serializando y validando JSON de auditoría…" -ForegroundColor Cyan
 $json = ConvertTo-Json -InputObject $data -Depth 9
+if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 2MB) { throw "Captura mayor de 2 MiB. Reduce el inventario antes de importarla." }
 $encoding = New-Object System.Text.UTF8Encoding($false)
 $stream = [IO.File]::Open($full,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
 try {
     $writer = New-Object System.IO.StreamWriter($stream,$encoding)
     try { $writer.Write($json); $writer.Flush() } finally { $writer.Dispose() }
 } finally { $stream.Dispose() }
-Write-Host "RabbitMole: JSON local guardado en $full"
+Write-Host "[RabbitMole] [OK] JSON local guardado en $full" -ForegroundColor Green
 Write-Host ("Equipos: 1 | Interfaces: {0} | Aplicaciones: {1}" -f $networks.Count,$software.Count)
-if ($limitations.Count) { Write-Warning ("Limitaciones: "+($limitations -join '; ')) }
+if ($limitations.Count) { foreach ($message in $limitations) { Write-Warning $message } }
+Write-Host "[RabbitMole] Listo para importar en Nueva auditoría → Flujo automático asistido." -ForegroundColor Green

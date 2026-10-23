@@ -1110,6 +1110,18 @@
       ${auditStart.blocks.map(block=>`<label><input type="checkbox" data-start-select="${block}" ${startSelected[block]?"checked":""} ${startReview.counts[block]?"":"disabled"}>
        <strong>${html(auditStart.label[block])}</strong><span>${startReview.counts[block]} registros</span></label>`).join("")}
       </div>
+      <div class="audit-start-preview">
+        ${auditStart.blocks.filter(block=>startReview.counts[block]).map(block=>`<details>
+          <summary>${html(auditStart.label[block])} · ver registros de muestra (${startReview.counts[block]})</summary>
+          <ul>${startReview.rows[block].slice(0,25).map(row=>`<li><strong>${html(row.name||row.id||"Sin nombre")}</strong>
+            ${row.version?`<span> · v${html(row.version)}</span>`:""}
+            ${row.vendor?`<span> · ${html(row.vendor)}</span>`:""}
+            ${row.ip?`<span> · ${html(row.ip)}</span>`:""}
+            ${row.ipAssignment?`<span> · ${html(row.ipAssignment)}</span>`:""}
+          </li>`).join("")}</ul>
+          ${startReview.counts[block]>25?`<p class="subtle">Se muestran los primeros 25 registros; el resto podrá editarse tras crear el borrador.</p>`:""}
+        </details>`).join("")}
+      </div>
       <div class="action-row"><button class="button accent" type="button" id="audit-start-confirm" ${auditStart.blocks.some(k=>startSelected[k]&&startReview.counts[k])&&!startBusy?"":"disabled"}>Crear borrador con selección</button>
       <button class="button quiet" type="button" id="audit-start-discard">Descartar captura</button></div>
       </section>`:""}

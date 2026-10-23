@@ -1515,3 +1515,13 @@ pre[tabindex="0"]:focus-visible{outline:3px solid var(--brand);outline-offset:3p
 #pwa-install-card .device-collector-command pre code{font:inherit;background:none;color:inherit;padding:0;border:none}
 #pwa-install-card .device-collector-command .glossary-copy{min-height:44px}
 @media(max-width:580px){#pwa-install-card .device-collector-downloads .button{flex:1 1 100%}#pwa-install-card .device-collector-command .glossary-copy{width:100%}}
+
+/* Execution permissions guide on device setup */
+#pwa-install-card .collector-permissions-guide{border:1px solid var(--line);border-radius:.7rem;padding:.7rem .9rem;min-width:0}
+#pwa-install-card .collector-permissions-guide summary{font-weight:700;cursor:pointer;min-height:44px;align-content:center}
+#pwa-install-card .collector-permissions-guide p{margin:.7rem 0;overflow-wrap:anywhere}
+#pwa-install-card .collector-permissions-guide pre{overflow-x:auto;max-width:100%;background:var(--canvas);color:var(--ink);padding:.8rem;border:1px solid var(--line);border-radius:.5rem}
+#pwa-install-card .collector-permissions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1rem}
+#pwa-install-card .collector-permissions-grid>div{min-width:0}
+#pwa-install-card .collector-permissions-grid h4{font-size:1rem;margin:0}
+@media(max-width:700px){#pwa-install-card .collector-permissions-grid{grid-template-columns:minmax(0,1fr)}}

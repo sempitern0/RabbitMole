@@ -77,6 +77,8 @@ class NativeCollector(unittest.TestCase):
             self.assertIn(filename,device)
         self.assertIn('device-collector-setup',device)
         self.assertIn('collector-permissions-guide',device)
+        self.assertIn('device-collector-download-status',device)
+        self.assertEqual(device.count('class="button quiet collector-download"'),2)
         self.assertIn('Ejecutar como administrador',device)
 
 if __name__=='__main__':

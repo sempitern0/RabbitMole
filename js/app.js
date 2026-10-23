@@ -1101,10 +1101,17 @@
         <input id="audit-start-file" type="file" accept=".json,application/json">
         <a class="button accent audit-start-collector-download" href="./collect-local.ps1" download="collect-local.ps1">Descargar recolector Windows (.ps1) →</a>
         <p class="subtle">También disponibles: <a href="./collect-local.sh" download="collect-local.sh">Linux (Bash)</a> y <a href="./collect-local.py" download="collect-local.py">Python (Windows/Linux)</a>. Descarga el motor elegido y revisa su procedencia antes de ejecutarlo.</p>
-        <p class="subtle">Sin EXE, Python ni permisos de administrador. Descarga el script, ejecútalo localmente desde PowerShell con <code>powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1 -Output .\\captura.json</code> y carga arriba el JSON generado. El parámetro <code>-ExecutionPolicy Bypass</code> solo afecta al proceso y debe usarse con autorización; una GPO, AppLocker o WDAC pueden impedir la ejecución igualmente. Tras verificar el origen también puedes utilizar <code>Unblock-File .\\collect-local.ps1</code> cuando el problema sea la marca de descarga.</p>
+        <p class="subtle">Sin EXE, Python ni permisos de administrador. Descarga el script, ejecútalo localmente desde PowerShell con <code class="audit-start-command-inline">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\\collect-local.ps1 -Output .\\captura.json</code> y carga arriba el JSON generado. El parámetro <code>-ExecutionPolicy Bypass</code> solo afecta al proceso y debe usarse con autorización; una GPO, AppLocker o WDAC pueden impedir la ejecución igualmente. Tras verificar el origen también puedes utilizar <code>Unblock-File .\\collect-local.ps1</code> cuando el problema sea la marca de descarga.</p>
+        <div class="intake-command audit-start-command">
+          <div class="intake-command-head">
+            <strong class="glossary-command-platform">Windows · PowerShell 5.1+</strong>
+            <button type="button" class="glossary-copy" id="audit-start-copy" aria-label="Copiar comando PowerShell">Copiar comando</button>
+          </div>
+          <pre tabindex="0" aria-label="Comando de captura local para Windows"><code>${html(intakeCommands.localps)}</code></pre>
+          <p>Ejecuta el recolector desde la carpeta donde lo descargaste; después importa el JSON.</p>
+        </div>
         <div class="audit-start-actions">
           <button class="button quiet" type="button" id="audit-start-companion">Recopilar con Companion local</button>
-          <button class="button quiet" type="button" id="audit-start-copy">Copiar comando PowerShell</button>
         </div>
         <div id="audit-start-status" class="audit-start-inline-status is-${html(startStatusKind)}" role="status" aria-live="polite" aria-atomic="true" ${startError?"":'hidden'}>${html(startError)}</div>
         <details class="audit-start-help"><summary>Cómo preparar Companion y solucionar problemas</summary>

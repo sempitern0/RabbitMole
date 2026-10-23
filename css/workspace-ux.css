@@ -719,7 +719,7 @@
 
 /* Distinguish the sticky audit filters from editable records without masking them. */
 #workspace .record-navigator{background:var(--paper);border:2px solid var(--brand);border-inline-start:5px solid var(--brand);box-shadow:0 9px 25px #00000029,0 2px 6px #00000014;isolation:isolate;scroll-margin-block-start:1rem}
-#workspace .record-navigator::before{content:"FILTROS Y NAVEGACIÓN";display:block;flex:1 0 100%;font-size:.73rem;font-weight:800;letter-spacing:.075em;color:var(--brand)}
+
 #workspace .record-navigator :is(input,select){background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:.55rem}
 #workspace .record-navigator :is(input,select):focus-visible{outline:3px solid var(--brand);outline-offset:2px}
 #workspace .record-navigator>p{color:var(--muted);line-height:1.4}

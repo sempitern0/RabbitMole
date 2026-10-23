@@ -1,0 +1,40 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const ctx={URL,Date,AbortController,setTimeout,clearTimeout};
+ctx.globalThis=ctx;
+vm.runInNewContext(fs.readFileSync('js/online-lookups.js','utf8'),ctx);
+const m=ctx.RabbitMoleOnlineLookups;
+assert.equal(Object.keys(m.PROVIDERS).length,4);
+assert.throws(()=>m.request('unknown','query'),/no permitido/);
+assert.throws(()=>m.request('cve','bad id'),/CVE/);
+assert.equal(new URL(m.request('cve','cve-2025-12345').url).origin,'https://cveawg.mitre.org');
+const nvd=m.request('nvd','CVE-2025-12345',{apiKey:'test-key'});
+assert.equal(nvd.headers.apiKey,'test-key');
+assert(!nvd.url.includes('test-key'));
+const company=m.request('company','Empresa de Prueba');
+assert.equal(new URL(company.url).origin,'https://api.gleif.org');
+assert(company.url.includes('fulltext'));
+assert.throws(()=>m.request('nvd','CVE-2025-12345',{apiKey:'aa bb'}),/inválida/);
+const location=m.summarize('place',[{display_name:'Las Palmas',lat:'28.13',lon:'-15.43'}]);
+assert(location.map&&location.map.lat===28.13);
+assert.equal(location.map.lon,-15.43);
+assert.equal(m.summarize('company',{data:[]}).title,'0 coincidencia(s) LEI');
+assert.equal(m.summarize('cve',{cveMetadata:{cveId:'CVE-2025-12345'}}).title,'CVE-2025-12345');
+(async()=>{
+ let url='',options={};
+ const fake=async(u,o)=>{url=u;options=o;return {ok:true,json:async()=>({vulnerabilities:[{cve:{id:'CVE-2025-12345'}}]})}};
+ const result=await m.lookup('nvd','CVE-2025-12345',{fetchImpl:fake,apiKey:'memory-only'});
+ assert.equal(result.title,'CVE-2025-12345');
+ assert.equal(options.credentials,'omit');
+ assert.equal(options.method,'GET');
+ assert.equal(options.referrerPolicy,'no-referrer');
+ assert.equal(options.headers.apiKey,'memory-only');
+ assert(!url.includes('memory-only'));
+ const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
+ for(const file of ['js/online-lookups.js']){
+  assert(html.includes('src="'+file+'"'));assert(sw.includes('./'+file));
+  assert(fs.readFileSync('rabbitmole.sh','utf8').includes(file));
+  assert(fs.readFileSync('rabbitmole.ps1','utf8').includes(file));
+ }
+ console.log('PASS fixed HTTPS providers, explicit read-only requests, no persisted API keys and map coordinates');
+})().catch(e=>{console.error(e);process.exitCode=1});

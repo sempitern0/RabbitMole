@@ -99,7 +99,7 @@
 
 /* Desktop filters keep a readable width instead of stretching across the form. */
 @media screen and (min-width:1001px){
- .record-nav-inner>div{flex:0 1 20rem;max-width:20rem}
+ .record-nav-inner>div{flex:0 1 15rem;max-width:15rem}
  .record-nav-inner{gap:.5rem .75rem}
  .record-nav-inner>p{font-size:.8rem}
 }

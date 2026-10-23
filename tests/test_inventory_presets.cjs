@@ -7,6 +7,10 @@ const catalog=ctx.AuditOSCatalog,presets=ctx.RabbitMoleInventoryPresets.create(c
 for(const k of ['hardware','operating','function','support','license','exposure','risk','owner','cpu','ram','storage','site'])assert(Array.isArray(presets[k])&&Object.isFrozen(presets[k]),k);
 assert.deepEqual(Array.from(presets.operating),Array.from(catalog.ALL));
 assert(presets.hardware.includes('Servidor físico'));
+assert(presets.hardware.length>=45);
+assert(presets.endpointProtection.length>=20);
+assert(presets.cpu.length>=35);
+assert(presets.storage.length>=25);
 assert(presets.site.includes('Rack de servidores'));
 assert.throws(()=>ctx.RabbitMoleInventoryPresets.create(null),/catálogo/);
 const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8'),app=fs.readFileSync('js/app.js','utf8');

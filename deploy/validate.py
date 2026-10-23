@@ -40,6 +40,7 @@ COMMANDS = [
     ['node', 'tests/test_audit_actions.cjs'],
     ['node', 'tests/test_shell_resources.cjs'],
     ['node', 'tests/test_glossary_data.cjs'],
+    ['node', 'tests/test_online_lookups.cjs'],
     ['node', 'tests/test_glossary.cjs'],
     ['node', 'tests/test_glossary_guide.cjs'],
     [sys.executable, 'tests/test_build_bundle.py'],

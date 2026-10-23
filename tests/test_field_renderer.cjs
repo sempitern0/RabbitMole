@@ -21,6 +21,9 @@ assert(c({evidenceIds:''},'findings',['evidenceIds','Evidencias']).includes('dat
 assert(c({name:'Equipo'},'assets',['name','Nombre']).includes('data-glossary-term="help"'));
 assert(c({licenseKeySuffix:'A7K2'},'software',['licenseKeySuffix','Sufijo']).includes('maxlength="4"'));
 assert(c({licenseEvidenceIds:''},'software',['licenseEvidenceIds','Evidencia']).includes('data-assist-ref="evidence"'));
+const ip=render({ipAssignment:'DHCP / dinámica',ip:''},'assets',['ip','IP observada'],0,d);
+assert(ip.includes('Opcional · dirección temporal'));
+assert(ip.includes('la IP no es permanente'));
 const page=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8'),app=fs.readFileSync('js/app.js','utf8');
 assert(page.indexOf('js/audit-field-renderer.js')<page.indexOf('js/app.js'));
 assert(sw.includes('./js/audit-field-renderer.js'));

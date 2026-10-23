@@ -3942,6 +3942,15 @@
           const title=document.createElement("strong");title.textContent=response.provider+" · "+response.title;
           result.append(title);
           for(const detail of response.details){const line=document.createElement("p");line.textContent=detail;result.append(line);}
+          if(response.map){
+            const link=document.createElement("a");
+            link.href="https://www.openstreetmap.org/?mlat="+encodeURIComponent(response.map.lat)+
+              "&mlon="+encodeURIComponent(response.map.lon)+
+              "#map=15/"+encodeURIComponent(response.map.lat)+"/"+encodeURIComponent(response.map.lon);
+            link.target="_blank";link.rel="noopener noreferrer";
+            link.textContent="Ver ubicación aproximada en OpenStreetMap ↗";
+            result.append(link);
+          }
           result.hidden=false;
         }
         if(status)status.textContent="Consulta completada. Resultado orientativo, no validado ni guardado.";

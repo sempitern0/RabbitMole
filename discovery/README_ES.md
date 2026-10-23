@@ -2,7 +2,7 @@
 
 [English](README.md) · **Español**
 
-El motor funciona **desde un dispositivo externo conectado a la red del cliente**, sin instalar agentes en cada activo. No se integra como un escáner dentro del navegador: la PWA importa su JSON local.
+El sistema dispone de dos rutas complementarias: **inventario local** de Windows con PowerShell 5.1 sin Python ni elevación y **descubrimiento autorizado de red** mediante ICMP (Windows nativo) o Python/Nmap cuando está disponible. La PWA importa el JSON tras revisión; no ejecuta scripts dentro del navegador.
 
 ## Inicio rápido, sin servicios ni cambios de permisos
 

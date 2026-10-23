@@ -25,6 +25,7 @@
   }
   if(!blocks.some(block=>counts[block]))throw Error("Captura sin inventario.");
   return Object.freeze({counts,rows,
+   deviceId:typeof payload.source?.deviceId==="string"&&/^RM-(WIN|LIN)-[A-F0-9]{24}$/.test(payload.source.deviceId)?payload.source.deviceId:"",
    platform:String(payload.source?.platform||"").slice(0,60),
    collector:String(payload.source?.collector||"").slice(0,90),
    privilege:String(payload.source?.privilege||"No especificado").slice(0,100),
@@ -65,6 +66,53 @@
    }
   }
   return audit;
+ }
+
+
+ function updateExisting(review,choices,audit,{groups,uid}={}){
+  if(!audit||!groups||typeof uid!=="function")throw Error("Selecciona una auditoría existente.");
+  if(!review.deviceId)throw Error("La captura no tiene identificador de equipo fiable; crea un expediente o incorpora datos manualmente.");
+  const selected=blocks.filter(block=>choices?.[block]!==false&&review.counts[block]);
+  if(!selected.length)throw Error("Selecciona alguna categoría.");
+  const result=structuredClone(audit);
+  const id=review.deviceId;
+  const hardware=(result.assets||[]).find(a=>a.id===id);
+  if(!hardware&&result.assets?.length)throw Error("Este equipo no coincide con el activo del expediente. Revisa el dispositivo seleccionado; no se mezclan equipos.");
+  const statistics={added:0,updated:0,unchanged:0};
+  const clean=v=>String(v??"").trim().toLowerCase();
+  for(const block of selected){
+   const allowed=new Set(groups[block].fields.map(([field])=>field));
+   const existing=result[block]||[];
+   for(const incoming of review.rows[block]){
+    const match=existing.find(row=>block==="assets"?row.id===id:
+      block==="networks"?(row.cidr&&row.name&&clean(row.cidr)===clean(incoming.cidr)&&clean(row.name)===clean(incoming.name)):
+      (clean(row.name)===clean(incoming.name)&&clean(row.asset)===clean(incoming.asset)));
+    if(!match){
+     if(existing.length>=500)throw Error("Se ha alcanzado el máximo de 500 filas en "+label[block]);
+     const row={_key:uid()};
+     for(const field of allowed)row[field]=incoming[field]||"";
+     if(block==="assets"){row.id=id;row.state="Por revisar";row.osLicense="Pendiente de verificar";}
+     if(block==="software"){row.licenseStatus="Pendiente de verificar";row.support="Pendiente de verificar";}
+     existing.push(row);statistics.added++;
+     continue;
+    }
+    let changed=false;
+    // Never override auditor conclusions or manual verification; refresh only
+    // observed hardware/network/software inventory fields with nonempty values.
+    const observed=block==="assets"?
+      ["name","vendor","model","serial","ip","ipAssignment","ipObservedAt","mac","os","cpu","cpuSpeed","ram","ramSlots","ramMax","storage","diskCapacity","diskType","gpuType","wifiAdapter","avProduct","avEngineVersion","avSignaturesVersion","avSignaturesCheckedAt"]:
+      block==="networks"?["name","cidr","gateway","dns","ssid","wifiStandard","networkKind"]:
+      ["name","version","vendor","asset"];
+    for(const field of observed){
+     if(!allowed.has(field))continue;
+     const value=incoming[field];
+     if(typeof value==="string"&&value.trim()&&match[field]!==value){match[field]=value;changed=true;}
+    }
+    if(changed)statistics.updated++;else statistics.unchanged++;
+   }
+   result[block]=existing;
+  }
+  return {audit:result,statistics};
  }
 
  async function collectFromCompanion({origin,fetchImpl=fetch,onProgress=()=>{},sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
@@ -136,5 +184,5 @@
   }
   throw Error("Tiempo agotado esperando la captura local.");
  }
- globalThis.RabbitMoleAuditStart=Object.freeze({blocks,label,inspect,prepare,sizeLimit,collectFromCompanion});
+ globalThis.RabbitMoleAuditStart=Object.freeze({blocks,label,inspect,prepare,updateExisting,sizeLimit,collectFromCompanion});
 })();

@@ -43,6 +43,7 @@ assert.throws(()=>start.inspect(data,{intake,size:3*1024*1024}),/2 MiB/);
     const path=url.replace('http://127.0.0.1:8766','');
     steps.push({path,headers:opts.headers,method:opts.method});
     const response=
+      path==='/ready'?{ready:true,pairing:true,inventory:true}:
       path==='/pair/request'?{requestId:'x'.repeat(32)}:
       path.startsWith('/pair/status')?{state:'approved',token}:
       path==='/inventory/request'?{requestId:'y'.repeat(32)}:
@@ -57,12 +58,18 @@ assert.throws(()=>start.inspect(data,{intake,size:3*1024*1024}),/2 MiB/);
   assert.equal(JSON.parse(result).items.assets[0].name,'PC-01');
   assert(steps.some(x=>x.path==='/inventory/request'&&x.headers['X-RabbitMole-Token']===token));
   assert(steps.every(x=>x.path.startsWith('/')));
-  await assert.rejects(start.collectFromCompanion({origin:'file:///audit.html'}),/HTTPS/);
+  assert(steps.some(x=>x.path==='/ready'));
+  await start.collectFromCompanion({origin:'http://localhost:8080',fetchImpl:fake,sleep:async()=>{}});
+  await assert.rejects(start.collectFromCompanion({origin:'http://192.168.1.2:8080'}),/HTTP local/);
+  await assert.rejects(start.collectFromCompanion({origin:'http://remote.example'}),/HTTP local/);
+  await assert.rejects(start.collectFromCompanion({origin:'file:///audit.html'}),/HTTPS|HTTP local/);
   const app=fs.readFileSync('js/app.js','utf8');
   const html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
   assert(app.includes('renderAuditStart()')&&app.includes('id="audit-start-manual"'));
   assert(app.includes('id="audit-start-confirm"')&&app.includes('startSelected'));
   assert(app.includes('renderFindingWorkspace(page)'));
+  assert(app.includes('audit-start-inline-status'));
+  assert(app.includes('audit-start-manual-guide'));
   assert(app.includes('if(startBusy){startError="Hay una captura en curso.'));
   assert(/if\(b\.id===\"audit-start-discard\"\)\{\s*if\(startBusy\)return;/.test(app));
   const responsive=fs.readFileSync('css/workspace-ux.css','utf8');
